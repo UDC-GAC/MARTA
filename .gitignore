@@ -1,0 +1,10 @@
+*.csv
+*.swp
+*.o
+*.a
+bin/
+polybench*/
+*.swo
+test*
+*test
+*.tar.gz
