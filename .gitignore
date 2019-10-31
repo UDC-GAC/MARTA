@@ -2,9 +2,15 @@
 *.swp
 *.o
 *.a
+old_files/
+results/
+data/
 bin/
 polybench*/
 *.swo
 test*
 *test
 *.tar.gz
+*.log
+*.txt
+
