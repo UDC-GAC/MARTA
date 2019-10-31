@@ -3,7 +3,7 @@
 # File              : prepare_data.py
 # Author            : Marcos Horro <marcos.horro@udc.gal>
 # Date              : Mar 29 Out 2019 09:38:20 MDT
-# Last Modified Date: Xov 31 Out 2019 13:43:20 MDT
+# Last Modified Date: Xov 31 Out 2019 14:40:45 MDT
 # Last Modified By  : Marcos Horro <marcos.horro@udc.gal>
 # -*- coding: utf-8 -*-
 # prepare_data.py
@@ -39,6 +39,7 @@ FORCE_REPLACEMENT = True
 ALGORITHMS = ['REPTree']
 MIN_OBJ = [1]  # min number of instances
 MAX_LEAF = [3]  # number of folds
+NORM = False
 
 
 class StoreDictKeyPair(argparse.Action):
@@ -67,6 +68,9 @@ def check_error(err_log):
 
 def preprocess_data(inputfile, outputfile, cols, *rows, cat, ncat):
     df = pd.read_csv(inputfile, comment="#", index_col=False)
+    if NORM:
+        setattr(df, cat, getattr(df, cat)-min(getattr(df, cat)))
+        setattr(df, cat, getattr(df, cat)/max(getattr(df, cat)))
     tmp = df
     for d in rows:
         if d == None:
@@ -79,11 +83,13 @@ def preprocess_data(inputfile, outputfile, cols, *rows, cat, ncat):
         exit(-1)
     # categorical data
     tmp_cat = getattr(tmp, cat)
+
     bins = np.linspace(min(getattr(df, cat)), max(getattr(df, cat)), ncat+1)
+    print("[DEBUG] bins = %s" % bins)
     # labels = range(0, ncat+1)
     step = bins[1] - bins[0]
-    labels = ["I-{0}-{1}".format("{0:.3f}".format(float(i/1e6)),
-                                 "{0:.3f}".format(float((i + step)/1e6))) for i in bins]
+    labels = ["I-{0}-{1}".format("{0:.3f}".format(float(i/step)),
+                                 "{0:.3f}".format(float((i + step)/step))) for i in bins]
     setattr(tmp, cat, pd.cut(tmp_cat, bins, labels=labels[:-1]))
     new_cols = []
     tmp['overhead'] = df.Is*df.Is*df.Is/(df.Js*df.Js)
@@ -191,9 +197,13 @@ parser.add_argument('-nc', '--ncats',  # action='store_const',
                     ' categories are created uniformly in pandas',
                     default=10)
 parser.add_argument('-ml', '--minleaf',  # action='store_const',
-                    help='number of folds', default=1)
+                    help='minimum number of instances on each leaf', default=1)
 parser.add_argument('-nf', '--nfolds',  # action='store_cont',
                     help='number of folds', default=3)
+parser.add_argument('-nv', '--norm', action='store_true',
+                    help='normalize predicted dimension (min-max norm i.e.'
+                    ' values in range [0-1])',
+                    default=False)
 parser.add_argument('-rm', '--rmtemp', action='store_true',
                     help='clean directory of temp files (default=False)', default=False)
 parser.add_argument('-f', '--force', action='store_true',
@@ -218,7 +228,7 @@ PRED = args.pred
 NCATS = int(args.ncats)
 MIN_OBJ = [int(i) for i in [args.minleaf]]
 MAX_LEAF = [int(i) for i in [args.nfolds]]
-
+NORM = args.norm
 # ERR_OUT = " 2> /dev/null"
 ERR_FILE = "error.log"
 ERR_OUT = " 2> %s" % ERR_FILE

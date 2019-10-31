@@ -3,7 +3,7 @@
 # File              : wrapper.py
 # Author            : Marcos Horro <marcos.horro@udc.gal>
 # Date              : Xov 31 Out 2019 09:56:07 MDT
-# Last Modified Date: Xov 31 Out 2019 13:42:27 MDT
+# Last Modified Date: Xov 31 Out 2019 14:36:50 MDT
 # Last Modified By  : Marcos Horro <marcos.horro@udc.gal>
 
 import os
@@ -28,9 +28,7 @@ class StoreDictKeyPair(argparse.Action):
 
 
 stride = range(1, 2)
-cols = 'I J It Jt Iters Jters '
-nfolds = 3
-minleaf = 1
+cols = 'I J It Jt Iters Jters NELEMS '
 
 parser = argparse.ArgumentParser(
     description='Wrapper for prepare data. Quite ugly tho...')
@@ -42,9 +40,22 @@ parser.add_argument('-p', '--pred',  # action='store_const',
 parser.add_argument('-nc', '--ncats',  # action='store_const',
                     help='number of categories of dimension to predict',
                     default=10)
+parser.add_argument('-ml', '--minleaf',  # action='store_const',
+                    help='number of folds', default=1)
+parser.add_argument('-nf', '--nfolds',  # action='store_cont',
+                    help='number of folds', default=3)
+parser.add_argument('-nv', '--norm', action='store_true',
+                    help='normalize predicted dimension (i.e. [0-1])',
+                    default=False)
 args = parser.parse_args()
 INPUT_FILE = "../data/CSV/exec_reg_model.csv"
 OUTPUT_FILE = "testing.arff"
+nfolds = args.nfolds
+minleaf = args.minleaf
+if args.norm:
+    norm = "--norm"
+else:
+    norm = ""
 ROWS = args.rows
 PRED = args.pred
 NCATS = int(args.ncats)
@@ -59,9 +70,10 @@ os.system("echo \"\" > %s" % (summary_file))
 for Is, Js in it.product(stride, stride):
     print("[wrapper] executing for strides Is %2d Js %2d" % (Is, Js))
     ret = os.system("python3 prepare_data.py -i %s -o %s -r Is=%s Js=%s"
-                    " %s -c %s --nfolds=%s --minleaf=%s --pred=%s --ncats=%s" %
+                    " %s -c %s --nfolds=%s --minleaf=%s --pred=%s --ncats=%s"
+                    " %s " %
                     (INPUT_FILE, OUTPUT_FILE, str(Is), str(Js), filter_rows, cols, nfolds,
-                     minleaf, PRED, str(NCATS)))
+                     minleaf, PRED, str(NCATS), norm))
     if (ret != 0):
         print("[wrapper] Something went wrong!")
     result_file = "results/model_learn_stats_%s_is%s_js%s_folds%s_leaf%s" % (
