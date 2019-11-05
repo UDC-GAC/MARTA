@@ -3,7 +3,7 @@
 # File              : prepare_data.py
 # Author            : Marcos Horro <marcos.horro@udc.gal>
 # Date              : Mar 29 Out 2019 09:38:20 MDT
-# Last Modified Date: Ven 01 Nov 2019 10:26:51 MDT
+# Last Modified Date: Lun 04 Nov 2019 12:21:23 MST
 # Last Modified By  : Marcos Horro <marcos.horro@udc.gal>
 # -*- coding: utf-8 -*-
 # prepare_data.py
@@ -68,16 +68,18 @@ def check_error(err_log):
 
 def preprocess_data(inputfile, outputfile, cols, *rows, cat, ncat):
     df = pd.read_csv(inputfile, comment="#", index_col=False)
-    # if NORM:
-    #    # minmax
-    #    # setattr(df, cat, getattr(df, cat)-min(getattr(df, cat)))
-    #    # setattr(df, cat, getattr(df, cat)/max(getattr(df, cat)))
-    #    # z-score
-    #    print("[DEBUG] z-score avg = %f" % np.mean(getattr(df, cat)))
-    #    print("[DEBUG] z-score std = %f" % np.std(getattr(df, cat)))
-    #    setattr(df, cat, np.log(getattr(df, cat)))
-    #    setattr(df, cat, (getattr(df, cat)-np.mean(getattr(df, cat)
-    #                                               ))/np.std(getattr(df, cat)))
+    if NORM:
+        if NORM_MIN_MAX:
+            # minmax
+            setattr(df, cat, getattr(df, cat)-min(getattr(df, cat)))
+            setattr(df, cat, getattr(df, cat)/max(getattr(df, cat)))
+        if NORM_Z_SCORE:
+            # z-score
+            print("[DEBUG] z-score avg = %f" % np.mean(getattr(df, cat)))
+            print("[DEBUG] z-score std = %f" % np.std(getattr(df, cat)))
+            setattr(df, cat, np.log(getattr(df, cat)))
+            setattr(df, cat, (getattr(df, cat)-np.mean(getattr(df, cat)
+                                                       ))/np.std(getattr(df, cat)))
     tmp = df
     for d in rows:
         if d == None:
@@ -88,17 +90,18 @@ def preprocess_data(inputfile, outputfile, cols, *rows, cat, ncat):
     if (tmp.count()[0] == 0):
         print("[ERROR] DATASET EMPTY! Revise constraints in data please!")
         exit(-1)
-    # categorical data
-    tmp_cat = getattr(tmp, cat)
-
-    bins = np.linspace(min(getattr(df, cat)), max(getattr(df, cat)), ncat+1)
-    #print("[DEBUG] bins = %s" % bins)
-    # labels = range(0, ncat+1)
-    step = bins[1] - bins[0]
-    labels = ["I-{0}-{1}".format("{0:.3f}".format(float(i/1e9)),
-                                 "{0:.3f}".format(float((i + step)/1e9))) for i in bins]
-    setattr(tmp, cat, pd.cut(tmp_cat, bins, labels=labels[:-1]))
+    if ncat > 0:
+        # categorical data
+        tmp_cat = getattr(tmp, cat)
+        bins = np.linspace(min(getattr(df, cat)), max(getattr(df, cat)), ncat+1)
+        # print("[DEBUG] bins = %s" % bins)
+        # labels = range(0, ncat+1)
+        step = bins[1] - bins[0]
+        labels = ["I-{0}-{1}".format("{0:.3f}".format(float(i/1e9)),
+                                     "{0:.3f}".format(float((i + step)/1e9))) for i in bins]
+        setattr(tmp, cat, pd.cut(tmp_cat, bins, labels=labels[:-1]))
     new_cols = []
+    # debug area
     tmp['overhead'] = df.Is*df.Is*df.Is/(df.Js*df.Js)
     tmp['cl'] = 0.125*(df.It*df.Is) + 0.25 * (df.Js*df.Jt) * df.It/df.Is
     tmp['loadstore'] = 0

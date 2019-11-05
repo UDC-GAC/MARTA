@@ -3,7 +3,7 @@
 # File              : wrapper.py
 # Author            : Marcos Horro <marcos.horro@udc.gal>
 # Date              : Xov 31 Out 2019 09:56:07 MDT
-# Last Modified Date: Ven 01 Nov 2019 10:22:52 MDT
+# Last Modified Date: Lun 04 Nov 2019 12:35:21 MST
 # Last Modified By  : Marcos Horro <marcos.horro@udc.gal>
 
 import os
@@ -50,7 +50,7 @@ parser.add_argument('-nv', '--norm', action='store_true',
 parser.add_argument('-c', '--columns', metavar='col', type=str, nargs='+',
                     help='columns we are interested to filter')
 args = parser.parse_args()
-INPUT_FILE = "../data/exec_asm_merged.csv"
+INPUT_FILE = "exec_asm_full_filtered.csv"
 OUTPUT_FILE = "testing.arff"
 nfolds = args.nfolds
 minleaf = args.minleaf
@@ -93,8 +93,10 @@ for Is, Js in it.product(stride, stride):
     os.system("grep -m 1 -n \"Size of the tree\" %s /dev/null >> %s" %
               (result_file, summary_file))
 
+if (len(filter_rows) > 0):
+    filter_rows = "-r " + filter_rows
 ret = os.system("python3 prepare_data.py -i %s -o %s"
-                " -r %s -c %s --nfolds=%s --minleaf=%s --pred=%s --ncats=%s"
+                " %s -c %s --nfolds=%s --minleaf=%s --pred=%s --ncats=%s"
                 " %s " %
                 (INPUT_FILE, OUTPUT_FILE, filter_rows,
                  filter_cols, nfolds,

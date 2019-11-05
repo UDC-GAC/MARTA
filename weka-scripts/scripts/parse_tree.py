@@ -3,7 +3,7 @@
 # File              : parse_tree.py
 # Author            : Marcos Horro <marcos.horro@udc.gal>
 # Date              : Lun 04 Nov 2019 13:06:33 MST
-# Last Modified Date: Lun 04 Nov 2019 18:01:12 MST
+# Last Modified Date: Lun 04 Nov 2019 18:45:18 MST
 # Last Modified By  : Marcos Horro <marcos.horro@udc.gal>
 
 import re
@@ -97,13 +97,41 @@ class ClassTree:
 
 # parsing based on https://github.com/rudi-c/weka-json-parser/blob/master/sample.txt
 
+def cond_not_compatible(c1, c2):
+    op1, v1 = c1
+    op2, v2 = c2
+    return eval("%s %s %s" % (str(round(float(v1))), str(op2), str(v2)))
+
 
 class REPTree(ClassTree):
 
-    def get_parents_by_value(self, value):
+    def aux_reverse_tree_compressed(self, leaves, cond):
+        leaves_tree = []
+        for leaf in leaves:
+            d = {}
+            parent = leaf.parent
+            cond_valid = True
+            while parent.parent != None:
+                feat, comp, val = parent.info.get_values()
+                if feat in cond:
+                    c, v = cond[feat]
+                    if cond_not_compatible((comp, val), (c, v)):
+                        cond_valid = False
+                        break
+                l = str(feat) + " " + str(comp) + " " + str(val)
+                if feat in d:
+                    d[feat] += " & " + l
+                else:
+                    d[feat] = l
+                parent = parent.parent
+            if cond_valid:
+                leaves_tree += [(leaf, d)]
+        return leaves_tree
+
+    def print_get_parents_by_value(self, value):
         leaves = self.root.get_leaves([])
         for leaf in leaves:
-            if leaf.value != value:
+            if leaf.info.value != value:
                 continue
             parent = leaf.parent
             print("for leaf = %s" % str(leaf.info))
@@ -117,29 +145,17 @@ class REPTree(ClassTree):
         leaves = self.root.get_leaves([])
         new_leaves = []
         for leaf in leaves:
-            if leaf.value != value:
+            if leaf.info.value != value:
                 continue
             new_leaves += [leaf]
-        return aux_reverse_tree_compressed(new_leaves)
+        return self.aux_reverse_tree_compressed(new_leaves, {'Jt': ('>=', '6')})
 
-    def aux_reverse_tree_compressed(self, leaves):
-        leaves_tree = []
-        for leaf in leaves:
-            d = {}
-            parent = leaf.parent
-            while parent.parent != None:
-                feat, comp, val = parent.info.get_values()
-                l = str(feat) + " " + str(comp) + " " + str(val)
-                if feat in d:
-                    d[feat] += " & " + l
-                else:
-                    d[feat] = l
-                parent = parent.parent
-            leaves_tree += [(leaf, d)]
-        return leaves_tree
+    def print_parents_compressed_by_value(self, value):
+        leaves = self.get_parents_compressed_by_value(value)
+        self.print_reverse_tree_compressed(leaves)
 
-    def print_reverse_tree_compressed(self):
-        leaves = self.aux_reverse_tree_compressed(self.root.get_leaves([]))
+    def print_reverse_tree_compressed(self, leaves):
+        #leaves = self.aux_reverse_tree_compressed(self.root.get_leaves([]))
         for leaf, d in leaves:
             print("for leaf = %s" % str(leaf.info))
             for k, v in d.items():
@@ -244,7 +260,8 @@ class REPTree(ClassTree):
 
 # testing
 tree = REPTree("test_tree.txt")
-print(tree)
+# print(tree)
 
-tree.print_reverse_tree_compressed()
-tree.print_get_parents_by_value("I-1.113-1.728")
+# tree.print_reverse_tree_compressed()
+# tree.print_get_parents_by_value("I-1.113-1.728")
+tree.print_parents_compressed_by_value("12")
