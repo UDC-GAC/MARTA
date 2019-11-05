@@ -1,3 +1,10 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# File              : ubench.py
+# Author            : Marcos Horro <marcos.horro@udc.gal>
+# Date              : Tue 05 Nov 2019 02:42:50 PM MST
+# Last Modified Date: Tue 05 Nov 2019 02:52:14 PM MST
+# Last Modified By  : Marcos Horro <marcos.horro@udc.gal>
 #!/env/python3
 
 import numpy as np
@@ -7,6 +14,7 @@ import itertools as it
 import os
 import sys
 from datetime import datetime as dt
+#import argsparse
 
 # dependencies:
 # python3, pandas, numpy
@@ -30,9 +38,10 @@ from datetime import datetime as dt
 # values of interest
 init_val = [0, 1, 3, 7, 15, 16]
 #init_val = [0, 1]
-tile_size = [1]
+#tile_size = [1]
 tile_size = [1,3,4,8,12,16]
 step_size = range(1,6)
+#step_size = range(1,2)
 #step_size = [1]
 nexec = 7 # should be at least 7
 nruns = 1000000
@@ -119,8 +128,8 @@ def reading_asm_inst(asm_file):
         if count:
             ins_type,vec_ins = asm_type(tok)
             raw_asm = raw_asm_type(tok)
-            if ins_type in raw_asm:
-                raw_inst[ins] += 1
+            if raw_asm in raw_inst:
+                raw_inst[raw_asm] += 1
             else:
                 raw_inst[raw_asm] = 1
             dict_inst[ins_type] += 1
@@ -137,15 +146,20 @@ def check_vect():
     return False
 
 def csv_header(params):
+  machine_file = "___tmp__machine_info.txt"
+  os.system("uname -a > %s" % machine_file)
+  os.system("lscpu >> %s")
   header = ""
+  with open(machine_file, 'r') as mf:
+      l = mf.readline()
+      header += str("# " + l + "\n")
+  os.system("rm %s" % machine_file)
   for p in params:
-    if (type(p)==list):
-      header += "# [ "
-      for e in p:
-        header += str(e) + " "
-      header += "]\n"
-    if (type(p)==str):
-      header += str("# " + p + '\n')
+    if type(d)==dict:
+        for k,v in d.items():
+            header += str("# " + str(k) + ": " + str(v) + "\n")
+    else:
+      header += str("# " + p + "\n")
   return header
 
 def avg_exec(name):
@@ -183,17 +197,17 @@ for uI, uJ in it.product(init_val, init_val):
       print("progress = %d / %d" % (iteration,niters))
       iteration += 1
       # compilation
-      ret = os.system("make CUSTOM_FLAGS='%s' NRUNS=%d"\
-                          " uI=%d uIt=%d uIs=%d"\
-                          " uJ=%d uJt=%d uJs=%d"\
-                          % (CUSTOM_FLAGS,nruns,uI,uIt,uIs,uJ,uJt,uJs))
-      if (ret != 0):
-        print("Error compiling, quiting...")
-        exit(0)
+      #ret = os.system("make CUSTOM_FLAGS='%s' NRUNS=%d"\
+      #                    " uI=%d uIt=%d uIs=%d"\
+      #                    " uJ=%d uJt=%d uJs=%d"\
+      #                    % (CUSTOM_FLAGS,nruns,uI,uIt,uIs,uJ,uJt,uJs))
+      #if (ret != 0):
+      #  print("Error compiling, quiting...")
+      #  exit(0)
       
       raw_asm = reading_asm_inst("asm_codes/kernel_I%d_J%d_It%d_Jt%d_Is%d_Js%d.s" %
               (uI,uJ,uIt,uJt,uIs,uJs))
-      vect = check_vect()
+      #vect = check_vect()
 #      # Average cycles
 #      avg_cycles = avg_exec("cyc")
 #      # Average time
@@ -201,7 +215,7 @@ for uI, uJ in it.product(init_val, init_val):
 #      # FIXME calculating FLOPS/s ad-hoc for this problem
 #      flops = (int(uIt/uIs) * int(uJt/uJs) * 2. * nruns) / avg_time
       d = {'I': int(uI), 'It': int(uIt), 'Is': int(uIs),\
-              'J': int(uJ), 'Jt': int(uJt), 'Js': int(uJs), 'Vec':int(vect)}
+           'J': int(uJ), 'Jt': int(uJt), 'Js': int(uJs), 'Vec': 0}
       d.update(raw_asm)
       df = df.append(d, ignore_index=True)
 
@@ -209,16 +223,10 @@ for uI, uJ in it.product(init_val, init_val):
 df = df.fillna(0.0)
 df.to_csv(nfile,index=False)
 
-machine_file = "machine_info.txt"
-os.system("uname -a > %s" % machine_file)
-os.system("lscpu >> %s")
 
 with open(nfile, 'r+') as f:
   content = f.read()
   f.seek(0,0)
-  with open(machine_file, 'r') as mf:
-      l = mf.readline()
-      f.write("# " + str(l))
   f.write(csv_header([["init_vals",init_val],\
         ["tile_size",tile_size], ["step_size", step_size],\
         CUSTOM_FLAGS, th_pin, ["runs and execs:", nruns, nexec]]))
