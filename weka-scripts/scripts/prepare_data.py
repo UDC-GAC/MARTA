@@ -3,24 +3,30 @@
 # File              : prepare_data.py
 # Author            : Marcos Horro <marcos.horro@udc.gal>
 # Date              : Mar 29 Out 2019 09:38:20 MDT
-# Last Modified Date: Lun 04 Nov 2019 12:21:23 MST
+# Last Modified Date: Mar 05 Nov 2019 11:00:25 MST
 # Last Modified By  : Marcos Horro <marcos.horro@udc.gal>
-# -*- coding: utf-8 -*-
 # prepare_data.py
-# Copyright (c) 2019 Marcos Horro <marcos.horro@udc.gal>
+# Copyright (c) 2019 Computer Architecture Group, Universidade da Coruña
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
 #
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#!/env/python3
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+#
+# Authors: Marcos Horro
 
 import os
 import sys
@@ -28,6 +34,10 @@ import argparse
 import pandas as pd
 import numpy as np
 from math import ceil
+from utils.utilities import StoreDictKeyPair
+from utils.utilities import prGreen
+from utils.utilities import prRed
+from utils.utilities import prYellow
 
 # global definitions
 PATH_ROOT = os.getcwd() + "/"
@@ -40,20 +50,6 @@ ALGORITHMS = ['REPTree']
 MIN_OBJ = [1]  # min number of instances
 MAX_LEAF = [3]  # number of folds
 NORM = False
-
-
-class StoreDictKeyPair(argparse.Action):
-    def __init__(self, option_strings, dest, nargs=None, **kwargs):
-        self._nargs = nargs
-        super(StoreDictKeyPair, self).__init__(
-            option_strings, dest, nargs=nargs, **kwargs)
-
-    def __call__(self, parser, namespace, values, option_string=None):
-        my_dict = {}
-        for kv in values:
-            k, v = kv.split("=")
-            my_dict[k] = int(v)
-        setattr(namespace, self.dest, my_dict)
 
 ##################################################
 # preprocessing data
@@ -102,9 +98,9 @@ def preprocess_data(inputfile, outputfile, cols, *rows, cat, ncat):
         setattr(tmp, cat, pd.cut(tmp_cat, bins, labels=labels[:-1]))
     new_cols = []
     # debug area
-    tmp['overhead'] = df.Is*df.Is*df.Is/(df.Js*df.Js)
-    tmp['cl'] = 0.125*(df.It*df.Is) + 0.25 * (df.Js*df.Jt) * df.It/df.Is
-    tmp['loadstore'] = 0
+    # tmp['overhead'] = df.Is*df.Is*df.Is/(df.Js*df.Js)
+    # tmp['cl'] = 0.125*(df.It*df.Is) + 0.25 * (df.Js*df.Jt) * df.It/df.Is
+    # tmp['loadstore'] = 0
     # new_cols += ['overhead']
     # new_cols += ['cl']
     f_cols = new_cols + cols
@@ -240,36 +236,40 @@ MIN_OBJ = [int(i) for i in [args.minleaf]]
 MAX_LEAF = [int(i) for i in [args.nfolds]]
 NORM = args.norm
 # ERR_OUT = " 2> /dev/null"
-ERR_FILE = "error.log"
+ERR_FILE = "___error.log"
 ERR_OUT = " 2> %s" % ERR_FILE
 ##################################################
 
+prGreen("[prepare_data] starting process...")
 ##################################################
 # Script based on Pouchet's, but unfollowing him's, I perform the 'filtering' or whatever in the CSV instead of the ARFF
 # Main reason: familiarity and ease to work with DataFrames in python and mantainability for me...
 # 1) create temporal CSV with filtering perform in terms of columns, rows and even some transformations
 TMP_CSV = "___tmp_" + str(INPUT_FILE.split("/")[-1])
-print("[step 1] filtering csv... (", INPUT_FILE, ")")
+prYellow("[step 1] filtering csv... (" + INPUT_FILE + ")")
 preprocess_data(INPUT_FILE, TMP_CSV, COLUMNS, ROWS, ncat=NCATS, cat=PRED)
 
 ##################################################
 # 2) convert CSV to ARFF file (all data, beware to have unique name for columns in the CSV file):
-print("[step 2] converting csv to arff format...")
+prYellow("[step 2] converting csv to arff format...")
 os.system("java -cp %s/weka.jar weka.core.converters.CSVLoader %s -B 100000 > %s" %
           (PATH_WEKA, TMP_CSV, OUTPUT_FILE))
 
 ##################################################
 # 3) prepare data: create training and testing sets
-print("[step 3] creating training and testing sets...")
+prYellow(
+    "[step 3] creating training and testing sets... (NSETS = " + str(NSETS) +
+    ")")
 create_train_and_test(OUTPUT_FILE)
 
 ##################################################
 # 4) run experiments
-print("[step 4] running experiments...")
+prYellow("[step 4] running experiments...")
 run_experiments(OUTPUT_FILE)
 
-print("you are all set!")
+prGreen("[prepare_data] you are all set!")
 ##################################################
 # Clean working directory
 if args.rmtemp:
-    print("[rm option enabled] cleaning temp files!")
+    prYellow("[rm option enabled] cleaning temp files!")
+    os.system("rm %s %s %s" % (TMP_CSV, ERR_FILE, OUTPUT_FILE))
