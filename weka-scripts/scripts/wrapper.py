@@ -3,33 +3,40 @@
 # File              : wrapper.py
 # Author            : Marcos Horro <marcos.horro@udc.gal>
 # Date              : Xov 31 Out 2019 09:56:07 MDT
-# Last Modified Date: Ven 01 Nov 2019 10:22:52 MDT
+# Last Modified Date: Mar 05 Nov 2019 10:59:38 MST
 # Last Modified By  : Marcos Horro <marcos.horro@udc.gal>
+# wrapper.py
+# Copyright (c) 2019 Computer Architecture Group, Universidade da Coruña
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+#
+# Authors: Marcos Horro
 
 import os
 import itertools as it
 import argparse
+from utils.utilities import StoreDictKeyPair
+from utils.utilities import prRed
+from utils.utilities import prGreen
 
-# disgusting wrapper
-
-
-class StoreDictKeyPair(argparse.Action):
-    def __init__(self, option_strings, dest, nargs=None, **kwargs):
-        self._nargs = nargs
-        super(StoreDictKeyPair, self).__init__(
-            option_strings, dest, nargs=nargs, **kwargs)
-
-    def __call__(self, parser, namespace, values, option_string=None):
-        my_dict = {}
-        for kv in values:
-            k, v = kv.split("=")
-            my_dict[k] = int(v)
-        setattr(namespace, self.dest, my_dict)
-
-
-#stride = range(1, 6)
-stride = range(1, 2)
-
+##################################################
+# parsing arguments
 parser = argparse.ArgumentParser(
     description='Wrapper for prepare data. Quite ugly tho...')
 parser.add_argument('-r', '--rows', dest="rows", action=StoreDictKeyPair,
@@ -50,65 +57,65 @@ parser.add_argument('-nv', '--norm', action='store_true',
 parser.add_argument('-c', '--columns', metavar='col', type=str, nargs='+',
                     help='columns we are interested to filter')
 args = parser.parse_args()
-INPUT_FILE = "../data/exec_asm_merged.csv"
+
+##################################################
+# parsing all the arguments
+INPUT_FILE = "exec_asm_full_filtered.csv"
 OUTPUT_FILE = "testing.arff"
-nfolds = args.nfolds
-minleaf = args.minleaf
-cols = args.columns
+NFOLDS = args.nfolds
+MINLEAF = args.minleaf
+COLS = args.columns
+NORM = ""
 if args.norm:
-    norm = "--norm"
-else:
-    norm = ""
+    NORM = "--norm"
 ROWS = args.rows
 PRED = args.pred
 NCATS = int(args.ncats)
-cols += [PRED]
-filter_rows = ""
+COLS += [PRED]
+FILTER_ROWS = ""
 if ROWS != None:
+    FILTER_ROWS = "-r "
     for d in ROWS:
-        filter_rows += "%s=%s " % (str(d), str(ROWS[d]))
+        FILTER_ROWS += "%s=%s " % (str(d), str(ROWS[d]))
+FILTER_COLS = ""
+for c in COLS:
+    FILTER_COLS = FILTER_COLS + " " + c
 
-summary_file = "summary_file.txt"
-os.system("echo \"\" > %s" % (summary_file))
-for Is, Js in it.product(stride, stride):
-    print("[wrapper] executing for strides Is %2d Js %2d" % (Is, Js))
-    filter_cols = ""
-    for c in cols:
-        filter_cols = filter_cols + " " + c
-    ret = os.system("python3 prepare_data.py -i %s -o %s -r Is=%s Js=%s"
-                    " %s -c %s --nfolds=%s --minleaf=%s --pred=%s --ncats=%s"
-                    " %s " %
-                    (INPUT_FILE, OUTPUT_FILE, str(Is), str(Js), filter_rows,
-                     filter_cols, nfolds,
-                     minleaf, PRED, str(NCATS), norm))
-    if (ret != 0):
-        print("[wrapper] Something went wrong!")
-    result_file = "results/model_learn_stats_%s_is%s_js%s_folds%s_leaf%s" % (
-        str(PRED), str(Is), str(Js), str(nfolds), str(minleaf))
-    os.system("cp results/exp_%s_all_REPTree_%s_%s/model_learn_stats.txt"
-              " %s" %
-              (OUTPUT_FILE.split(".")[0], minleaf, nfolds, result_file))
-    os.system("grep -m 1 -n \"Correctly\" %s /dev/null >> %s" %
-              (result_file, summary_file))
-    os.system("grep -m 1 -n \"Size of the tree\" %s /dev/null >> %s" %
-              (result_file, summary_file))
+SUMM_FILE = "___tmp__SUMM_FILE.txt"
+os.system("echo \"\" > %s" % (SUMM_FILE))
 
+##################################################
+# executing experiments
+prGreen("[wrapper] executing wrapper...")
 ret = os.system("python3 prepare_data.py -i %s -o %s"
-                " -r %s -c %s --nfolds=%s --minleaf=%s --pred=%s --ncats=%s"
-                " %s " %
-                (INPUT_FILE, OUTPUT_FILE, filter_rows,
-                 filter_cols, nfolds,
-                 minleaf, PRED, str(NCATS), norm))
+                " %s -c %s --nfolds=%s --minleaf=%s --pred=%s --ncats=%s"
+                " %s --rmtemp" %
+                (INPUT_FILE, OUTPUT_FILE, FILTER_ROWS,
+                 FILTER_COLS, NFOLDS,
+                 MINLEAF, PRED, str(NCATS), NORM))
 if (ret != 0):
-    print("[wrapper] Something went wrong!")
+    prRed("[wrapper] Something went wrong!")
 result_file = "results/model_learn_stats_%s_folds%s_leaf%s" % (
-    str(PRED), str(nfolds), str(minleaf))
+    str(PRED), str(NFOLDS), str(MINLEAF))
+
+##################################################
+# parsing results
 os.system("cp results/exp_%s_all_REPTree_%s_%s/model_learn_stats.txt"
           " %s" %
-          (OUTPUT_FILE.split(".")[0], minleaf, nfolds, result_file))
+          (OUTPUT_FILE.split(".")[0], MINLEAF, NFOLDS, result_file))
 os.system("grep -m 1 -n \"Correctly\" %s /dev/null >> %s" %
-          (result_file, summary_file))
+          (result_file, SUMM_FILE))
+os.system("grep -m 1 -n \"Correlation coefficient\" %s /dev/null >> %s" %
+          (result_file, SUMM_FILE))
 os.system("grep -m 1 -n \"Size of the tree\" %s /dev/null >> %s" %
-          (result_file, summary_file))
+          (result_file, SUMM_FILE))
 
-os.system("cat %s" % summary_file)
+##################################################
+# results obtained
+prGreen("[wrapper] results")
+os.system("cat %s" % SUMM_FILE)
+prGreen("[wrapper] finished! cleaning temp files...")
+
+##################################################
+# remove tmp files
+os.system("rm %s" % SUMM_FILE)
