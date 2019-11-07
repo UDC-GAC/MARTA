@@ -3,7 +3,7 @@
 # File              : recommender.py
 # Author            : Marcos Horro <marcos.horro@udc.gal>
 # Date              : Mér 06 Nov 2019 17:54:44 MST
-# Last Modified Date: Mér 06 Nov 2019 22:25:03 MST
+# Last Modified Date: Xov 07 Nov 2019 12:55:19 MST
 # Last Modified By  : Marcos Horro <marcos.horro@udc.gal>
 #
 # Copyright (c) 2019 Marcos Horro <marcos.horro@udc.gal>
@@ -38,6 +38,8 @@ requiredNamed.add_argument(
     '-i', '--input', help='input file name', required=True)
 requiredNamed.add_argument('-v', '--value',  # action='store_const',
                            help='value we are looking for', required=True)
+requiredNamed.add_argument('-t', '--vtype',  # action='store_const',
+                           help='type value: numeric/categorial', required=True)
 requiredNamed.add_argument('-d', '--dimensions', metavar='dim', type=str, nargs='+',
                            help='values we are interested on', required=True)
 args = parser.parse_args()
@@ -45,8 +47,15 @@ args = parser.parse_args()
 INPUT_FILE = args.input
 DIMENSIONS = args.dimensions
 INTEREST_VALUE = args.value
+INTEREST_VALUE_T = args.vtype
 
+if INTEREST_VALUE_T != "numeric" and INTEREST_VALUE_T != "categorial":
+    prRed("[ERROR] interset value type wrong: should be numeric or categorial")
+    exit(-1)
 
 # testing parsing tree
 tree = REPTree(INPUT_FILE)
-tree.print_parents_compressed_by_value(INTEREST_VALUE)
+NORM_VAL = INTEREST_VALUE
+if INTEREST_VALUE_T == "numeric":
+    NORM_VAL = tree.get_value_range(INTEREST_VALUE)
+tree.print_parents_compressed_by_value(NORM_VAL)

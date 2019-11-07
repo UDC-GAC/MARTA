@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# File              : utils/utilities.py
+# File              : utilities.py
 # Author            : Marcos Horro <marcos.horro@udc.gal>
 # Date              : Lun 04 Nov 2019 21:45:52 MST
-# Last Modified Date: Mar 05 Nov 2019 13:36:42 MST
+# Last Modified Date: Xov 07 Nov 2019 13:56:06 MST
 # Last Modified By  : Marcos Horro <marcos.horro@udc.gal>
 import argparse
 import os
+
+DEBUG = True
 
 
 class StoreDictKeyPair(argparse.Action):
@@ -73,6 +75,7 @@ class colors:
 
 
 # print with color
+
 def prRed(msg): print((colors.fg.red + '{}' + colors.reset) .format(msg))
 
 
@@ -82,6 +85,16 @@ def prGreen(msg): print((colors.fg.green + '{}' + colors.reset) .format(msg))
 def prYellow(msg): print((colors.fg.yellow + '{}' + colors.reset) .format(msg))
 
 
+def prDebug(msg):
+    if DEBUG:
+        print((colors.fg.purple + '[DEBUG] {}' + colors.reset) .format(msg))
+
+
 def grep_file2file(string, infile, outfile):
     os.system("grep -m 1 -n \"%s\" %s /dev/null >> %s" %
               (string, infile, outfile))
+    with open(outfile, 'r') as f:
+        for l in f:
+            if string in l:
+                return l.replace("%", "").split()[-1]
+    return None

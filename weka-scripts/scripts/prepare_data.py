@@ -3,7 +3,7 @@
 # File              : prepare_data.py
 # Author            : Marcos Horro <marcos.horro@udc.gal>
 # Date              : Mar 29 Out 2019 09:38:20 MDT
-# Last Modified Date: Mér 06 Nov 2019 22:35:21 MST
+# Last Modified Date: Xov 07 Nov 2019 10:23:08 MST
 # Last Modified By  : Marcos Horro <marcos.horro@udc.gal>
 #
 # Copyright (c) 2019 Computer Architecture Group, Universidade da Coruña
@@ -39,6 +39,7 @@ from utils.utilities import StoreDictKeyPair
 from utils.utilities import prGreen
 from utils.utilities import prRed
 from utils.utilities import prYellow
+from utils.utilities import prDebug
 
 # global definitions
 PATH_ROOT = os.getcwd() + "/"
@@ -93,20 +94,11 @@ def preprocess_data(inputfile, outputfile, cols, *rows, cat, ncat):
         # categorical data
         tmp_cat = getattr(tmp, cat)
         bins = np.linspace(min(getattr(df, cat)), max(getattr(df, cat)), ncat+1)
-        # print("[DEBUG] bins = %s" % bins)
-        # labels = range(0, ncat+1)
         step = bins[1] - bins[0]
         labels = ["I-{0}-{1}".format("{0:.3f}".format(float(i/1e9)),
                                      "{0:.3f}".format(float((i + step)/1e9))) for i in bins]
         setattr(tmp, cat, pd.cut(tmp_cat, bins, labels=labels[:-1]))
-    new_cols = []
-    # debug area
-    # tmp['overhead'] = df.Is*df.Is*df.Is/(df.Js*df.Js)
-    # tmp['cl'] = 0.125*(df.It*df.Is) + 0.25 * (df.Js*df.Jt) * df.It/df.Is
-    # tmp['loadstore'] = 0
-    # new_cols += ['overhead']
-    # new_cols += ['cl']
-    f_cols = new_cols + cols
+    f_cols = cols + [cat]
     tmp = tmp[list(f_cols)]
     tmp.to_csv(outputfile, index=False)
     return
@@ -145,7 +137,7 @@ def create_train_and_test(datafile):
     suff = "_test.arff"
     filename = "%s_all%s%s" % (name, pref, suff)
     os.system("cp %s %s/%s" % (datafile, PATH_DATA, filename))
-
+    prDebug("%s %s" % (datafile, filename))
 ##################################################
 # runing experiments
 

@@ -3,7 +3,7 @@
 # File              : parse_tree.py
 # Author            : Marcos Horro <marcos.horro@udc.gal>
 # Date              : Mar 04 Nov 2019 11:08:25 MST
-# Last Modified Date: Mér 06 Nov 2019 17:46:20 MST
+# Last Modified Date: Xov 07 Nov 2019 12:54:10 MST
 # Last Modified By  : Marcos Horro <marcos.horro@udc.gal>
 #
 # Copyright (c) 2019 Computer Architecture Group, Universidade da Coruña
@@ -31,6 +31,8 @@
 import re
 import os
 import sys
+import numpy as np
+from utils.utilities import prRed
 
 
 class InfoNode:
@@ -129,6 +131,20 @@ class REPTree(ClassTree):
         tree = self.parse_tree(tree_lines, self.root)
         self.root = tree
 
+    def get_value_range(self, value):
+        leaves = self.root.get_leaves([])
+        cand = np.arange(0)
+        for leaf in leaves:
+            leaf_range = (leaf.info.value).strip().replace("I-", "")
+            cand = np.append(cand, leaf_range)
+            min_val, max_val = leaf_range.split("-")
+            if eval("%s <= %s" % (min_val, value)) and eval("%s <= %s" %
+                                                            (value, max_val)):
+                return leaf.info.value
+        prRed("[ERROR] Interest value out of range: %s\n\tPossible"
+              " values: %s" % (value, np.unique(cand)))
+        exit(-1)
+
     def get_parents_compressed_by_value(self, value):
         '''Get leaves of the tree according to a given value'''
         leaves = self.root.get_leaves([])
@@ -164,17 +180,15 @@ class REPTree(ClassTree):
                 parent = parent.parent
 
     @staticmethod
-    def cond_not_compatible(c1, c2):
-        '''Checks whether user and node conditions are compatible'''
-        op1, v1 = c1
-        op2, v2 = c2
-        return eval("%s %s %s" % (str(round(float(v1))), str(op2), str(v2)))
-
-    @staticmethod
     def aux_reverse_tree_compressed(leaves, cond):
         '''Auxiliar method for generating a reversed tree according to
         conditions
         '''
+        def cond_not_compatible(c1, c2):
+            '''Checks whether user and node conditions are compatible'''
+            op1, v1 = c1
+            op2, v2 = c2
+            return eval("%s %s %s" % (str(round(float(v1))), str(op2), str(v2)))
         leaves_tree = []
         for leaf in leaves:
             d = {}

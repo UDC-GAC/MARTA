@@ -3,7 +3,7 @@
 # File              : wrapper.py
 # Author            : Marcos Horro <marcos.horro@udc.gal>
 # Date              : Xov 31 Out 2019 09:56:07 MDT
-# Last Modified Date: Mér 06 Nov 2019 22:27:47 MST
+# Last Modified Date: Xov 07 Nov 2019 13:59:23 MST
 # Last Modified By  : Marcos Horro <marcos.horro@udc.gal>
 #
 # Copyright (c) 2019 Computer Architecture Group, Universidade da Coruña
@@ -33,7 +33,9 @@ import os
 import itertools as it
 import argparse
 import weka_cmd
+import utils.utilities as ut
 from utils.utilities import StoreDictKeyPair
+from utils.utilities import prDebug
 from utils.utilities import prRed
 from utils.utilities import prGreen
 from utils.utilities import grep_file2file
@@ -62,17 +64,21 @@ RM_TEMP_FILES = files_cfg['clean']
 
 # prepare data
 prepdata_cfg = cfg[1]['prepare_data']
-FILTER_COLS = prepdata_cfg['cols']
-FILTER_ROWS = prepdata_cfg['rows']
+FILTER_COLS = "-c " + \
+    prepdata_cfg['cols'] if len(prepdata_cfg['cols']) else ""
+FILTER_ROWS = "-r " + \
+    prepdata_cfg['rows'] if len(prepdata_cfg['rows']) else ""
 PRED = prepdata_cfg['pred']
 NORM = "--norm" if prepdata_cfg['norm'] else ""
 NCATS = prepdata_cfg['ncats']
 DTALG = prepdata_cfg['dt_alg']
 DTPARAMS = prepdata_cfg['dt_params']
+MIN_ACC = prepdata_cfg['min_acc']
 
 # recommender
 recommender_cfg = cfg[2]['recommender']
 INTEREST_VALUE = recommender_cfg['interest_value']
+INTEREST_VALUE_T = recommender_cfg['interest_value_type']
 DIMENSIONS = recommender_cfg['dimensions']
 
 SUMM_FILE = "___tmp__SUMM_FILE.txt"
@@ -81,8 +87,14 @@ os.system("echo \"Summary of results: \" > %s" % (SUMM_FILE))
 ##################################################
 # executing experiments
 prGreen("[wrapper] executing wrapper...")
+prDebug("python3 prepare_data.py -i %s -o %s"
+        " %s %s --pred=%s --ncats=%s"
+        " %s -dt %s -dtp %s" %
+        (INPUT_FILE, OUTPUT_FILE, FILTER_ROWS,
+         FILTER_COLS, PRED, str(NCATS), NORM,
+         DTALG, DTPARAMS))
 ret = os.system("python3 prepare_data.py -i %s -o %s"
-                " -r %s -c %s --pred=%s --ncats=%s"
+                " %s %s --pred=%s --ncats=%s"
                 " %s -dt %s -dtp %s" %
                 (INPUT_FILE, OUTPUT_FILE, FILTER_ROWS,
                  FILTER_COLS, PRED, str(NCATS), NORM,
@@ -99,17 +111,21 @@ RES_FILE = "results/model_learn_stats_%s%s" % (
 os.system("cp results/exp_%s_all%s/model_learn_stats.txt"
           " %s" %
           (OUTPUT_FILE.split(".")[0], suffix, RES_FILE))
-grep_file2file("Correctly", RES_FILE, SUMM_FILE)
-grep_file2file("Correlation coefficient", RES_FILE, SUMM_FILE)
+acc = grep_file2file("Correctly", RES_FILE, SUMM_FILE)
+acc = float(grep_file2file("Correlation coefficient", RES_FILE,
+                           SUMM_FILE)) if acc == None else float(acc)/100
 grep_file2file("Mean absolute error", RES_FILE, SUMM_FILE)
 grep_file2file("Relative absolute error", RES_FILE, SUMM_FILE)
 grep_file2file("Total Number of Instances", RES_FILE, SUMM_FILE)
-grep_file2file("Size of the tree", RES_FILE, SUMM_FILE)
+tree_size = grep_file2file("Size of the tree", RES_FILE, SUMM_FILE)
 
 ##################################################
 # results obtained
 prGreen("[wrapper] displaying summary of results")
 os.system("cat %s" % SUMM_FILE)
+if MIN_ACC > acc:
+    prRed("[ERROR] minimum accuracy (%s) not achieved (%s)" % (MIN_ACC, acc))
+    exit(-1)
 prGreen("[wrapper] finished! cleaning temp files...")
 
 ##################################################
@@ -117,8 +133,8 @@ prGreen("[wrapper] finished! cleaning temp files...")
 PARSING_TREE_FILE = "___tmp_tree.txt"
 os.system("cp %s %s" % (RES_FILE, PARSING_TREE_FILE))
 
-os.system("python3 recommender.py -i %s -v %s -d %s" %
-          (PARSING_TREE_FILE, INTEREST_VALUE, DIMENSIONS))
+os.system("python3 recommender.py -i %s -v %s -t %s -d %s" %
+          (PARSING_TREE_FILE, INTEREST_VALUE, INTEREST_VALUE_T, DIMENSIONS))
 
 ##################################################
 # remove tmp files

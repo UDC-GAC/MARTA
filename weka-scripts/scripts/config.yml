@@ -1,7 +1,7 @@
 # File              : config.yml
 # Author            : Marcos Horro <marcos.horro@udc.gal>
 # Date              : Mér 06 Nov 2019 16:36:12 MST
-# Last Modified Date: Mér 06 Nov 2019 22:26:40 MST
+# Last Modified Date: Xov 07 Nov 2019 14:09:01 MST
 # Last Modified By  : Marcos Horro <marcos.horro@udc.gal>
 #
 # example file, this file should be used for executing with wrapper.py
@@ -29,16 +29,18 @@
     input: exec_asm_full_filtered.csv
     output: output.arff
     overwrite: True # overwrite if existing files?
-    clean: True # clean temp files?
+    clean: False # clean temp files?
 - prepare_data:
-    cols: I J It Jt Is Js Jters Iters vmov_loads_mem_pd
-    rows: I=0 J=0
+    cols: I J It Jt Is Js Jters Iters NELEMS
+    rows: I=0 J=0 Vec_x=1
     pred: FLOPSs # dimension to predict
     norm: False # norm values
     norm_alg: None # z-score/minmax; useless if norm: False
-    ncats: 0 # use 0 for discrete values
+    ncats: 10 # use 0 for discrete values
     dt_alg: REPTree # FIXME Only supported right now
-    dt_params: M=5 N=5
+    dt_params: M=1 N=5
+    min_acc: 0.8 # minimum accuracy accepted of DT
 - recommender:
-    interest_value: value
-    dimensions: values
+    interest_value: 6.5
+    interest_value_type: numeric # numeric/nominal
+    dimensions: I J It Jt Is Js
