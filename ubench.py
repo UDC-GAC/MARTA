@@ -3,9 +3,30 @@
 # File              : ubench.py
 # Author            : Marcos Horro <marcos.horro@udc.gal>
 # Date              : Mer 23 Oct 2019 11:41:57 MST
-# Last Modified Date: Tue 05 Nov 2019 03:24:58 PM MST
+# Last Modified Date: Mér 06 Nov 2019 08:30:58 MST
 # Last Modified By  : Marcos Horro <marcos.horro@udc.gal>
-#!/env/python3
+#
+# Copyright (c) 2019 Computer Architecture Group, Universidade da Coruña
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+#
+# Authors: Marcos Horro
 
 import numpy as np
 import pandas as pd
@@ -152,27 +173,28 @@ def check_vect():
 
 
 def csv_header(params):
-  machine_file = "___tmp__machine_info.txt"
-  os.system("uname -a > %s" % machine_file)
-  os.system("lscpu >> %s")
-  header = ""
-  with open(machine_file, 'r') as mf:
-      l = mf.readline()
-      header += str("# " + l + "\n")
-  os.system("rm %s" % machine_file)
-  for p in params:
-    if type(d)==dict:
-        for k,v in d.items():
-            header += str("# " + str(k) + ": " + str(v) + "\n")
-    else:
-      header += str("# " + p + "\n")
-  return header
+    machine_file = "___tmp__machine_info.txt"
+    os.system("uname -a > %s" % machine_file)
+    os.system("lscpu >> %s")
+    header = ""
+    with open(machine_file, 'r') as mf:
+        l = mf.readline()
+        header += str("# " + l + "\n")
+    os.system("rm %s" % machine_file)
+    for p in params:
+        if type(d) == dict:
+            for k, v in d.items():
+                header += str("# " + str(k) + ": " + str(v) + "\n")
+        else:
+            header += str("# " + p + "\n")
+    return header
+
 
 def avg_exec(name):
-    # executing seven times at least
+        # executing seven times at least
     os.system("%s ./bin/spmv_%s  > ____tmp_%s" % (th_pin, name, name))
     for tt in range(1, nexec):
-        # execute
+            # execute
         os.system("%s ./bin/spmv_%s >> ____tmp_%s" % (th_pin, name, name))
     val = []
     for l in open("____tmp_%s" % name):
@@ -199,42 +221,41 @@ df = pd.DataFrame(columns=["I", "It", "Is", "J", "Jt", "Js", "Vec"])
 print("Microbenchmarking using a SpMV-like code...")
 # microbenchmarking according to values of interest
 for uI, uJ in it.product(init_val, init_val):
-  for uIt, uJt in it.product(tile_size, tile_size):
-    for uIs, uJs in it.product(step_size, step_size):
-      print("progress = %d / %d" % (iteration,niters))
-      iteration += 1
-      # compilation
-      #ret = os.system("make CUSTOM_FLAGS='%s' NRUNS=%d"\
-      #                    " uI=%d uIt=%d uIs=%d"\
-      #                    " uJ=%d uJt=%d uJs=%d"\
-      #                    % (CUSTOM_FLAGS,nruns,uI,uIt,uIs,uJ,uJt,uJs))
-      #if (ret != 0):
-      #  print("Error compiling, quiting...")
-      #  exit(0)
-      
-      raw_asm = reading_asm_inst("asm_codes/kernel_I%d_J%d_It%d_Jt%d_Is%d_Js%d.s" %
-              (uI,uJ,uIt,uJt,uIs,uJs))
-      #vect = check_vect()
+    for uIt, uJt in it.product(tile_size, tile_size):
+        for uIs, uJs in it.product(step_size, step_size):
+            print("progress = %d / %d" % (iteration, niters))
+            iteration += 1
+            # compilation
+            # ret = os.system("make CUSTOM_FLAGS='%s' NRUNS=%d"\
+            #                    " uI=%d uIt=%d uIs=%d"\
+            #                    " uJ=%d uJt=%d uJs=%d"\
+            #                    % (CUSTOM_FLAGS,nruns,uI,uIt,uIs,uJ,uJt,uJs))
+            # if (ret != 0):
+            #  print("Error compiling, quiting...")
+            #  exit(0)
+
+            raw_asm = reading_asm_inst("asm_codes/kernel_I%d_J%d_It%d_Jt%d_Is%d_Js%d.s" %
+                                       (uI, uJ, uIt, uJt, uIs, uJs))
+            #vect = check_vect()
 #      # Average cycles
 #      avg_cycles = avg_exec("cyc")
 #      # Average time
 #      avg_time = avg_exec("time")
 #      # FIXME calculating FLOPS/s ad-hoc for this problem
 #      flops = (int(uIt/uIs) * int(uJt/uJs) * 2. * nruns) / avg_time
-      d = {'I': int(uI), 'It': int(uIt), 'Is': int(uIs),\
-           'J': int(uJ), 'Jt': int(uJt), 'Js': int(uJs), 'Vec': 0}
-      d.update(raw_asm)
-      df = df.append(d, ignore_index=True)
+            d = {'I': int(uI), 'It': int(uIt), 'Is': int(uIs),
+                 'J': int(uJ), 'Jt': int(uJt), 'Js': int(uJs), 'Vec': 0}
+            d.update(raw_asm)
+            df = df.append(d, ignore_index=True)
 
 # storing results with metadata
 df = df.fillna(0.0)
 df.to_csv(nfile, index=False)
 
-
 with open(nfile, 'r+') as f:
-  content = f.read()
-  f.seek(0,0)
-  f.write(csv_header([["init_vals",init_val],\
-        ["tile_size",tile_size], ["step_size", step_size],\
-        CUSTOM_FLAGS, th_pin, ["runs and execs:", nruns, nexec]]))
-  f.write(content)
+    content = f.read()
+    f.seek(0, 0)
+    f.write(csv_header([["init_vals", init_val],
+                        ["tile_size", tile_size], ["step_size", step_size],
+                        CUSTOM_FLAGS, th_pin, ["runs and execs:", nruns, nexec]]))
+    f.write(content)
