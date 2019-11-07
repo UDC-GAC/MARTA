@@ -3,9 +3,9 @@
 # File              : prepare_data.py
 # Author            : Marcos Horro <marcos.horro@udc.gal>
 # Date              : Mar 29 Out 2019 09:38:20 MDT
-# Last Modified Date: Mar 05 Nov 2019 11:00:25 MST
+# Last Modified Date: Mar 05 Nov 2019 11:07:41 MST
 # Last Modified By  : Marcos Horro <marcos.horro@udc.gal>
-# prepare_data.py
+#
 # Copyright (c) 2019 Computer Architecture Group, Universidade da Coruña
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy

@@ -3,9 +3,10 @@
 # File              : utils/utilities.py
 # Author            : Marcos Horro <marcos.horro@udc.gal>
 # Date              : Lun 04 Nov 2019 21:45:52 MST
-# Last Modified Date: Mar 05 Nov 2019 09:29:13 MST
+# Last Modified Date: Mar 05 Nov 2019 13:36:42 MST
 # Last Modified By  : Marcos Horro <marcos.horro@udc.gal>
 import argparse
+import os
 
 
 class StoreDictKeyPair(argparse.Action):
@@ -79,3 +80,8 @@ def prGreen(msg): print((colors.fg.green + '{}' + colors.reset) .format(msg))
 
 
 def prYellow(msg): print((colors.fg.yellow + '{}' + colors.reset) .format(msg))
+
+
+def grep_file2file(string, infile, outfile):
+    os.system("grep -m 1 -n \"%s\" %s /dev/null >> %s" %
+              (string, infile, outfile))
