@@ -3,7 +3,7 @@
 # File              : parse_tree.py
 # Author            : Marcos Horro <marcos.horro@udc.gal>
 # Date              : Mar 04 Nov 2019 11:08:25 MST
-# Last Modified Date: Mér 06 Nov 2019 08:47:34 MST
+# Last Modified Date: Mér 06 Nov 2019 17:46:20 MST
 # Last Modified By  : Marcos Horro <marcos.horro@udc.gal>
 #
 # Copyright (c) 2019 Computer Architecture Group, Universidade da Coruña
@@ -64,6 +64,7 @@ class Node:
         self.parent = None
 
     def __str__(self):
+        '''Debuggin purposes mostly'''
         string = "node: %s\n" % (str(self.info))
         if self.child != []:
             for c in self.child:
@@ -73,12 +74,16 @@ class Node:
         return string
 
     def set_info(self, info):
+        '''Setting info of node, can be whatever'''
         self.info = info
 
     def is_leave(self):
+        '''Leaves do not have children'''
         return (self.child == [])
 
     def get_leaves(self, leaves):
+        '''Recursive method for getting all the leaves.
+        Returns a list of Node objects'''
         if self.is_leave():
             leaves += [self]
             return leaves
@@ -88,6 +93,7 @@ class Node:
             return leaves
 
     def append_node(self, node):
+        '''When appending node, need to track its parent'''
         node.parent = self
         self.child += [node]
 

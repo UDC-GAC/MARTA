@@ -1,9 +1,9 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # File              : wrapper.py
 # Author            : Marcos Horro <marcos.horro@udc.gal>
 # Date              : Xov 31 Out 2019 09:56:07 MDT
-# Last Modified Date: Mér 06 Nov 2019 17:28:24 MST
+# Last Modified Date: Mér 06 Nov 2019 22:27:47 MST
 # Last Modified By  : Marcos Horro <marcos.horro@udc.gal>
 #
 # Copyright (c) 2019 Computer Architecture Group, Universidade da Coruña
@@ -32,11 +32,11 @@ import yaml
 import os
 import itertools as it
 import argparse
+import weka_cmd
 from utils.utilities import StoreDictKeyPair
 from utils.utilities import prRed
 from utils.utilities import prGreen
 from utils.utilities import grep_file2file
-from parse_tree import REPTree
 
 ##################################################
 # parsing arguments
@@ -59,15 +59,21 @@ INPUT_FILE = files_cfg['input']
 OUTPUT_FILE = files_cfg['output']
 FORCE_REPLACEMENT = files_cfg['overwrite']
 RM_TEMP_FILES = files_cfg['clean']
+
 # prepare data
 prepdata_cfg = cfg[1]['prepare_data']
 FILTER_COLS = prepdata_cfg['cols']
 FILTER_ROWS = prepdata_cfg['rows']
 PRED = prepdata_cfg['pred']
-MINLEAF = prepdata_cfg['dt_params']['minleaf']
-NFOLDS = prepdata_cfg['dt_params']['nfolds']
 NORM = "--norm" if prepdata_cfg['norm'] else ""
 NCATS = prepdata_cfg['ncats']
+DTALG = prepdata_cfg['dt_alg']
+DTPARAMS = prepdata_cfg['dt_params']
+
+# recommender
+recommender_cfg = cfg[2]['recommender']
+INTEREST_VALUE = recommender_cfg['interest_value']
+DIMENSIONS = recommender_cfg['dimensions']
 
 SUMM_FILE = "___tmp__SUMM_FILE.txt"
 os.system("echo \"Summary of results: \" > %s" % (SUMM_FILE))
@@ -76,22 +82,23 @@ os.system("echo \"Summary of results: \" > %s" % (SUMM_FILE))
 # executing experiments
 prGreen("[wrapper] executing wrapper...")
 ret = os.system("python3 prepare_data.py -i %s -o %s"
-                " -r %s -c %s --nfolds=%s --minleaf=%s --pred=%s --ncats=%s"
-                " %s --rmtemp" %
+                " -r %s -c %s --pred=%s --ncats=%s"
+                " %s -dt %s -dtp %s" %
                 (INPUT_FILE, OUTPUT_FILE, FILTER_ROWS,
-                 FILTER_COLS, NFOLDS,
-                 MINLEAF, PRED, str(NCATS), NORM))
+                 FILTER_COLS, PRED, str(NCATS), NORM,
+                 DTALG, DTPARAMS))
 if (ret != 0):
     prRed("[wrapper] Something went wrong!")
     exit(1)
-RES_FILE = "results/model_learn_stats_%s_folds%s_leaf%s" % (
-    str(PRED), str(NFOLDS), str(MINLEAF))
+suffix = "_" + str(DTALG) + "_" + DTPARAMS.replace("=", "").replace(" ", "_")
+RES_FILE = "results/model_learn_stats_%s%s" % (
+    str(PRED), suffix)
 
 ##################################################
 # parsing results
-os.system("cp results/exp_%s_all_REPTree_%s_%s/model_learn_stats.txt"
+os.system("cp results/exp_%s_all%s/model_learn_stats.txt"
           " %s" %
-          (OUTPUT_FILE.split(".")[0], MINLEAF, NFOLDS, RES_FILE))
+          (OUTPUT_FILE.split(".")[0], suffix, RES_FILE))
 grep_file2file("Correctly", RES_FILE, SUMM_FILE)
 grep_file2file("Correlation coefficient", RES_FILE, SUMM_FILE)
 grep_file2file("Mean absolute error", RES_FILE, SUMM_FILE)
@@ -106,16 +113,15 @@ os.system("cat %s" % SUMM_FILE)
 prGreen("[wrapper] finished! cleaning temp files...")
 
 ##################################################
-# remove tmp files
-os.system("rm %s" % SUMM_FILE)
-
-##################################################
 # copy results for parsing tree
 PARSING_TREE_FILE = "___tmp_tree.txt"
 os.system("cp %s %s" % (RES_FILE, PARSING_TREE_FILE))
 
-# testing parsing tree
-tree = REPTree(PARSING_TREE_FILE)
-tree.print_parents_compressed_by_value("I-5.419-6.035")
+os.system("python3 recommender.py -i %s -v %s -d %s" %
+          (PARSING_TREE_FILE, INTEREST_VALUE, DIMENSIONS))
 
-os.system("rm %s" % PARSING_TREE_FILE)
+##################################################
+# remove tmp files
+if RM_TEMP_FILES:
+    os.system("rm %s" % SUMM_FILE)
+    os.system("rm %s" % PARSING_TREE_FILE)
