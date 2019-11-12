@@ -3,7 +3,7 @@
 # File              : prepare_data.py
 # Author            : Marcos Horro <marcos.horro@udc.gal>
 # Date              : Mar 29 Out 2019 09:38:20 MDT
-# Last Modified Date: Mar 12 Nov 2019 10:28:59 MST
+# Last Modified Date: Mar 12 Nov 2019 10:50:59 MST
 # Last Modified By  : Marcos Horro <marcos.horro@udc.gal>
 #
 # Copyright (c) 2019 Computer Architecture Group, Universidade da Coruña
@@ -33,8 +33,8 @@ import sys
 import argparse
 import pandas as pd
 import numpy as np
-import weka_cmd
 from math import ceil
+from utils import weka_cmd
 from utils.utilities import StoreDictKeyPair
 from utils.utilities import pr_debug
 from utils.utilities import pr_col
@@ -224,35 +224,35 @@ ERR_FILE = "___error.log"
 ERR_OUT = " 2> %s" % ERR_FILE
 ##################################################
 
-pr_col(c.fg.green, "[prepare_data] starting process...")
+pr_col(c.fg.orange, "[prepare_data] starting process...")
 ##################################################
 # Script based on Pouchet's, but unfollowing him's, I perform the 'filtering' or whatever in the CSV instead of the ARFF
 # Main reason: familiarity and ease to work with DataFrames in python and mantainability for me...
 # 1) create temporal CSV with filtering perform in terms of columns, rows and even some transformations
 TMP_CSV = "___tmp_" + str(INPUT_FILE.split("/")[-1])
-pr_col(c.fg.green, "[step 1] filtering csv... (" + INPUT_FILE + ")")
+pr_col(c.fg.orange, "[step 1] filtering csv... (" + INPUT_FILE + ")")
 preprocess_data(INPUT_FILE, TMP_CSV, COLUMNS, ROWS, ncat=NCATS, cat=PRED)
 
 ##################################################
 # 2) convert CSV to ARFF file (all data, beware to have unique name for columns in the CSV file):
-pr_col(c.fg.green, "[step 2] converting csv to arff format...")
+pr_col(c.fg.orange, "[step 2] converting csv to arff format...")
 weka_cmd.convert_csv_to_arff(TMP_CSV, OUTPUT_FILE)
 
 ##################################################
 # 3) prepare data: create training and testing sets
-pr_col(c.fg.green,
+pr_col(c.fg.orange,
        "[step 3] creating training and testing sets... (NSETS = " + str(NSETS) +
        ")")
 create_train_and_test(OUTPUT_FILE)
 
 ##################################################
 # 4) run experiments
-pr_col(c.fg.green, "[step 4] running experiments...")
+pr_col(c.fg.orange, "[step 4] running experiments...")
 run_experiments(OUTPUT_FILE, {'alg': DTALG, 'params': DTPARAMS})
 
-pr_col(c.fg.green, "[prepare_data] you are all set!")
+pr_col(c.fg.orange, "[prepare_data] you are all set!")
 ##################################################
 # Clean working directory
 if args.rmtemp:
-    pr_col(c.orange, "\t[rm option enabled] cleaning temp files!")
+    pr_col(c.fg.orange, "[prepare_data] cleaning temp files!")
     os.system("rm %s %s %s" % (TMP_CSV, ERR_FILE, OUTPUT_FILE))

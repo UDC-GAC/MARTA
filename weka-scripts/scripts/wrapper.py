@@ -3,7 +3,7 @@
 # File              : wrapper.py
 # Author            : Marcos Horro <marcos.horro@udc.gal>
 # Date              : Xov 31 Out 2019 09:56:07 MDT
-# Last Modified Date: Mar 12 Nov 2019 10:28:31 MST
+# Last Modified Date: Mar 12 Nov 2019 10:52:26 MST
 # Last Modified By  : Marcos Horro <marcos.horro@udc.gal>
 #
 # Copyright (c) 2019 Computer Architecture Group, Universidade da Coruña
@@ -32,8 +32,8 @@ import yaml
 import os
 import itertools as it
 import argparse
-import weka_cmd
 import utils.utilities as ut
+from utils import weka_cmd
 from utils.utilities import StoreDictKeyPair
 from utils.utilities import pr_debug
 from utils.utilities import pr_col
@@ -82,24 +82,29 @@ INTEREST_VALUE = recommender_cfg['interest_value']
 INTEREST_VALUE_T = recommender_cfg['interest_value_type']
 DIMENSIONS = recommender_cfg['dimensions']
 
+# preparing summary file
 SUMM_FILE = "___tmp__SUMM_FILE.txt"
 os.system("echo \"Summary of results: \" > %s" % (SUMM_FILE))
 
 ##################################################
+# some comprobations
+if not os.path.exists(INPUT_FILE):
+    pr_col(c.fg.red, "[ERROR] introduce a valid input file in " + YML_CONFIG +
+           " file")
+    exit(-1)
+
+##################################################
 # executing experiments
 pr_col(c.fg.green, "[wrapper] executing wrapper...")
-pr_debug(PRINT_DEBUG, "python3 prepare_data.py -i %s -o %s"
-         " %s %s --pred=%s --ncats=%s"
-         " %s -dt %s -dtp %s" %
-         (INPUT_FILE, OUTPUT_FILE, FILTER_ROWS,
-          FILTER_COLS, PRED, str(NCATS), NORM,
-          DTALG, DTPARAMS))
-ret = os.system("python3 prepare_data.py -i %s -o %s"
-                " %s %s --pred=%s --ncats=%s"
-                " %s -dt %s -dtp %s" %
-                (INPUT_FILE, OUTPUT_FILE, FILTER_ROWS,
-                 FILTER_COLS, PRED, str(NCATS), NORM,
-                 DTALG, DTPARAMS))
+cmd_line = ("python3 prepare_data.py -i %s -o %s"
+            " %s %s --pred=%s --ncats=%s"
+            " %s -dt %s -dtp %s %s" %
+            (INPUT_FILE, OUTPUT_FILE, FILTER_ROWS,
+             FILTER_COLS, PRED, str(NCATS), NORM,
+             DTALG, DTPARAMS, ("--rmtemp" if RM_TEMP_FILES else "")))
+pr_debug(PRINT_DEBUG, cmd_line)
+ret = os.system(cmd_line)
+
 if (ret != 0):
     pr_col(c.fg.red, "[wrapper] Something went wrong!")
     exit(1)

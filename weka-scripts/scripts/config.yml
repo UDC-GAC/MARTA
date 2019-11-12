@@ -1,7 +1,7 @@
 # File              : config.yml
 # Author            : Marcos Horro <marcos.horro@udc.gal>
 # Date              : Mér 06 Nov 2019 16:36:12 MST
-# Last Modified Date: Mar 12 Nov 2019 09:56:20 MST
+# Last Modified Date: Mar 12 Nov 2019 10:52:47 MST
 # Last Modified By  : Marcos Horro <marcos.horro@udc.gal>
 #
 # example file, this file should be used for executing with wrapper.py
@@ -28,10 +28,10 @@
 #                 prepare_data
 
 - general:
-    input: exec_asm_full_filtered.csv
+    input: test_data/exec_asm_full_filtered.csv
     output: output.arff
     overwrite: True # overwrite if existing files?
-    clean: False # clean temp files?
+    clean: True # clean temp files?
     debug: True
 - prepare_data:
     cols: I J It Jt Is Js Jters Iters NELEMS
