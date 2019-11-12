@@ -3,7 +3,7 @@
 # File              : wrapper.py
 # Author            : Marcos Horro <marcos.horro@udc.gal>
 # Date              : Xov 31 Out 2019 09:56:07 MDT
-# Last Modified Date: Mar 12 Nov 2019 10:52:26 MST
+# Last Modified Date: Mar 12 Nov 2019 14:25:37 MST
 # Last Modified By  : Marcos Horro <marcos.horro@udc.gal>
 #
 # Copyright (c) 2019 Computer Architecture Group, Universidade da Coruña
@@ -82,7 +82,8 @@ INTEREST_VALUE = recommender_cfg['interest_value']
 INTEREST_VALUE_T = recommender_cfg['interest_value_type']
 DIMENSIONS = recommender_cfg['dimensions']
 
-# preparing summary file
+# preparing temp file
+TMP_CSV = "___tmp_" + str(INPUT_FILE.split("/")[-1])
 SUMM_FILE = "___tmp__SUMM_FILE.txt"
 os.system("echo \"Summary of results: \" > %s" % (SUMM_FILE))
 
@@ -142,8 +143,9 @@ pr_col(c.fg.green, "[wrapper] finished! cleaning temp files...")
 PARSING_TREE_FILE = "___tmp_tree.txt"
 os.system("cp %s %s" % (RES_FILE, PARSING_TREE_FILE))
 
-os.system("python3 recommender.py -i %s -v %s -t %s -d %s -dt %s" %
-          (PARSING_TREE_FILE, INTEREST_VALUE, INTEREST_VALUE_T, DIMENSIONS,
+pr_col(c.fg.green, "[wrapper] executing recommender.py")
+os.system("python3 recommender.py -i %s -c %s -p %s -v %s -t %s -d %s -dt %s" %
+          (PARSING_TREE_FILE, TMP_CSV, PRED, INTEREST_VALUE, INTEREST_VALUE_T, DIMENSIONS,
               DTALG))
 
 ##################################################
@@ -151,3 +153,4 @@ os.system("python3 recommender.py -i %s -v %s -t %s -d %s -dt %s" %
 if RM_TEMP_FILES:
     os.system("rm %s" % SUMM_FILE)
     os.system("rm %s" % PARSING_TREE_FILE)
+    os.system("rm %s" % TMP_CSV)

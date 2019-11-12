@@ -3,7 +3,7 @@
 # File              : prepare_data.py
 # Author            : Marcos Horro <marcos.horro@udc.gal>
 # Date              : Mar 29 Out 2019 09:38:20 MDT
-# Last Modified Date: Mar 12 Nov 2019 10:50:59 MST
+# Last Modified Date: Mar 12 Nov 2019 14:41:01 MST
 # Last Modified By  : Marcos Horro <marcos.horro@udc.gal>
 #
 # Copyright (c) 2019 Computer Architecture Group, Universidade da Coruña
@@ -55,6 +55,9 @@ NORM = False
 
 
 def check_error(phase, err_log):
+    if not os.path.exists(err_log):
+        pr_col(c.fg.orange, "[WARNING] no err log file")
+        return
     for l in open(err_log, 'r'):
         if "Weka exception" in l:
             pr_col(c.fg.red, "[ERROR] %s could not open file:\n%s" % (phase, l))
@@ -219,7 +222,6 @@ NCATS = int(args.ncats)
 NORM = args.norm
 DTALG = args.dtalg
 DTPARAMS = args.dtparams
-# ERR_OUT = " 2> /dev/null"
 ERR_FILE = "___error.log"
 ERR_OUT = " 2> %s" % ERR_FILE
 ##################################################
@@ -255,4 +257,4 @@ pr_col(c.fg.orange, "[prepare_data] you are all set!")
 # Clean working directory
 if args.rmtemp:
     pr_col(c.fg.orange, "[prepare_data] cleaning temp files!")
-    os.system("rm %s %s %s" % (TMP_CSV, ERR_FILE, OUTPUT_FILE))
+    os.system("rm %s %s" % (ERR_FILE, OUTPUT_FILE))

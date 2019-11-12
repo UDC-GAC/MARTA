@@ -3,7 +3,7 @@
 # File              : recommender.py
 # Author            : Marcos Horro <marcos.horro@udc.gal>
 # Date              : Mér 06 Nov 2019 17:54:44 MST
-# Last Modified Date: Mar 12 Nov 2019 10:32:08 MST
+# Last Modified Date: Mar 12 Nov 2019 15:01:15 MST
 # Last Modified By  : Marcos Horro <marcos.horro@udc.gal>
 #
 # Copyright (c) 2019 Marcos Horro <marcos.horro@udc.gal>
@@ -27,8 +27,16 @@
 # SOFTWARE.
 
 import argparse
+import pandas as pd
+import numpy as np
+import operator
 from parse_tree import DTTree
 from utils.utilities import colors as c
+from utils.utilities import pr_col
+
+# translations needed of some operators
+ops = {'>': operator.gt, '>=': operator.ge, '<': operator.lt, '<=': operator.le,
+       '=': operator.eq}
 
 ##################################################
 # parsing arguments
@@ -37,6 +45,10 @@ parser = argparse.ArgumentParser(
 required_named = parser.add_argument_group('required named arguments')
 required_named.add_argument(
     '-i', '--input', help='input file name', required=True)
+required_named.add_argument(
+    '-c', '--csv', help='CSV input file name', required=True)
+required_named.add_argument('-p', '--pred',  # action='store_const',
+                            help='dimension we are predicting', required=True)
 required_named.add_argument('-v', '--value',  # action='store_const',
                             help='value we are looking for', required=True)
 required_named.add_argument('-t', '--vtype',  # action='store_const',
@@ -48,20 +60,51 @@ required_named.add_argument('-dt', '--dtalg',  # action='store_const',
                             default='REPTree')
 args = parser.parse_args()
 
-INPUT_FILE = args.input
-DIMENSIONS = args.dimensions
-INTEREST_VALUE = args.value
-INTEREST_VALUE_T = args.vtype
-DTALG = args.dtalg
+g_input_file = args.input
+g_csv_file = args.csv
+g_dimensions = args.dimensions
+g_pred = args.pred
+g_interest_value = args.value
+g_interest_value_t = args.vtype
+g_dtalg = args.dtalg
 
-if INTEREST_VALUE_T != "numeric" and INTEREST_VALUE_T != "categorial":
+if g_interest_value_t != "numeric" and g_interest_value_t != "categorial":
     pr_col(
         c.fg.red, "[ERROR] interset value type wrong: should be numeric or categorial")
     exit(-1)
 
 # testing parsing tree
-tree = DTTree(INPUT_FILE, DTALG)
-NORM_VAL = INTEREST_VALUE
-if INTEREST_VALUE_T == "numeric":
-    NORM_VAL = tree.get_value_range(INTEREST_VALUE)
-tree.print_parents_compressed_by_value(NORM_VAL)
+tree = DTTree(g_input_file, g_dtalg)
+norm_val = g_interest_value
+if g_interest_value_t == "numeric":
+    norm_val = tree.get_value_range(g_interest_value)
+# tree.print_parents_compressed_by_value(norm_val)
+leaves = tree.get_parents_compressed_by_value(norm_val)
+
+##################################################
+# analyzing outliers
+df = pd.read_csv(g_csv_file, comment="#", index_col=False)
+df_filtered = pd.DataFrame(columns=df.columns)
+for leaf in leaves:
+    tmp = df
+    d = leaf[1]
+    for k, v in d.items():
+        for op, val in v.items():
+            cond = ops[op](getattr(tmp, k), float(val))
+            tmp = tmp[cond]
+    df_filtered = pd.concat([df_filtered, tmp]).drop_duplicates()
+
+##################################################
+# getting false positives
+cond = (getattr(df, g_pred) == norm_val)
+actual_val = df[cond]
+n_actval = len(actual_val)
+
+false_pos = df_filtered[getattr(df_filtered, g_pred) != norm_val]
+pr_col(c.fg.red, "[recommender] false positives: %s/%s" %
+       (len(false_pos), n_actval))
+print(false_pos)
+
+false_neg = df[~df.index.isin(df_filtered.index) & cond]
+pr_col(c.fg.red, "[recommender] false negative: %s " % (len(false_neg)))
+print(false_neg)

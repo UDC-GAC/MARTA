@@ -1,7 +1,7 @@
 # File              : config.yml
 # Author            : Marcos Horro <marcos.horro@udc.gal>
 # Date              : Mér 06 Nov 2019 16:36:12 MST
-# Last Modified Date: Mar 12 Nov 2019 10:52:47 MST
+# Last Modified Date: Mar 12 Nov 2019 14:33:48 MST
 # Last Modified By  : Marcos Horro <marcos.horro@udc.gal>
 #
 # example file, this file should be used for executing with wrapper.py
@@ -21,7 +21,9 @@
 #    ncats: # use 0 for discrete values, value greater than 1 in other case
 #    dt_alg: # REPTree or J48 right now (tested)
 #    dt_params: # e.g. M 5 N 1 (minimum 5 instances, 1 fold), or ''
+#    min_acc: # minimum accuracy accepted of DT
 #- recommender:
+#    pred: # dimension to predict
 #    interest_value: # value of interest of prediction
 #    interest_value_type: # numeric/nominal (categorial also called)
 #    dimension: # dimensions we want to know, analogous value == cols in
@@ -31,11 +33,11 @@
     input: test_data/exec_asm_full_filtered.csv
     output: output.arff
     overwrite: True # overwrite if existing files?
-    clean: True # clean temp files?
+    clean: False # clean temp files?
     debug: True
 - prepare_data:
     cols: I J It Jt Is Js Jters Iters NELEMS
-    rows: I=0 J=0 Vec_x=1
+    rows: Vec_x=1
     pred: FLOPSs # dimension to predict
     norm: False # norm values
     norm_alg: None # z-score/minmax; useless if norm: False
@@ -44,6 +46,7 @@
     dt_params: ''
     min_acc: 0.8 # minimum accuracy accepted of DT
 - recommender:
+    pred: FLOPSs # dimension to predict
     interest_value: 6.5
     interest_value_type: numeric # numeric/nominal
     dimensions: I J It Jt Is Js

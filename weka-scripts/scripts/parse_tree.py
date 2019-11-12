@@ -3,7 +3,7 @@
 # File              : parse_tree.py
 # Author            : Marcos Horro <marcos.horro@udc.gal>
 # Date              : Mar 04 Nov 2019 11:08:25 MST
-# Last Modified Date: Mar 12 Nov 2019 10:32:55 MST
+# Last Modified Date: Mar 12 Nov 2019 11:59:51 MST
 # Last Modified By  : Marcos Horro <marcos.horro@udc.gal>
 #
 # Copyright (c) 2019 Computer Architecture Group, Universidade da Coruña
@@ -73,7 +73,7 @@ class Node:
         self.parent = None
 
     def __str__(self):
-        '''Debuggin purposes mostly'''
+        '''Debugging purposes mostly'''
         string = "node: %s\n" % (str(self.info))
         if self.child != []:
             for c in self.child:
@@ -122,7 +122,7 @@ class ClassTree:
         return str(self.root)
 
 
-# parsing based on https://github.com/rudi-c/weka-json-parser/blob/master/sample.txt
+# parsing based on https://github.com/rudi-c/weka-json-parser/
 
 
 class DTTree(ClassTree):
@@ -172,7 +172,7 @@ class DTTree(ClassTree):
         for leaf, d in leaves:
             print("for leaf = %s" % str(leaf.info))
             for k, v in d.items():
-                print("\t%s" % v)
+                print("\t%s: %s" % (k, v))
 
     def print_reverse_tree(self):
         '''Print full reversed tree'''
@@ -185,6 +185,26 @@ class DTTree(ClassTree):
                 print("%snode = %s" % (sep, str(parent.info)))
                 sep += " "
                 parent = parent.parent
+
+    @staticmethod
+    def reduce_expression(d):
+        return d
+
+    @staticmethod
+    def evaluate_expression(feat, comp, val, d):
+        if feat in d:
+            if comp in d[feat]:
+                val_1 = d[feat][comp]
+                if eval(val + comp + val_1):
+                    d[feat][comp] = val
+                else:
+                    d[feat][comp] = val_1
+            else:
+                d[feat][comp] = val
+        else:
+            d[feat] = {}
+            d[feat][comp] = val
+        return d
 
     @staticmethod
     def aux_reverse_tree_compressed(leaves, cond):
@@ -208,13 +228,10 @@ class DTTree(ClassTree):
                     if DTTree.cond_not_compatible((comp, val), (c, v)):
                         cond_valid = False
                         break
-                l = str(feat) + " " + str(comp) + " " + str(val)
-                if feat in d:
-                    d[feat] += " & " + l
-                else:
-                    d[feat] = l
+                d = DTTree.evaluate_expression(feat, comp, val, d)
                 parent = parent.parent
             if cond_valid:
+                d = DTTree.reduce_expression(d)
                 leaves_tree += [(leaf, d)]
         return leaves_tree
 
