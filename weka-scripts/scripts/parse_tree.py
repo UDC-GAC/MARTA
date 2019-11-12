@@ -3,7 +3,7 @@
 # File              : parse_tree.py
 # Author            : Marcos Horro <marcos.horro@udc.gal>
 # Date              : Mar 04 Nov 2019 11:08:25 MST
-# Last Modified Date: Xov 07 Nov 2019 12:54:10 MST
+# Last Modified Date: Mar 12 Nov 2019 09:29:49 MST
 # Last Modified By  : Marcos Horro <marcos.horro@udc.gal>
 #
 # Copyright (c) 2019 Computer Architecture Group, Universidade da Coruña
@@ -33,6 +33,12 @@ import os
 import sys
 import numpy as np
 from utils.utilities import prRed
+
+alg_template = {
+    'REPTree': (re.compile("REPTree"), re.compile("^=*\n$"),
+                re.compile("^[\t\n]*$")),
+    'J48': (re.compile("J48 (un)?pruned tree"), re.compile("^-*\n$"), re.compile("^[ \t\n]*$"))
+}
 
 
 class InfoNode:
@@ -118,16 +124,16 @@ class ClassTree:
 # parsing based on https://github.com/rudi-c/weka-json-parser/blob/master/sample.txt
 
 
-class REPTree(ClassTree):
-    '''REPTree class, which generates a tree from an input file
+class DTTree(ClassTree):
+    '''DTTree class, which generates a tree from an input file
     '''
 
-    def __init__(self, file):
+    def __init__(self, file, alg):
         super().__init__()
         lines = ''
         with open(file, 'r') as f:
             lines = f.readlines()
-        tree_lines = self.get_tree_lines(lines)
+        tree_lines = self.get_tree_lines(lines, alg)
         tree = self.parse_tree(tree_lines, self.root)
         self.root = tree
 
@@ -198,7 +204,7 @@ class REPTree(ClassTree):
                 feat, comp, val = parent.info.get_values()
                 if feat in cond:
                     c, v = cond[feat]
-                    if REPTree.cond_not_compatible((comp, val), (c, v)):
+                    if DTTree.cond_not_compatible((comp, val), (c, v)):
                         cond_valid = False
                         break
                 l = str(feat) + " " + str(comp) + " " + str(val)
@@ -240,7 +246,7 @@ class REPTree(ClassTree):
             node_feature = None
             while current_index[0] < len(lines):
                 line = lines[current_index[0]]
-                depth, feature, comparator, value, cat = REPTree.parse_line(
+                depth, feature, comparator, value, cat = DTTree.parse_line(
                     line)
                 if depth < current_depth:
                     # Finished parsing this node.
@@ -274,11 +280,9 @@ class REPTree(ClassTree):
         return root
 
     @staticmethod
-    def get_tree_lines(lines):
+    def get_tree_lines(lines, alg):
         '''Return the lines of the input that correspond to the decision tree'''
-        re_head = re.compile("REPTree")
-        re_divider_line = re.compile("^=*\n$")
-        re_blank_line = re.compile("^[ \t\n]*$")
+        re_head, re_divider_line, re_blank_line = alg_template[alg]
         tree_lines = []
         for i in range(len(lines) - 2):
             if re_head.match(lines[i]):

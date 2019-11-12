@@ -3,7 +3,7 @@
 # File              : wrapper.py
 # Author            : Marcos Horro <marcos.horro@udc.gal>
 # Date              : Xov 31 Out 2019 09:56:07 MDT
-# Last Modified Date: Xov 07 Nov 2019 13:59:23 MST
+# Last Modified Date: Mar 12 Nov 2019 09:53:32 MST
 # Last Modified By  : Marcos Horro <marcos.horro@udc.gal>
 #
 # Copyright (c) 2019 Computer Architecture Group, Universidade da Coruña
@@ -55,12 +55,13 @@ YML_CONFIG = args.input
 with open(YML_CONFIG, 'r') as ymlfile:
     cfg = yaml.load(ymlfile)
 
-# files
-files_cfg = cfg[0]['files']
-INPUT_FILE = files_cfg['input']
-OUTPUT_FILE = files_cfg['output']
-FORCE_REPLACEMENT = files_cfg['overwrite']
-RM_TEMP_FILES = files_cfg['clean']
+# general config
+general_cfg = cfg[0]['general']
+INPUT_FILE = general_cfg['input']
+OUTPUT_FILE = general_cfg['output']
+FORCE_REPLACEMENT = general_cfg['overwrite']
+RM_TEMP_FILES = general_cfg['clean']
+PRINT_DEBUG = general_cfg['debug']
 
 # prepare data
 prepdata_cfg = cfg[1]['prepare_data']
@@ -102,7 +103,9 @@ ret = os.system("python3 prepare_data.py -i %s -o %s"
 if (ret != 0):
     prRed("[wrapper] Something went wrong!")
     exit(1)
-suffix = "_" + str(DTALG) + "_" + DTPARAMS.replace("=", "").replace(" ", "_")
+suffix_dtparams = "" if len(DTPARAMS) == 0 else "_" + \
+    DTPARAMS.replace("=", "").replace(" ", "_")
+suffix = "_" + str(DTALG) + suffix_dtparams
 RES_FILE = "results/model_learn_stats_%s%s" % (
     str(PRED), suffix)
 
@@ -133,8 +136,9 @@ prGreen("[wrapper] finished! cleaning temp files...")
 PARSING_TREE_FILE = "___tmp_tree.txt"
 os.system("cp %s %s" % (RES_FILE, PARSING_TREE_FILE))
 
-os.system("python3 recommender.py -i %s -v %s -t %s -d %s" %
-          (PARSING_TREE_FILE, INTEREST_VALUE, INTEREST_VALUE_T, DIMENSIONS))
+os.system("python3 recommender.py -i %s -v %s -t %s -d %s -dt %s" %
+          (PARSING_TREE_FILE, INTEREST_VALUE, INTEREST_VALUE_T, DIMENSIONS,
+              DTALG))
 
 ##################################################
 # remove tmp files

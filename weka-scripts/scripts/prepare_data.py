@@ -3,7 +3,7 @@
 # File              : prepare_data.py
 # Author            : Marcos Horro <marcos.horro@udc.gal>
 # Date              : Mar 29 Out 2019 09:38:20 MDT
-# Last Modified Date: Xov 07 Nov 2019 10:23:08 MST
+# Last Modified Date: Mar 12 Nov 2019 09:47:17 MST
 # Last Modified By  : Marcos Horro <marcos.horro@udc.gal>
 #
 # Copyright (c) 2019 Computer Architecture Group, Universidade da Coruña
@@ -200,7 +200,7 @@ parser.add_argument('-dt', '--dtalg',  # action='store_const',
                     help='decision tree algorithm, e.g. REPTree, J48',
                     default='REPTree')
 parser.add_argument('-dtp', '--dtparams', dest="dtparams", action=StoreDictKeyPair,
-                    help="decision tree parameters", nargs="+", metavar="KEY=VAL")
+                    help="decision tree parameters", nargs="*", metavar="KEY=VAL")
 requiredNamed = parser.add_argument_group('required named arguments')
 requiredNamed.add_argument(
     '-i', '--input', help='input file name', required=True)

@@ -3,7 +3,7 @@
 # File              : recommender.py
 # Author            : Marcos Horro <marcos.horro@udc.gal>
 # Date              : Mér 06 Nov 2019 17:54:44 MST
-# Last Modified Date: Xov 07 Nov 2019 12:55:19 MST
+# Last Modified Date: Mar 12 Nov 2019 09:32:12 MST
 # Last Modified By  : Marcos Horro <marcos.horro@udc.gal>
 #
 # Copyright (c) 2019 Marcos Horro <marcos.horro@udc.gal>
@@ -27,7 +27,7 @@
 # SOFTWARE.
 
 import argparse
-from parse_tree import REPTree
+from parse_tree import DTTree
 
 ##################################################
 # parsing arguments
@@ -42,19 +42,23 @@ requiredNamed.add_argument('-t', '--vtype',  # action='store_const',
                            help='type value: numeric/categorial', required=True)
 requiredNamed.add_argument('-d', '--dimensions', metavar='dim', type=str, nargs='+',
                            help='values we are interested on', required=True)
+requiredNamed.add_argument('-dt', '--dtalg',  # action='store_const',
+                           help='decision tree algorithm, e.g. REPTree, J48',
+                           default='REPTree')
 args = parser.parse_args()
 
 INPUT_FILE = args.input
 DIMENSIONS = args.dimensions
 INTEREST_VALUE = args.value
 INTEREST_VALUE_T = args.vtype
+DTALG = args.dtalg
 
 if INTEREST_VALUE_T != "numeric" and INTEREST_VALUE_T != "categorial":
     prRed("[ERROR] interset value type wrong: should be numeric or categorial")
     exit(-1)
 
 # testing parsing tree
-tree = REPTree(INPUT_FILE)
+tree = DTTree(INPUT_FILE, DTALG)
 NORM_VAL = INTEREST_VALUE
 if INTEREST_VALUE_T == "numeric":
     NORM_VAL = tree.get_value_range(INTEREST_VALUE)
