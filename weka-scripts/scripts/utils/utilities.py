@@ -3,12 +3,10 @@
 # File              : utilities.py
 # Author            : Marcos Horro <marcos.horro@udc.gal>
 # Date              : Lun 04 Nov 2019 21:45:52 MST
-# Last Modified Date: Xov 07 Nov 2019 13:56:06 MST
+# Last Modified Date: Mar 12 Nov 2019 10:24:39 MST
 # Last Modified By  : Marcos Horro <marcos.horro@udc.gal>
 import argparse
 import os
-
-DEBUG = True
 
 
 class StoreDictKeyPair(argparse.Action):
@@ -76,18 +74,12 @@ class colors:
 
 # print with color
 
-def prRed(msg): print((colors.fg.red + '{}' + colors.reset) .format(msg))
+def pr_col(col, msg): print((col + '{}' + colors.reset).format(msg))
 
 
-def prGreen(msg): print((colors.fg.green + '{}' + colors.reset) .format(msg))
-
-
-def prYellow(msg): print((colors.fg.yellow + '{}' + colors.reset) .format(msg))
-
-
-def prDebug(msg):
-    if DEBUG:
-        print((colors.fg.purple + '[DEBUG] {}' + colors.reset) .format(msg))
+def pr_debug(debug_f, msg):
+    if debug_f:
+        print((colors.fg.purple + '[DEBUG] {}' + colors.reset).format(msg))
 
 
 def grep_file2file(string, infile, outfile):

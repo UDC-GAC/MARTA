@@ -3,7 +3,7 @@
 # File              : parse_tree.py
 # Author            : Marcos Horro <marcos.horro@udc.gal>
 # Date              : Mar 04 Nov 2019 11:08:25 MST
-# Last Modified Date: Mar 12 Nov 2019 09:29:49 MST
+# Last Modified Date: Mar 12 Nov 2019 10:32:55 MST
 # Last Modified By  : Marcos Horro <marcos.horro@udc.gal>
 #
 # Copyright (c) 2019 Computer Architecture Group, Universidade da Coruña
@@ -32,7 +32,8 @@ import re
 import os
 import sys
 import numpy as np
-from utils.utilities import prRed
+from utils.utilities import pr_col
+from utils.utilities import colors as c
 
 alg_template = {
     'REPTree': (re.compile("REPTree"), re.compile("^=*\n$"),
@@ -147,8 +148,8 @@ class DTTree(ClassTree):
             if eval("%s <= %s" % (min_val, value)) and eval("%s <= %s" %
                                                             (value, max_val)):
                 return leaf.info.value
-        prRed("[ERROR] Interest value out of range: %s\n\tPossible"
-              " values: %s" % (value, np.unique(cand)))
+        pr_col(c.fg.red, "[ERROR] Interest value out of range: %s\n\tPossible"
+               " values: %s" % (value, np.unique(cand)))
         exit(-1)
 
     def get_parents_compressed_by_value(self, value):

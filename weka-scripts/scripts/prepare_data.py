@@ -3,7 +3,7 @@
 # File              : prepare_data.py
 # Author            : Marcos Horro <marcos.horro@udc.gal>
 # Date              : Mar 29 Out 2019 09:38:20 MDT
-# Last Modified Date: Mar 12 Nov 2019 09:47:17 MST
+# Last Modified Date: Mar 12 Nov 2019 10:28:59 MST
 # Last Modified By  : Marcos Horro <marcos.horro@udc.gal>
 #
 # Copyright (c) 2019 Computer Architecture Group, Universidade da Coruña
@@ -36,11 +36,9 @@ import numpy as np
 import weka_cmd
 from math import ceil
 from utils.utilities import StoreDictKeyPair
-from utils.utilities import prGreen
-from utils.utilities import prRed
-from utils.utilities import prYellow
-from utils.utilities import prDebug
-
+from utils.utilities import pr_debug
+from utils.utilities import pr_col
+from utils.utilities import colors as c
 # global definitions
 PATH_ROOT = os.getcwd() + "/"
 PATH_DATA = PATH_ROOT + "data"
@@ -59,10 +57,11 @@ NORM = False
 def check_error(phase, err_log):
     for l in open(err_log, 'r'):
         if "Weka exception" in l:
-            prRed("[ERROR] %s could not open file:\n%s" % (phase, l))
+            pr_col(c.fg.red, "[ERROR] %s could not open file:\n%s" % (phase, l))
             exit(-1)
         if "Exception" in l:
-            prRed("[ERROR] %s something went wrong:\n%s" % (phase, l))
+            pr_col(
+                c.fg.red, "[ERROR] %s something went wrong:\n%s" % (phase, l))
             exit(-1)
 
 
@@ -88,7 +87,8 @@ def preprocess_data(inputfile, outputfile, cols, *rows, cat, ncat):
             cond = (getattr(tmp, k) == v)
             tmp = tmp[cond]
     if (tmp.count()[0] == 0):
-        prRed("[ERROR] DATASET EMPTY! Revise constraints in data please!")
+        pr_col(
+            c.fg.red, "[ERROR] DATASET EMPTY! Revise constraints in data please!")
         exit(-1)
     if ncat > 0:
         # categorical data
@@ -137,7 +137,6 @@ def create_train_and_test(datafile):
     suff = "_test.arff"
     filename = "%s_all%s%s" % (name, pref, suff)
     os.system("cp %s %s/%s" % (datafile, PATH_DATA, filename))
-    prDebug("%s %s" % (datafile, filename))
 ##################################################
 # runing experiments
 
@@ -201,13 +200,13 @@ parser.add_argument('-dt', '--dtalg',  # action='store_const',
                     default='REPTree')
 parser.add_argument('-dtp', '--dtparams', dest="dtparams", action=StoreDictKeyPair,
                     help="decision tree parameters", nargs="*", metavar="KEY=VAL")
-requiredNamed = parser.add_argument_group('required named arguments')
-requiredNamed.add_argument(
+required_named = parser.add_argument_group('required named arguments')
+required_named.add_argument(
     '-i', '--input', help='input file name', required=True)
-requiredNamed.add_argument(
+required_named.add_argument(
     '-o', '--output', help='output file name', required=True)
-requiredNamed.add_argument('-c', '--columns', metavar='col', type=str, nargs='+',
-                           help='columns we are interested to filter')
+required_named.add_argument('-c', '--columns', metavar='col', type=str, nargs='+',
+                            help='columns we are interested to filter')
 args = parser.parse_args()
 
 FORCE_REPLACEMENT = args.force
@@ -225,35 +224,35 @@ ERR_FILE = "___error.log"
 ERR_OUT = " 2> %s" % ERR_FILE
 ##################################################
 
-prGreen("[prepare_data] starting process...")
+pr_col(c.fg.green, "[prepare_data] starting process...")
 ##################################################
 # Script based on Pouchet's, but unfollowing him's, I perform the 'filtering' or whatever in the CSV instead of the ARFF
 # Main reason: familiarity and ease to work with DataFrames in python and mantainability for me...
 # 1) create temporal CSV with filtering perform in terms of columns, rows and even some transformations
 TMP_CSV = "___tmp_" + str(INPUT_FILE.split("/")[-1])
-prYellow("[step 1] filtering csv... (" + INPUT_FILE + ")")
+pr_col(c.fg.green, "[step 1] filtering csv... (" + INPUT_FILE + ")")
 preprocess_data(INPUT_FILE, TMP_CSV, COLUMNS, ROWS, ncat=NCATS, cat=PRED)
 
 ##################################################
 # 2) convert CSV to ARFF file (all data, beware to have unique name for columns in the CSV file):
-prYellow("[step 2] converting csv to arff format...")
+pr_col(c.fg.green, "[step 2] converting csv to arff format...")
 weka_cmd.convert_csv_to_arff(TMP_CSV, OUTPUT_FILE)
 
 ##################################################
 # 3) prepare data: create training and testing sets
-prYellow(
-    "[step 3] creating training and testing sets... (NSETS = " + str(NSETS) +
-    ")")
+pr_col(c.fg.green,
+       "[step 3] creating training and testing sets... (NSETS = " + str(NSETS) +
+       ")")
 create_train_and_test(OUTPUT_FILE)
 
 ##################################################
 # 4) run experiments
-prYellow("[step 4] running experiments...")
+pr_col(c.fg.green, "[step 4] running experiments...")
 run_experiments(OUTPUT_FILE, {'alg': DTALG, 'params': DTPARAMS})
 
-prGreen("[prepare_data] you are all set!")
+pr_col(c.fg.green, "[prepare_data] you are all set!")
 ##################################################
 # Clean working directory
 if args.rmtemp:
-    prYellow("[rm option enabled] cleaning temp files!")
+    pr_col(c.orange, "\t[rm option enabled] cleaning temp files!")
     os.system("rm %s %s %s" % (TMP_CSV, ERR_FILE, OUTPUT_FILE))

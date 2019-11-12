@@ -3,7 +3,7 @@
 # File              : recommender.py
 # Author            : Marcos Horro <marcos.horro@udc.gal>
 # Date              : Mér 06 Nov 2019 17:54:44 MST
-# Last Modified Date: Mar 12 Nov 2019 09:32:12 MST
+# Last Modified Date: Mar 12 Nov 2019 10:32:08 MST
 # Last Modified By  : Marcos Horro <marcos.horro@udc.gal>
 #
 # Copyright (c) 2019 Marcos Horro <marcos.horro@udc.gal>
@@ -28,23 +28,24 @@
 
 import argparse
 from parse_tree import DTTree
+from utils.utilities import colors as c
 
 ##################################################
 # parsing arguments
 parser = argparse.ArgumentParser(
     description='')
-requiredNamed = parser.add_argument_group('required named arguments')
-requiredNamed.add_argument(
+required_named = parser.add_argument_group('required named arguments')
+required_named.add_argument(
     '-i', '--input', help='input file name', required=True)
-requiredNamed.add_argument('-v', '--value',  # action='store_const',
-                           help='value we are looking for', required=True)
-requiredNamed.add_argument('-t', '--vtype',  # action='store_const',
-                           help='type value: numeric/categorial', required=True)
-requiredNamed.add_argument('-d', '--dimensions', metavar='dim', type=str, nargs='+',
-                           help='values we are interested on', required=True)
-requiredNamed.add_argument('-dt', '--dtalg',  # action='store_const',
-                           help='decision tree algorithm, e.g. REPTree, J48',
-                           default='REPTree')
+required_named.add_argument('-v', '--value',  # action='store_const',
+                            help='value we are looking for', required=True)
+required_named.add_argument('-t', '--vtype',  # action='store_const',
+                            help='type value: numeric/categorial', required=True)
+required_named.add_argument('-d', '--dimensions', metavar='dim', type=str, nargs='+',
+                            help='values we are interested on', required=True)
+required_named.add_argument('-dt', '--dtalg',  # action='store_const',
+                            help='decision tree algorithm, e.g. REPTree, J48',
+                            default='REPTree')
 args = parser.parse_args()
 
 INPUT_FILE = args.input
@@ -54,7 +55,8 @@ INTEREST_VALUE_T = args.vtype
 DTALG = args.dtalg
 
 if INTEREST_VALUE_T != "numeric" and INTEREST_VALUE_T != "categorial":
-    prRed("[ERROR] interset value type wrong: should be numeric or categorial")
+    pr_col(
+        c.fg.red, "[ERROR] interset value type wrong: should be numeric or categorial")
     exit(-1)
 
 # testing parsing tree

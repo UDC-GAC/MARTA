@@ -3,7 +3,7 @@
 # File              : wrapper.py
 # Author            : Marcos Horro <marcos.horro@udc.gal>
 # Date              : Xov 31 Out 2019 09:56:07 MDT
-# Last Modified Date: Mar 12 Nov 2019 09:53:32 MST
+# Last Modified Date: Mar 12 Nov 2019 10:28:31 MST
 # Last Modified By  : Marcos Horro <marcos.horro@udc.gal>
 #
 # Copyright (c) 2019 Computer Architecture Group, Universidade da Coruña
@@ -35,17 +35,17 @@ import argparse
 import weka_cmd
 import utils.utilities as ut
 from utils.utilities import StoreDictKeyPair
-from utils.utilities import prDebug
-from utils.utilities import prRed
-from utils.utilities import prGreen
+from utils.utilities import pr_debug
+from utils.utilities import pr_col
+from utils.utilities import colors as c
 from utils.utilities import grep_file2file
 
 ##################################################
 # parsing arguments
 parser = argparse.ArgumentParser(
     description='Wrapper for preparing data given a CSV')
-requiredNamed = parser.add_argument_group('required named arguments')
-requiredNamed.add_argument(
+required_named = parser.add_argument_group('required named arguments')
+required_named.add_argument(
     '-i', '--input', help='input file name', required=True)
 args = parser.parse_args()
 
@@ -87,13 +87,13 @@ os.system("echo \"Summary of results: \" > %s" % (SUMM_FILE))
 
 ##################################################
 # executing experiments
-prGreen("[wrapper] executing wrapper...")
-prDebug("python3 prepare_data.py -i %s -o %s"
-        " %s %s --pred=%s --ncats=%s"
-        " %s -dt %s -dtp %s" %
-        (INPUT_FILE, OUTPUT_FILE, FILTER_ROWS,
-         FILTER_COLS, PRED, str(NCATS), NORM,
-         DTALG, DTPARAMS))
+pr_col(c.fg.green, "[wrapper] executing wrapper...")
+pr_debug(PRINT_DEBUG, "python3 prepare_data.py -i %s -o %s"
+         " %s %s --pred=%s --ncats=%s"
+         " %s -dt %s -dtp %s" %
+         (INPUT_FILE, OUTPUT_FILE, FILTER_ROWS,
+          FILTER_COLS, PRED, str(NCATS), NORM,
+          DTALG, DTPARAMS))
 ret = os.system("python3 prepare_data.py -i %s -o %s"
                 " %s %s --pred=%s --ncats=%s"
                 " %s -dt %s -dtp %s" %
@@ -101,7 +101,7 @@ ret = os.system("python3 prepare_data.py -i %s -o %s"
                  FILTER_COLS, PRED, str(NCATS), NORM,
                  DTALG, DTPARAMS))
 if (ret != 0):
-    prRed("[wrapper] Something went wrong!")
+    pr_col(c.fg.red, "[wrapper] Something went wrong!")
     exit(1)
 suffix_dtparams = "" if len(DTPARAMS) == 0 else "_" + \
     DTPARAMS.replace("=", "").replace(" ", "_")
@@ -124,12 +124,13 @@ tree_size = grep_file2file("Size of the tree", RES_FILE, SUMM_FILE)
 
 ##################################################
 # results obtained
-prGreen("[wrapper] displaying summary of results")
+pr_col(c.fg.green, "[wrapper] displaying summary of results")
 os.system("cat %s" % SUMM_FILE)
 if MIN_ACC > acc:
-    prRed("[ERROR] minimum accuracy (%s) not achieved (%s)" % (MIN_ACC, acc))
+    pr_col(c.fg.red, "[ERROR] minimum accuracy (%s) not achieved (%s)" %
+           (MIN_ACC, acc))
     exit(-1)
-prGreen("[wrapper] finished! cleaning temp files...")
+pr_col(c.fg.green, "[wrapper] finished! cleaning temp files...")
 
 ##################################################
 # copy results for parsing tree
