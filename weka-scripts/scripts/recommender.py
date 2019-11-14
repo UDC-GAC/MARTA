@@ -3,7 +3,7 @@
 # File              : recommender.py
 # Author            : Marcos Horro <marcos.horro@udc.gal>
 # Date              : Mér 06 Nov 2019 17:54:44 MST
-# Last Modified Date: Xov 14 Nov 2019 10:43:08 MST
+# Last Modified Date: Xov 14 Nov 2019 11:56:47 MST
 # Last Modified By  : Marcos Horro <marcos.horro@udc.gal>
 #
 # Copyright (c) 2019 Marcos Horro <marcos.horro@udc.gal>
@@ -78,21 +78,25 @@ tree = DTTree(g_input_file, g_dtalg)
 norm_val = g_interest_value
 if g_interest_value_t == "numeric":
     norm_val = tree.get_value_range(g_interest_value)
-# tree.print_parents_compressed_by_value(norm_val)
 leaves = tree.get_parents_compressed_by_value(norm_val)
 
 ##################################################
 # analyzing outliers
 df = pd.read_csv(g_csv_file, comment="#", index_col=False)
 df_filtered = pd.DataFrame(columns=df.columns)
+i = 0
 for leaf in leaves:
     tmp = df
     d = leaf[1]
+    cond_str = ""
     for k, v in d.items():
         for op, val in v.items():
             cond = ops[op](getattr(tmp, k), float(val))
+            cond_str += str(k) + str(op) + str(val) + " & "
             tmp = tmp[cond]
+    print("cond " + str(i) + ": " + cond_str[:-2])
     df_filtered = pd.concat([df_filtered, tmp]).drop_duplicates()
+    i += 1
 
 ##################################################
 # getting false positives
@@ -103,8 +107,32 @@ n_actval = len(actual_val)
 false_pos = df_filtered[getattr(df_filtered, g_pred) != norm_val]
 pr_col(c.fg.red, "[recommender] false positives: %s/%s" %
        (len(false_pos), n_actval))
-print(false_pos)
 
+# analysis of the false positives. Not significant if they are in contiguous
+# categories
+# get the categories of false negatives
+if len(false_pos) > 1:
+    cat_org = np.unique(getattr(getattr(df, g_pred), "values"))
+    cat_org.sort()
+    cat_false_pos = np.unique(getattr(getattr(false_pos, g_pred), "values"))
+    inter_org_false_pos = [val for val in cat_org if val in cat_false_pos]
+    pos_pred = np.where(cat_org == norm_val)[0]
+    for val in inter_org_false_pos:
+        pos_fp = np.where(cat_org == val)[0]
+        diff = abs(pos_pred-pos_fp)
+        df_false_pos_cat = false_pos[getattr(false_pos, g_pred) == val]
+        n = len(df_false_pos_cat)
+        print("\tdiff with cat %s is %s (%s)" % (str(val), str(diff), str(n)))
+        print(df_false_pos_cat[g_dimensions])
+
+
+##################################################
+# getting false negatives
 false_neg = df[~df.index.isin(df_filtered.index) & cond]
 pr_col(c.fg.red, "[recommender] false negative: %s " % (len(false_neg)))
 print(false_neg)
+print("Unique values for these outliers:")
+for col in false_neg:
+    print("col " + str(col) + ", values:" +
+          str(np.unique(getattr(getattr(false_neg, col), "values"))))
+# analysis of the false negatives: extract common dimensions
