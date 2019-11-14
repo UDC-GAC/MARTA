@@ -3,7 +3,7 @@
 # File              : prepare_data.py
 # Author            : Marcos Horro <marcos.horro@udc.gal>
 # Date              : Mar 29 Out 2019 09:38:20 MDT
-# Last Modified Date: Xov 14 Nov 2019 10:30:51 MST
+# Last Modified Date: Xov 14 Nov 2019 11:28:48 MST
 # Last Modified By  : Marcos Horro <marcos.horro@udc.gal>
 #
 # Copyright (c) 2019 Computer Architecture Group, Universidade da Coruña
@@ -84,6 +84,14 @@ def preprocess_data(inputfile, outputfile, cols, *rows, cat, ncat):
             setattr(df, cat, (getattr(df, cat)-np.mean(getattr(df, cat)
                                                        ))/np.std(getattr(df, cat)))
     tmp = df
+    if ncat > 0:
+        # categorical data
+        tmp_cat = getattr(tmp, cat)
+        bins = np.linspace(min(getattr(df, cat)), max(getattr(df, cat)), ncat+1)
+        step = bins[1] - bins[0]
+        labels = ["I-{0}-{1}".format("{0:.3f}".format(float(i/1e9)),
+                                     "{0:.3f}".format(float((i + step)/1e9))) for i in bins]
+        setattr(tmp, cat, pd.cut(tmp_cat, bins, labels=labels[:-1]))
     for d in rows:
         if d == None:
             continue
@@ -94,14 +102,6 @@ def preprocess_data(inputfile, outputfile, cols, *rows, cat, ncat):
         pr_col(
             c.fg.red, "[error] dataset empty! revise constraints in data please!")
         exit(-1)
-    if ncat > 0:
-        # categorical data
-        tmp_cat = getattr(tmp, cat)
-        bins = np.linspace(min(getattr(df, cat)), max(getattr(df, cat)), ncat+1)
-        step = bins[1] - bins[0]
-        labels = ["I-{0}-{1}".format("{0:.3f}".format(float(i/1e9)),
-                                     "{0:.3f}".format(float((i + step)/1e9))) for i in bins]
-        setattr(tmp, cat, pd.cut(tmp_cat, bins, labels=labels[:-1]))
     f_cols = cols + [cat]
     tmp = tmp[list(f_cols)]
     tmp.to_csv(outputfile, index=False)
