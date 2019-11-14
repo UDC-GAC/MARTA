@@ -1,7 +1,7 @@
 # File              : config.yml
 # Author            : Marcos Horro <marcos.horro@udc.gal>
 # Date              : Mér 06 Nov 2019 16:36:12 MST
-# Last Modified Date: Mar 12 Nov 2019 14:33:48 MST
+# Last Modified Date: Xov 14 Nov 2019 10:25:57 MST
 # Last Modified By  : Marcos Horro <marcos.horro@udc.gal>
 #
 # example file, this file should be used for executing with wrapper.py
@@ -21,6 +21,7 @@
 #    ncats: # use 0 for discrete values, value greater than 1 in other case
 #    dt_alg: # REPTree or J48 right now (tested)
 #    dt_params: # e.g. M 5 N 1 (minimum 5 instances, 1 fold), or ''
+#    dt_opts: # opts split by space, e.g. "\"B R U\""
 #    min_acc: # minimum accuracy accepted of DT
 #- recommender:
 #    pred: # dimension to predict
@@ -43,7 +44,8 @@
     norm_alg: None # z-score/minmax; useless if norm: False
     ncats: 10 # use 0 for discrete values
     dt_alg: J48
-    dt_params: ''
+    dt_params: "M=40 N=10"
+    dt_opts: "\"B R\""
     min_acc: 0.8 # minimum accuracy accepted of DT
 - recommender:
     pred: FLOPSs # dimension to predict

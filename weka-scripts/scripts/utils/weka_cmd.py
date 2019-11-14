@@ -3,7 +3,7 @@
 # File              : weka_cmd.py
 # Author            : Marcos Horro <marcos.horro@udc.gal>
 # Date              : Mér 06 Nov 2019 21:00:44 MST
-# Last Modified Date: Mér 06 Nov 2019 22:16:30 MST
+# Last Modified Date: Xov 14 Nov 2019 10:16:03 MST
 # Last Modified By  : Marcos Horro <marcos.horro@udc.gal>
 #
 # Copyright (c) 2019 Marcos Horro <marcos.horro@udc.gal>
@@ -28,13 +28,13 @@
 
 import os
 
-PATH_WEKA = "~/Descargas/weka-3-8-3"
-WEKA_JAR = PATH_WEKA + "/weka.jar"
+path_weka = "~/Descargas/weka-3-8-3"
+weka_jar = path_weka + "/weka.jar"
 
 
 def convert_csv_to_arff(tmp_csv, outputfile):
     os.system("java -cp %s weka.core.converters.CSVLoader %s -B 100000 > %s" %
-              (WEKA_JAR, tmp_csv, outputfile))
+              (weka_jar, tmp_csv, outputfile))
 
 
 def produce_class_outputs(alg, folderpath, testfile, err_out):
@@ -42,7 +42,7 @@ def produce_class_outputs(alg, folderpath, testfile, err_out):
               " weka.classifiers.trees.%s"
               " -l %s/output.model -T %s -p 0"
               "  > %s/pred.txt %s"
-              % (WEKA_JAR, alg, folderpath, testfile,
+              % (weka_jar, alg, folderpath, testfile,
                  folderpath, err_out))
 
 
@@ -51,7 +51,7 @@ def produce_tester_stats(alg, folderpath, testfile, err_out):
               " weka.classifiers.trees.%s"
               " -l %s/output.model -T %s"
               "  > %s/model_test_stats.csv %s"
-              % (WEKA_JAR, alg, folderpath, testfile,
+              % (weka_jar, alg, folderpath, testfile,
                  folderpath, err_out))
 
 
@@ -62,13 +62,16 @@ def params_to_str(alg, params):
     return str_params
 
 
-def train_model(alg, params, trainfile, folderpath, err_out):
+def train_model(alg, params, opts, trainfile, folderpath, err_out):
     str_params = ""
     for k, v in params.items():
         str_params += (" -" + str(k) + " " + str(v))
+    str_opts = ""
+    for opt in opts.split(" "):
+        str_opts += "-" + str(opt) + " "
     os.system("java -cp %s"
               " weka.classifiers.trees.%s"
-              " %s -t %s -d %s/output.model"
+              " %s %s -t %s -d %s/output.model"
               "  > %s/model_learn_stats.txt %s"
-              % (WEKA_JAR, alg, str_params, trainfile,
+              % (weka_jar, alg, str_params, str_opts, trainfile,
                  folderpath, folderpath, err_out))

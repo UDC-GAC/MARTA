@@ -3,7 +3,7 @@
 # File              : wrapper.py
 # Author            : Marcos Horro <marcos.horro@udc.gal>
 # Date              : Xov 31 Out 2019 09:56:07 MDT
-# Last Modified Date: Mar 12 Nov 2019 14:25:37 MST
+# Last Modified Date: Xov 14 Nov 2019 10:22:38 MST
 # Last Modified By  : Marcos Horro <marcos.horro@udc.gal>
 #
 # Copyright (c) 2019 Computer Architecture Group, Universidade da Coruña
@@ -34,7 +34,6 @@ import itertools as it
 import argparse
 import utils.utilities as ut
 from utils import weka_cmd
-from utils.utilities import StoreDictKeyPair
 from utils.utilities import pr_debug
 from utils.utilities import pr_col
 from utils.utilities import colors as c
@@ -43,7 +42,7 @@ from utils.utilities import grep_file2file
 ##################################################
 # parsing arguments
 parser = argparse.ArgumentParser(
-    description='Wrapper for preparing data given a CSV')
+    description='wrapper for preparing data given a csv')
 required_named = parser.add_argument_group('required named arguments')
 required_named.add_argument(
     '-i', '--input', help='input file name', required=True)
@@ -51,46 +50,47 @@ args = parser.parse_args()
 
 ##################################################
 # parsing all the arguments from the config.yml
-YML_CONFIG = args.input
-with open(YML_CONFIG, 'r') as ymlfile:
+yml_config = args.input
+with open(yml_config, 'r') as ymlfile:
     cfg = yaml.load(ymlfile)
 
 # general config
 general_cfg = cfg[0]['general']
-INPUT_FILE = general_cfg['input']
-OUTPUT_FILE = general_cfg['output']
-FORCE_REPLACEMENT = general_cfg['overwrite']
-RM_TEMP_FILES = general_cfg['clean']
-PRINT_DEBUG = general_cfg['debug']
+input_file = general_cfg['input']
+output_file = general_cfg['output']
+force_replacement = general_cfg['overwrite']
+rm_temp_files = general_cfg['clean']
+print_debug = general_cfg['debug']
 
 # prepare data
 prepdata_cfg = cfg[1]['prepare_data']
-FILTER_COLS = "-c " + \
+filter_cols = "-c " + \
     prepdata_cfg['cols'] if len(prepdata_cfg['cols']) else ""
-FILTER_ROWS = "-r " + \
+filter_rows = "-r " + \
     prepdata_cfg['rows'] if len(prepdata_cfg['rows']) else ""
-PRED = prepdata_cfg['pred']
-NORM = "--norm" if prepdata_cfg['norm'] else ""
-NCATS = prepdata_cfg['ncats']
-DTALG = prepdata_cfg['dt_alg']
-DTPARAMS = prepdata_cfg['dt_params']
-MIN_ACC = prepdata_cfg['min_acc']
+pred = prepdata_cfg['pred']
+norm = "--norm" if prepdata_cfg['norm'] else ""
+ncats = prepdata_cfg['ncats']
+dtalg = prepdata_cfg['dt_alg']
+dtparams = prepdata_cfg['dt_params']
+dtopts = prepdata_cfg['dt_opts']
+min_acc = prepdata_cfg['min_acc']
 
 # recommender
 recommender_cfg = cfg[2]['recommender']
-INTEREST_VALUE = recommender_cfg['interest_value']
-INTEREST_VALUE_T = recommender_cfg['interest_value_type']
-DIMENSIONS = recommender_cfg['dimensions']
+interest_value = recommender_cfg['interest_value']
+interest_value_t = recommender_cfg['interest_value_type']
+dimensions = recommender_cfg['dimensions']
 
 # preparing temp file
-TMP_CSV = "___tmp_" + str(INPUT_FILE.split("/")[-1])
-SUMM_FILE = "___tmp__SUMM_FILE.txt"
-os.system("echo \"Summary of results: \" > %s" % (SUMM_FILE))
+tmp_csv = "___tmp_" + str(input_file.split("/")[-1])
+summ_file = "___tmp__summ_file.txt"
+os.system("echo \"summary of results: \" > %s" % (summ_file))
 
 ##################################################
 # some comprobations
-if not os.path.exists(INPUT_FILE):
-    pr_col(c.fg.red, "[ERROR] introduce a valid input file in " + YML_CONFIG +
+if not os.path.exists(input_file):
+    pr_col(c.fg.red, "[error] introduce a valid input file in " + yml_config +
            " file")
     exit(-1)
 
@@ -99,58 +99,58 @@ if not os.path.exists(INPUT_FILE):
 pr_col(c.fg.green, "[wrapper] executing wrapper...")
 cmd_line = ("python3 prepare_data.py -i %s -o %s"
             " %s %s --pred=%s --ncats=%s"
-            " %s -dt %s -dtp %s %s" %
-            (INPUT_FILE, OUTPUT_FILE, FILTER_ROWS,
-             FILTER_COLS, PRED, str(NCATS), NORM,
-             DTALG, DTPARAMS, ("--rmtemp" if RM_TEMP_FILES else "")))
-pr_debug(PRINT_DEBUG, cmd_line)
+            " %s -dt %s -dtp %s -dto %s %s" %
+            (input_file, output_file, filter_rows,
+             filter_cols, pred, str(ncats), norm,
+             dtalg, dtparams, dtopts, ("--rmtemp" if rm_temp_files else "")))
+pr_debug(print_debug, cmd_line)
 ret = os.system(cmd_line)
 
 if (ret != 0):
-    pr_col(c.fg.red, "[wrapper] Something went wrong!")
+    pr_col(c.fg.red, "[wrapper] something went wrong!")
     exit(1)
-suffix_dtparams = "" if len(DTPARAMS) == 0 else "_" + \
-    DTPARAMS.replace("=", "").replace(" ", "_")
-suffix = "_" + str(DTALG) + suffix_dtparams
-RES_FILE = "results/model_learn_stats_%s%s" % (
-    str(PRED), suffix)
+suffix_dtparams = "" if len(dtparams) == 0 else "_" + \
+    dtparams.replace("=", "").replace(" ", "_")
+suffix = "_" + str(dtalg) + suffix_dtparams
+res_file = "results/model_learn_stats_%s%s" % (
+    str(pred), suffix)
 
 ##################################################
 # parsing results
 os.system("cp results/exp_%s_all%s/model_learn_stats.txt"
           " %s" %
-          (OUTPUT_FILE.split(".")[0], suffix, RES_FILE))
-acc = grep_file2file("Correctly", RES_FILE, SUMM_FILE)
-acc = float(grep_file2file("Correlation coefficient", RES_FILE,
-                           SUMM_FILE)) if acc == None else float(acc)/100
-grep_file2file("Mean absolute error", RES_FILE, SUMM_FILE)
-grep_file2file("Relative absolute error", RES_FILE, SUMM_FILE)
-grep_file2file("Total Number of Instances", RES_FILE, SUMM_FILE)
-tree_size = grep_file2file("Size of the tree", RES_FILE, SUMM_FILE)
+          (output_file.split(".")[0], suffix, res_file))
+acc = grep_file2file("Correctly", res_file, summ_file)
+acc = float(grep_file2file("Correlation coefficient", res_file,
+                           summ_file)) if acc == None else float(acc)/100
+grep_file2file("Mean absolute error", res_file, summ_file)
+grep_file2file("Relative absolute error", res_file, summ_file)
+grep_file2file("Total number of instances", res_file, summ_file)
+tree_size = grep_file2file("Size of the tree", res_file, summ_file)
 
 ##################################################
 # results obtained
 pr_col(c.fg.green, "[wrapper] displaying summary of results")
-os.system("cat %s" % SUMM_FILE)
-if MIN_ACC > acc:
-    pr_col(c.fg.red, "[ERROR] minimum accuracy (%s) not achieved (%s)" %
-           (MIN_ACC, acc))
+os.system("cat %s" % summ_file)
+if min_acc > acc:
+    pr_col(c.fg.red, "[error] minimum accuracy (%s) not achieved (%s)" %
+           (min_acc, acc))
     exit(-1)
 pr_col(c.fg.green, "[wrapper] finished! cleaning temp files...")
 
 ##################################################
 # copy results for parsing tree
-PARSING_TREE_FILE = "___tmp_tree.txt"
-os.system("cp %s %s" % (RES_FILE, PARSING_TREE_FILE))
+parsing_tree_file = "___tmp_tree.txt"
+os.system("cp %s %s" % (res_file, parsing_tree_file))
 
 pr_col(c.fg.green, "[wrapper] executing recommender.py")
 os.system("python3 recommender.py -i %s -c %s -p %s -v %s -t %s -d %s -dt %s" %
-          (PARSING_TREE_FILE, TMP_CSV, PRED, INTEREST_VALUE, INTEREST_VALUE_T, DIMENSIONS,
-              DTALG))
+          (parsing_tree_file, tmp_csv, pred, interest_value, interest_value_t, dimensions,
+              dtalg))
 
 ##################################################
 # remove tmp files
-if RM_TEMP_FILES:
-    os.system("rm %s" % SUMM_FILE)
-    os.system("rm %s" % PARSING_TREE_FILE)
-    os.system("rm %s" % TMP_CSV)
+if rm_temp_files:
+    os.system("rm %s" % summ_file)
+    os.system("rm %s" % parsing_tree_file)
+    os.system("rm %s" % tmp_csv)

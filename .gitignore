@@ -1,14 +1,24 @@
+# bytecode
 __pycache__/
 *cpython*
 *.pyc
-*.csv
-*.swp
 *.o
 *.a
+
+# results
 old_files/
 results/
 data/
 bin/
+*.arff
+*.csv
+
+# asm
+*.s
+*.vec
+
+# temp files
+*.swp
 polybench*/
 *.swo
 test*

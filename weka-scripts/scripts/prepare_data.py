@@ -3,7 +3,7 @@
 # File              : prepare_data.py
 # Author            : Marcos Horro <marcos.horro@udc.gal>
 # Date              : Mar 29 Out 2019 09:38:20 MDT
-# Last Modified Date: Mar 12 Nov 2019 14:41:01 MST
+# Last Modified Date: Xov 14 Nov 2019 10:30:51 MST
 # Last Modified By  : Marcos Horro <marcos.horro@udc.gal>
 #
 # Copyright (c) 2019 Computer Architecture Group, Universidade da Coruña
@@ -39,16 +39,17 @@ from utils.utilities import StoreDictKeyPair
 from utils.utilities import pr_debug
 from utils.utilities import pr_col
 from utils.utilities import colors as c
+
 # global definitions
-PATH_ROOT = os.getcwd() + "/"
-PATH_DATA = PATH_ROOT + "data"
-PATH_RES = PATH_ROOT + "results"
-NSETS = 0
-FORCE_REPLACEMENT = True
-ALGORITHMS = ['REPTree']
-MIN_OBJ = [1]  # min number of instances
-MAX_LEAF = [3]  # number of folds
-NORM = False
+path_root = os.getcwd() + "/"
+path_data = path_root + "data"
+path_res = path_root + "results"
+nsets = 0
+force_replacement = True
+algorithms = ['reptree']
+min_obj = [1]  # min number of instances
+max_leaf = [3]  # number of folds
+norm = False
 
 ##################################################
 # preprocessing data
@@ -56,29 +57,29 @@ NORM = False
 
 def check_error(phase, err_log):
     if not os.path.exists(err_log):
-        pr_col(c.fg.orange, "[WARNING] no err log file")
+        pr_col(c.fg.orange, "[warning] no err log file")
         return
     for l in open(err_log, 'r'):
-        if "Weka exception" in l:
-            pr_col(c.fg.red, "[ERROR] %s could not open file:\n%s" % (phase, l))
+        if "weka exception" in l:
+            pr_col(c.fg.red, "[error] %s could not open file:\n%s" % (phase, l))
             exit(-1)
-        if "Exception" in l:
+        if "exception" in l:
             pr_col(
-                c.fg.red, "[ERROR] %s something went wrong:\n%s" % (phase, l))
+                c.fg.red, "[error] %s something went wrong:\n%s" % (phase, l))
             exit(-1)
 
 
 def preprocess_data(inputfile, outputfile, cols, *rows, cat, ncat):
     df = pd.read_csv(inputfile, comment="#", index_col=False)
-    if NORM:
-        if NORM_MIN_MAX:
+    if norm:
+        if norm_min_max:
             # minmax
             setattr(df, cat, getattr(df, cat)-min(getattr(df, cat)))
             setattr(df, cat, getattr(df, cat)/max(getattr(df, cat)))
-        if NORM_Z_SCORE:
+        if norm_z_score:
             # z-score
-            print("[DEBUG] z-score avg = %f" % np.mean(getattr(df, cat)))
-            print("[DEBUG] z-score std = %f" % np.std(getattr(df, cat)))
+            print("[debug] z-score avg = %f" % np.mean(getattr(df, cat)))
+            print("[debug] z-score std = %f" % np.std(getattr(df, cat)))
             setattr(df, cat, np.log(getattr(df, cat)))
             setattr(df, cat, (getattr(df, cat)-np.mean(getattr(df, cat)
                                                        ))/np.std(getattr(df, cat)))
@@ -88,10 +89,10 @@ def preprocess_data(inputfile, outputfile, cols, *rows, cat, ncat):
             continue
         for k, v in d.items():
             cond = (getattr(tmp, k) == v)
-            tmp = tmp[cond]
+            tmp = tmp[cond].copy()
     if (tmp.count()[0] == 0):
         pr_col(
-            c.fg.red, "[ERROR] DATASET EMPTY! Revise constraints in data please!")
+            c.fg.red, "[error] dataset empty! revise constraints in data please!")
         exit(-1)
     if ncat > 0:
         # categorical data
@@ -111,79 +112,80 @@ def preprocess_data(inputfile, outputfile, cols, *rows, cat, ncat):
 
 
 def create_train_and_test(datafile):
-    os.system("mkdir -p %s" % PATH_DATA)
+    os.system("mkdir -p %s" % path_data)
     name = datafile.split(".")[0]
     pref = "_full_rand"
-    for i in range(1, NSETS+1):
+    for i in range(1, nsets+1):
         # training
         suff = "_train.arff"
         filename = "%s_%s%s%s" % (name, str(i), pref, suff)
-        if FORCE_REPLACEMENT or not (os.path.exists("%s/%s" % (PATH_DATA, filename))):
-            os.system("java -cp %s/weka.jar weka.filters.supervised.instance.StratifiedRemoveFolds "
+        if force_replacement or not (os.path.exists("%s/%s" % (path_data, filename))):
+            os.system("java -cp %s/weka.jar weka.filters.supervised.instance.stratifiedremovefolds "
                       " -i %s -c last -o %s/%s "
-                      " -N %s -F %s -V -S 42 %s" % (PATH_WEKA, datafile,
-                                                    PATH_DATA, filename,
-                                                    str(NSETS), str(i),
-                                                    ERR_OUT))
+                      " -n %s -f %s -v -s 42 %s" % (path_weka, datafile,
+                                                    path_data, filename,
+                                                    str(nsets), str(i),
+                                                    err_out))
         # testing
         suff = "_test.arff"
         filename = "%s_%s%s%s" % (name, str(i), pref, suff)
-        if FORCE_REPLACEMENT or not (os.path.exists("%s/%s" % (PATH_DATA, filename))):
-            os.system("java -cp %s/weka.jar weka.filters.supervised.instance.StratifiedRemoveFolds "
+        if force_replacement or not (os.path.exists("%s/%s" % (path_data, filename))):
+            os.system("java -cp %s/weka.jar weka.filters.supervised.instance.stratifiedremovefolds "
                       " -i %s -c last -o %s/%s "
-                      " -N %s -F %s -S 42 %s" % (PATH_WEKA, datafile,
-                                                 PATH_DATA, filename,
-                                                 str(NSETS), str(i), ERR_OUT))
+                      " -n %s -f %s -s 42 %s" % (path_weka, datafile,
+                                                 path_data, filename,
+                                                 str(nsets), str(i), err_out))
     suff = "_train.arff"
     filename = "%s_all%s%s" % (name, pref, suff)
-    os.system("cp %s %s/%s" % (datafile, PATH_DATA, filename))
+    os.system("cp %s %s/%s" % (datafile, path_data, filename))
     suff = "_test.arff"
     filename = "%s_all%s%s" % (name, pref, suff)
-    os.system("cp %s %s/%s" % (datafile, PATH_DATA, filename))
+    os.system("cp %s %s/%s" % (datafile, path_data, filename))
 ##################################################
 # runing experiments
 
 
 def run_experiments(datafile, dtparams):
-    os.system("mkdir -p %s" % (PATH_RES))
+    os.system("mkdir -p %s" % (path_res))
     alg = dtparams['alg']
     params = dtparams['params']
+    opts = dtparams['opts']
     name = datafile.split(".")[0]
     pref = "_full_rand"
-    liters = list(range(1, NSETS+1))
+    liters = list(range(1, nsets+1))
     liters.append("all")
     for i in liters:
         suffix = weka_cmd.params_to_str(alg, params)
         basename = "%s_%s" % (name, str(i))
         foldername = "exp_%s%s" % (basename, suffix)
-        os.system("mkdir -p %s/%s" % (PATH_RES, foldername))
-        folderpath = PATH_RES + "/" + foldername
-        trainfile = PATH_DATA + "/" + basename + pref + "_train.arff"
-        testfile = PATH_DATA + "/" + basename + pref + "_test.arff"
-        print("\t[%s] Train... (%s/%d)" %
-              (alg, str(i), NSETS))
+        os.system("mkdir -p %s/%s" % (path_res, foldername))
+        folderpath = path_res + "/" + foldername
+        trainfile = path_data + "/" + basename + pref + "_train.arff"
+        testfile = path_data + "/" + basename + pref + "_test.arff"
+        print("\t[%s] train... (%s/%d)" %
+              (alg, str(i), nsets))
         weka_cmd.train_model(
-            alg, params, trainfile, folderpath, ERR_OUT)
-        check_error("[train]", ERR_FILE)
-        print("\t[%s] Produce classfied outputs... (%s/%d)" %
-              (alg, str(i), NSETS))
+            alg, params, opts, trainfile, folderpath, err_out)
+        check_error("[train]", err_file)
+        print("\t[%s] produce classfied outputs... (%s/%d)" %
+              (alg, str(i), nsets))
         weka_cmd.produce_class_outputs(alg, folderpath, testfile,
-                                       ERR_OUT)
-        check_error("[class output]", ERR_FILE)
-        print("\t[%s] Produce tester stats... (%s/%d)" %
-              (alg, str(i), NSETS))
+                                       err_out)
+        check_error("[class output]", err_file)
+        print("\t[%s] produce tester stats... (%s/%d)" %
+              (alg, str(i), nsets))
         weka_cmd.produce_tester_stats(alg, folderpath,
-                                      testfile, ERR_OUT)
-        check_error("[tester]", ERR_FILE)
+                                      testfile, err_out)
+        check_error("[tester]", err_file)
     return
 
 
 ##################################################
 # parsing arguments
 parser = argparse.ArgumentParser(
-    description='Convert from CSV to ARFF (generic format), creates training and testing sets. Allows the inclusion of custom scripts (no need to be python) for preparing data according to experiments need. TODO: options for selecting categorical value. NOTE: Need to have WEKA installed.')
+    description='convert from csv to arff (generic format), creates training and testing sets. allows the inclusion of custom scripts (no need to be python) for preparing data according to experiments need. todo: options for selecting categorical value. note: need to have weka installed.')
 parser.add_argument('-p', '--pred',  # action='store_const',
-                    help='dimension to predict', default="FLOPSs")
+                    help='dimension to predict', default="flopss")
 parser.add_argument('-nc', '--ncats',  # action='store_const',
                     help='number of categories of dimension to predict,'
                     ' categories are created uniformly in pandas',
@@ -197,12 +199,14 @@ parser.add_argument('-rm', '--rmtemp', action='store_true',
 parser.add_argument('-f', '--force', action='store_true',
                     help='force replacement files even if they exist (default=False)', default=False)
 parser.add_argument('-r', '--rows', dest="rows", action=StoreDictKeyPair,
-                    help="filtering rows as a dictionary. E.g. -r I=0 J=0", nargs="+", metavar="KEY=VAL")
+                    help="filtering rows as a dictionary. e.g. -r i=0 j=0", nargs="+", metavar="key=val")
 parser.add_argument('-dt', '--dtalg',  # action='store_const',
-                    help='decision tree algorithm, e.g. REPTree, J48',
-                    default='REPTree')
+                    help='decision tree algorithm, e.g. reptree, j48',
+                    default='reptree')
 parser.add_argument('-dtp', '--dtparams', dest="dtparams", action=StoreDictKeyPair,
-                    help="decision tree parameters", nargs="*", metavar="KEY=VAL")
+                    help="decision tree parameters", nargs="*", metavar="key=val")
+parser.add_argument('-dto', '--dtopts', dest="dtopts",
+                    help="options for ftalgo")
 required_named = parser.add_argument_group('required named arguments')
 required_named.add_argument(
     '-i', '--input', help='input file name', required=True)
@@ -212,49 +216,50 @@ required_named.add_argument('-c', '--columns', metavar='col', type=str, nargs='+
                             help='columns we are interested to filter')
 args = parser.parse_args()
 
-FORCE_REPLACEMENT = args.force
-INPUT_FILE = args.input
-OUTPUT_FILE = args.output
-COLUMNS = args.columns
-ROWS = args.rows
-PRED = args.pred
-NCATS = int(args.ncats)
-NORM = args.norm
-DTALG = args.dtalg
-DTPARAMS = args.dtparams
-ERR_FILE = "___error.log"
-ERR_OUT = " 2> %s" % ERR_FILE
+force_replacement = args.force
+input_file = args.input
+output_file = args.output
+columns = args.columns
+rows = args.rows
+pred = args.pred
+ncats = int(args.ncats)
+norm = args.norm
+dtalg = args.dtalg
+dtparams = args.dtparams
+dtopts = args.dtopts
+err_file = "___error.log"
+err_out = " 2> %s" % err_file
 ##################################################
 
 pr_col(c.fg.orange, "[prepare_data] starting process...")
 ##################################################
-# Script based on Pouchet's, but unfollowing him's, I perform the 'filtering' or whatever in the CSV instead of the ARFF
-# Main reason: familiarity and ease to work with DataFrames in python and mantainability for me...
-# 1) create temporal CSV with filtering perform in terms of columns, rows and even some transformations
-TMP_CSV = "___tmp_" + str(INPUT_FILE.split("/")[-1])
-pr_col(c.fg.orange, "[step 1] filtering csv... (" + INPUT_FILE + ")")
-preprocess_data(INPUT_FILE, TMP_CSV, COLUMNS, ROWS, ncat=NCATS, cat=PRED)
+# script based on pouchet's, but unfollowing him's, i perform the 'filtering' or whatever in the csv instead of the arff
+# main reason: familiarity and ease to work with dataframes in python and mantainability for me...
+# 1) create temporal csv with filtering perform in terms of columns, rows and even some transformations
+tmp_csv = "___tmp_" + str(input_file.split("/")[-1])
+pr_col(c.fg.orange, "[step 1] filtering csv... (" + input_file + ")")
+preprocess_data(input_file, tmp_csv, columns, rows, ncat=ncats, cat=pred)
 
 ##################################################
-# 2) convert CSV to ARFF file (all data, beware to have unique name for columns in the CSV file):
+# 2) convert csv to arff file (all data, beware to have unique name for columns in the csv file):
 pr_col(c.fg.orange, "[step 2] converting csv to arff format...")
-weka_cmd.convert_csv_to_arff(TMP_CSV, OUTPUT_FILE)
+weka_cmd.convert_csv_to_arff(tmp_csv, output_file)
 
 ##################################################
 # 3) prepare data: create training and testing sets
 pr_col(c.fg.orange,
-       "[step 3] creating training and testing sets... (NSETS = " + str(NSETS) +
+       "[step 3] creating training and testing sets... (nsets = " + str(nsets) +
        ")")
-create_train_and_test(OUTPUT_FILE)
+create_train_and_test(output_file)
 
 ##################################################
 # 4) run experiments
 pr_col(c.fg.orange, "[step 4] running experiments...")
-run_experiments(OUTPUT_FILE, {'alg': DTALG, 'params': DTPARAMS})
+run_experiments(output_file, {'alg': dtalg, 'params': dtparams, 'opts': dtopts})
 
 pr_col(c.fg.orange, "[prepare_data] you are all set!")
 ##################################################
-# Clean working directory
+# clean working directory
 if args.rmtemp:
     pr_col(c.fg.orange, "[prepare_data] cleaning temp files!")
-    os.system("rm %s %s" % (ERR_FILE, OUTPUT_FILE))
+    os.system("rm %s %s" % (err_file, output_file))
