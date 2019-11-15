@@ -1,7 +1,7 @@
 # File              : config.yml
 # Author            : Marcos Horro <marcos.horro@udc.gal>
 # Date              : Mér 06 Nov 2019 16:36:12 MST
-# Last Modified Date: Xov 14 Nov 2019 11:51:00 MST
+# Last Modified Date: Ven 15 Nov 2019 15:37:57 MST
 # Last Modified By  : Marcos Horro <marcos.horro@udc.gal>
 #
 # example file, this file should be used for executing with wrapper.py
@@ -17,38 +17,49 @@
 #    rows: # filtering rows in CSV
 #    pred: # dimension to predict
 #    norm: # norm values
-#    norm_alg: # z-score/minmax; useless if norm: False
-#    ncats: # use 0 for discrete values, value greater than 1 in other case
-#    dt_alg: # REPTree or J48 right now (tested)
-#    dt_params: # e.g. M 5 N 1 (minimum 5 instances, 1 fold), or ''
-#    dt_opts: # opts split by space, e.g. "\"B R U\""
+#       enabled: # True/False
+#       type: # z-score/minmax; useless if norm: False
+#    cats:
+#       num: # use 0 for discrete values, value greater than 1 in other case
+#       scale_factor: # if numeric, could be convenient to scale numbers
+#    dt_settings: # decision tree parameters
+#       alg: # REPTree or J48 right now (both tested)
+#       params: # e.g. M 5 N 1 (minimum 5 instances, 1 fold), or ''
+#       opts: # opts split by space, e.g. "\"B R U\""
 #    min_acc: # minimum accuracy accepted of DT
 #- recommender:
 #    pred: # dimension to predict
-#    interest_value: # value of interest of prediction
-#    interest_value_type: # numeric/nominal (categorial also called)
-#    dimension: # dimensions we want to know, analogous value == cols in
+#    interest_dim:
+#       value: # value of interest of prediction
+#       type: # numeric/nominal (categorial also called)
+#    dim: # dimensions we want to know, analogous value == cols in
 #                 prepare_data
 
 - general:
     input: test_data/exec_asm_full_filtered.csv
     output: output.arff
-    overwrite: True # overwrite if existing files?
-    clean: False # clean temp files?
-    debug: True
+    overwrite: True
+    clean: True
+    debug: False
 - prepare_data:
     cols: I J It Jt Is Js Jters Iters NELEMS
     rows: Vec_x=1
-    pred: FLOPSs # dimension to predict
-    norm: False # norm values
-    norm_alg: None # z-score/minmax; useless if norm: False
-    ncats: 10 # use 0 for discrete values
-    dt_alg: J48
-    dt_params: "M=20"
-    dt_opts: "\"B R\""
-    min_acc: 0.8 # minimum accuracy accepted of DT
+    pred: FLOPSs
+    norm:
+        enabled: False
+        type: None
+    cats:
+        num: 10
+        scale_factor: 1e9
+    dt_settings:
+        name: J48
+        params: "M=20"
+        opts: "\"B R\""
+    min_acc: 0.8
 - recommender:
-    pred: FLOPSs # dimension to predict
-    interest_value: 6.5
-    interest_value_type: numeric # numeric/nominal
-    dimensions: I J It Jt Is Js Jters Iters NELEMS
+    pred: FLOPSs
+    interest_dim:
+        value: 6.5
+        type: numeric
+    dim: I J It Jt Is Js Jters Iters NELEMS
+

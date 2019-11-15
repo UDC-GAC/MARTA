@@ -3,7 +3,7 @@
 # File              : wrapper.py
 # Author            : Marcos Horro <marcos.horro@udc.gal>
 # Date              : Xov 31 Out 2019 09:56:07 MDT
-# Last Modified Date: Xov 14 Nov 2019 10:22:38 MST
+# Last Modified Date: Ven 15 Nov 2019 15:34:24 MST
 # Last Modified By  : Marcos Horro <marcos.horro@udc.gal>
 #
 # Copyright (c) 2019 Computer Architecture Group, Universidade da Coruña
@@ -69,18 +69,19 @@ filter_cols = "-c " + \
 filter_rows = "-r " + \
     prepdata_cfg['rows'] if len(prepdata_cfg['rows']) else ""
 pred = prepdata_cfg['pred']
-norm = "--norm" if prepdata_cfg['norm'] else ""
-ncats = prepdata_cfg['ncats']
-dtalg = prepdata_cfg['dt_alg']
-dtparams = prepdata_cfg['dt_params']
-dtopts = prepdata_cfg['dt_opts']
+norm = "--norm" if prepdata_cfg['norm']['enabled'] else ""
+ncats = prepdata_cfg['cats']['num']
+cats_scale = prepdata_cfg['cats']['scale_factor']
+dtalg = prepdata_cfg['dt_settings']['name']
+dtparams = prepdata_cfg['dt_settings']['params']
+dtopts = prepdata_cfg['dt_settings']['opts']
 min_acc = prepdata_cfg['min_acc']
 
 # recommender
 recommender_cfg = cfg[2]['recommender']
-interest_value = recommender_cfg['interest_value']
-interest_value_t = recommender_cfg['interest_value_type']
-dimensions = recommender_cfg['dimensions']
+interest_value = recommender_cfg['interest_dim']['value']
+interest_value_t = recommender_cfg['interest_dim']['type']
+dimensions = recommender_cfg['dim']
 
 # preparing temp file
 tmp_csv = "___tmp_" + str(input_file.split("/")[-1])
