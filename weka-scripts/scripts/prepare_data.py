@@ -3,7 +3,7 @@
 # File              : prepare_data.py
 # Author            : Marcos Horro <marcos.horro@udc.gal>
 # Date              : Mar 29 Out 2019 09:38:20 MDT
-# Last Modified Date: Xov 14 Nov 2019 11:28:48 MST
+# Last Modified Date: Ven 15 Nov 2019 15:50:08 MST
 # Last Modified By  : Marcos Horro <marcos.horro@udc.gal>
 #
 # Copyright (c) 2019 Computer Architecture Group, Universidade da Coruña
@@ -69,7 +69,7 @@ def check_error(phase, err_log):
             exit(-1)
 
 
-def preprocess_data(inputfile, outputfile, cols, *rows, cat, ncat):
+def preprocess_data(inputfile, outputfile, cols, *rows, cat, catscale=1, ncat):
     df = pd.read_csv(inputfile, comment="#", index_col=False)
     if norm:
         if norm_min_max:
@@ -89,8 +89,8 @@ def preprocess_data(inputfile, outputfile, cols, *rows, cat, ncat):
         tmp_cat = getattr(tmp, cat)
         bins = np.linspace(min(getattr(df, cat)), max(getattr(df, cat)), ncat+1)
         step = bins[1] - bins[0]
-        labels = ["I-{0}-{1}".format("{0:.3f}".format(float(i/1e9)),
-                                     "{0:.3f}".format(float((i + step)/1e9))) for i in bins]
+        labels = ["I-{0}-{1}".format("{0:.3f}".format(float(i/catscale)),
+                                     "{0:.3f}".format(float((i + step)/catscale))) for i in bins]
         setattr(tmp, cat, pd.cut(tmp_cat, bins, labels=labels[:-1]))
     for d in rows:
         if d == None:
@@ -190,6 +190,10 @@ parser.add_argument('-nc', '--ncats',  # action='store_const',
                     help='number of categories of dimension to predict,'
                     ' categories are created uniformly in pandas',
                     default=10)
+parser.add_argument('-cs', '--catscale',  # action='store_const',
+                    help='scale factor when creating categories, not relevant'
+                    ' if dimension is not numeric',
+                    default=1)
 parser.add_argument('-nv', '--norm', action='store_true',
                     help='normalize predicted dimension (min-max norm i.e.'
                     ' values in range [0-1])',
@@ -223,6 +227,7 @@ columns = args.columns
 rows = args.rows
 pred = args.pred
 ncats = int(args.ncats)
+catscale = float(args.catscale)
 norm = args.norm
 dtalg = args.dtalg
 dtparams = args.dtparams
@@ -238,7 +243,8 @@ pr_col(c.fg.orange, "[prepare_data] starting process...")
 # 1) create temporal csv with filtering perform in terms of columns, rows and even some transformations
 tmp_csv = "___tmp_" + str(input_file.split("/")[-1])
 pr_col(c.fg.orange, "[step 1] filtering csv... (" + input_file + ")")
-preprocess_data(input_file, tmp_csv, columns, rows, ncat=ncats, cat=pred)
+preprocess_data(input_file, tmp_csv, columns, rows, ncat=ncats,
+                catscale=catscale, cat=pred)
 
 ##################################################
 # 2) convert csv to arff file (all data, beware to have unique name for columns in the csv file):

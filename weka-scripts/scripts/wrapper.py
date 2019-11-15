@@ -3,7 +3,7 @@
 # File              : wrapper.py
 # Author            : Marcos Horro <marcos.horro@udc.gal>
 # Date              : Xov 31 Out 2019 09:56:07 MDT
-# Last Modified Date: Ven 15 Nov 2019 15:34:24 MST
+# Last Modified Date: Ven 15 Nov 2019 15:49:01 MST
 # Last Modified By  : Marcos Horro <marcos.horro@udc.gal>
 #
 # Copyright (c) 2019 Computer Architecture Group, Universidade da Coruña
@@ -71,7 +71,7 @@ filter_rows = "-r " + \
 pred = prepdata_cfg['pred']
 norm = "--norm" if prepdata_cfg['norm']['enabled'] else ""
 ncats = prepdata_cfg['cats']['num']
-cats_scale = prepdata_cfg['cats']['scale_factor']
+catscale = prepdata_cfg['cats']['scale_factor']
 dtalg = prepdata_cfg['dt_settings']['name']
 dtparams = prepdata_cfg['dt_settings']['params']
 dtopts = prepdata_cfg['dt_settings']['opts']
@@ -99,10 +99,10 @@ if not os.path.exists(input_file):
 # executing experiments
 pr_col(c.fg.green, "[wrapper] executing wrapper...")
 cmd_line = ("python3 prepare_data.py -i %s -o %s"
-            " %s %s --pred=%s --ncats=%s"
+            " %s %s --pred=%s --ncats=%s --catscale=%s"
             " %s -dt %s -dtp %s -dto %s %s" %
             (input_file, output_file, filter_rows,
-             filter_cols, pred, str(ncats), norm,
+             filter_cols, pred, str(ncats), str(catscale), norm,
              dtalg, dtparams, dtopts, ("--rmtemp" if rm_temp_files else "")))
 pr_debug(print_debug, cmd_line)
 ret = os.system(cmd_line)
