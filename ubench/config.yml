@@ -1,0 +1,7 @@
+# File              : config.yml
+# Author            : Marcos Horro <marcos.horro@udc.gal>
+# Date              : Lun 09 Dec 2019 13:23:11 MST
+# Last Modified Date: Lun 09 Dec 2019 13:23:11 MST
+# Last Modified By  : Marcos Horro <marcos.horro@udc.gal>
+
+dimensions: N KERNEL_SIZE STRIDE
