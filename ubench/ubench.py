@@ -43,8 +43,8 @@ th_pin = "OMP_NUM_THREADS=1 GOMP_CPU_AFFINITY=7"  # gcc version
 
 # custom flags, e.g. vectorization
 custom_flags = "-DPOLYBENCH_USE_C99_PROTO -DPOLYBENCH_USE_RESTRICT -Ofast -ftree-vectorize -march=native " + \
-    "-mtune=native -fvect-cost-model=unlimited -fsimd-cost-model=unlimited " +\
-    "-mavx2 -ftree-vectorizer-verbose=7 --param min-vect-loop-bound=1"
+        "-mtune=native -fvect-cost-model=unlimited -fsimd-cost-model=unlimited " +\
+        "-mavx2 -ftree-vectorizer-verbose=7 --param min-vect-loop-bound=1"
 if (len(sys.argv) > 1):
     custom_flags = str(sys.argv[1])
 
@@ -151,7 +151,7 @@ iteration = 0
 
 # Structure for storing results and ploting
 df = pd.DataFrame(columns=["I", "It", "Is", "J", "Jt",
-                           "Js", "FLOPSs", "Cycles", "Time", "Vec"])
+    "Js", "FLOPSs", "Cycles", "Time", "Vec"])
 #df = pd.DataFrame(columns=["I","It","Is","J","Jt","Js","Vec"])
 
 print("Microbenchmarking using a SpMV-like code...")
@@ -163,14 +163,14 @@ for uI, uJ in it.product(init_val, init_val):
             iteration += 1
             # compilation
             ret = os.system("make custom_flags='%s' NRUNS=%d"
-                            " uI=%d uIt=%d uIs=%d"
-                            " uJ=%d uJt=%d uJs=%d"
-                            % (custom_flags, nruns, uI, uIt, uIs, uJ, uJt, uJs))
+                    " uI=%d uIt=%d uIs=%d"
+                    " uJ=%d uJt=%d uJs=%d"
+                    % (custom_flags, nruns, uI, uIt, uIs, uJ, uJt, uJs))
             if (ret != 0):
                 print("Error compiling, quiting...")
                 exit(0)
             raw_asm = reading_asm_inst("asm_codes/kernel_I%d_J%d_It%d_Jt%d_Is%d_Js%d.s" %
-                                       (uI, uJ, uIt, uJt, uIs, uJs))
+                    (uI, uJ, uIt, uJt, uIs, uJs))
             vect = check_vect()
             # Average cycles
             avg_cycles = avg_exec("cyc")
@@ -179,8 +179,8 @@ for uI, uJ in it.product(init_val, init_val):
             # FIXME calculating FLOPS/s ad-hoc for this problem
             flops = (int(uIt/uIs) * int(uJt/uJs) * 2. * nruns) / avg_time
             d = {'I': int(uI), 'It': int(uIt), 'Is': int(uIs),
-                 'J': int(uJ), 'Jt': int(uJt), 'Js': int(uJs), 'FLOPSs': flops,
-                 'Cycles': avg_cycles, 'Time': avg_time, 'Vec': vect}
+                    'J': int(uJ), 'Jt': int(uJt), 'Js': int(uJs), 'FLOPSs': flops,
+                    'Cycles': avg_cycles, 'Time': avg_time, 'Vec': vect}
             d.update(raw_asm)
             df = df.append(d, ignore_index=True)
 
@@ -193,6 +193,6 @@ with open(fullfile, 'r+') as f:
     content = f.read()
     f.seek(0, 0)
     f.write(csv_header([["init_vals", init_val],
-                        ["tile_size", tile_size], ["step_size", step_size],
-                        custom_flags, th_pin, ["runs and execs:", nruns, nexec]]))
+        ["tile_size", tile_size], ["step_size", step_size],
+        custom_flags, th_pin, ["runs and execs:", nruns, nexec]]))
     f.write(content)

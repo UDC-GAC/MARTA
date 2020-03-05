@@ -7,8 +7,8 @@
  *
  * Web address: http://polybench.sourceforge.net
  */
-#ifndef _ATAX_H
-# define _ATAX_H
+#ifndef _SPMV_H
+# define _SPMV_H
 
 /* Default to LARGE_DATASET. */
 # if !defined(MINI_DATASET) && !defined(SMALL_DATASET) && !defined(MEDIUM_DATASET) && !defined(LARGE_DATASET) && !defined(EXTRALARGE_DATASET)
@@ -77,4 +77,4 @@
 #  define POW_FUN(x,y) pow(x,y)
 # endif
 
-#endif /* !_ATAX_H */
+#endif /* !_SPMV_H */
