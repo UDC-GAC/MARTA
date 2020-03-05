@@ -1,12 +1,8 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# File              : ubench.py
-# Author            : Marcos Horro <marcos.horro@udc.gal>
-# Date              : Tue 05 Nov 2019 02:42:50 PM MST
-# Last Modified Date: Mar 26 Nov 2019 13:53:06 MST
-# Last Modified By  : Marcos Horro <marcos.horro@udc.gal>
 #!/env/python3
 
+import yaml
+import argparse
 import numpy as np
 import pandas as pd
 import csv
@@ -30,27 +26,42 @@ from datetime import datetime as dt
 # * vectorization flags: arguments
 #############################
 
-# values of interest
-init_val = [0, 1, 3, 7, 15, 16]
-tile_size = [1, 3, 4, 8, 12, 16]
-step_size = [1, 2, 3, 4, 5]
-nexec = 7
-nruns = 1e6
 
-# pinning thread to CPU (ugly way tho)
-th_pin = "OMP_NUM_THREADS=1 GOMP_CPU_AFFINITY=7"  # gcc version
-# th_pin="OMP_NUM_THREADS=1 KMP_AFFINITY=7" # icc version
+#############################
+## parse arguments
+##################################################
+# parsing arguments
+parser = argparse.ArgumentParser(
+        description='wrapper for preparing data given a csv')
+required_named = parser.add_argument_group('required named arguments')
+required_named.add_argument(
+        '-i', '--input', help='input file name', required=True)
+args = parser.parse_args()
 
-# custom flags, e.g. vectorization
-custom_flags = "-DPOLYBENCH_USE_C99_PROTO -DPOLYBENCH_USE_RESTRICT -Ofast -ftree-vectorize -march=native " + \
-        "-mtune=native -fvect-cost-model=unlimited -fsimd-cost-model=unlimited " +\
-        "-mavx2 -ftree-vectorizer-verbose=7 --param min-vect-loop-bound=1"
-if (len(sys.argv) > 1):
-    custom_flags = str(sys.argv[1])
+##################################################
+# parsing all the arguments from the config.yml
+yml_config = args.input
+with open(yml_config, 'r') as ymlfile:
+    cfg = yaml.load(ymlfile)
 
-# file names
-tstamp = dt.now().strftime("%H_%M_%S__%m_%d")
-fullfile = "full_asm_%s.csv" % tstamp
+# compilation arguments
+config_comp = cfg[0]['compilation']
+compiler = config_comp['compiler']
+kernel = config_comp['kernel']
+init_val = config_comp['init_val']
+tile_size = config_comp['tile_size']
+step_size = config_comp['step_size']
+nexec = config_comp['nexec']
+nruns = int(config_comp['nruns'])
+flops = config_comp['flops']
+custom_flags = config_comp['custom_flags']
+#custom_flags = "-DPOLYBENCH_USE_C99_PROTO -DPOLYBENCH_USE_RESTRICT -Ofast -ftree-vectorize -march=native " + \
+        #        "-mtune=native -fvect-cost-model=unlimited -fsimd-cost-model=unlimited " +\
+        #        "-mavx2 -ftree-vectorizer-verbose=7 --param min-vect-loop-bound=1"
+
+# execution arguments
+config_exec = cfg[1]['execution']
+th_pin = config_exec['th_pin']
 
 
 def acceptable_dev(values):
@@ -78,6 +89,8 @@ def reading_asm_inst(asm_file):
     raw_inst = {}
     count = False
     for l in open(asm_file, 'r'):
+        if "#"==l[0]:
+            continue
         tok = l.strip().split("\t")
         if tok[0] == '.cfi_endproc':
             return raw_inst
@@ -97,13 +110,13 @@ def reading_asm_inst(asm_file):
     return raw_inst
 
 
-def check_vect():
-    with open("kernel.vec", 'r') as f:
+def check_vect(code):
+    with open(code + ".vec", 'r') as f:
         for l in f:
-            if ("kernel.c" in l) and ("loop vectorized" in l):
-                os.system("rm kernel.vec")
+            if (code + ".c" in l) and ("loop vectorized" in l):
+                os.system("rm " + code + ".vec")
                 return True
-    os.system("rm kernel.vec")
+    os.system("rm " + code + ".vec")
     return False
 
 
@@ -125,17 +138,17 @@ def csv_header(params):
     return header
 
 
-def avg_exec(name):
+def avg_exec(code, name):
     # executing seven times at least
-    os.system("%s ./bin/spmv_%s  > ____tmp_%s" % (th_pin, name, name))
+    os.system("%s ./bin/%s_%s.o  > ____tmp_%s" % (th_pin, code, name, name))
     for tt in range(1, nexec):
         # execute
-        os.system("%s ./bin/spmv_%s >> ____tmp_%s" % (th_pin, name, name))
+        os.system("%s ./bin/%s_%s.o >> ____tmp_%s" % (th_pin, code, name, name))
     val = []
     for l in open("____tmp_%s" % name):
         val.append(float(l))
     val.sort()
-    with open((name + "_" + fullfile), "a+") as f:
+    with open((name + "_" + code), "a+") as f:
         for v in val:
             f.write(str(v)+",")
         f.write("\n")
@@ -147,52 +160,58 @@ def avg_exec(name):
 
 # for debuggin purposes and feedback
 niters = pow(len(init_val), 2) * pow(len(tile_size), 2) * pow(len(step_size), 2)
-iteration = 0
 
-# Structure for storing results and ploting
-df = pd.DataFrame(columns=["I", "It", "Is", "J", "Jt",
-    "Js", "FLOPSs", "Cycles", "Time", "Vec"])
-#df = pd.DataFrame(columns=["I","It","Is","J","Jt","Js","Vec"])
+# main loop
+for code in kernel:
+    iteration = 0
+    basename = code.split(".c")[0]
+    # file names
+    tstamp = dt.now().strftime("%H_%M_%S__%m_%d")
+    fullfile = "full_%s_asm_%s.csv" % (basename,tstamp)
 
-print("Microbenchmarking using a SpMV-like code...")
-# microbenchmarking according to values of interest
-for uI, uJ in it.product(init_val, init_val):
-    for uIt, uJt in it.product(tile_size, tile_size):
-        for uIs, uJs in it.product(step_size, step_size):
-            print("progress = %d / %d" % (iteration, niters))
-            iteration += 1
-            # compilation
-            ret = os.system("make custom_flags='%s' NRUNS=%d"
-                    " uI=%d uIt=%d uIs=%d"
-                    " uJ=%d uJt=%d uJs=%d"
-                    % (custom_flags, nruns, uI, uIt, uIs, uJ, uJt, uJs))
-            if (ret != 0):
-                print("Error compiling, quiting...")
-                exit(0)
-            raw_asm = reading_asm_inst("asm_codes/kernel_I%d_J%d_It%d_Jt%d_Is%d_Js%d.s" %
-                    (uI, uJ, uIt, uJt, uIs, uJs))
-            vect = check_vect()
-            # Average cycles
-            avg_cycles = avg_exec("cyc")
-            # Average time
-            avg_time = avg_exec("time")
-            # FIXME calculating FLOPS/s ad-hoc for this problem
-            flops = (int(uIt/uIs) * int(uJt/uJs) * 2. * nruns) / avg_time
-            d = {'I': int(uI), 'It': int(uIt), 'Is': int(uIs),
-                    'J': int(uJ), 'Jt': int(uJt), 'Js': int(uJs), 'FLOPSs': flops,
-                    'Cycles': avg_cycles, 'Time': avg_time, 'Vec': vect}
-            d.update(raw_asm)
-            df = df.append(d, ignore_index=True)
+    # Structure for storing results and ploting
+    df = pd.DataFrame(columns=["I", "It", "Is", "J", "Jt",
+        "Js", "FLOPSs", "Cycles", "Time", "Vec"])
 
-# storing results with metadata
-df = df.fillna(0.0)
-df.to_csv(fullfile, index=False)
+    print("Microbenchmarking for " + code + " code...")
+    # microbenchmarking according to values of interest
+    for uI, uJ in it.product(init_val, init_val):
+        for uIt, uJt in it.product(tile_size, tile_size):
+            for uIs, uJs in it.product(step_size, step_size):
+                print("progress = %d / %d" % (iteration, niters))
+                iteration += 1
+                # compilation
+                ret = os.system("make CUSTOM_FLAGS='%s' NRUNS=%d"
+                        " uI=%d uIt=%d uIs=%d"
+                        " uJ=%d uJt=%d uJs=%d"
+                        % (custom_flags, nruns, uI, uIt, uIs, uJ, uJt, uJs))
+                if (ret != 0):
+                    print("Error compiling %s, quiting..." % (code))
+                    exit(0)
+                raw_asm = reading_asm_inst("asm_codes/%s_I%d_J%d_It%d_Jt%d_Is%d_Js%d.s" %
+                        (basename, uI, uJ, uIt, uJt, uIs, uJs))
+                vect = check_vect(basename)
+                # Average cycles
+                # avg_cycles = avg_exec(basename, "cyc")
+                avg_cycles = 0.0
+                # Average time
+                avg_time = avg_exec(basename, "time")
+                flops = (int(uIt/uIs) * int(uJt/uJs) * float(flops) * nruns) / avg_time
+                d = {'I': int(uI), 'It': int(uIt), 'Is': int(uIs),
+                        'J': int(uJ), 'Jt': int(uJt), 'Js': int(uJs), 'FLOPSs': flops,
+                        'Cycles': avg_cycles, 'Time': avg_time, 'Vec': vect}
+                d.update(raw_asm)
+                df = df.append(d, ignore_index=True)
 
-# saving data
-with open(fullfile, 'r+') as f:
-    content = f.read()
-    f.seek(0, 0)
-    f.write(csv_header([["init_vals", init_val],
-        ["tile_size", tile_size], ["step_size", step_size],
-        custom_flags, th_pin, ["runs and execs:", nruns, nexec]]))
-    f.write(content)
+    # storing results with metadata
+    df = df.fillna(0.0)
+    df.to_csv(fullfile, index=False)
+
+    # saving all data
+    with open(fullfile, 'r+') as f:
+        content = f.read()
+        f.seek(0, 0)
+        f.write(csv_header([["init_vals", init_val],
+            ["tile_size", tile_size], ["step_size", step_size],
+            custom_flags, th_pin, ["runs and execs:", nruns, nexec]]))
+        f.write(content)

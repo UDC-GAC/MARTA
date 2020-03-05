@@ -1,7 +1,6 @@
-#include <polybench.c>
-#include "definitions.h"
+#include "kernel.h"
 
-static void kernel_spmvstyle(int m, int n,
+void kernel_spmvstyle(int m, int n,
         int _uI, int _uIt, int _uIs,
         int _uJ, int _uJt, int _uJs,
         DATA_TYPE POLYBENCH_2D(A,M,N,m,n),

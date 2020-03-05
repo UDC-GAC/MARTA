@@ -5,17 +5,16 @@
 # Last Modified By  : Marcos Horro <marcos.horro@udc.gal>
 
 BINDIR=./bin
-#USRDIR=/s/chopin/b/grad/markos11
 USRDIR=$(HOME)
 
 CC=gcc
-CFLAGS=-fopenmp $(BINDIR)/$(KERNEL).o
+CFLAGS=-fopenmp
 TFLAGS=-DPOLYBENCH_TIME -DPOLYBENCH_CYCLE_ACCURATE_TIME
-PFLAGS=-DPOLYBENCH_PAPI -L$(USRDIR)/usr/lib -lpapi
-POLYINC=-I utilities -I $(UBENCH) utilities/polybench.c
-#KERNEL=kernel.o kernel_reductions.o
-KERNEL=kernel.o
-UBENCH=kernels
+PFLAGS=-DPOLYBENCH_PAPI -L$(USRDIR)/papi/src -I$(USRDIR)/papi/src -lpapi
+INC_KERN=kernels
+POLYINC=-I utilities -I $(INC_KERN)
+POLYINCC=-I utilities -I $(INC_KERN) utilities/polybench.c
+KERNEL=kernel
 
 ################################################################################
 ################################################################################
@@ -39,20 +38,20 @@ endif
 KFLAGS = $(CUSTOM_FLAGS) -DuI=$(uI) -DuIt=$(uIt) -DuIs=$(uIs) -DuJ=$(uJ) -DuJt=$(uJt) -DuJs=$(uJs)
 SFLAGS = $(CUSTOM_FLAGS) -DNRUNS=$(NRUNS)
 # if @ specified, then not verbose
-SILENT =
+SILENT = @
 
 all: ubench
 .PHONY: all
 .SILENT: ubench
 ubench: $(KERNEL)
 
-%.o: kernels/%.c
+%: kernels/%.c
 	$(SILENT)$(CC) $(POLYINC) $(KFLAGS) $^ -c -fverbose-asm -fopt-info-optimized=$@.vec -S
-	$(SILENT)cp kernel.s asm_codes/kernel_I$(uI)_J$(uJ)_It$(uIt)_Jt$(uJt)_Is$(uIs)_Js$(uJs)_$^.s
-	$(SILENT)$(CC) $(POLYINC) $(KFLAGS) kernels/$^.c -c -fopt-info-optimized=$^.vec
-	$(SILENT)mv $^.o $(BINDIR)
-	$(SILENT)$(CC) $(CFLAGS) $(POLYINC) kernels/skeleton.c $(SFLAGS) $(TFLAGS) -o $(BINDIR)/spmv_time
-	$(SILENT)$(CC) $(CFLAGS) $(POLYINC) kernels/skeleton.c $(SFLAGS) $(PFLAGS) -o $(BINDIR)/spmv_cyc
+	$(SILENT)cp $@.s asm_codes/$@_I$(uI)_J$(uJ)_It$(uIt)_Jt$(uJt)_Is$(uIs)_Js$(uJs).s
+	$(SILENT)$(CC) $(POLYINC) $(KFLAGS) $^ -c -fopt-info-optimized=$@.vec
+	$(SILENT)mv $@.o $(BINDIR)
+	$(SILENT)$(CC) $(CFLAGS) $(POLYINCC) kernels/skeleton.c $(BINDIR)/$@.o $(SFLAGS) $(TFLAGS) -o $(BINDIR)/$@_time.o
+	$(SILENT)$(CC) $(CFLAGS) $(POLYINCC) kernels/skeleton.c $(BINDIR)/$@.o $(SFLAGS) $(PFLAGS) -o $(BINDIR)/$@_cyc.o
 
 clean:
-	rm -f bin/* *.s *.vec
+	rm -f bin/* *.s *.vec *.o

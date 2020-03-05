@@ -16,6 +16,9 @@
 
 /* Include polybench common header. */
 #include <polybench.h>
+/* Include benchmark-specific header. */
+// #include "definitions.h"
+#include "kernel.h"
 
 
 #ifndef uI
@@ -50,9 +53,6 @@
 #define NRUNS 1000
 #endif
 
-/* Include benchmark-specific header. */
-#include "definitions.h"
-#include "kernel.h"
 
 /* Array initialization. */
     static
@@ -107,8 +107,6 @@ main(int argc, char** argv)
     /* Initialize array(s). */
     init_array (m, n, POLYBENCH_ARRAY(A), POLYBENCH_ARRAY(x));
 
-    // debugging
-    // printf("values steps %d %d\n", uIs, uJs);
     /* Start timer. */
     polybench_start_instruments;
 
