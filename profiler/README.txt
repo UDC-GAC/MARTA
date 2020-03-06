@@ -1,19 +1,19 @@
-```
- File              : README.md
- Author            : Marcos Horro <marcos.horro@udc.gal>
- Date              : Mar 12 Nov 2019 21:51:21 MST
- Last Modified Date: Mér 13 Nov 2019 22:07:44 MST
- Last Modified By  : Marcos Horro <marcos.horro@udc.gal>
-```
+* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+*                                  MARPLOT                                    *
+*              Micro ARchitectural Profiler for LOop-based Tensors            *
+* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
-# $\mu$bench
----
+Copyright (c) 2019-2020 the Colorado State Univesity.
+
+Contact:
+    Marcos Horro Varela <marcos.horro@udc.es> (mantainer)
+    Louis-Noël Pouchet <pouchet@colostate.edu>
 
 Machine characterization is a tedious task that can require a lot of profiling
 by executing many programs or kernels and analyzing their performance. This
 tool has been created to automate this task.
 
-This tool is meant for:
+This part of MARPLOT is meant for:
 
 * Compiling kernels with different configurations, regarding: loop stride,
   datasizes, etc.
