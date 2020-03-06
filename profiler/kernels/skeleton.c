@@ -16,56 +16,29 @@
 
 /* Include polybench common header. */
 #include <polybench.h>
+
 /* Include benchmark-specific header. */
-// #include "definitions.h"
-#include "kernel.h"
+#include "definitions.h"
 
-
-#ifndef uI
-#define uI 0
+#if KERNEL==REDUX
+#include "kernel_redux.h"
+#define KERNEL_NAME kernel_redux
 #endif
-
-#ifndef uIt
-#define uIt 1
-#endif
-
-#ifndef uIs
-#define uIs 1
-#endif
-
-#ifndef uJ
-#define uJ 0
-#endif
-
-#ifndef uJt
-#define uJt 1
-#endif
-
-#ifndef uJs
-#define uJs 1
-#endif
-
-#ifndef DATA_TYPE
-#define DATA_TYPE double
-#endif
-
-#ifndef NRUNS
-#define NRUNS 1000
-#endif
-
 
 /* Array initialization. */
-    static
-void init_array (int m, int n,
+static void init_arrays(int m, int n,
         DATA_TYPE POLYBENCH_2D(A,M,N,m,n),
-        DATA_TYPE POLYBENCH_1D(x,N,n))
+        DATA_TYPE POLYBENCH_1D(x,N,n),
+        DATA_TYPE POLYBENCH_1D(y,N,n))
 {
     int i, j;
     DATA_TYPE fn;
     fn = (DATA_TYPE)n;
 
-    for (i = 0; i < n; i++)
+    for (i = 0; i < n; i++) {
         x[i] = 1 + (i / fn);
+        y[i] = 2 + (i / fn);
+    }
     for (i = 0; i < m; i++)
         for (j = 0; j < n; j++)
             A[i][j] = (DATA_TYPE) ((i+j) % n) / (5*m);
@@ -74,8 +47,7 @@ void init_array (int m, int n,
 
 /* DCE code. Must scan the entire live-out data.
    Can be used also to check the correctness of the output. */
-    static
-void print_array(int n,
+static void print_array1d(int n,
         DATA_TYPE POLYBENCH_1D(y,N,n))
 
 {
@@ -91,13 +63,31 @@ void print_array(int n,
     POLYBENCH_DUMP_FINISH;
 }
 
-    int
-main(int argc, char** argv)
+/* DCE code. Must scan the entire live-out data.
+   Can be used also to check the correctness of the output. */
+static void print_array2d(int n,
+        DATA_TYPE POLYBENCH_2D(A,N,N,n,n))
+
+{
+    int i, j;
+
+    POLYBENCH_DUMP_START;
+    POLYBENCH_DUMP_BEGIN("A");
+    for (i = 0; i < n; i++) {
+        for (j = 0; j < n; j++) {
+            if (i % 20 == 0) fprintf (POLYBENCH_DUMP_TARGET, "\n");
+            fprintf (POLYBENCH_DUMP_TARGET, DATA_PRINTF_MODIFIER, A[i][j]);
+        }
+    }
+    POLYBENCH_DUMP_END("A");
+    POLYBENCH_DUMP_FINISH;
+}
+
+int main(int argc, char** argv)
 {
     /* Retrieve problem size. */
     int m = M;
     int n = N;
-    int t = 0;
 
     /* Variable declaration/allocation. */
     POLYBENCH_2D_ARRAY_DECL(A, DATA_TYPE, M, N, m, n);
@@ -105,19 +95,32 @@ main(int argc, char** argv)
     POLYBENCH_1D_ARRAY_DECL(y, DATA_TYPE, N, n);
 
     /* Initialize array(s). */
-    init_array (m, n, POLYBENCH_ARRAY(A), POLYBENCH_ARRAY(x));
+    init_arrays(m, n, POLYBENCH_ARRAY(A), POLYBENCH_ARRAY(x), POLYBENCH_ARRAY(y));
+
+#if STMT==2
+    POLYBENCH_2D_ARRAY_DECL(B, DATA_TYPE, M, N, m, n);
+    POLYBENCH_1D_ARRAY_DECL(w, DATA_TYPE, N, n);
+    POLYBENCH_1D_ARRAY_DECL(z, DATA_TYPE, N, n);
+    init_arrays(m, n, POLYBENCH_ARRAY(B), POLYBENCH_ARRAY(w), POLYBENCH_ARRAY(z));
+#endif
 
     /* Start timer. */
+    int t = 0;
     polybench_start_instruments;
-
     for (t = 0; t < NRUNS; ++t)
     {
-        kernel_spmvstyle (m, n,
+        KERNEL_NAME(m, n,
                 uI, uIt, uIs,
                 uJ, uJt, uJs,
                 POLYBENCH_ARRAY(A),
                 POLYBENCH_ARRAY(x),
-                POLYBENCH_ARRAY(y));
+                POLYBENCH_ARRAY(y)
+#if STMT==2
+                ,POLYBENCH_ARRAY(B),
+                POLYBENCH_ARRAY(w),
+                POLYBENCH_ARRAY(z)
+#endif
+                );
     }
     /* Stop and print timer. */
     polybench_stop_instruments;
@@ -125,12 +128,23 @@ main(int argc, char** argv)
 
     /* Prevent dead-code elimination. All live-out data must be printed
        by the function call in argument. */
-    polybench_prevent_dce(print_array(n, POLYBENCH_ARRAY(y)));
+    polybench_prevent_dce(print_array1d(n, POLYBENCH_ARRAY(y)));
+    polybench_prevent_dce(print_array2d(n, POLYBENCH_ARRAY(A)));
 
     /* Be clean. */
     POLYBENCH_FREE_ARRAY(A);
     POLYBENCH_FREE_ARRAY(x);
     POLYBENCH_FREE_ARRAY(y);
+
+#if STMT==2
+    /* Prevent dead-code elimination. All live-out data must be printed
+       by the function call in argument. */
+    polybench_prevent_dce(print_array1d(n, POLYBENCH_ARRAY(w)));
+    polybench_prevent_dce(print_array2d(n, POLYBENCH_ARRAY(B)));
+    POLYBENCH_FREE_ARRAY(B);
+    POLYBENCH_FREE_ARRAY(w);
+    POLYBENCH_FREE_ARRAY(z);
+#endif
 
     return 0;
 }
