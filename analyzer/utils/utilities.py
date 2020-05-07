@@ -23,7 +23,7 @@ class StoreDictKeyPair(argparse.Action):
         my_dict = {}
         for kv in values:
             k, v = kv.split("=")
-            my_dict[k] = int(v)
+            my_dict[k] = v
         setattr(namespace, self.dest, my_dict)
 
 

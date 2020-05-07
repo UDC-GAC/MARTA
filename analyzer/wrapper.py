@@ -52,7 +52,7 @@ args = parser.parse_args()
 # parsing all the arguments from the config.yml
 yml_config = args.input
 with open(yml_config, 'r') as ymlfile:
-    cfg = yaml.load(ymlfile)
+    cfg = yaml.load(ymlfile, Loader=yaml.FullLoader)
 
 # general config
 general_cfg = cfg[0]['general']
