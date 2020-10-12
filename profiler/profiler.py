@@ -11,6 +11,7 @@ import os
 import sys
 from datetime import datetime as dt
 from math import ceil
+from tqdm import tqdm
 
 #############################
 # Setup of this experiment:
@@ -21,9 +22,13 @@ from math import ceil
 # * vectorization flags: arguments
 #############################
 
+debug = False
+
+
 def acceptable_dev(values):
     norm_val = values/np.max(values)
-    # print("[DEBUG] std deviation = %f\n" % np.std(norm_val))
+    if (debug):
+        print("[DEBUG] std deviation = %f\n" % np.std(norm_val))
     return (np.std(norm_val) < acc_dev)
 
 
@@ -35,7 +40,7 @@ def raw_asm_type(ins):
     if len(operands) != 0:
         op_name += "_"
         for op in operands:
-            if ("%ymm" in op) or ("%xmm" in op):
+            if ("%zmm" in op) or ("%ymm" in op) or ("%xmm" in op):
                 op_name += "r"
             else:
                 op_name += "m"
@@ -46,7 +51,7 @@ def reading_asm_inst(asm_file):
     raw_inst = {}
     count = False
     for l in open(asm_file, 'r'):
-        if "#"==l[0]:
+        if "#" == l[0]:
             continue
         tok = l.strip().split("\t")
         if tok[0] == '.cfi_endproc':
@@ -100,7 +105,8 @@ def avg_exec(code, name):
     os.system("%s ./bin/%s_%s.o  > ____tmp_%s" % (th_pin, code, name, name))
     for tt in range(1, nexec):
         # execute
-        os.system("%s ./bin/%s_%s.o >> ____tmp_%s" % (th_pin, code, name, name))
+        os.system("%s ./bin/%s_%s.o >> ____tmp_%s" %
+                  (th_pin, code, name, name))
     val = []
     for l in open("____tmp_%s" % name):
         val.append(float(l))
@@ -114,14 +120,17 @@ def avg_exec(code, name):
     os.system("rm ____tmp_%s" % name)
     return avg_val
 
+
 #############################
 # parsing CLI arguments
 #############################
 parser = argparse.ArgumentParser(
-        description='wrapper for preparing data given a csv')
+    description='wrapper for preparing data given a csv')
 required_named = parser.add_argument_group('required named arguments')
 required_named.add_argument(
-        '-i', '--input', help='input file name', required=True)
+    '-i', '--input', help='input file name', required=True)
+required_named.add_argument(
+    '-d', '--debug', action='store_true', help='debug verbose', required=False)
 args = parser.parse_args()
 
 
@@ -134,6 +143,7 @@ except ImportError:
     from yaml import Loader
 
 yml_config = args.input
+debug = args.debug
 with open(yml_config, 'r') as ymlfile:
     kernel_configs = yaml.load(ymlfile, Loader=Loader)
 
@@ -168,59 +178,63 @@ for cfg in kernel_configs:
     basename = kernel.split(".c")[0]
 
     # for debuggin purposes and feedback
-    niters = len(kernel_cfg) * pow(len(init_val), 2) * pow(len(tile_size), 2) * pow(len(step_size), 2)
+    niters = len(kernel_cfg) * pow(len(init_val), 2) * \
+        pow(len(tile_size), 2) * pow(len(step_size), 2)
 
     # file names
     tstamp = dt.now().strftime("%H_%M_%S__%m_%d")
-    fullfile = "full_%s_asm_%s.csv" % (basename,tstamp)
+    fullfile = "full_%s_asm_%s.csv" % (basename, tstamp)
 
     # Structure for storing results and ploting
     df = pd.DataFrame(columns=["I", "It", "Is", "J", "Jt",
-        "Js", "FLOPSs", "Cycles", "Time", "CFG"])
+                               "Js", "FLOPSs", "Cycles", "Time", "CFG"])
 
     print("Microbenchmarking for " + kernel + " code...")
     # microbenchmarking according to values of interest
-    for kconfig in kernel_cfg:
-        for uI, uJ in it.product(init_val, init_val):
-            for uIt, uJt in it.product(tile_size, tile_size):
-                for uIs, uJs in it.product(step_size, step_size):
-                    print("progress = %d / %d" % (iteration, niters))
-                    iteration += 1
-                    # compilation
-                    ret = os.system("make KERNEL='%s' ID='%s' KCFG='%s' CUSTOM_FLAGS='%s' NRUNS=%d"
-                            " uI=%d uIt=%d uIs=%d"
-                            " uJ=%d uJt=%d uJs=%d"
-                            % (basename, kconfig[-1], kconfig, custom_flags, nruns, uI, uIt, uIs, uJ, uJt, uJs))
-                    if (ret != 0):
-                        print("Error compiling %s, quiting..." % (kernel))
-                        exit(0)
-                    raw_asm = reading_asm_inst("asm_codes/%s_%s_I%d_J%d_It%d_Jt%d_Is%d_Js%d.s" %
-                            (basename, kconfig[-1], uI, uJ, uIt, uJt, uIs, uJs))
-                    # Average cycles
-                    avg_cycles = avg_exec(basename, "cyc")
-                    # Average time
-                    avg_time = avg_exec(basename, "time")
-                    flopss = (ceil(uIt/uIs) * ceil(uJt/uJs) * float(flops) * nruns) / avg_time
-                    d = {'I': int(uI), 'It': int(uIt), 'Is': int(uIs),
-                            'J': int(uJ), 'Jt': int(uJt), 'Js': int(uJs),
-                            'FLOPSs': flopss,
-                            'Cycles': avg_cycles, 'Time': avg_time,
-                            'CFG': kconfig}
-                    d.update(raw_asm)
-                    df = df.append(d, ignore_index=True)
+    with tqdm(total=niters) as pbar:
+        for kconfig in kernel_cfg:
+            for uI, uJ in it.product(init_val, init_val):
+                for uIt, uJt in it.product(tile_size, tile_size):
+                    for uIs, uJs in it.product(step_size, step_size):
+                        pbar.update(1)
+                        iteration += 1
+                        # compilation
+                        ret = os.system("make KERNEL='%s' ID='%s' KCFG='%s' CUSTOM_FLAGS='%s' NRUNS=%d"
+                                        " uI=%d uIt=%d uIs=%d"
+                                        " uJ=%d uJt=%d uJs=%d"
+                                        % (basename, kconfig[-1], kconfig, custom_flags, nruns, uI, uIt, uIs, uJ, uJt, uJs))
+                        if (ret != 0):
+                            print("Error compiling %s, quiting..." % (kernel))
+                            exit(0)
+                        raw_asm = reading_asm_inst("asm_codes/%s_%s_I%d_J%d_It%d_Jt%d_Is%d_Js%d.s" %
+                                                   (basename, kconfig[-1], uI, uJ, uIt, uJt, uIs, uJs))
+                        # Average cycles
+                        avg_cycles = avg_exec(basename, "cyc")
+                        # Average time
+                        avg_time = avg_exec(basename, "time")
+                        flopss = (ceil(uIt/uIs) * ceil(uJt/uJs) *
+                                  float(flops) * nruns) / avg_time
+                        d = {'I': int(uI), 'It': int(uIt), 'Is': int(uIs),
+                             'J': int(uJ), 'Jt': int(uJt), 'Js': int(uJs),
+                             'FLOPSs': flopss,
+                             'Cycles': avg_cycles, 'Time': avg_time,
+                             'CFG': kconfig}
+                        d.update(raw_asm)
+                        df = df.append(d, ignore_index=True)
 
-        # storing results with metadata
-        df = df.fillna(0.0)
-        df.to_csv(fullfile, index=False)
+            # storing results with metadata
+            df = df.fillna(0.0)
+            df.to_csv(fullfile, index=False)
 
-        # saving all data to file
-        with open(fullfile, 'r+') as f:
-            content = f.read()
-            f.seek(0, 0)
-            f.write(csv_header([["init_vals", init_val],
-                ["tile_size", tile_size], ["step_size", step_size],
-                custom_flags, th_pin, ["runs and execs:", nruns, nexec]]))
-            f.write(content)
+            # saving all data to file
+            with open(fullfile, 'r+') as f:
+                content = f.read()
+                f.seek(0, 0)
+                f.write(csv_header([["init_vals", init_val],
+                                    ["tile_size", tile_size], [
+                                        "step_size", step_size],
+                                    custom_flags, th_pin, ["runs and execs:", nruns, nexec]]))
+                f.write(content)
 
 # clean director1y
 os.system("rm *.s *.o")
