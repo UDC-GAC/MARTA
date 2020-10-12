@@ -36,14 +36,15 @@
 #                 prepare_data
 
 - general:
-    input: test_data/exec_asm_full_filtered.csv
+  # input: test_data/exec_asm_full_filtered.csv
+    input: test.csv
     output: output.arff
     overwrite: True
     clean: True
     debug: False
 - prepare_data:
     cols: I J It Jt Is Js Jters Iters NELEMS
-    rows: Vec_x=1
+    rows: CFG="reduxFused2stmt"
     pred: FLOPSs
     norm:
         enabled: False
@@ -55,11 +56,11 @@
         name: J48
         params: "M=20"
         opts: "\"B R\""
-    min_acc: 0.8
+    min_acc: 0.7
 - recommender:
     pred: FLOPSs
     interest_dim:
-        value: 6.5
+        value: 2.7
         type: numeric
     dim: I J It Jt Is Js Jters Iters NELEMS
 

@@ -112,7 +112,10 @@ pr_col(c.fg.red, "[recommender] false positives: %s/%s" %
 # categories
 # get the categories of false negatives
 if len(false_pos) > 1:
+    print(g_pred)
+    print(getattr(getattr(df, g_pred), "values"))
     cat_org = np.unique(getattr(getattr(df, g_pred), "values"))
+    print(cat_org)
     cat_org.sort()
     cat_false_pos = np.unique(getattr(getattr(false_pos, g_pred), "values"))
     inter_org_false_pos = [val for val in cat_org if val in cat_false_pos]
