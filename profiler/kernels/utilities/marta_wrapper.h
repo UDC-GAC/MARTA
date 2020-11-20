@@ -3,9 +3,6 @@
 
 #include "definitions.h"
 #include "polybench.h"
-#ifdef POLYBENCH_PAPI
-#include <papi.h>
-#endif
 
 #include <algorithm>
 #include <math.h>
@@ -151,7 +148,7 @@ static void init_2darray(int n, DATA_TYPE POLYBENCH_2D(A, N, N, n, n)) {
   }
 
 #if defined(POLYBENCH_PAPI)
-#undef MARTA_BENCHMARK_BEGIN(cond)
+#undef MARTA_BENCHMARK_BEGIN
 #define MARTA_BENCHMARK_BEGIN(cond)                                            \
   int main(int argc, char **argv) {                                            \
     int i = 0;                                                                 \

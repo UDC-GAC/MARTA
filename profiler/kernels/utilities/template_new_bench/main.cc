@@ -29,8 +29,8 @@
  * SOFTWARE.
  */
 
-#include "MARTA_wrapper.h"
 #include "kern.h"
+#include "marta_wrapper.h"
 
 MARTA_BENCHMARK_BEGIN(0);
 

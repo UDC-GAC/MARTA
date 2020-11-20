@@ -29,7 +29,7 @@
  * SOFTWARE.
  */
 
-#include "MARTA_wrapper.h"
+#include "marta_wrapper.h"
 #include "vpack.h"
 
 MARTA_BENCHMARK_BEGIN(0);

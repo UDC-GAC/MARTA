@@ -1,5 +1,5 @@
-#include "MARTA_wrapper.h"
 #include "kernel_redux.h"
+#include "marta_wrapper.h"
 
 MARTA_BENCHMARK_BEGIN(0);
 

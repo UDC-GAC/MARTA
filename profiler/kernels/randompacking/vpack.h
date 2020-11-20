@@ -1,9 +1,4 @@
 /**
- * File					 :
- * /home/markoshorro/workspace/MACVETH/tmp/cs553-hw5-alexnet/layers.h Author
- * : Marcos Horro Date					 : Wed 03 Jun 2020 11:25
- * +02:00
- *
  * Last Modified : Wed 10 Jun 2020 09:38 +02:00
  * Modified By	 : Marcos Horro (marcos.horro@udc.gal>)
  *
