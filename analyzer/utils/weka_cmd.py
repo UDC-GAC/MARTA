@@ -28,50 +28,44 @@
 
 import os
 
-path_weka = "~/Descargas/weka-3-8-3"
+path_weka = "~/Descargas/weka-3-8-4"
 weka_jar = path_weka + "/weka.jar"
 
 
 def convert_csv_to_arff(tmp_csv, outputfile):
-    os.system("java -cp %s weka.core.converters.CSVLoader %s -B 100000 > %s" %
-              (weka_jar, tmp_csv, outputfile))
+    os.system(
+        f"java -cp {weka_jar} weka.core.converters.CSVLoader {tmp_csv} -B 100000 > {outputfile}")
 
 
 def produce_class_outputs(alg, folderpath, testfile, err_out):
-    os.system("java -cp %s"
-              " weka.classifiers.trees.%s"
-              " -l %s/output.model -T %s -p 0"
-              "  > %s/pred.txt %s"
-              % (weka_jar, alg, folderpath, testfile,
-                 folderpath, err_out))
+    os.system(f"java -cp {weka_jar}"
+              " weka.classifiers.trees.{alg}"
+              " -l {folderpath}/output.model -T {testfile} -p 0"
+              "  > {folderpath}/pred.txt {err_out}")
 
 
 def produce_tester_stats(alg, folderpath, testfile, err_out):
-    os.system("java -cp %s"
-              " weka.classifiers.trees.%s"
-              " -l %s/output.model -T %s"
-              "  > %s/model_test_stats.csv %s"
-              % (weka_jar, alg, folderpath, testfile,
-                 folderpath, err_out))
+    os.system(f"java -cp {weka_jar}"
+              " weka.classifiers.trees.{alg}"
+              " -l {folderpath}/output.model -T {testfile}"
+              "  > {folderpath}/model_test_stats.csv {err_out}")
 
 
 def params_to_str(alg, params):
-    str_params = "_" + str(alg)
+    str_params = f"_{str(alg)}"
     for k, v in params.items():
-        str_params += ("_" + str(k) + str(v))
+        str_params += (f"_{str(k)}{str(v)}")
     return str_params
 
 
 def train_model(alg, params, opts, trainfile, folderpath, err_out):
     str_params = ""
     for k, v in params.items():
-        str_params += (" -" + str(k) + " " + str(v))
+        str_params += (f" -{str(k)} {str(v)}")
     str_opts = ""
     for opt in opts.split(" "):
-        str_opts += "-" + str(opt) + " "
-    os.system("java -cp %s"
-              " weka.classifiers.trees.%s"
-              " %s %s -t %s -d %s/output.model"
-              "  > %s/model_learn_stats.txt %s"
-              % (weka_jar, alg, str_params, str_opts, trainfile,
-                 folderpath, folderpath, err_out))
+        str_opts += f"-{str(opt)} "
+    os.system(f"java -cp {weka_jar}"
+              " weka.classifiers.trees.{alg}"
+              " {str_params} {str_opts} -t {trainfile} -d {folderpath}/output.model"
+              "  > {folderpath}/model_learn_stats.txt {err_out}")

@@ -47,15 +47,15 @@ required_named.add_argument(
     '-i', '--input', help='input file name', required=True)
 required_named.add_argument(
     '-c', '--csv', help='CSV input file name', required=True)
-required_named.add_argument('-p', '--pred',  # action='store_const',
+required_named.add_argument('-p', '--pred',
                             help='dimension we are predicting', required=True)
-required_named.add_argument('-v', '--value',  # action='store_const',
+required_named.add_argument('-v', '--value',
                             help='value we are looking for', required=True)
-required_named.add_argument('-t', '--vtype',  # action='store_const',
+required_named.add_argument('-t', '--vtype',
                             help='type value: numeric/categorial', required=True)
 required_named.add_argument('-d', '--dimensions', metavar='dim', type=str, nargs='+',
                             help='values we are interested on', required=True)
-required_named.add_argument('-dt', '--dtalg',  # action='store_const',
+required_named.add_argument('-dt', '--dtalg',
                             help='decision tree algorithm, e.g. REPTree, J48',
                             default='REPTree')
 args = parser.parse_args()

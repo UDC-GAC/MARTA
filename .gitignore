@@ -1,5 +1,6 @@
 # temp files
 __*
+macveth_output.c*
 
 # bytecode
 __pycache__/
@@ -11,6 +12,8 @@ __pycache__/
 # results
 old_files/
 results/
+output/
+results_*/
 data/
 bin/
 *.arff
@@ -24,8 +27,6 @@ bin/
 *.swp
 polybench*/
 *.swo
-test*
-*test
 *.tar.gz
 *.log
 *.txt

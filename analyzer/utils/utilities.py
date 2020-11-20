@@ -74,17 +74,16 @@ class colors:
 
 # print with color
 
-def pr_col(col, msg): print((col + '{}' + colors.reset).format(msg))
+def pr_col(col, msg): print((col + "{}" + colors.reset).format(msg))
 
 
 def pr_debug(debug_f, msg):
     if debug_f:
-        print((colors.fg.purple + '[DEBUG] {}' + colors.reset).format(msg))
+        print((colors.fg.purple + "[DEBUG] {}" + colors.reset).format(msg))
 
 
 def grep_file2file(string, infile, outfile):
-    os.system("grep -m 1 -n \"%s\" %s /dev/null >> %s" %
-              (string, infile, outfile))
+    os.system(f"grep -m 1 -n \"{string}\" {infile} /dev/null >> {outfile}")
     with open(outfile, 'r') as f:
         for l in f:
             if string in l:

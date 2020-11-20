@@ -70,6 +70,7 @@ filter_rows = "-r " + \
     prepdata_cfg['rows'] if len(prepdata_cfg['rows']) else ""
 pred = prepdata_cfg['pred']
 norm = "--norm" if prepdata_cfg['norm']['enabled'] else ""
+norm_type = prepdata_cfg['norm']['type']
 ncats = prepdata_cfg['cats']['num']
 catscale = prepdata_cfg['cats']['scale_factor']
 dtalg = prepdata_cfg['dt_settings']['name']
