@@ -9,6 +9,7 @@ import csv
 import itertools as it
 import os
 import sys
+import copy
 from datetime import datetime as dt
 from math import ceil
 from tqdm import tqdm
@@ -99,7 +100,10 @@ def csv_header(params):
 
 def avg_exec(code, name):
     # executing seven times at least
-    os.mkdir("tmp")
+    try:
+        os.mkdir("tmp")
+    except FileExistsError:
+        os.system("rm tmp/*")
     os.system(f"{th_pin} ./bin/{code}_{name}.o  > tmp/____tmp_{name}")
     for tt in range(1, nexec):
         # execute
@@ -157,7 +161,9 @@ if __name__ == "__main__":
     #############################
     for cfg in kernel_configs:
         # compilation arguments
-        kernel = cfg['kernel']['target']
+        kernel = cfg['kernel']['name']
+        target_file = cfg['kernel']['target']
+        descr = cfg['kernel']['descr']
         path_kernel = cfg['kernel']['path']
         config_comp = cfg['kernel']['compilation']
         compiler = config_comp['compiler']
@@ -170,15 +176,16 @@ if __name__ == "__main__":
         common_flags = config_comp['common_flags']
         debug_comp = config_comp['debug']
         macveth = config_comp['macveth']
+        is_silent = config_comp['silent']
 
         # execution arguments
         config_exec = cfg['kernel']['execution']
         th_pin = config_exec['th_pin']
-        basename = kernel.split(".c")[0]
+        basename = target_file.split(".c")[0]
 
         # file names
         tstamp = dt.now().strftime("%H_%M_%S__%m_%d")
-        fullfile = "full_%s_asm_%s.csv" % (basename, tstamp)
+        fullfile = f"full_{basename}_asm_{tstamp}.csv"
 
         params_name = list()
         params_values = list()
@@ -190,7 +197,8 @@ if __name__ == "__main__":
                     print(
                         f"Evaluation of expression for feature {f} went wrong!")
                     exit(1)
-                for t in tmp_eval:
+                tmp_eval_copy = copy.deepcopy(tmp_eval)
+                for t in tmp_eval_copy:
                     size = len(t)
                     break
                 for i in range(size):
@@ -210,16 +218,19 @@ if __name__ == "__main__":
         # Structure for storing results and ploting
         df = pd.DataFrame(columns=output_cols)
 
+        params_values_copy = copy.deepcopy(params_values)
+        niterations = len(list(*params_values_copy))
+
         print("Microbenchmarking for " + kernel + " code...")
         # microbenchmarking according to values of interest
-        with tqdm(total=4) as pbar:
+        with tqdm(total=niterations) as pbar:
             for kconfig in kernel_cfg:
                 for params in it.product(*params_values):
+                    pbar.update(1)
                     try:
                         params = list(*params)
                     except Exception:
                         pass
-                    pbar.update(1)
                     n = 0
                     tmp_dict = {}
                     custom_params = ""
@@ -231,16 +242,20 @@ if __name__ == "__main__":
                         flops = flops.replace(params_name[n], str(p))
                         n = n + 1
                     common_flags += custom_params
+                    silent = ""
+                    if is_silent:
+                        silent = " > /dev/null 2> /dev/null"
                     # compilation
                     ret = os.system(
                         f"make -C {path_kernel} COMP={compiler}"
-                        " COMMON_FLAGS='{common_flags}'"
-                        " NRUNS={nruns}")
+                        f" COMMON_FLAGS='{common_flags}'"
+                        f" SUFFIX_ASM='{suffix_file}'"
+                        f" NRUNS={nruns} {silent}")
                     if (ret != 0):
-                        print(f"Error compiling {kernel}, quiting...")
+                        print(f"Error compiling in {path_kernel}, quiting...")
                         exit(1)
-                    tmp_dict.update(parse_asm("asm_codes/%s_%s%s.s" %
-                                              (basename, kconfig[-1], suffix_file)))
+                    tmp_dict.update(parse_asm(f"asm_codes/{basename}_{suffix_file}.s"
+                                              ))
                     # Average cycles
                     avg_cycles = avg_exec(basename, "cyc")
                     # Average time
@@ -267,8 +282,9 @@ if __name__ == "__main__":
                     content = f.read()
                     f.seek(0, 0)
                     f.write(csv_header([
-                        custom_flags, th_pin, ["runs and execs:", nruns, nexec]]))
+                        common_flags, th_pin, ["runs and execs:", nruns, nexec]]))
                     f.write(content)
 
-    # clean director1y
-    os.system(f"rm {temp_files}")
+    # Clean director1y
+    if (tmp_files != ""):
+        os.system(f"rm {tmp_files}")

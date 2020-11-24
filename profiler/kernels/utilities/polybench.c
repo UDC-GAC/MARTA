@@ -20,6 +20,8 @@
 #include "polybench.h"
 #endif
 
+BEGIN_C_DECLS
+
 /* By default, collect PAPI counters on thread 0. */
 #ifndef POLYBENCH_THREAD_MONITOR
 #define POLYBENCH_THREAD_MONITOR 0
@@ -531,3 +533,5 @@ void *polybench_alloc_data(unsigned long long int n, int elt_size) {
 
   return ret;
 }
+
+END_C_DECLS

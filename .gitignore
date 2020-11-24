@@ -23,6 +23,9 @@ bin/
 *.s
 *.vec
 
+# vscode
+.vscode
+
 # temp files
 *.swp
 polybench*/
@@ -30,4 +33,15 @@ polybench*/
 *.tar.gz
 *.log
 *.txt
+time_*
+cyc_*
 
+# LaTeX
+*.bbl
+*.aux
+*.blg
+*.fls
+*.fdb*
+*.synctex*
+*.out
+*.pdf
