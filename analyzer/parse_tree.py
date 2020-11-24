@@ -126,7 +126,8 @@ class ClassTree:
 
 
 class DTTree(ClassTree):
-    '''DTTree class, which generates a tree from an input file
+    '''
+    DTTree class, which generates a tree from an input file
     '''
 
     def __init__(self, file, alg):
@@ -188,6 +189,7 @@ class DTTree(ClassTree):
 
     @staticmethod
     def reduce_expression(d):
+        # TODO:
         return d
 
     @staticmethod
@@ -256,8 +258,7 @@ class DTTree(ClassTree):
     def parse_tree(lines, root):
         '''Parses input lines into a decision tree'''
         current_index = [
-            0]  # need mutable container because of closure limitations
-        root = Node()
+            0]  # need mutable container because of closure limitationssvg
 
         def parse(current_depth, root):
             '''Helper recursive function'''
@@ -274,9 +275,9 @@ class DTTree(ClassTree):
                     if node_feature is None:
                         node_feature = feature
                     elif node_feature != feature:
-                        raise Exception("Error : Feature mismatch - expected %s"
-                                        "but got : \n%s"
-                                        % (node_feature, line))
+                        raise ValueError("Error : Feature mismatch - expected %s"
+                                         "but got : \n%s"
+                                         % (node_feature, line))
                     # Another branch
                     current_index[0] += 1
                     info = InfoNode(node_feature, comparator, value)
@@ -289,11 +290,15 @@ class DTTree(ClassTree):
                         node.append_node(leaf)
                     root.append_node(node)
                 else:
-                    raise Exception("Error : Input jumps two levels at once\n%s."
-                                    % line)
+                    raise ValueError("Error : Input jumps two levels at once\n%s."
+                                     % line)
             return root
 
-        parse(0, root)
+        try:
+            parse(0, root)
+        except ValueError:
+            print("Something went wrong when parsing tree, quiting...")
+            exit(1)
         root.set_info("ROOT")
         return root
 

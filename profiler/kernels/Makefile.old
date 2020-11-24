@@ -23,18 +23,18 @@ CFLAGS=-fopenmp
 TFLAGS=-DPOLYBENCH_TIME -DPOLYBENCH_CYCLE_ACCURATE_TIME
 #PFLAGS=-DPOLYBENCH_PAPI -L$(USRDIR)/papi/src -I$(USRDIR)/papi/src -lpapi
 PFLAGS=-DPOLYBENCH_PAPI -L/opt/ohpc/pub/libs/papi/5.7.0/lib -I/opt/ohpc/pub/libs/papi/5.7.0/include -lpapi
-INC_KERN=kernels
-POLYINC=-I utilities -I $(INC_KERN)
-POLYINCC=-I utilities -I $(INC_KERN) utilities/polybench.c
+INC_KERN=.
+POLYINC=-Iutilities -I $(INC_KERN)
+POLYINCC=-Iutilities -I $(INC_KERN) ..utilities/polybench.c
 
 ifeq ($(CC),icc)
 	CFLAGS += -D__PURE_INTEL_C99_HEADERS__
 endif
 
-KFLAGS = $(CUSTOM_FLAGS) -DuI=$(uI) -DuIt=$(uIt) -DuIs=$(uIs) -DuJ=$(uJ) -DuJt=$(uJt) -DuJs=$(uJs)
+KFLAGS = $(CUSTOM_FLAGS)
 SFLAGS = $(CUSTOM_FLAGS) -DNRUNS=$(NRUNS)
 # if @ specified, then not verbose
-SILENT = @
+SILENT = 
 
 all: kern
 
@@ -43,13 +43,13 @@ all: kern
 
 kern: $(KERNEL)
 
-%: kernels/%.c
+%: %.c
 	$(SILENT)$(CC) $(POLYINC) $(KFLAGS) $(KCFG) $^ -c -fverbose-asm -fopt-info-optimized=$@.vec -S
-	$(SILENT)mv $@.s asm_codes/$@_$(ID)_I$(uI)_J$(uJ)_It$(uIt)_Jt$(uJt)_Is$(uIs)_Js$(uJs).s
+	$(SILENT)mv $@.s ../../asm_codes/$@_$(ID)_I$(uI)_J$(uJ)_It$(uIt)_Jt$(uJt)_Is$(uIs)_Js$(uJs).s
 	$(SILENT)$(CC) $(POLYINC) $(KFLAGS) $^ -c -fopt-info-optimized=$@.vec
 	$(SILENT)mv $@.o $(BINDIR)
-	$(SILENT)$(CC) $(CFLAGS) $(POLYINCC) $(KFLAGS) $(KCFG) kernels/skeleton.c $(BINDIR)/$@.o $(SFLAGS) $(TFLAGS) -o $(BINDIR)/$@_time.o
-	$(SILENT)$(CC) $(CFLAGS) $(POLYINCC) $(KFLAGS) $(KCFG) kernels/skeleton.c $(BINDIR)/$@.o $(SFLAGS) $(PFLAGS) -o $(BINDIR)/$@_cyc.o
+	$(SILENT)$(CC) $(CFLAGS) $(POLYINCC) $(KFLAGS) $(KCFG) skeleton.c $(BINDIR)/$@.o $(SFLAGS) $(TFLAGS) -o $(BINDIR)/$@_time.o
+	$(SILENT)$(CC) $(CFLAGS) $(POLYINCC) $(KFLAGS) $(KCFG) skeleton.c $(BINDIR)/$@.o $(SFLAGS) $(PFLAGS) -o $(BINDIR)/$@_cyc.o
 
 clean:
 	rm -f bin/* *.s *.vec *.o

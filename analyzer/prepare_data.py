@@ -35,12 +35,12 @@ import pandas as pd
 import numpy as np
 from math import ceil
 from utils import weka_cmd
+from weka_cmd import path_weka
 from utils.utilities import StoreDictKeyPair
 from utils.utilities import pr_debug
 from utils.utilities import pr_col
 from utils.utilities import colors as c
 
-# global definitions
 path_root = os.getcwd() + "/"
 path_data = path_root + "data"
 path_res = path_root + "results"
@@ -50,6 +50,9 @@ algorithms = ['reptree']
 min_obj = [1]  # min number of instances
 max_leaf = [3]  # number of folds
 norm = False
+
+train_suffix = "_train.arff"
+test_suffix = "_test.arff"
 
 ##################################################
 # preprocessing data
@@ -61,7 +64,8 @@ def check_error(phase, err_log):
         return
     for l in open(err_log, 'r'):
         if "weka exception" in l:
-            pr_col(c.fg.red, "[error] %s could not open file:\n%s" % (phase, l))
+            pr_col(
+                c.fg.red, "[error] %s could not open file:\n%s" % (phase, l))
             exit(-1)
         if "exception" in l:
             pr_col(
@@ -72,6 +76,7 @@ def check_error(phase, err_log):
 def preprocess_data(inputfile, outputfile, cols, *rows, cat, catscale=1, ncat):
     df = pd.read_csv(inputfile, comment="#", index_col=False)
     if norm:
+        # FIXME:
         if norm_min_max:
             # minmax
             setattr(df, cat, getattr(df, cat)-min(getattr(df, cat)))
@@ -87,7 +92,8 @@ def preprocess_data(inputfile, outputfile, cols, *rows, cat, catscale=1, ncat):
     if ncat > 0:
         # categorical data
         tmp_cat = getattr(tmp, cat)
-        bins = np.linspace(min(getattr(df, cat)), max(getattr(df, cat)), ncat+1)
+        bins = np.linspace(min(getattr(df, cat)),
+                           max(getattr(df, cat)), ncat+1)
         step = bins[1] - bins[0]
         labels = ["I-{0}-{1}".format("{0:.3f}".format(float(i/catscale)),
                                      "{0:.3f}".format(float((i + step)/catscale))) for i in bins]
@@ -117,7 +123,7 @@ def create_train_and_test(datafile):
     pref = "_full_rand"
     for i in range(1, nsets+1):
         # training
-        suff = "_train.arff"
+        suff = train_suffix
         filename = "%s_%s%s%s" % (name, str(i), pref, suff)
         if force_replacement or not (os.path.exists("%s/%s" % (path_data, filename))):
             os.system("java -cp %s/weka.jar weka.filters.supervised.instance.stratifiedremovefolds "
@@ -127,7 +133,7 @@ def create_train_and_test(datafile):
                                                     str(nsets), str(i),
                                                     err_out))
         # testing
-        suff = "_test.arff"
+        suff = test_suffix
         filename = "%s_%s%s%s" % (name, str(i), pref, suff)
         if force_replacement or not (os.path.exists("%s/%s" % (path_data, filename))):
             os.system("java -cp %s/weka.jar weka.filters.supervised.instance.stratifiedremovefolds "
@@ -135,10 +141,10 @@ def create_train_and_test(datafile):
                       " -n %s -f %s -s 42 %s" % (path_weka, datafile,
                                                  path_data, filename,
                                                  str(nsets), str(i), err_out))
-    suff = "_train.arff"
+    suff = train_suffix
     filename = "%s_all%s%s" % (name, pref, suff)
     os.system("cp %s %s/%s" % (datafile, path_data, filename))
-    suff = "_test.arff"
+    suff = test_suffix
     filename = "%s_all%s%s" % (name, pref, suff)
     os.system("cp %s %s/%s" % (datafile, path_data, filename))
 ##################################################
@@ -160,8 +166,8 @@ def run_experiments(datafile, dtparams):
         foldername = "exp_%s%s" % (basename, suffix)
         os.system("mkdir -p %s/%s" % (path_res, foldername))
         folderpath = path_res + "/" + foldername
-        trainfile = path_data + "/" + basename + pref + "_train.arff"
-        testfile = path_data + "/" + basename + pref + "_test.arff"
+        trainfile = path_data + "/" + basename + pref + train_suffix
+        testfile = path_data + "/" + basename + pref + test_suffix
         print("\t[%s] train... (%s/%d)" %
               (alg, str(i), nsets))
         weka_cmd.train_model(
@@ -184,13 +190,13 @@ def run_experiments(datafile, dtparams):
 # parsing arguments
 parser = argparse.ArgumentParser(
     description='convert from csv to arff (generic format), creates training and testing sets. allows the inclusion of custom scripts (no need to be python) for preparing data according to experiments need. todo: options for selecting categorical value. note: need to have weka installed.')
-parser.add_argument('-p', '--pred',  # action='store_const',
+parser.add_argument('-p', '--pred',
                     help='dimension to predict', default="flopss")
-parser.add_argument('-nc', '--ncats',  # action='store_const',
+parser.add_argument('-nc', '--ncats',
                     help='number of categories of dimension to predict,'
                     ' categories are created uniformly in pandas',
                     default=10)
-parser.add_argument('-cs', '--catscale',  # action='store_const',
+parser.add_argument('-cs', '--catscale',
                     help='scale factor when creating categories, not relevant'
                     ' if dimension is not numeric',
                     default=1)
@@ -204,7 +210,7 @@ parser.add_argument('-f', '--force', action='store_true',
                     help='force replacement files even if they exist (default=False)', default=False)
 parser.add_argument('-r', '--rows', dest="rows", action=StoreDictKeyPair,
                     help="filtering rows as a dictionary. e.g. -r i=0 j=0", nargs="+", metavar="key=val")
-parser.add_argument('-dt', '--dtalg',  # action='store_const',
+parser.add_argument('-dt', '--dtalg',
                     help='decision tree algorithm, e.g. reptree, j48',
                     default='reptree')
 parser.add_argument('-dtp', '--dtparams', dest="dtparams", action=StoreDictKeyPair,
@@ -261,7 +267,8 @@ create_train_and_test(output_file)
 ##################################################
 # 4) run experiments
 pr_col(c.fg.orange, "[step 4] running experiments...")
-run_experiments(output_file, {'alg': dtalg, 'params': dtparams, 'opts': dtopts})
+run_experiments(output_file, {'alg': dtalg,
+                              'params': dtparams, 'opts': dtopts})
 
 pr_col(c.fg.orange, "[prepare_data] you are all set!")
 ##################################################
