@@ -2,13 +2,14 @@ import os
 
 
 def raw_asm_type(ins):
-    """[summary]
+    """
+    Get ASM variant, i.e. mnemonic[_operand_type], where operand_type can be a
+    register, memory or a immediate value
 
-    Args:
-        ins ([type]): [description]
-
-    Returns:
-        [type]: [description]
+    :param ins: List of strings, where the first token is the mnemonic
+    :type ins: list
+    :return: ASM mnemonic with its operands
+    :rtype: str
     """
     op_name = ins[0]
     if len(ins) < 2:
@@ -26,6 +27,14 @@ def raw_asm_type(ins):
 
 
 def skip_asm(ins):
+    """
+    Auxiliary function for skipping certain ASM operations
+
+    :param ins: [description]
+    :type ins: [type]
+    :return: [description]
+    :rtype: [type]
+    """
     if ins[0][0] == ".":
         return True
     for i in ins:
@@ -37,21 +46,25 @@ def skip_asm(ins):
 def parse_asm(asm_file):
     raw_inst = {}
     count = False
-    for l in open(asm_file, "r"):
-        if l[0] == '#' or l == '\n':
-            continue
-        tok = l.strip().split('#')
-        tok = tok[0].strip().split('\t')
-        if tok[0] == ".cfi_endproc":
-            return raw_inst
-        if tok[0] == ".cfi_startproc":
-            count = True
-            continue
-        if not count or skip_asm(tok):
-            continue
-        raw_asm = raw_asm_type(tok)
-        if raw_asm in raw_inst.keys():
-            raw_inst[raw_asm] += 1
-        else:
-            raw_inst[raw_asm] = 1
+    with open(asm_file, "r") as f:
+        # Get the previous contents
+        lines = f.readlines()
+        for l in lines:
+            if l[0] == '#' or l == '\n':
+                continue
+            tok = l.strip().split('#')
+            tok = tok[0].strip().split('\t')
+            if tok[0] == ".cfi_endproc":
+                return raw_inst
+            if tok[0] == ".cfi_startproc":
+                count = True
+                continue
+            if not count or skip_asm(tok):
+                continue
+            raw_asm = raw_asm_type(tok)
+            if raw_asm in raw_inst.keys():
+                raw_inst[raw_asm] += 1
+            else:
+                raw_inst[raw_asm] = 1
+
     return raw_inst

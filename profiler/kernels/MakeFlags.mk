@@ -12,8 +12,6 @@ POLYBENCH_FLAGS = -I ../utilities ../utilities/polybench.c
 POLY_TFLAGS= -DPOLYBENCH_TIME -DPOLYBENCH_CYCLE_ACCURATE_TIME $(POLYBENCH_FLAGS)
 POLY_PFLAGS= -DPOLYBENCH_PAPI $(POLYBENCH_FLAGS) -L/share/apps/papi/gnu8/6.0.0/lib -lpapi
 
-MACVETH_DB=$(COMMON_FLAGS)
-
 ifeq ($(VECT),fast)
 	VF= -Ofast
 else
@@ -39,24 +37,26 @@ MAIN_FILE=$(MAIN_SRC)$(MAIN_SUFFIX)
 # if @ specified, then not verbose
 V = 
 
-MACVETH_RULE=
-ifeq ($(MV),true)
-	MACVETH_RULE=macveth
-	OLD_TARGET=$(TARGET)
-	TARGET=$(TARGET)_macveth
-endif
+BASENAME:=$(TARGET)
 
+MACVETH_RULE=
+ifeq ($(MACVETH),true)
+	MACVETH_RULE:=macveth
+	OLD_TARGET:=$(TARGET)
+	TARGET:=$(TARGET)_macveth
+	MACVETH_DB:=$(CUSTOM_FLAGS)
+endif
 
 .PHONY: clean
 
 all: $(BINARY_NAME)
 
 macveth: 
-	$(V)$(MVPATH)macveth $(MACVETH_FLAGS) $(OLD_TARGET).cc -o kernels/$(BINARY_NAME)/$(TARGET).cc -- $(MACVETH_DB)
+	$(V)$(MVPATH)macveth $(MACVETH_FLAGS) $(OLD_TARGET).cc -o kernels/$(OLD_TARGET)/$(TARGET).cc -- $(MACVETH_DB)
 	
 asm_code: 
-	$(V)$(CC) -c $(VFLAGS) $(TARGET).cc -fverbose-asm -S
-	$(V)mv $(TARGET).s $(ASM_DIR)$(MAIN_SRC)$(SUFFIX_ASM).s
+	$(V)$(CC) -c $(VFLAGS) $(TARGET).cc -S
+	$(V)mv $(TARGET).s $(ASM_DIR)$(BASENAME)$(SUFFIX_ASM).s
 
 kernel_cyc: 
 	$(V)$(CC) -c $(POLY_PFLAGS) $(VFLAGS) $(TARGET).cc 
@@ -67,8 +67,8 @@ kernel_time:
 	$(V)mv $(TARGET).o $(TARGET)time.o
 
 $(BINARY_NAME): $(MACVETH_RULE) asm_code kernel_cyc kernel_time $(MAIN_SRC)$(MAIN_SUFFIX) 
-	$(V)$(CC) $(VFLAGS) $(POLY_TFLAGS) $(MAIN_FILE) $(TARGET)time.o -o $(BIN_DIR)$(MAIN_SRC)_time.o
-	$(V)$(CC) $(VFLAGS) $(POLY_PFLAGS) $(MAIN_FILE) $(TARGET)cyc.o -o $(BIN_DIR)$(MAIN_SRC)_cyc.o
+	$(V)$(CC) $(VFLAGS) $(POLY_TFLAGS) $(MAIN_FILE) $(TARGET)time.o -o $(BIN_DIR)/$(BASENAME)_time.o
+	$(V)$(CC) $(VFLAGS) $(POLY_PFLAGS) $(MAIN_FILE) $(TARGET)cyc.o -o $(BIN_DIR)/$(BASENAME)_cyc.o
 	
 	
 clean:

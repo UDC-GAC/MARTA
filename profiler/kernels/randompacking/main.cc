@@ -30,7 +30,7 @@
  */
 
 #include "marta_wrapper.h"
-#include "vpack.h"
+#include "randompacking.h"
 
 MARTA_BENCHMARK_BEGIN(0);
 

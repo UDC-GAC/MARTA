@@ -12,37 +12,47 @@ import itertools as it
 import os
 import copy
 from datetime import datetime as dt
-import profiler.measurements
-import profiler.asm_analyzer
+import measurements
+import asm_analyzer
 from tqdm import tqdm
 
 
 def csv_header(params, verbose):
     """
-    csv_header [summary]
+    Generate custom header for CSV file
 
-    :param params: 
+    :param params: List of parameters to print in the file
     :type params: list
-    :param verbose: [description]
-    :type verbose: [type]
-    :return: [description]
-    :rtype: [type]
+    :param verbose: If `True`, then outputs machine information
+    :type verbose: bool
+    :return: A string containing all data as a comment (all lines start with #)
+    :rtype: str
     """
     if verbose:
         machine_file = "___tmp__machine_info.txt"
         os.system(f"uname -a > {machine_file}")
         os.system(f"lscpu >> {machine_file}")
-        header = ""
+        header = f"# BEGIN -- machine info\n"
+        header = f"#\n"
         with open(machine_file, "r") as mf:
             for l in mf:
                 header += f"# {l}"
+        header += f"#\n"
+        header += f"# END -- machine info\n"
+        header += f"#\n"
+        header += f"#\n"
         os.system(f"rm {machine_file}")
+    header += f"# BEGIN -- parameters info\n"
+    header += f"#\n"
     for p in params:
         if type(p) == dict:
             for k, v in p.items():
                 header += f"# {str(k)}: {str(v)}\n"
         else:
             header += f"# {str(p)}\n"
+    header += f"#\n"
+    header += f"# END -- parameters info\n"
+    header += f"#\n"
     return header
 
 
@@ -78,11 +88,16 @@ def eval_features(feat):
     """
     Evaluate features from configuration file
 
-    Args:
-        :param feat ([type]): [description]
+    Example:
 
-    Returns:
-        [type]: [description]
+    "it.combinations(range(0,4),2)"
+
+    This would generate a list of values such as: (0,1), (0,2), (0,3), (1,2), etc.
+
+    :param feat: Dictionary of strings
+    :type feat: dict
+    :return: Retuns a tuple of lists with parameters names and their values
+    :rtype: tuple
     """
     params_name = list()
     params_values = list()
@@ -107,6 +122,12 @@ def eval_features(feat):
 
 
 def parse_arguments():
+    """
+    Parse CLI arguments
+
+    :return: Arguments parsed
+    :rtype: class:`argparse`
+    """
     parser = argparse.ArgumentParser(
         description="wrapper for preparing data given a csv"
     )
@@ -144,7 +165,7 @@ if __name__ == "__main__":
     os.system("mkdir -p asm_codes")
     os.system("mkdir -p bin")
 
-    tmp_files = ""
+    tmp_files = "-Rf tmp"
 
     #############################
     # For each kernel configuration
@@ -152,7 +173,8 @@ if __name__ == "__main__":
     for cfg in kernel_setup:
         # General configuration
         kernel = cfg["kernel"]["name"]
-        target_file = cfg["kernel"]["target"]
+        main_file = cfg["kernel"]["main_src"]
+        target_file = cfg["kernel"]["target_src"]
         descr = cfg["kernel"]["descr"]
         path_kernel = cfg["kernel"]["path"]
         debug = cfg["kernel"]["debug"]
@@ -169,7 +191,7 @@ if __name__ == "__main__":
         nruns = int(config_comp["nruns"])
         flops = config_comp["flops"]
         common_flags = config_comp["common_flags"]
-        macveth = config_comp["macveth"]
+        fixed_flags = config_comp["fixed_flags"]
         comp_silent = config_comp["silent"]
 
         # Execution arguments
@@ -206,7 +228,10 @@ if __name__ == "__main__":
         try:
             niterations = len(list(*params_values_copy))
         except Exception:
-            niterations = len(list(it.product(*params_values_copy)))
+            niterations = len(
+                list(it.product(*params_values_copy)))
+
+        niterations *= len(kernel_cfg)
 
         # Structure for storing results and ploting
         df = pd.DataFrame(columns=output_cols)
@@ -214,7 +239,8 @@ if __name__ == "__main__":
         print("Microbenchmarking for " + kernel + " code...")
         with tqdm(total=niterations) as pbar:
             for kconfig in kernel_cfg:
-                for params in it.product(*params_values):
+                backup_params_values = copy.deepcopy(params_values)
+                for params in it.product(*backup_params_values):
                     pbar.update(1)
                     try:
                         params = list(*params)
@@ -222,34 +248,36 @@ if __name__ == "__main__":
                         pass
                     n = 0
                     tmp_dict = {}
-                    custom_params = ""
+                    custom_flags = ""
                     suffix_file = ""
                     for p in params:
                         tmp_dict[params_name[n]] = p
-                        custom_params += f" -D{params_name[n]}={p}"
+                        custom_flags += f" -D{params_name[n]}={p}"
                         suffix_file += f"_{params_name[n]}{p}"
                         flops = flops.replace(params_name[n], str(p))
                         n = n + 1
-                    common_flags += custom_params
+                    custom_flags += fixed_flags
+                    common_flags += custom_flags
                     silent = ""
                     if comp_silent:
                         silent = " > /dev/null 2> /dev/null"
+
+                    if "MACVETH=true" in kconfig:
+                        suffix_file += "_macveth"
+
                     # compilation
                     ret = os.system(
                         f"make -C {path_kernel} COMP={compiler}"
+                        f" {kconfig} "
                         f" COMMON_FLAGS='{common_flags}'"
+                        f" CUSTOM_FLAGS='{custom_flags}'"
                         f" SUFFIX_ASM='{suffix_file}'"
-                        f" NRUNS={nruns} {silent}"
+                        f" NRUNS={nruns} "
+                        f" {silent}"
                     )
                     if (ret != 0):
                         print(
                             f"Error {str(ret)} compiling in {path_kernel}, quiting:")
-                        os.system(
-                            f"make -C {path_kernel} COMP={compiler}"
-                            f" COMMON_FLAGS='{common_flags}'"
-                            f" SUFFIX_ASM='{suffix_file}'"
-                            f" NRUNS={nruns} "
-                        )
                         print("Saving file...")
                         save_df(df, output_filename, output_verbose)
                         exit(1)
@@ -257,6 +285,7 @@ if __name__ == "__main__":
                         asm_analyzer.parse_asm(
                             f"asm_codes/{basename}{suffix_file}.s")
                     )
+
                     # Average cycles
                     avg_cycles = measurements.time_benchmark(
                         basename, "cyc", nexec, exec_args)
@@ -275,7 +304,7 @@ if __name__ == "__main__":
                             "FLOPSs": flopss,
                             "Cycles": avg_cycles,
                             "Time": avg_time,
-                            "CFG": kconfig,
+                            "CFG": kconfig
                         }
                     )
                     # Apending results

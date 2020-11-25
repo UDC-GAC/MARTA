@@ -1,7 +1,6 @@
-BINARY_NAME=vpack
+BINARY_NAME=randompacking
 MAIN_SRC=main
 MAIN_SUFFIX=.cc
-TARGET=vpack
-
+TARGET=randompacking
 
 include ../MakeFlags.mk
