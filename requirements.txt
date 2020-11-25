@@ -1,0 +1,10 @@
+# This file may be used to create an environment using:
+# $ conda create --name <env> --file <this file>
+# platform: linux-64
+
+tqdm
+pandas
+pyyaml=5.3
+Sphinx=3.3.1
+sphinxcontrib-serializinghtml
+rinohtype

@@ -33,30 +33,40 @@ else
 	VFLAGSMV= $(VF) -march=native -mfma -ftree-vectorize
 endif
 
+VFLAGS+= $(COMMON_FLAGS)
+
 MAIN_FILE=$(MAIN_SRC)$(MAIN_SUFFIX)
 # if @ specified, then not verbose
 V = 
+
+MACVETH_RULE=
+ifeq ($(MV),true)
+	MACVETH_RULE=macveth
+	OLD_TARGET=$(TARGET)
+	TARGET=$(TARGET)_macveth
+endif
+
 
 .PHONY: clean
 
 all: $(BINARY_NAME)
 
 macveth: 
-	$(V)$(MVPATH)macveth $(MACVETH_FLAGS) $(TARGET).cc -o kernels/$(BINARY_NAME)/$(TARGET)_macveth$(SUFFIX).cc -- $(MACVETH_DB)
+	$(V)$(MVPATH)macveth $(MACVETH_FLAGS) $(OLD_TARGET).cc -o kernels/$(BINARY_NAME)/$(TARGET).cc -- $(MACVETH_DB)
 	
 asm_code: 
-	$(V)$(CC) -c $(VFLAGS) $(TARGET).cc -fverbose-asm -fopt-info-optimized=$@.vec -S
-	$(V)mv $(TARGET).s $(ASM_DIR)$(MAIN_SRC)_$(SUFFIX_ASM).s
+	$(V)$(CC) -c $(VFLAGS) $(TARGET).cc -fverbose-asm -S
+	$(V)mv $(TARGET).s $(ASM_DIR)$(MAIN_SRC)$(SUFFIX_ASM).s
 
 kernel_cyc: 
-	$(V)$(CC) -c $(POLY_PFLAGS) $(VFLAGS) $(TARGET).cc
+	$(V)$(CC) -c $(POLY_PFLAGS) $(VFLAGS) $(TARGET).cc 
 	$(V)mv $(TARGET).o $(TARGET)cyc.o
 
 kernel_time:
 	$(V)$(CC) -c $(POLY_TFLAGS) $(VFLAGS) $(TARGET).cc
 	$(V)mv $(TARGET).o $(TARGET)time.o
 
-$(BINARY_NAME): asm_code kernel_cyc kernel_time $(MAIN_SRC)$(MAIN_SUFFIX)
+$(BINARY_NAME): $(MACVETH_RULE) asm_code kernel_cyc kernel_time $(MAIN_SRC)$(MAIN_SUFFIX) 
 	$(V)$(CC) $(VFLAGS) $(POLY_TFLAGS) $(MAIN_FILE) $(TARGET)time.o -o $(BIN_DIR)$(MAIN_SRC)_time.o
 	$(V)$(CC) $(VFLAGS) $(POLY_PFLAGS) $(MAIN_FILE) $(TARGET)cyc.o -o $(BIN_DIR)$(MAIN_SRC)_cyc.o
 	

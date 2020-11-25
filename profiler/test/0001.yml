@@ -26,50 +26,28 @@
 #
 # #############################################################################
 
-# - kernel:
-#       target: "kernel_redux.c"
-#       path: "kernels/reductions"
-#       compilation:
-#           compiler: ["gcc"]
-#           kernel_cfg: ["-DKERNEL=REDUX -DSTMT=1", "-DKERNEL=REDUX -DSTMT=2"]
-#           features:
-#             init_val_i: [0]
-#             init_val_j: [0]
-#             tile_size_i: [1]
-#             tile_size_j: [1]
-#             step_size_i: [1]
-#             step_size_j: [1]
-#           nexec: 7
-#           nruns: 100000
-#           flops: "2*ceil(tile_size_i/step_size_i)*ceil(tile_size_j/step_size_j)" 
-#           common_flags: "-DPOLYBENCH_USE_C99_PROTO -DPOLYBENCH_USE_RESTRICT
-#           -Ofast -ftree-vectorize -march=native -mtune=native
-#           -fvect-cost-model=unlimited -fsimd-cost-model=unlimited -mavx2
-#           -ftree-vectorizer-verbose=7 --param min-vect-loop-bound=1"
-#           output_cols: "all"
-#           debug: True
-#       execution:
-#           th_pin: "OMP_NUM_THREADS=1 GOMP_CPU_AFFINITY=7"
-#           debug: False
-
 - kernel:
-      target: "randompacking.c"
+      name: "randomvectorpacking"
+      target: "main.cc"
+      descr: ""
       path: "kernels/randompacking"
       compilation:
           compiler: "gcc"
-          kernel_cfg: ["TYPE=TIME"]
+          kernel_cfg: ["NPACK=4"]
           features:
             X_: "it.combinations(range(0, 5), 4)"
           macveth: True
           nexec: 7
-          nruns: 100000
-          flops: "2*ceil(tile_size_i/step_size_i)*ceil(tile_size_j/step_size_j)" 
+          nruns: 1000000
+          flops: "4*2" 
           common_flags: "-DNPACK=4 -DPOLYBENCH_USE_C99_PROTO -DPOLYBENCH_USE_RESTRICT
           -Ofast -ftree-vectorize -march=native -mtune=native
           -fvect-cost-model=unlimited -fsimd-cost-model=unlimited -mavx2
           -ftree-vectorizer-verbose=7 --param min-vect-loop-bound=1"
           output_cols: "all"
+          silent: True
           debug: False
       execution:
           th_pin: "OMP_NUM_THREADS=1 GOMP_CPU_AFFINITY=7"
           debug: False
+ 

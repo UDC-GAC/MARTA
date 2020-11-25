@@ -57,22 +57,29 @@
       target: "main.cc"
       descr: ""
       path: "kernels/randompacking"
+      debug: False
+      tmp_files: "keep"
       compilation:
           compiler: "gcc"
           kernel_cfg: ["NPACK=4"]
           features:
-            X_: "it.combinations(range(0, 5), 4)"
+            #X_: "it.combinations(range(0, 5), 4)"
+            X_0: [0]
+            X_1: [1]
+            X_2: [2,54]
+            X_3: [3,18]
           macveth: True
           nexec: 7
-          nruns: 100000
+          nruns: 1000000
           flops: "4*2" 
-          common_flags: "-DNPACK=4 -DPOLYBENCH_USE_C99_PROTO -DPOLYBENCH_USE_RESTRICT
-          -Ofast -ftree-vectorize -march=native -mtune=native
-          -fvect-cost-model=unlimited -fsimd-cost-model=unlimited -mavx2
+          common_flags: "-DNPACK=4 -ftree-vectorize -march=native -mtune=native
+          -fvect-cost-model=unlimited -fsimd-cost-model=unlimited
           -ftree-vectorizer-verbose=7 --param min-vect-loop-bound=1"
-          output_cols: "all"
           silent: True
-          debug: False
       execution:
-          th_pin: "OMP_NUM_THREADS=1 GOMP_CPU_AFFINITY=7"
-          debug: False
+          args: "OMP_NUM_THREADS=1 GOMP_CPU_AFFINITY=7"
+      output:
+          name: ""
+          dir: "./"
+          columns: "all"
+          verbose: True

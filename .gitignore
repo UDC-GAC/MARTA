@@ -26,6 +26,11 @@ bin/
 # vscode
 .vscode
 
+# docs
+_build/
+_static/
+_templates/
+
 # temp files
 *.swp
 polybench*/
@@ -45,3 +50,6 @@ cyc_*
 *.synctex*
 *.out
 *.pdf
+
+# Build
+build/
