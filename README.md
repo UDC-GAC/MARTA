@@ -6,12 +6,12 @@
 </p>
 
 MARTA is a toolkit for analyzing peformance in any architecture given any kind,
-in form and shape, of C/C++ code and a set of features to extract.
+in form and shape, of C/C++ code and a set of features to take into account.
 
-Toolkit performs in two phases: profiling and analysis. The first component
+This toolkit performs in two stages: profiling and analysis. The first component
 compiles, executes and gathers information in a CSV file, and the second
-component post-process that data given a set of parameters to extract. For
-instance, having a piece of code or kernel such as:
+component post-process that data offline given a set of parameters to consider.
+For instance, having a piece of code or kernel such as:
 
 ```
 for (int i = INIT_VAL; i < UPPER_BOUND; i += STEP) {
@@ -21,8 +21,9 @@ for (int i = INIT_VAL; i < UPPER_BOUND; i += STEP) {
 
 It could be interesting to analyze the deviation in performance of same code
 but varying `INIT_VAL`, `UPPER_BOUND` and `STEP`. Just given that little code
-and those variables, MARTA extracts information in form of decision tree
-regarding performance.
+and those variables or parameters, MARTA extracts information in form of decision tree
+regarding performance. This decision tree can give hints regarding how data
+should be distributed given a kernel.
 
 ## Getting started
 
@@ -45,7 +46,7 @@ Specification (<https://semver.org/spec/v2.0.0.html>)
 
 ## Author
 
-- Marcos Horro Varela: marcos.horro@udc.gal (mantainer)
+- Marcos Horro Varela: marcos.horro@udc.gal (maintainer)
 - Dr. Louis-Noël Pouchet: pouchet@colostate.edu
 
 ## License

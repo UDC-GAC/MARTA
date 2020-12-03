@@ -13,6 +13,16 @@ This part of MARTA is meant for:
 - Create a CSV/pandas (python) DataFrame with all the configurations and results
   obtained in the execution.
 
+## Requirements
+
+Need to have Python 3 (no, there is no Python 2 version nor will be one).
+Profiler works with a configuration file in YAML format. Therefore:
+
+```
+chmod +x profiler
+./profiler -i file.yml
+```
+
 ## Author
 
 - Marcos Horro Varela: marcos.horro@udc.gal (mantainer)
