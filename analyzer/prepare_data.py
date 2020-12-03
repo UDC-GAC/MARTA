@@ -35,7 +35,7 @@ import pandas as pd
 import numpy as np
 from math import ceil
 from utils import weka_cmd
-from weka_cmd import path_weka
+from utils.weka_cmd import path_weka
 from utils.utilities import StoreDictKeyPair
 from utils.utilities import pr_debug
 from utils.utilities import pr_col

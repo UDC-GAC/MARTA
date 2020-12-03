@@ -1,18 +1,11 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-# File              : utilities.py
-# Author            : Marcos Horro <marcos.horro@udc.gal>
-# Date              : Lun 04 Nov 2019 21:45:52 MST
-# Last Modified Date: Mar 12 Nov 2019 10:24:39 MST
-# Last Modified By  : Marcos Horro <marcos.horro@udc.gal>
 import argparse
 import os
 
 
 class StoreDictKeyPair(argparse.Action):
-    '''
+    """
     StoreDictKeyPair class for parsing
-    '''
+    """
 
     def __init__(self, option_strings, dest, nargs=None, **kwargs):
         self._nargs = nargs
@@ -28,14 +21,15 @@ class StoreDictKeyPair(argparse.Action):
 
 
 class colors:
-    '''
+    """
     Colors class: reset all colors with colors.reset; two
     sub classes fg for foreground
     and bg for background; use as colors.subclass.colorname.
     i.e. colors.fg.red or colors.bg.greenalso, the generic bold, disable,
     underline, reverse, strike through,
     and invisible work with the main class i.e. colors.bold
-    '''
+    """
+
     reset = '\033[0m'
     bold = '\033[01m'
     disable = '\033[02m'

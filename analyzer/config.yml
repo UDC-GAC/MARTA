@@ -36,30 +36,30 @@
 #                 prepare_data
 
 - general:
-    input: test_data/exec_asm_full_filtered.csv
-    output: output.arff
-    overwrite: True
-    clean: True
-    debug: False
+      input: test/test.csv
+      output: output.arff
+      overwrite: True
+      clean: True
+      debug: False
 - prepare_data:
-    cols: I J It Jt Is Js Jters Iters NELEMS
-    rows: Vec_x=1
-    pred: FLOPSs
-    norm:
-        enabled: False
-        type: None
-    cats:
-        num: 10
-        scale_factor: 1e9
-    dt_settings:
-        name: J48
-        params: "M=20"
-        opts: "\"B R\""
-    min_acc: 0.8
+      cols: I J It Jt Is Js Jters Iters NELEMS
+      rows: Vec_x=1
+      pred: FLOPSs
+      norm:
+          enabled: False
+          type: None
+      cats:
+          num: 10
+          type: "linear"
+          scale_factor: 1e9
+      dt_settings:
+          name: J48
+          params: "M=20"
+          opts: '"B R"'
+      min_acc: 0.8
 - recommender:
-    pred: FLOPSs
-    interest_dim:
-        value: 6.5
-        type: numeric
-    dim: I J It Jt Is Js Jters Iters NELEMS
-
+      pred: FLOPSs
+      interest_dim:
+          value: 6.5
+          type: numeric
+      dim: I J It Jt Is Js Jters Iters NELEMS

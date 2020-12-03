@@ -39,16 +39,16 @@ def convert_csv_to_arff(tmp_csv, outputfile):
 
 def produce_class_outputs(alg, folderpath, testfile, err_out):
     os.system(f"java -cp {weka_jar}"
-              " weka.classifiers.trees.{alg}"
-              " -l {folderpath}/output.model -T {testfile} -p 0"
-              "  > {folderpath}/pred.txt {err_out}")
+              f" weka.classifiers.trees.{alg}"
+              f" -l {folderpath}/output.model -T {testfile} -p 0"
+              f"  > {folderpath}/pred.txt {err_out}")
 
 
 def produce_tester_stats(alg, folderpath, testfile, err_out):
     os.system(f"java -cp {weka_jar}"
-              " weka.classifiers.trees.{alg}"
-              " -l {folderpath}/output.model -T {testfile}"
-              "  > {folderpath}/model_test_stats.csv {err_out}")
+              f" weka.classifiers.trees.{alg}"
+              f" -l {folderpath}/output.model -T {testfile}"
+              f"  > {folderpath}/model_test_stats.csv {err_out}")
 
 
 def params_to_str(alg, params):
@@ -66,6 +66,6 @@ def train_model(alg, params, opts, trainfile, folderpath, err_out):
     for opt in opts.split(" "):
         str_opts += f"-{str(opt)} "
     os.system(f"java -cp {weka_jar}"
-              " weka.classifiers.trees.{alg}"
-              " {str_params} {str_opts} -t {trainfile} -d {folderpath}/output.model"
-              "  > {folderpath}/model_learn_stats.txt {err_out}")
+              f" weka.classifiers.trees.{alg}"
+              f" {str_params} {str_opts} -t {trainfile} -d {folderpath}/output.model"
+              f"  > {folderpath}/model_learn_stats.txt {err_out}")
