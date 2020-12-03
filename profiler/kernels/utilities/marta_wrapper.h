@@ -1,5 +1,5 @@
-#if !defined(_WRAPPER_H)
-#define _WRAPPER_H
+#if !defined(_MARTA_WRAPPER_H)
+#define _MARTA_WRAPPER_H
 
 #include "definitions.h"
 #include "polybench.h"
@@ -11,6 +11,13 @@
 #include <string.h>
 #include <string>
 #include <vector>
+
+#ifndef NRUNS
+#define NRUNS 10000
+#endif
+
+#define MARTA_NO_HEADER 0
+#define MARTA_CSV_HEADER 1
 
 #if defined(POLYBENCH_PAPI)
 struct T {
@@ -136,13 +143,21 @@ static void init_2darray(int n, DATA_TYPE POLYBENCH_2D(A, N, N, n, n)) {
   }
 }
 
+#define MARTA_CHECK_HEADERS(cond)\
+    if ((cond != MARTA_NO_HEADER) && (cond != MARTA_CSV_HEADER)) {             \
+      fprintf(stderr, "[MARTA] Bad flag for BENCHMARK_BEGIN");                 \
+      exit(1);                                                                 \
+    }                                                                          \
+
 #define MARTA_BENCHMARK_BEGIN(cond)                                            \
   int main(int argc, char **argv) {                                            \
     int i = 0;                                                                 \
     int n = N;                                                                 \
     int m = M;                                                                 \
+    MARTA_CHECK_HEADERS(cond);                                                 \
     if (cond)                                                                  \
       printf("name,features,flops,time,gflops\n");
+
 #define MARTA_BENCHMARK_END                                                    \
   return 0;                                                                    \
   }
@@ -154,6 +169,7 @@ static void init_2darray(int n, DATA_TYPE POLYBENCH_2D(A, N, N, n, n)) {
     int i = 0;                                                                 \
     int n = N;                                                                 \
     int m = M;                                                                 \
+    MARTA_CHECK_HEADERS(cond);                                                 \
     if (cond) {                                                                \
       printf("name,features,flops,");                                          \
       while (__polybench_papi_eventlist[i] != NULL) {                          \

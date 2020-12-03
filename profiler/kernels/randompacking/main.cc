@@ -1,7 +1,7 @@
 /*
  * File			: tests/perftest/randompacking/randompacking.cc
- * Author   : Marcos Horro
- * Date		  : Fri 13 Nov 2020 10:27 +01:00
+ * Author       : Marcos Horro
+ * Date		    : Fri 13 Nov 2020 10:27 +01:00
  *
  * Last Modified : Fri 13 Nov 2020 10:38 +01:00
  * Modified By	 : Marcos Horro (marcos.horro@udc.gal>)
@@ -32,8 +32,9 @@
 #include "marta_wrapper.h"
 #include "randompacking.h"
 
-MARTA_BENCHMARK_BEGIN(0);
+MARTA_BENCHMARK_BEGIN(MARTA_NO_HEADER);
 
+// Initialization section
 POLYBENCH_1D_ARRAY_DECL(y, DATA_TYPE, N, n);
 POLYBENCH_1D_ARRAY_DECL(A, DATA_TYPE, N, n);
 POLYBENCH_1D_ARRAY_DECL(x, DATA_TYPE, N, n);
@@ -42,12 +43,11 @@ init_1darray(n, POLYBENCH_ARRAY(y));
 init_1darray(n, POLYBENCH_ARRAY(A));
 init_1darray(n, POLYBENCH_ARRAY(x));
 
-// random vector packing
-int nsteps = 10000;
-PROFILE_FUNCTION_SINGLE_VAL(nsteps,
-                            vpack(POLYBENCH_ARRAY(A), POLYBENCH_ARRAY(x),
-                                  POLYBENCH_ARRAY(y)));
+// Kernel section
+PROFILE_FUNCTION_SINGLE_VAL(NRUNS, vpack(POLYBENCH_ARRAY(A), POLYBENCH_ARRAY(x),
+                                         POLYBENCH_ARRAY(y)));
 
+// Avoid DCE section
 polybench_prevent_dce(print_array1d(4, POLYBENCH_ARRAY(y)));
 
 MARTA_BENCHMARK_END;

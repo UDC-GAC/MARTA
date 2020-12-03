@@ -1,9 +1,10 @@
+#!/bin/python3
+# -*- coding: utf-8 -*-
 """
 .. module:: profiler
    :synopsis: This module enables measurements given a configuration file
 .. moduleauthor:: Marcos Horro <marcos.horro@udc.es>
 """
-# -*- coding: utf-8 -*-
 
 import yaml
 import argparse
@@ -15,6 +16,10 @@ from datetime import datetime as dt
 import measurements
 import asm_analyzer
 from tqdm import tqdm
+
+VERSION_MAJOR = 0
+VERSION_MINOR = 0
+VERSION_PATCH = 0
 
 
 def csv_header(params, verbose):
@@ -77,11 +82,41 @@ def save_df(df, output_filename, verbose):
         f.seek(0, 0)
         f.write(
             csv_header(
-                [common_flags, exec_args, [
-                    "runs and execs:", nruns, nexec]], verbose
+                [common_flags, exec_args, ["runs and execs:", nruns, nexec]], verbose
             )
         )
         f.write(content)
+
+
+def compile_parse_asm(common_flags, custom_flags, suffix_file, silent):
+    """
+    Compile benchmark according to a set of flags, suffixes and so
+    """
+    comp_str = (
+        f"make -B -C {path_kernel} COMP={compiler}"
+        f" {kconfig} "
+        f" COMMON_FLAGS='{common_flags}'"
+        f" CUSTOM_FLAGS='{custom_flags}'"
+        f" SUFFIX_ASM='{suffix_file}'"
+        f" {silent}"
+    )
+    ret = os.system(comp_str)
+
+    if ret != 0:
+        attempts = 3
+        for i in range(attempts):
+            if os.system(comp_str) == 0:
+                break
+        if i == (attempts - 1):
+            print(f"Error {str(ret)} compiling in {path_kernel}, quiting...")
+            if quit_on_error:
+                print("Saving file...")
+                save_df(df, output_filename, output_verbose)
+                exit(1)
+            else:
+                print("Continue execution...")
+                return {}
+    return asm_analyzer.parse_asm(f"asm_codes/{basename}{suffix_file}.s")
 
 
 def eval_features(feat):
@@ -121,6 +156,69 @@ def eval_features(feat):
     return params_name, params_values
 
 
+def compute_flops(flops, nruns, avg_time):
+    """
+    [summary]
+
+    :param flops: [description]
+    :type flops: [type]
+    :param nruns: [description]
+    :type nruns: [type]
+    :param avg_time: [description]
+    :type avg_time: [type]
+    :return: [description]
+    :rtype: [type]
+    """
+    try:
+        flops_eval = eval(flops)
+    except NameError:
+        print("FLOPS formula is not valid; please review it!")
+        exit(1)
+    return (flops_eval * nruns) / avg_time
+
+
+def run_kernel(kconfig, params):
+    try:
+        params = list(*params)
+    except Exception:
+        pass
+    n = 0
+    tmp_dict = {}
+    custom_flags = ""
+    suffix_file = ""
+    for p in params:
+        tmp_dict[params_name[n]] = p
+        custom_flags += f" -D{params_name[n]}={p}"
+        suffix_file += f"_{params_name[n]}{p}"
+        flops_eval = flops.replace(params_name[n], str(p))
+        n = n + 1
+    custom_flags += fixed_flags
+    local_common_flags = common_flags + custom_flags
+    local_common_flags += f" -DNRUNS={nruns} "
+
+    if "MACVETH=true" in kconfig:
+        suffix_file += "_macveth"
+
+    asm_cols = compile_parse_asm(local_common_flags, custom_flags, suffix_file, silent)
+
+    # Average cycles
+    avg_cycles = measurements.time_benchmark(basename, "cyc", nexec, exec_args)
+
+    # Average time
+    avg_time = measurements.time_benchmark(basename, "time", nexec, exec_args)
+
+    tmp_dict.update(
+        {
+            "FLOPSs": compute_flops(flops_eval, nruns, avg_time),
+            "Cycles": avg_cycles,
+            "Time": avg_time,
+            "CFG": kconfig,
+        }
+    )
+    tmp_dict.update(asm_cols)
+    return tmp_dict
+
+
 def parse_arguments():
     """
     Parse CLI arguments
@@ -131,13 +229,44 @@ def parse_arguments():
     parser = argparse.ArgumentParser(
         description="wrapper for preparing data given a csv"
     )
+
+    # Mandatory arguments
     required_named = parser.add_argument_group("required named arguments")
-    required_named.add_argument(
-        "-i", "--input", help="input file name", required=True)
-    required_named.add_argument(
+    required_named.add_argument("-i", "--input", help="input file name", required=True)
+
+    # Optional arguments
+    optional_named = parser.add_argument_group("optional named arguments")
+    optional_named.add_argument(
         "-d", "--debug", action="store_true", help="debug verbose", required=False
     )
+    optional_named.add_argument(
+        "-x",
+        "--quit-on-error",
+        action="store_true",
+        help="quit if there is an error during compilation or execution of the kernel",
+        required=False,
+    )
+    optional_named.add_argument(
+        "-q", "--quiet", action="store_true", help="quiet execution", required=False
+    )
+    optional_named.add_argument(
+        "-v",
+        "--version",
+        action="store_true",
+        help="display version and quit",
+        required=False,
+    )
     return parser.parse_args()
+
+
+def print_version():
+    version = f"{VERSION_MAJOR}.{VERSION_MINOR}.{VERSION_PATCH}"
+    print(
+        f"Micro ARchiTectural Analyzer (MARTA) - Profiler v{version}\n"
+        f"(c) Colorado State University 2019-2020\n"
+        f"(c) Universidade da Coruña 2020\n",
+        end="",
+    )
 
 
 if __name__ == "__main__":
@@ -156,6 +285,8 @@ if __name__ == "__main__":
 
     yml_config = args.input
     debug = args.debug
+    quit_on_error = args.x
+    quiet_exec = args.quiet
     with open(yml_config, "r") as ymlfile:
         kernel_setup = yaml.load(ymlfile, Loader=Loader)
 
@@ -197,7 +328,6 @@ if __name__ == "__main__":
         # Execution arguments
         exec_args = config_exec["args"]
         basename = target_file.split(".c")[0]
-
         params_name, params_values = eval_features(feat)
 
         # Output configuration
@@ -228,88 +358,28 @@ if __name__ == "__main__":
         try:
             niterations = len(list(*params_values_copy))
         except Exception:
-            niterations = len(
-                list(it.product(*params_values_copy)))
+            niterations = len(list(it.product(*params_values_copy)))
 
         niterations *= len(kernel_cfg)
 
         # Structure for storing results and ploting
         df = pd.DataFrame(columns=output_cols)
 
-        print("Microbenchmarking for " + kernel + " code...")
+        # Silent compilation or not
+        silent = ""
+        if comp_silent:
+            silent = " > /dev/null 2> /dev/null"
+
+        # Print version if not quiet
+        print_version()
+
+        # Main loop
         with tqdm(total=niterations) as pbar:
             for kconfig in kernel_cfg:
                 backup_params_values = copy.deepcopy(params_values)
                 for params in it.product(*backup_params_values):
                     pbar.update(1)
-                    try:
-                        params = list(*params)
-                    except Exception:
-                        pass
-                    n = 0
-                    tmp_dict = {}
-                    custom_flags = ""
-                    suffix_file = ""
-                    for p in params:
-                        tmp_dict[params_name[n]] = p
-                        custom_flags += f" -D{params_name[n]}={p}"
-                        suffix_file += f"_{params_name[n]}{p}"
-                        flops = flops.replace(params_name[n], str(p))
-                        n = n + 1
-                    custom_flags += fixed_flags
-                    common_flags += custom_flags
-                    silent = ""
-                    if comp_silent:
-                        silent = " > /dev/null 2> /dev/null"
-
-                    if "MACVETH=true" in kconfig:
-                        suffix_file += "_macveth"
-
-                    # compilation
-                    ret = os.system(
-                        f"make -C {path_kernel} COMP={compiler}"
-                        f" {kconfig} "
-                        f" COMMON_FLAGS='{common_flags}'"
-                        f" CUSTOM_FLAGS='{custom_flags}'"
-                        f" SUFFIX_ASM='{suffix_file}'"
-                        f" NRUNS={nruns} "
-                        f" {silent}"
-                    )
-                    if (ret != 0):
-                        print(
-                            f"Error {str(ret)} compiling in {path_kernel}, quiting:")
-                        print("Saving file...")
-                        save_df(df, output_filename, output_verbose)
-                        exit(1)
-                    tmp_dict.update(
-                        asm_analyzer.parse_asm(
-                            f"asm_codes/{basename}{suffix_file}.s")
-                    )
-
-                    # Average cycles
-                    avg_cycles = measurements.time_benchmark(
-                        basename, "cyc", nexec, exec_args)
-                    # Average time
-                    avg_time = measurements.time_benchmark(
-                        basename, "time", nexec, exec_args)
-                    # FLOPS formula
-                    try:
-                        flops_eval = eval(flops)
-                    except NameError:
-                        print("FLOPS formula is not valid; please review it!")
-                        exit(1)
-                    flopss = (flops_eval * nruns) / avg_time
-                    tmp_dict.update(
-                        {
-                            "FLOPSs": flopss,
-                            "Cycles": avg_cycles,
-                            "Time": avg_time,
-                            "CFG": kconfig
-                        }
-                    )
-                    # Apending results
-                    df = df.append(tmp_dict, ignore_index=True)
-
+                    df = df.append(run_kernel(kconfig, params), ignore_index=True)
                 # Saving results
                 save_df(df, output_filename, output_verbose)
 

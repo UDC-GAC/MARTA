@@ -30,48 +30,8 @@
 
 #define restrict __restrict
 
-#if !defined(TWO_PACK) && !defined(THREE_PACK) && !defined(FOUR_PACK)
-#define TWO_PACK
-#endif
-
 #ifndef NPACK
 #define NPACK 2
-#endif
-
-#if NPACK == 2
-#ifndef FUNC_NAME
-#define FUNC_NAME two_vpack
-#endif
-#ifndef FUNC_OPS
-#define FUNC_OPS 2
-#endif
-#ifndef FUNC_STR
-#define FUNC_STR "two_pack"
-#endif
-#endif
-
-#if NPACK == 3
-#ifndef FUNC_NAME
-#define FUNC_NAME three_vpack
-#endif
-#ifndef FUNC_OPS
-#define FUNC_OPS 3
-#endif
-#ifndef FUNC_STR
-#define FUNC_STR "three_pack"
-#endif
-#endif
-
-#if NPACK == 4
-#ifndef FUNC_NAME
-#define FUNC_NAME four_vpack
-#endif
-#ifndef FUNC_OPS
-#define FUNC_OPS 4
-#endif
-#ifndef FUNC_STR
-#define FUNC_STR "four_pack"
-#endif
 #endif
 
 #ifndef N
