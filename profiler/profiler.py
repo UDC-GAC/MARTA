@@ -88,9 +88,20 @@ def save_df(df, output_filename, verbose):
         f.write(content)
 
 
-def compile_parse_asm(common_flags, custom_flags, suffix_file, silent):
+def compile_parse_asm(common_flags, custom_flags, suffix_file="", silent=""):
     """
     Compile benchmark according to a set of flags, suffixes and so
+
+    :param common_flags: Flags which are common for all versions
+    :type common_flags: str
+    :param custom_flags: Flags which are target-dependent
+    :type custom_flags: str
+    :param suffix_file: Suffix
+    :type suffix_file: [type]
+    :param silent: [description]
+    :type silent: [type]
+    :return: [description]
+    :rtype: [type]
     """
     comp_str = (
         f"make -B -C {path_kernel} COMP={compiler}"
@@ -158,16 +169,17 @@ def eval_features(feat):
 
 def compute_flops(flops, nruns, avg_time):
     """
-    [summary]
+    Evaluate FLOPS expression provided by user as string and return a floating
+    point value
 
-    :param flops: [description]
-    :type flops: [type]
-    :param nruns: [description]
-    :type nruns: [type]
-    :param avg_time: [description]
-    :type avg_time: [type]
-    :return: [description]
-    :rtype: [type]
+    :param flops: Expression provided by user, e.g. "X/42", where "X" is a parameter
+    :type flops: str
+    :param nruns: Number of times to execute the kernel
+    :type nruns: int
+    :param avg_time: Average time to execute the kernel
+    :type avg_time: float
+    :return: FLOPS
+    :rtype: float
     """
     try:
         flops_eval = eval(flops)
@@ -178,6 +190,16 @@ def compute_flops(flops, nruns, avg_time):
 
 
 def run_kernel(kconfig, params):
+    """
+    Main block of the execution chain, where compilation and execution take place
+
+    :param kconfig: Kernel configuration
+    :type kconfig: str
+    :param params: Parameters to use in the compilation and execution processes
+    :type params: list
+    :return: New row in form of dictionary
+    :rtype: dict
+    """
     try:
         params = list(*params)
     except Exception:
@@ -260,6 +282,9 @@ def parse_arguments():
 
 
 def print_version():
+    """
+    Print version and copyright message (if not quiet execution)
+    """
     version = f"{VERSION_MAJOR}.{VERSION_MINOR}.{VERSION_PATCH}"
     print(
         f"Micro ARchiTectural Analyzer (MARTA) - Profiler v{version}\n"
