@@ -25,6 +25,8 @@ and those variables or parameters, MARTA extracts information in form of decisio
 regarding performance. This decision tree can give hints regarding how data
 should be distributed given a kernel.
 
+It is recommended to check out testing configuration files for more clarity.
+
 ## Getting started
 
 This project has two big and independent components:
@@ -44,16 +46,6 @@ What does **categorizing performance** means?
 The version number of this compiler follows the Semantic Versioning
 Specification (<https://semver.org/spec/v2.0.0.html>)
 
-## Author
+## License, copyright and authors
 
-- Marcos Horro Varela: marcos.horro@udc.gal (maintainer)
-- Dr. Louis-Noël Pouchet: pouchet@colostate.edu
-
-## License
-
-(c) Copyright 2019-2020 the Colorado State University.
-(c) Copyright 2020- Universidade da Coruña.
-
-MIT license.
-
-No warranties. Under development, code disclosed under request.
+See [LICENSE](LICENSE), [COPYRIGHT](COPYRIGHT) and [AUTHORS](AUTHORS) files, respectively, for further information

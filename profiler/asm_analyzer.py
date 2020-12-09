@@ -11,6 +11,7 @@ def raw_asm_type(ins):
     :return: ASM mnemonic with its operands
     :rtype: str
     """
+
     op_name = ins[0]
     if len(ins) < 2:
         return op_name
@@ -30,11 +31,12 @@ def skip_asm(ins):
     """
     Auxiliary function for skipping certain ASM operations
 
-    :param ins: [description]
-    :type ins: [type]
-    :return: [description]
-    :rtype: [type]
+    :param ins:
+    :type ins: str
+    :return: `True` if assembly instruction must be skipped
+    :rtype: bool
     """
+
     if ins[0][0] == ".":
         return True
     for i in ins:
@@ -44,16 +46,25 @@ def skip_asm(ins):
 
 
 def parse_asm(asm_file):
+    """
+    Parse the
+
+    :param asm_file: [description]
+    :type asm_file: [type]
+    :return: [description]
+    :rtype: [type]
+    """
+
     raw_inst = {}
     count = False
     with open(asm_file, "r") as f:
         # Get the previous contents
         lines = f.readlines()
         for l in lines:
-            if l[0] == '#' or l == '\n':
+            if l[0] == "#" or l == "\n":
                 continue
-            tok = l.strip().split('#')
-            tok = tok[0].strip().split('\t')
+            tok = l.strip().split("#")
+            tok = tok[0].strip().split("\t")
             if tok[0] == ".cfi_endproc":
                 return raw_inst
             if tok[0] == ".cfi_startproc":
