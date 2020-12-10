@@ -1,7 +1,7 @@
 import os
 
 
-def raw_asm_type(ins):
+def get_raw_asm_type(ins):
     """
     Get ASM variant, i.e. mnemonic[_operand_type], where operand_type can be a
     register, memory or a immediate value
@@ -27,11 +27,11 @@ def raw_asm_type(ins):
     return op_name
 
 
-def skip_asm(ins):
+def skip_asm_instruction(ins):
     """
     Auxiliary function for skipping certain ASM operations
 
-    :param ins:
+    :param ins: Instructions to analyze
     :type ins: str
     :return: `True` if assembly instruction must be skipped
     :rtype: bool
@@ -49,10 +49,10 @@ def parse_asm(asm_file):
     """
     Parse the
 
-    :param asm_file: [description]
-    :type asm_file: [type]
-    :return: [description]
-    :rtype: [type]
+    :param asm_file: File name containing assembly instructions
+    :type asm_file: str
+    :return: Dictionary containing number of occurrences for an ASM instruction
+    :rtype: dict
     """
 
     raw_inst = {}
@@ -70,9 +70,9 @@ def parse_asm(asm_file):
             if tok[0] == ".cfi_startproc":
                 count = True
                 continue
-            if not count or skip_asm(tok):
+            if not count or skip_asm_instruction(tok):
                 continue
-            raw_asm = raw_asm_type(tok)
+            raw_asm = get_raw_asm_type(tok)
             if raw_asm in raw_inst.keys():
                 raw_inst[raw_asm] += 1
             else:

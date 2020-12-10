@@ -6,6 +6,7 @@
 .. moduleauthor:: Marcos Horro <marcos.horro@udc.es>
 """
 
+import sys
 import yaml
 import argparse
 import pandas as pd
@@ -19,7 +20,7 @@ from tqdm import tqdm
 
 VERSION_MAJOR = 0
 VERSION_MINOR = 0
-VERSION_PATCH = 0
+VERSION_PATCH = 1
 
 
 def csv_header(params, verbose):
@@ -33,6 +34,7 @@ def csv_header(params, verbose):
     :return: A string containing all data as a comment (all lines start with #)
     :rtype: str
     """
+    header = ""
     if verbose:
         machine_file = "___tmp__machine_info.txt"
         os.system(f"uname -a > {machine_file}")
@@ -61,23 +63,23 @@ def csv_header(params, verbose):
     return header
 
 
-def save_df(df, output_filename, verbose):
+def save_dataframe(df, filename, verbose):
     """
     Save data as a pandas.DataFrame
 
     :param df: Data to save
     :type df: class:`pandas.DataFrame`
-    :param output_filename: Full path output file
-    :type output_filename: str
+    :param filename: Full path output file
+    :type filename: str
     :param verbose: Output includes machine information
     :type verbose: bool
     """
     # storing results with metadata
     df = df.fillna(0.0)
-    df.to_csv(output_filename, index=False)
+    df.to_csv(filename, index=False)
 
     # saving all data to file
-    with open(output_filename, "r+") as f:
+    with open(filename, "r+") as f:
         content = f.read()
         f.seek(0, 0)
         f.write(
@@ -97,11 +99,11 @@ def compile_parse_asm(common_flags, custom_flags, suffix_file="", silent=""):
     :param custom_flags: Flags which are target-dependent
     :type custom_flags: str
     :param suffix_file: Suffix
-    :type suffix_file: [type]
-    :param silent: [description]
-    :type silent: [type]
-    :return: [description]
-    :rtype: [type]
+    :type suffix_file: str
+    :param silent: Suffix for execution command in order to redirect output if any
+    :type silent: str
+    :return: Dictionary of ASM occurrences
+    :rtype: dict
     """
     comp_str = (
         f"make -B -C {path_kernel} COMP={compiler}"
@@ -122,8 +124,8 @@ def compile_parse_asm(common_flags, custom_flags, suffix_file="", silent=""):
             print(f"Error {str(ret)} compiling in {path_kernel}, quiting...")
             if quit_on_error:
                 print("Saving file...")
-                save_df(df, output_filename, output_verbose)
-                exit(1)
+                save_dataframe(df, output_filename, output_verbose)
+                sys.exit(1)
             else:
                 print("Continue execution...")
                 return {}
@@ -153,7 +155,7 @@ def eval_features(feat):
                 tmp_eval = eval(feat[f])
             except NameError:
                 print(f"Evaluation of expression for {f} went wrong!")
-                exit(1)
+                sys.exit(1)
             tmp_eval_copy = copy.deepcopy(tmp_eval)
             for t in tmp_eval_copy:
                 size = len(t)
@@ -178,14 +180,14 @@ def compute_flops(flops, nruns, avg_time):
     :type nruns: int
     :param avg_time: Average time to execute the kernel
     :type avg_time: float
-    :return: FLOPS
+    :return: Dynamic number of FLOPS
     :rtype: float
     """
     try:
         flops_eval = eval(flops)
     except NameError:
         print("FLOPS formula is not valid; please review it!")
-        exit(1)
+        sys.exit(1)
     return (flops_eval * nruns) / avg_time
 
 
@@ -241,6 +243,11 @@ def run_kernel(kconfig, params):
     return tmp_dict
 
 
+def check_errors():
+    # sys.exit(1)
+    pass
+
+
 def parse_arguments():
     """
     Parse CLI arguments
@@ -258,6 +265,11 @@ def parse_arguments():
 
     # Optional arguments
     optional_named = parser.add_argument_group("optional named arguments")
+
+    optional_named.add_argument(
+        "-o", "--output", help="output file name", required=False
+    )
+
     optional_named.add_argument(
         "-d", "--debug", action="store_true", help="debug verbose", required=False
     )
@@ -310,18 +322,23 @@ if __name__ == "__main__":
 
     yml_config = args.input
     debug = args.debug
-    quit_on_error = args.x
+    quit_on_error = args.quit_on_error
     quiet_exec = args.quiet
-    with open(yml_config, "r") as ymlfile:
-        kernel_setup = yaml.load(ymlfile, Loader=Loader)
+    try:
+        with open(yml_config, "r") as ymlfile:
+            kernel_setup = yaml.load(ymlfile, Loader=Loader)
+    except FileNotFoundError:
+        print("Configuration file not found")
+        sys.exit(1)
+    except Exception:
+        print("Unknown error... quitting")
+        sys.exit(1)
 
     #############################
     # Create folders
     #############################
     os.system("mkdir -p asm_codes")
     os.system("mkdir -p bin")
-
-    tmp_files = "-Rf tmp"
 
     #############################
     # For each kernel configuration
@@ -357,25 +374,22 @@ if __name__ == "__main__":
 
         # Output configuration
         # file names
-        tstamp = dt.now().strftime("%H_%M_%S__%m_%d")
-        d = config_output["dir"] + "/"
-        try:
-            os.mkdir(f"{d}")
-        except FileExistsError:
-            pass
-        output_filename = d
-        if config_output["name"] == "":
-            output_filename += f"profiler_{basename}_{tstamp}.csv"
-        else:
-            output_filename += f"profiler_{config_output['name']}_{tstamp}.csv"
         output_cols = config_output["columns"]
         output_verbose = config_output["verbose"]
-
+        if args.output is None:
+            tstamp = dt.now().strftime("%H_%M_%S__%m_%d")
+            output_filename = "marta_profiler_"
+            if config_output["name"] == "":
+                output_filename += f"{basename}_{tstamp}.csv"
+            else:
+                output_filename += f"{config_output['name']}_{tstamp}.csv"
+        else:
+            output_filename = args.output
         if output_cols == "all":
             output_cols = params_name.copy()
         if type(output_cols) is not list:
             print("output_cols parameter must be a list or 'all'")
-            exit(1)
+            sys.exit(1)
         output_cols += ["FLOPSs", "Cycles", "Time", "CFG"]
 
         # Compute number of iterations
@@ -406,8 +420,16 @@ if __name__ == "__main__":
                     pbar.update(1)
                     df = df.append(run_kernel(kconfig, params), ignore_index=True)
                 # Saving results
-                save_df(df, output_filename, output_verbose)
+                save_dataframe(df, output_filename, output_verbose)
+                if cfg["kernel"]["clean_asm_files"]:
+                    os.system("rm asm_codes/*")
 
-    # Clean directory properly
-    if tmp_files != "":
-        os.system(f"rm {tmp_files}")
+        # Clean directory properly
+        if cfg["kernel"]["clean_tmp_files"]:
+            os.system(f"rm -Rf tmp bin")
+
+        # TODO: Check if any errors in compilation, execution or anything...
+        check_errors()
+
+        # Quit with no error
+        exit(0)

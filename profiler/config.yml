@@ -46,7 +46,8 @@
       descr: ""
       path: "kernels/randompacking"
       debug: False
-      tmp_files: "keep"
+      clean_tmp_files: True
+      clean_asm_files: False
       compilation:
           compiler: "gcc"
           kernel_cfg: ["NPACK=4 MACVETH=true", "NPACK=4"]
@@ -69,6 +70,5 @@
           args: "OMP_NUM_THREADS=1 GOMP_CPU_AFFINITY=7"
       output:
           name: ""
-          dir: "./"
           columns: "all"
           verbose: True

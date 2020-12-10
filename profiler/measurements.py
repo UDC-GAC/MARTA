@@ -1,4 +1,5 @@
 import os
+import sys
 
 
 def time_benchmark(code, name, nexec, exec_opts):
@@ -37,7 +38,16 @@ def time_benchmark(code, name, nexec, exec_opts):
     # Save values in an array
     val = []
     for l in open(f"tmp/____tmp_{name}"):
-        val.append(float(l))
+        try:
+            new_value = float(l)
+            val.append(new_value)
+        except ValueError:
+            print("Execution did not return a numeric value.")
+            if "FAILED" in l:
+                print("Executions need to have access to PAPI library")
+                print("Seems you do not have access, try: ")
+                print("\tsudo sh -c 'echo -1 >/proc/sys/kernel/perf_event_paranoid'")
+            sys.exit(1)
     val.sort()
 
     # Remove first and last and compute the average

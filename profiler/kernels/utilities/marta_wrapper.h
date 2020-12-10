@@ -143,11 +143,11 @@ static void init_2darray(int n, DATA_TYPE POLYBENCH_2D(A, N, N, n, n)) {
   }
 }
 
-#define MARTA_CHECK_HEADERS(cond)\
-    if ((cond != MARTA_NO_HEADER) && (cond != MARTA_CSV_HEADER)) {             \
-      fprintf(stderr, "[MARTA] Bad flag for BENCHMARK_BEGIN");                 \
-      exit(1);                                                                 \
-    }                                                                          \
+#define MARTA_CHECK_HEADERS(cond)                                              \
+  if ((cond != MARTA_NO_HEADER) && (cond != MARTA_CSV_HEADER)) {               \
+    fprintf(stderr, "[MARTA] Bad flag for BENCHMARK_BEGIN");                   \
+    exit(1);                                                                   \
+  }
 
 #define MARTA_BENCHMARK_BEGIN(cond)                                            \
   int main(int argc, char **argv) {                                            \
