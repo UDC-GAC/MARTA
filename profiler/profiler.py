@@ -22,6 +22,8 @@ VERSION_MAJOR = 0
 VERSION_MINOR = 0
 VERSION_PATCH = 1
 
+errors = 0
+
 
 def csv_header(params, verbose):
     """
@@ -225,11 +227,15 @@ def run_kernel(kconfig, params):
 
     asm_cols = compile_parse_asm(local_common_flags, custom_flags, suffix_file, silent)
 
-    # Average cycles
-    avg_cycles = measurements.time_benchmark(basename, "cyc", nexec, exec_args)
-
-    # Average time
-    avg_time = measurements.time_benchmark(basename, "time", nexec, exec_args)
+    if asm_cols != {}:
+        # Average cycles
+        avg_cycles = measurements.time_benchmark(basename, "cyc", nexec, exec_args)
+        # Average time
+        avg_time = measurements.time_benchmark(basename, "time", nexec, exec_args)
+    else:
+        errors += 1
+        avg_cycles = -1
+        avg_time = -1
 
     tmp_dict.update(
         {
@@ -244,8 +250,9 @@ def run_kernel(kconfig, params):
 
 
 def check_errors():
-    # sys.exit(1)
-    pass
+    if errors > 0:
+        print(f"There were {str(errors)} errors during execution...")
+        sys.exit(1)
 
 
 def parse_arguments():
@@ -432,4 +439,4 @@ if __name__ == "__main__":
         check_errors()
 
         # Quit with no error
-        exit(0)
+        sys.exit(0)
