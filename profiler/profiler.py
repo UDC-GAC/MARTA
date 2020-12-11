@@ -22,8 +22,6 @@ VERSION_MAJOR = 0
 VERSION_MINOR = 0
 VERSION_PATCH = 1
 
-errors = 0
-
 
 def csv_header(params, verbose):
     """
@@ -92,7 +90,7 @@ def save_dataframe(df, filename, verbose):
         f.write(content)
 
 
-def compile_parse_asm(common_flags, custom_flags, suffix_file="", silent=""):
+def compile_parse_asm(common_flags, kconfig, custom_flags, suffix_file="", silent=""):
     """
     Compile benchmark according to a set of flags, suffixes and so
 
@@ -224,8 +222,12 @@ def run_kernel(kconfig, params):
 
     if "MACVETH=true" in kconfig:
         suffix_file += "_macveth"
+        kconfig += " MVPATH=" + config_comp["macveth_path"]
+        kconfig += " MACVETH_FLAGS='" + config_comp["macveth_flags"] + "'"
 
-    asm_cols = compile_parse_asm(local_common_flags, custom_flags, suffix_file, silent)
+    asm_cols = compile_parse_asm(
+        local_common_flags, kconfig, custom_flags, suffix_file, silent
+    )
 
     if asm_cols != {}:
         # Average cycles
@@ -233,7 +235,7 @@ def run_kernel(kconfig, params):
         # Average time
         avg_time = measurements.time_benchmark(basename, "time", nexec, exec_args)
     else:
-        errors += 1
+        # errors += 1
         avg_cycles = -1
         avg_time = -1
 
@@ -318,6 +320,8 @@ if __name__ == "__main__":
     # Parsing CLI inputs
     #############################
     args = parse_arguments()
+
+    errors = 0
 
     #############################
     # Parsing all the arguments from the config.yml
@@ -436,7 +440,7 @@ if __name__ == "__main__":
             os.system(f"rm -Rf tmp bin")
 
         # TODO: Check if any errors in compilation, execution or anything...
-        check_errors()
+        # check_errors()
 
         # Quit with no error
         sys.exit(0)
