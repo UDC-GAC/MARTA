@@ -22,10 +22,21 @@ for (int i = INIT_VAL; i < UPPER_BOUND; i += STEP) {
 It could be interesting to analyze the deviation in performance of same code
 but varying `INIT_VAL`, `UPPER_BOUND` and `STEP`. Just given that little code
 and those variables or parameters, MARTA extracts information in form of decision tree
-regarding performance. This decision tree can give hints regarding how data
-should be distributed given a kernel.
+regarding performance. Decision tree informs how those variables affect to
+kernel performance.
+
+MARTA is also a very low intrusive profiler (even though requires recompiling).
+Just with a header and two directives indicating the start and end of the
+region of interest (ROI), it can perform different compilations and executions,
+for instance, using different flags and/or compilers, and generating a readable
+table with performance metrics.
 
 It is recommended to check out testing configuration files for more clarity.
+
+## Dependencies
+
+- Python 3.x
+- C/C++ compiler: clang, GNU/GCC or ICC
 
 ## Getting started
 
@@ -39,7 +50,17 @@ This project has two big and independent components:
   generates a decision tree in order to **categorize** performance,
   as well as detecting false positives/negatives.
 
-What does **categorizing performance** means?
+TODO: What does **categorizing performance** means?
+
+### Installation
+
+MARTA supports out-of-tree building and execution. This method could be
+preferred in order to avoid copying files, for instance, in an already
+existence project.
+
+#### Out-of-tree
+
+#### From sources
 
 ## Versioning
 

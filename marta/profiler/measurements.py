@@ -1,8 +1,9 @@
 import os
 import sys
+import numpy as np
 
 
-def time_benchmark(code, name, nexec, exec_opts):
+def time_benchmark(code, name, exec_opts, nexec=10, threshold_outliers=3):
     """
     Execute and time given benchmark nexec times
 
@@ -22,11 +23,14 @@ def time_benchmark(code, name, nexec, exec_opts):
     except FileExistsError:
         pass
 
-    if nexec < 3:
+    if nexec < 5:
         print(
-            "For time_bench nexec must be, at least, 3; changing to this minimum value..."
+            "For time_bench nexec must be, at least, 5; changing to this minimum value..."
         )
-        nexec = 3
+        nexec = 5
+
+    if nexec > 10:
+        print("For time_bench maybe more than 10 executions is too much...")
 
     # Execute nexec times
     # NOTE: you could do this probably capturing stdout, but you do not want to
@@ -36,11 +40,11 @@ def time_benchmark(code, name, nexec, exec_opts):
         os.system(f"{exec_opts} ./bin/{code}_{name}.o  >> tmp/____tmp_{name}")
 
     # Save values in an array
-    val = []
+    aval = np.array([])
     for l in open(f"tmp/____tmp_{name}"):
         try:
             new_value = float(l)
-            val.append(new_value)
+            aval = np.append(aval, new_value)
         except ValueError:
             print("Execution did not return a numeric value.")
             if "FAILED" in l:
@@ -48,9 +52,8 @@ def time_benchmark(code, name, nexec, exec_opts):
                 print("Seems you do not have access, try: ")
                 print("\tsudo sh -c 'echo -1 >/proc/sys/kernel/perf_event_paranoid'")
             sys.exit(1)
-    val.sort()
 
-    # Remove first and last and compute the average
-    avg_val = sum(val[1:-1]) / len(val[1:-1])
+    # discard outliers: |x - mean(x)| > threshold * std(x)
+    mean_values = aval[abs(aval - aval.mean()) < threshold_outliers * aval.std()].mean()
 
-    return avg_val
+    return mean_values

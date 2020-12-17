@@ -18,12 +18,29 @@ import measurements
 import asm_analyzer
 from tqdm import tqdm
 
-VERSION_MAJOR = 0
-VERSION_MINOR = 0
-VERSION_PATCH = 1
+__version__ = "0.0.1-alpha"
+
+# some global variables, do not hate me
 
 
-def csv_header(params, verbose):
+def get_machine_info(machine_file):
+    """
+    Get information regarding processor and SO of host machine
+
+    :param machine_file: Name of file to store information
+    :type machine_file: str
+    """
+    if sys.platform == "linux" or sys.platform == "linux2":
+        os.system(f"uname -a > {machine_file}")
+        os.system(f"lscpu >> {machine_file}")
+    elif sys.platform == "win32":
+        # TODO:
+        pass
+    else:
+        print("OS not recognized")
+
+
+def csv_header(params, verbose) -> str:
     """
     Generate custom header for CSV file
 
@@ -37,10 +54,9 @@ def csv_header(params, verbose):
     header = ""
     if verbose:
         machine_file = "___tmp__machine_info.txt"
-        os.system(f"uname -a > {machine_file}")
-        os.system(f"lscpu >> {machine_file}")
+        get_machine_info(machine_file)
         header = f"# BEGIN -- machine info\n"
-        header = f"#\n"
+        header += f"#\n"
         with open(machine_file, "r") as mf:
             for l in mf:
                 header += f"# {l}"
@@ -63,12 +79,10 @@ def csv_header(params, verbose):
     return header
 
 
-def save_dataframe(df, filename, verbose):
+def save_results(df, common_flags, exec_args, nruns, nexec, filename, verbose):
     """
     Save data as a pandas.DataFrame
 
-    :param df: Data to save
-    :type df: class:`pandas.DataFrame`
     :param filename: Full path output file
     :type filename: str
     :param verbose: Output includes machine information
@@ -79,18 +93,18 @@ def save_dataframe(df, filename, verbose):
     df.to_csv(filename, index=False)
 
     # saving all data to file
-    with open(filename, "r+") as f:
-        content = f.read()
-        f.seek(0, 0)
+    report_filename = filename.replace(".csv", ".log")
+    with open(report_filename, "w") as f:
         f.write(
             csv_header(
                 [common_flags, exec_args, ["runs and execs:", nruns, nexec]], verbose
             )
         )
-        f.write(content)
 
 
-def compile_parse_asm(common_flags, kconfig, custom_flags, suffix_file="", silent=""):
+def compile_parse_asm(
+    kname, kpath, comp, common_flags, kconfig, custom_flags, suffix_file="", silent=""
+):
     """
     Compile benchmark according to a set of flags, suffixes and so
 
@@ -106,7 +120,7 @@ def compile_parse_asm(common_flags, kconfig, custom_flags, suffix_file="", silen
     :rtype: dict
     """
     comp_str = (
-        f"make -B -C {path_kernel} COMP={compiler}"
+        f"make -B -C {kpath} COMP={comp}"
         f" {kconfig} "
         f" COMMON_FLAGS='{common_flags}'"
         f" CUSTOM_FLAGS='{custom_flags}'"
@@ -116,23 +130,12 @@ def compile_parse_asm(common_flags, kconfig, custom_flags, suffix_file="", silen
     ret = os.system(comp_str)
 
     if ret != 0:
-        attempts = 3
-        for i in range(attempts):
-            if os.system(comp_str) == 0:
-                break
-        if i == (attempts - 1):
-            print(f"Error {str(ret)} compiling in {path_kernel}, quiting...")
-            if quit_on_error:
-                print("Saving file...")
-                save_dataframe(df, output_filename, output_verbose)
-                sys.exit(1)
-            else:
-                print("Continue execution...")
-                return {}
-    return asm_analyzer.parse_asm(f"asm_codes/{basename}{suffix_file}.s")
+        print(f"Error {str(ret)} compiling in {kpath}, quiting...")
+        return {}
+    return asm_analyzer.parse_asm(f"asm_codes/{kname}{suffix_file}.s")
 
 
-def eval_features(feat):
+def eval_features(feature):
     """
     Evaluate features from configuration file
 
@@ -149,10 +152,10 @@ def eval_features(feat):
     """
     params_name = list()
     params_values = list()
-    for f in feat.keys():
-        if type(feat[f]) is str:
+    for f in feature.keys():
+        if type(feature[f]) is str:
             try:
-                tmp_eval = eval(feat[f])
+                tmp_eval = eval(feature[f])
             except NameError:
                 print(f"Evaluation of expression for {f} went wrong!")
                 sys.exit(1)
@@ -165,7 +168,7 @@ def eval_features(feat):
             params_values += [tmp_eval]
         else:
             params_name += [f]
-            params_values += [feat[f]]
+            params_values += [feature[f]]
     return params_name, params_values
 
 
@@ -188,10 +191,28 @@ def compute_flops(flops, nruns, avg_time):
     except NameError:
         print("FLOPS formula is not valid; please review it!")
         sys.exit(1)
-    return (flops_eval * nruns) / avg_time
+
+    if avg_time > 0:
+        return (flops_eval * nruns) / avg_time
+    else:
+        return 0
 
 
-def run_kernel(kconfig, params):
+def run_kernel(
+    kname,
+    kconfig,
+    p,
+    flops,
+    compiler,
+    fixed_flags,
+    common_flags,
+    nruns,
+    exec_args,
+    nexec,
+    config_cfg,
+    silent,
+    path_kernel,
+):
     """
     Main block of the execution chain, where compilation and execution take place
 
@@ -203,9 +224,11 @@ def run_kernel(kconfig, params):
     :rtype: dict
     """
     try:
+        params = p[0]
         params = list(*params)
     except Exception:
         pass
+    params_name = p[1]
     n = 0
     tmp_dict = {}
     custom_flags = ""
@@ -222,22 +245,30 @@ def run_kernel(kconfig, params):
 
     if "MACVETH=true" in kconfig:
         suffix_file += "_macveth"
-        kconfig += " MVPATH=" + config_comp["macveth_path"]
-        kconfig += " MACVETH_FLAGS='" + config_comp["macveth_flags"] + "'"
+        kconfig += " MVPATH=" + config_cfg["macveth_path_build"]
+        kconfig += " MACVETH_FLAGS='" + config_cfg["macveth_flags"] + "'"
 
     asm_cols = compile_parse_asm(
-        local_common_flags, kconfig, custom_flags, suffix_file, silent
+        kname,
+        path_kernel,
+        compiler,
+        local_common_flags,
+        kconfig,
+        custom_flags,
+        suffix_file,
+        silent,
     )
 
     if asm_cols != {}:
         # Average cycles
-        avg_cycles = measurements.time_benchmark(basename, "cyc", nexec, exec_args)
+        avg_cycles = measurements.time_benchmark(kname, "cyc", exec_args, nexec)
         # Average time
-        avg_time = measurements.time_benchmark(basename, "time", nexec, exec_args)
+        avg_time = measurements.time_benchmark(kname, "time", exec_args, nexec)
     else:
-        # errors += 1
-        avg_cycles = -1
-        avg_time = -1
+        if quit_on_error:
+            return None
+        avg_cycles = 0
+        avg_time = 0
 
     tmp_dict.update(
         {
@@ -249,12 +280,6 @@ def run_kernel(kconfig, params):
     )
     tmp_dict.update(asm_cols)
     return tmp_dict
-
-
-def check_errors():
-    if errors > 0:
-        print(f"There were {str(errors)} errors during execution...")
-        sys.exit(1)
 
 
 def parse_arguments():
@@ -270,18 +295,28 @@ def parse_arguments():
 
     # Mandatory arguments
     required_named = parser.add_argument_group("required named arguments")
-    required_named.add_argument("-i", "--input", help="input file name", required=True)
+    required_named.add_argument(
+        "input", metavar="input", type=str, nargs=1, help="input configuration file"
+    )
 
     # Optional arguments
     optional_named = parser.add_argument_group("optional named arguments")
 
     optional_named.add_argument(
-        "-o", "--output", help="output file name", required=False
+        "-o", "--output", help="output results file name", required=False
+    )
+
+    optional_named.add_argument(
+        "-r",
+        "--report",
+        help="output report file name, with data regarding the machine, compilation flags, warnings, and errors",
+        required=False,
     )
 
     optional_named.add_argument(
         "-d", "--debug", action="store_true", help="debug verbose", required=False
     )
+
     optional_named.add_argument(
         "-x",
         "--quit-on-error",
@@ -289,9 +324,11 @@ def parse_arguments():
         help="quit if there is an error during compilation or execution of the kernel",
         required=False,
     )
+
     optional_named.add_argument(
         "-q", "--quiet", action="store_true", help="quiet execution", required=False
     )
+
     optional_named.add_argument(
         "-v",
         "--version",
@@ -299,6 +336,7 @@ def parse_arguments():
         help="display version and quit",
         required=False,
     )
+
     return parser.parse_args()
 
 
@@ -306,13 +344,149 @@ def print_version():
     """
     Print version and copyright message (if not quiet execution)
     """
-    version = f"{VERSION_MAJOR}.{VERSION_MINOR}.{VERSION_PATCH}"
     print(
-        f"Micro ARchiTectural Analyzer (MARTA) - Profiler v{version}\n"
+        f"Micro ARchiTectural Analyzer (MARTA) - Profiler v{__version__}\n"
         f"(c) Colorado State University 2019-2020\n"
         f"(c) Universidade da Coruña 2020\n",
         end="",
     )
+
+
+def profiling_kernel(cfg):
+    """
+    Configuration file must have at least one kernel for performing profling
+
+    :param cfg: Dictionary with many
+    :type cfg: dict
+    """
+    # General configuration
+    kernel = cfg["kernel"]["name"]
+    main_file = cfg["kernel"]["main_src"]
+    target_file = cfg["kernel"]["target_src"]
+    descr = cfg["kernel"]["description"]
+    path_kernel = cfg["kernel"]["path"]
+    debug = cfg["kernel"]["debug"]
+
+    # compilation:
+    config_comp = cfg["kernel"]["compilation"]
+    # configuration:
+    config_cfg = cfg["kernel"]["configuration"]
+    # execution:
+    config_exec = cfg["kernel"]["execution"]
+    # output:
+    config_output = cfg["kernel"]["output"]
+
+    # Compilation configuration
+    compilers_list = config_comp["compiler"]
+    common_flags = config_comp["common_flags"]
+    fixed_flags = config_comp["fixed_flags"]
+    comp_silent = config_comp["silent"]
+
+    # Configuration
+    kernel_cfg = config_cfg["kernel_cfg"]
+    feat = config_cfg["features"]
+
+    # Execution arguments
+    threshold_outliers = config_exec["threshold_outliers"]
+    nexec = config_exec["nexec"]
+    nruns = int(config_exec["nruns"])
+    flops = config_exec["flops"]
+    exec_args = config_exec["args"]
+    basename = target_file.split(".c")[0]
+    params_name, params_values = eval_features(feat)
+
+    # Output configuration
+    # file names
+    output_cols = config_output["columns"]
+    output_verbose = config_output["verbose"]
+    if args.output is None:
+        tstamp = dt.now().strftime("%H_%M_%S__%m_%d")
+        output_filename = "marta_profiler_"
+        if config_output["name"] == "":
+            output_filename += f"{basename}_{tstamp}.csv"
+        else:
+            output_filename += f"{config_output['name']}_{tstamp}.csv"
+    else:
+        output_filename = args.output
+    if output_cols == "all":
+        output_cols = params_name.copy()
+    if type(output_cols) is not list:
+        print("output_cols parameter must be a list or 'all'")
+        sys.exit(1)
+    output_cols += ["FLOPSs", "Cycles", "Time", "CFG"]
+
+    # Compute number of iterations
+    params_values_copy = copy.deepcopy(params_values)
+    try:
+        niterations = len(list(*params_values_copy))
+    except Exception:
+        niterations = len(list(it.product(*params_values_copy)))
+
+    niterations *= len(kernel_cfg)
+
+    # Structure for storing results and ploting
+    df = pd.DataFrame(columns=output_cols)
+
+    # Silent compilation or not
+    silent = ""
+    if comp_silent:
+        silent = " > /dev/null 2> /dev/null"
+
+    # Print version if not quiet
+    print_version()
+
+    # Main loop with progress bar
+    with tqdm(total=niterations) as pbar:
+        for compiler in compilers_list:
+            for kconfig in kernel_cfg:
+                backup_params_values = copy.deepcopy(params_values)
+                for params in it.product(*backup_params_values):
+                    pbar.update(1)
+                    kern_exec = run_kernel(
+                        basename,
+                        kconfig,
+                        [params, params_name],
+                        flops,
+                        compiler,
+                        fixed_flags,
+                        common_flags,
+                        nruns,
+                        exec_args,
+                        nexec,
+                        config_cfg,
+                        silent,
+                        path_kernel,
+                    )
+                    # There was an error, exit on error, save data first
+                    if kern_exec == None:
+                        print("Saving file...")
+                        save_results(
+                            df,
+                            common_flags,
+                            exec_args,
+                            nruns,
+                            nexec,
+                            output_filename,
+                            output_verbose,
+                        )
+                        sys.exit(1)
+                    df = df.append(kern_exec, ignore_index=True)
+                # Saving results
+                save_results(
+                    df,
+                    common_flags,
+                    exec_args,
+                    nruns,
+                    nexec,
+                    output_filename,
+                    output_verbose,
+                )
+                if cfg["kernel"]["clean_asm_files"]:
+                    os.system("rm asm_codes/*")
+
+    # Clean directory properly
+    if cfg["kernel"]["clean_tmp_files"]:
+        os.system(f"rm -Rf tmp bin")
 
 
 if __name__ == "__main__":
@@ -320,8 +494,6 @@ if __name__ == "__main__":
     # Parsing CLI inputs
     #############################
     args = parse_arguments()
-
-    errors = 0
 
     #############################
     # Parsing all the arguments from the config.yml
@@ -331,7 +503,7 @@ if __name__ == "__main__":
     except ImportError:
         from yaml import Loader
 
-    yml_config = args.input
+    yml_config = args.input[0]
     debug = args.debug
     quit_on_error = args.quit_on_error
     quiet_exec = args.quiet
@@ -355,92 +527,7 @@ if __name__ == "__main__":
     # For each kernel configuration
     #############################
     for cfg in kernel_setup:
-        # General configuration
-        kernel = cfg["kernel"]["name"]
-        main_file = cfg["kernel"]["main_src"]
-        target_file = cfg["kernel"]["target_src"]
-        descr = cfg["kernel"]["descr"]
-        path_kernel = cfg["kernel"]["path"]
-        debug = cfg["kernel"]["debug"]
+        profiling_kernel(cfg)
 
-        config_comp = cfg["kernel"]["compilation"]
-        config_exec = cfg["kernel"]["execution"]
-        config_output = cfg["kernel"]["output"]
-
-        # Compilation configuration
-        compiler = config_comp["compiler"]
-        kernel_cfg = config_comp["kernel_cfg"]
-        feat = config_comp["features"]
-        nexec = config_comp["nexec"]
-        nruns = int(config_comp["nruns"])
-        flops = config_comp["flops"]
-        common_flags = config_comp["common_flags"]
-        fixed_flags = config_comp["fixed_flags"]
-        comp_silent = config_comp["silent"]
-
-        # Execution arguments
-        exec_args = config_exec["args"]
-        basename = target_file.split(".c")[0]
-        params_name, params_values = eval_features(feat)
-
-        # Output configuration
-        # file names
-        output_cols = config_output["columns"]
-        output_verbose = config_output["verbose"]
-        if args.output is None:
-            tstamp = dt.now().strftime("%H_%M_%S__%m_%d")
-            output_filename = "marta_profiler_"
-            if config_output["name"] == "":
-                output_filename += f"{basename}_{tstamp}.csv"
-            else:
-                output_filename += f"{config_output['name']}_{tstamp}.csv"
-        else:
-            output_filename = args.output
-        if output_cols == "all":
-            output_cols = params_name.copy()
-        if type(output_cols) is not list:
-            print("output_cols parameter must be a list or 'all'")
-            sys.exit(1)
-        output_cols += ["FLOPSs", "Cycles", "Time", "CFG"]
-
-        # Compute number of iterations
-        params_values_copy = copy.deepcopy(params_values)
-        try:
-            niterations = len(list(*params_values_copy))
-        except Exception:
-            niterations = len(list(it.product(*params_values_copy)))
-
-        niterations *= len(kernel_cfg)
-
-        # Structure for storing results and ploting
-        df = pd.DataFrame(columns=output_cols)
-
-        # Silent compilation or not
-        silent = ""
-        if comp_silent:
-            silent = " > /dev/null 2> /dev/null"
-
-        # Print version if not quiet
-        print_version()
-
-        # Main loop
-        with tqdm(total=niterations) as pbar:
-            for kconfig in kernel_cfg:
-                backup_params_values = copy.deepcopy(params_values)
-                for params in it.product(*backup_params_values):
-                    pbar.update(1)
-                    df = df.append(run_kernel(kconfig, params), ignore_index=True)
-                # Saving results
-                save_dataframe(df, output_filename, output_verbose)
-                if cfg["kernel"]["clean_asm_files"]:
-                    os.system("rm asm_codes/*")
-
-        # Clean directory properly
-        if cfg["kernel"]["clean_tmp_files"]:
-            os.system(f"rm -Rf tmp bin")
-
-        # TODO: Check if any errors in compilation, execution or anything...
-        # check_errors()
-
-        # Quit with no error
-        sys.exit(0)
+    # Quit with no error
+    sys.exit(0)

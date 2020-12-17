@@ -11,7 +11,7 @@ void vpack(double *restrict A, double *restrict x, double *restrict y) {
   __m128d __mv_lo256, __mv_hi256;
   __mv_accm0 = _mm256_setzero_pd();
   __mv_vop0 = _mm256_loadu_pd(&A[4]);
-  __mv_vop1 = _mm256_loadu_pd(&x[1]);
+  __mv_vop1 = _mm256_loadu_pd(&x[0]);
   __mv_accm0 = _mm256_fmadd_pd(__mv_vop0, __mv_vop1, __mv_accm0);
   // y[5] += A[4] * x[X_0];
   __mv_lo256 = _mm256_castpd256_pd128(__mv_accm0);

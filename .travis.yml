@@ -3,9 +3,16 @@ python:
   - "3.6" # current default Python on Travis CI
   - "3.7"
   - "3.8"
+before_install:
+  - pip install -U pip
+  - pip install -U pytest
+#  - pip install codecov
 # command to install dependencies
 install:
   - pip install -r requirements.txt
+# tests to execute
 script:
-  - python -m unittest discover -s profiler/tests
-  - python -m unittest discover -s analyzer/tests
+  - pytest -v
+# code coverage
+#after_success:
+#  - codecov

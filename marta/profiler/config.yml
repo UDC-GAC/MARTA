@@ -26,7 +26,7 @@
 #             step_size_j: [1]
 #           nexec: 7
 #           nruns: 100000
-#           flops: "2*ceil(tile_size_i/step_size_i)*ceil(tile_size_j/step_size_j)" 
+#           flops: "2*ceil(tile_size_i/step_size_i)*ceil(tile_size_j/step_size_j)"
 #           common_flags: "-DPOLYBENCH_USE_C99_PROTO -DPOLYBENCH_USE_RESTRICT
 #           -Ofast -ftree-vectorize -march=native -mtune=native
 #           -fvect-cost-model=unlimited -fsimd-cost-model=unlimited -mavx2
@@ -43,27 +43,29 @@
       name: "randomvectorpacking"
       main_src: "main.cc"
       target_src: "randompacking.cc"
-      descr: ""
+      description: ""
       path: "kernels/randompacking"
       debug: False
       clean_tmp_files: True
       clean_asm_files: False
       compilation:
-          compiler: "gcc"
+          compiler: ["gcc"] # icc, gcc, clang
+          language: "C++" # cpp, c++, C++, CXX, CPP, cc, c, C, GNU/C...
+          fixed_flags: " -O3 -D__PURE_INTEL_C99_HEADERS__ -DNPACK=4 "
+          common_flags: " "
+          asm_analysis: True
+          silent: False
+      configuration:
           kernel_cfg: ["NPACK=4 MACVETH=true", "NPACK=4"]
           features:
-            X_: "it.combinations(range(0, 16), 4)"
-          macveth_path: /home/marcos.horro/workspace/MACVETH/build/
+              X_: "it.combinations(range(0, 4), 4)"
+          macveth_path_build: ""
           macveth_flags: " -misa=avx2 "
+      execution:
+          threshold_outliers: 3
           nexec: 7
           nruns: 1000000
           flops: "4*2"
-          fixed_flags: " -DNPACK=4 "
-          common_flags: "-ftree-vectorize -march=native -mtune=native
-          -fvect-cost-model=unlimited -fsimd-cost-model=unlimited
-          -ftree-vectorizer-verbose=7 --param min-vect-loop-bound=1"
-          silent: False
-      execution:
           args: "OMP_NUM_THREADS=1 GOMP_CPU_AFFINITY=7"
       output:
           name: ""
