@@ -1,5 +1,12 @@
 import unittest
-import profiler.profiler as profiler
+import sys
+import os
+
+# FIXME: This is a DIY shitty
+sys.path.append(os.path.realpath(os.path.dirname(__file__) + "/.."))
+
+
+import profiler.profiler as p
 
 
 def test_0001():
@@ -7,4 +14,4 @@ def test_0001():
 
 
 def test_compute_flops():
-    assert profiler.compute_flops("4*8", 100, 1) == 4 * 8 * 100 / 1
+    assert p.compute_flops("4*8", 100, 1) == 4 * 8 * 100 / 1

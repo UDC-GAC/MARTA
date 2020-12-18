@@ -14,69 +14,14 @@ import itertools as it
 import os
 import copy
 from datetime import datetime as dt
-import measurements
+import timing
 import asm_analyzer
+import report
 from tqdm import tqdm
 
 __version__ = "0.0.1-alpha"
 
 # some global variables, do not hate me
-
-
-def get_machine_info(machine_file):
-    """
-    Get information regarding processor and SO of host machine
-
-    :param machine_file: Name of file to store information
-    :type machine_file: str
-    """
-    if sys.platform == "linux" or sys.platform == "linux2":
-        os.system(f"uname -a > {machine_file}")
-        os.system(f"lscpu >> {machine_file}")
-    elif sys.platform == "win32":
-        # TODO:
-        pass
-    else:
-        print("OS not recognized")
-
-
-def csv_header(params, verbose) -> str:
-    """
-    Generate custom header for CSV file
-
-    :param params: List of parameters to print in the file
-    :type params: list
-    :param verbose: If `True`, then outputs machine information
-    :type verbose: bool
-    :return: A string containing all data as a comment (all lines start with #)
-    :rtype: str
-    """
-    header = ""
-    if verbose:
-        machine_file = "___tmp__machine_info.txt"
-        get_machine_info(machine_file)
-        header = f"# BEGIN -- machine info\n"
-        header += f"#\n"
-        with open(machine_file, "r") as mf:
-            for l in mf:
-                header += f"# {l}"
-        header += f"#\n"
-        header += f"# END -- machine info\n"
-        header += f"#\n"
-        header += f"#\n"
-        os.system(f"rm {machine_file}")
-    header += f"# BEGIN -- parameters info\n"
-    header += f"#\n"
-    for p in params:
-        if type(p) == dict:
-            for k, v in p.items():
-                header += f"# {str(k)}: {str(v)}\n"
-        else:
-            header += f"# {str(p)}\n"
-    header += f"#\n"
-    header += f"# END -- parameters info\n"
-    header += f"#\n"
-    return header
 
 
 def save_results(df, common_flags, exec_args, nruns, nexec, filename, verbose):
@@ -96,7 +41,7 @@ def save_results(df, common_flags, exec_args, nruns, nexec, filename, verbose):
     report_filename = filename.replace(".csv", ".log")
     with open(report_filename, "w") as f:
         f.write(
-            csv_header(
+            report.generate_report(
                 [common_flags, exec_args, ["runs and execs:", nruns, nexec]], verbose
             )
         )
@@ -261,9 +206,9 @@ def run_kernel(
 
     if asm_cols != {}:
         # Average cycles
-        avg_cycles = measurements.time_benchmark(kname, "cyc", exec_args, nexec)
+        avg_cycles = timing.time_benchmark(kname, "cyc", exec_args, nexec)
         # Average time
-        avg_time = measurements.time_benchmark(kname, "time", exec_args, nexec)
+        avg_time = timing.time_benchmark(kname, "time", exec_args, nexec)
     else:
         if quit_on_error:
             return None
@@ -400,7 +345,7 @@ def profiling_kernel(cfg):
     output_cols = config_output["columns"]
     output_verbose = config_output["verbose"]
     if args.output is None:
-        tstamp = dt.now().strftime("%H_%M_%S__%m_%d")
+        tstamp = dt.now().strftime("%d_%m___%H_%M_%S")
         output_filename = "marta_profiler_"
         if config_output["name"] == "":
             output_filename += f"{basename}_{tstamp}.csv"
