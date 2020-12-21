@@ -1,41 +1,9 @@
 # (c) Copyright 2019-2020 the Colorado State University.
 # (c) Copyright 2020 Universidade da Coruña.
 #
-#
 # Contact:
 #   Marcos Horro Varela <marcos.horro@udc.es>
 #   Louis-Noël Pouchet <pouchet@colostate.edu>
-#
-# #############################################################################
-#
-# Example file, this file should be used for executing with profiler.py
-# There is a - kernel for each program
-# An example could be:
-# - kernel:
-#       target: "kernel_redux.c"
-#       path: "kernels/reductions"
-#       compilation:
-#           compiler: ["gcc"]
-#           kernel_cfg: ["-DKERNEL=REDUX -DSTMT=1", "-DKERNEL=REDUX -DSTMT=2"]
-#           features:
-#             init_val_i: [0]
-#             init_val_j: [0]
-#             tile_size_i: [1]
-#             tile_size_j: [1]
-#             step_size_i: [1]
-#             step_size_j: [1]
-#           nexec: 7
-#           nruns: 100000
-#           flops: "2*ceil(tile_size_i/step_size_i)*ceil(tile_size_j/step_size_j)"
-#           common_flags: "-DPOLYBENCH_USE_C99_PROTO -DPOLYBENCH_USE_RESTRICT
-#           -Ofast -ftree-vectorize -march=native -mtune=native
-#           -fvect-cost-model=unlimited -fsimd-cost-model=unlimited -mavx2
-#           -ftree-vectorizer-verbose=7 --param min-vect-loop-bound=1"
-#           output_cols: "all"
-#           debug: True
-#       execution:
-#           th_pin: "OMP_NUM_THREADS=1 GOMP_CPU_AFFINITY=7"
-#           debug: False
 #
 # #############################################################################
 
@@ -51,10 +19,10 @@
       compilation:
           compiler: ["gcc"] # icc, gcc, clang
           language: "C++" # cpp, c++, C++, CXX, CPP, cc, c, C, GNU/C...
-          fixed_flags: " -O3 -D__PURE_INTEL_C99_HEADERS__ -DNPACK=4 "
+          fixed_flags: " -O3 -D__PURE_INTEL_C99_HEADERS__ "
           common_flags: " "
           asm_analysis: True
-          silent: False
+          silent: True
       configuration:
           kernel_cfg: ["NPACK=4 MACVETH=true", "NPACK=4"]
           features:

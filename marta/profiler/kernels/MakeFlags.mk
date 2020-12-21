@@ -20,10 +20,14 @@ ifeq ($(COMP),icc)
 	CC=icc
 	CXX=icpc
 	VFLAGS= $(VF) -vec-threshold0 -qoverride-limits -march=native -mfma
-else
+else ifeq ($(COMP),gcc)
 	CC=gcc
 	CXX=g++
 	VFLAGS= $(VF) -march=native -mfma -ftree-vectorize -fvect-cost-model=unlimited -fsimd-cost-model=unlimited -fprefetch-loop-arrays
+else ifeq ($(COMP),clang)
+	CC=clang
+	CXX=clang
+	VFLAGS= $(VF) -march=native -mfma -ftree-vectorize
 endif
 
 # Merging all flags

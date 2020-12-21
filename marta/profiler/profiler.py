@@ -14,24 +14,73 @@ import itertools as it
 import os
 import copy
 from datetime import datetime as dt
-import timing
-import asm_analyzer
+from timing import Timing
+from asm_analyzer import ASMParser as asm
 import report
 from tqdm import tqdm
+from tqdm.auto import tqdm as tqdm_auto
 
+# FIXME: change this at some point
 __version__ = "0.0.1-alpha"
 
-# some global variables, do not hate me
+
+def dump_confg_file():
+    config_file = """
+# Test YAML configuration file
+- kernel:
+    name: "randomvectorpacking"
+    main_src: "main.cc"
+    target_src: "randompacking.cc"
+    description: ""
+    path: "kernels/randompacking"
+    debug: False
+    clean_tmp_files: True
+    clean_asm_files: False
+    compilation:
+        compiler: ["clang"] # icc, gcc, clang
+        language: "C++" # cpp, c++, C++, CXX, CPP, cc, c, C, GNU/C...
+        fixed_flags: " -O3 -D__PURE_INTEL_C99_HEADERS__ -DNPACK=4 "
+        common_flags: " "
+        asm_analysis: True
+        silent: True
+    configuration:
+        kernel_cfg: ["NPACK=4 MACVETH=true", "NPACK=4"]
+        features:
+            X_: "it.combinations(range(0, 4), 4)"
+        macveth_path_build: ""
+        macveth_flags: " -misa=avx2 "
+    execution:
+        threshold_outliers: 3
+        nexec: 7
+        nruns: 1000000
+        flops: "4*2"
+        args: "OMP_NUM_THREADS=1 GOMP_CPU_AFFINITY=7"
+    output:
+        name: ""
+        columns: "all"
+        verbose: True
+    """
+
+    return config_file
 
 
-def save_results(df, common_flags, exec_args, nruns, nexec, filename, verbose):
+def save_results(df, common_flags, exec_args, nruns, nexec, filename):
     """
     Save data as a pandas.DataFrame
 
-    :param filename: Full path output file
+
+    :param df:
+    :type df: class:pandas.DataFrame
+    :param common_flags: List of flags used for compilation
+    :type common_flags: str
+    :param exec_args: List of arguments to pass when executing benchmark
+    :type exec_args: str
+    :param nruns: Number of times to execute the kernel
+    :type nruns: int
+    :param nexec: Number of time to execute whole experiment
+    :type nexec: int
+    :param filename: Name of the output file
     :type filename: str
-    :param verbose: Output includes machine information
-    :type verbose: bool
     """
     # storing results with metadata
     df = df.fillna(0.0)
@@ -41,8 +90,8 @@ def save_results(df, common_flags, exec_args, nruns, nexec, filename, verbose):
     report_filename = filename.replace(".csv", ".log")
     with open(report_filename, "w") as f:
         f.write(
-            report.generate_report(
-                [common_flags, exec_args, ["runs and execs:", nruns, nexec]], verbose
+            report.Report.generate_report(
+                [common_flags, exec_args, ["runs and execs:", nruns, nexec]]
             )
         )
 
@@ -77,7 +126,7 @@ def compile_parse_asm(
     if ret != 0:
         print(f"Error {str(ret)} compiling in {kpath}, quiting...")
         return {}
-    return asm_analyzer.parse_asm(f"asm_codes/{kname}{suffix_file}.s")
+    return asm.parse_asm(f"asm_codes/{kname}{suffix_file}.s")
 
 
 def eval_features(feature):
@@ -157,6 +206,7 @@ def run_kernel(
     config_cfg,
     silent,
     path_kernel,
+    quit_on_error=False,
 ):
     """
     Main block of the execution chain, where compilation and execution take place
@@ -206,9 +256,9 @@ def run_kernel(
 
     if asm_cols != {}:
         # Average cycles
-        avg_cycles = timing.time_benchmark(kname, "cyc", exec_args, nexec)
+        avg_cycles = Timing.measure_benchmark(kname, "cyc", exec_args, nexec)
         # Average time
-        avg_time = timing.time_benchmark(kname, "time", exec_args, nexec)
+        avg_time = Timing.measure_benchmark(kname, "time", exec_args, nexec)
     else:
         if quit_on_error:
             return None
@@ -227,21 +277,39 @@ def run_kernel(
     return tmp_dict
 
 
-def parse_arguments():
+def parse_arguments(list_args):
     """
     Parse CLI arguments
 
+    :param list_args: List of arguments to parse
+    :type list_args: list(str)
     :return: Arguments parsed
     :rtype: class:`argparse`
     """
     parser = argparse.ArgumentParser(
-        description="wrapper for preparing data given a csv"
+        prog="mprofiler",
+        description="simple kernel profiler based on compilation files (Makefile) and a configuration file",
     )
 
-    # Mandatory arguments
+    # If "version" or "dump" option, then positional is not needed
+    required_input = 1
+    if (
+        ("-v" in list_args)
+        or ("--version" in list_args)
+        or ("-dump" in list_args)
+        or ("--dump-config-file" in list_args)
+    ):
+        print(list_args)
+        required_input = "?"
+
+    # Positional argument
     required_named = parser.add_argument_group("required named arguments")
     required_named.add_argument(
-        "input", metavar="input", type=str, nargs=1, help="input configuration file"
+        "input",
+        metavar="input",
+        type=str,
+        nargs=required_input,
+        help="input configuration file",
     )
 
     # Optional arguments
@@ -282,7 +350,15 @@ def parse_arguments():
         required=False,
     )
 
-    return parser.parse_args()
+    optional_named.add_argument(
+        "-dump",
+        "--dump-config-file",
+        action="store_true",
+        help="dump a sample configuration file with all needed files for profiler to work properly",
+        required=False,
+    )
+
+    return parser.parse_args(list_args)
 
 
 def print_version():
@@ -297,10 +373,12 @@ def print_version():
     )
 
 
-def profiling_kernel(cfg):
+def profiling_kernel(args, cfg):
     """
     Configuration file must have at least one kernel for performing profling
 
+    :param args: Dictionary with all input arguments passed
+    :type args: dict
     :param cfg: Dictionary with many
     :type cfg: dict
     """
@@ -386,7 +464,6 @@ def profiling_kernel(cfg):
             for kconfig in kernel_cfg:
                 backup_params_values = copy.deepcopy(params_values)
                 for params in it.product(*backup_params_values):
-                    pbar.update(1)
                     kern_exec = run_kernel(
                         basename,
                         kconfig,
@@ -401,44 +478,47 @@ def profiling_kernel(cfg):
                         config_cfg,
                         silent,
                         path_kernel,
+                        args.quit_on_error,
                     )
                     # There was an error, exit on error, save data first
                     if kern_exec == None:
                         print("Saving file...")
                         save_results(
-                            df,
-                            common_flags,
-                            exec_args,
-                            nruns,
-                            nexec,
-                            output_filename,
-                            output_verbose,
+                            df, common_flags, exec_args, nruns, nexec, output_filename
                         )
                         sys.exit(1)
                     df = df.append(kern_exec, ignore_index=True)
-                # Saving results
-                save_results(
-                    df,
-                    common_flags,
-                    exec_args,
-                    nruns,
-                    nexec,
-                    output_filename,
-                    output_verbose,
-                )
+                    pbar.update(1)
                 if cfg["kernel"]["clean_asm_files"]:
                     os.system("rm asm_codes/*")
+
+    # Storing results and generating report file
+    # TODO: add some spinner or something here
+    save_results(df, common_flags, exec_args, nruns, nexec, output_filename)
 
     # Clean directory properly
     if cfg["kernel"]["clean_tmp_files"]:
         os.system(f"rm -Rf tmp bin")
 
 
-if __name__ == "__main__":
-    #############################
-    # Parsing CLI inputs
-    #############################
-    args = parse_arguments()
+def profiler(list_args):
+    """
+    Main function for profiler
+
+    :param list_args: List of arguments, may be from the input `sys.argv`, or a
+    "regular" string list
+    :type list_args: list(str)
+    """
+    args = parse_arguments(list_args)
+
+    if args.dump_config_file:
+        s = dump_confg_file()
+        print(s)
+        sys.exit(0)
+
+    if args.version:
+        print(__version__)
+        sys.exit(0)
 
     #############################
     # Parsing all the arguments from the config.yml
@@ -449,9 +529,6 @@ if __name__ == "__main__":
         from yaml import Loader
 
     yml_config = args.input[0]
-    debug = args.debug
-    quit_on_error = args.quit_on_error
-    quiet_exec = args.quiet
     try:
         with open(yml_config, "r") as ymlfile:
             kernel_setup = yaml.load(ymlfile, Loader=Loader)
@@ -472,7 +549,11 @@ if __name__ == "__main__":
     # For each kernel configuration
     #############################
     for cfg in kernel_setup:
-        profiling_kernel(cfg)
+        profiling_kernel(args, cfg)
 
     # Quit with no error
     sys.exit(0)
+
+
+if __name__ == "__main__":
+    profiler(sys.argv[1:])
