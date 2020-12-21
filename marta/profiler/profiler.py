@@ -445,7 +445,7 @@ def profiling_kernel(args, cfg):
     except Exception:
         niterations = len(list(it.product(*params_values_copy)))
 
-    niterations *= len(kernel_cfg)
+    niterations *= len(kernel_cfg) * len(compilers_list)
 
     # Structure for storing results and ploting
     df = pd.DataFrame(columns=output_cols)
