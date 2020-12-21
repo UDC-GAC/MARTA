@@ -66,7 +66,7 @@ class ASMParser:
                 if l[0] == "#" or l == "\n":
                     continue
                 tok = l.strip().split("#")
-                tok = tok[0].strip().split("\t")
+                tok = tok[0].strip().split("\t").split(" ")
                 if tok[0] == ".cfi_endproc":
                     return raw_inst
                 if tok[0] == ".cfi_startproc":

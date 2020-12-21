@@ -271,6 +271,7 @@ def run_kernel(
             "Cycles": avg_cycles,
             "Time": avg_time,
             "CFG": kconfig,
+            "Compiler": compiler,
         }
     )
     tmp_dict.update(asm_cols)
@@ -436,7 +437,7 @@ def profiling_kernel(args, cfg):
     if type(output_cols) is not list:
         print("output_cols parameter must be a list or 'all'")
         sys.exit(1)
-    output_cols += ["FLOPSs", "Cycles", "Time", "CFG"]
+    output_cols += ["FLOPSs", "Cycles", "Time", "CFG", "Compiler"]
 
     # Compute number of iterations
     params_values_copy = copy.deepcopy(params_values)
