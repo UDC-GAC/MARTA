@@ -39,7 +39,7 @@ class ASMParser:
         :rtype: bool
         """
 
-        if ins[0][0] == ".":
+        if ins[0] == "" or ins[0][0] == ".":
             return True
         for i in ins:
             if i == "ret" or i == "endbr64":
