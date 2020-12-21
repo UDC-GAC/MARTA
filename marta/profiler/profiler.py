@@ -403,7 +403,7 @@ def profiling_kernel(args, cfg):
     # Compilation configuration
     compilers_list = config_comp["compiler"]
     common_flags = config_comp["common_flags"]
-    fixed_flags = config_comp["fixed_flags"]
+    compiler_flags = config_comp["compiler_flags"]
     comp_silent = config_comp["silent"]
 
     # Configuration
@@ -471,7 +471,7 @@ def profiling_kernel(args, cfg):
                         [params, params_name],
                         flops,
                         compiler,
-                        fixed_flags,
+                        compiler_flags[compiler],
                         common_flags,
                         nruns,
                         exec_args,

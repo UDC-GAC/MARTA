@@ -17,10 +17,11 @@
       clean_tmp_files: True
       clean_asm_files: False
       compilation:
-          compiler: ["gcc"] # icc, gcc, clang
+          compiler: ["gcc", "icc"] # icc, gcc, clang
           language: "C++" # cpp, c++, C++, CXX, CPP, cc, c, C, GNU/C...
-          fixed_flags: " -O3 -D__PURE_INTEL_C99_HEADERS__ "
-          common_flags: " "
+          compiler_flags: { "gcc": " -O3 -ftree-vectorize ", "icc": " -O3
+                      -D__PURE_INTEL_C99_HEADERS__ -vec-threshold0 " }
+          common_flags: " -DNPACK=4 "
           asm_analysis: True
           silent: True
       configuration:
