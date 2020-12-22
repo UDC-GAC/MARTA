@@ -23,45 +23,46 @@ from tqdm.auto import tqdm as tqdm_auto
 # FIXME: change this at some point
 __version__ = "0.0.1-alpha"
 
+lang_equiv = {"c": ["gnu/c", "c", "cc"], "cpp": ["cpp", ""]}
 
-def dump_confg_file():
-    config_file = """
-# Test YAML configuration file
-- kernel:
-    name: "randomvectorpacking"
-    main_src: "main.cc"
-    target_src: "randompacking.cc"
-    description: ""
-    path: "kernels/randompacking"
-    debug: False
-    clean_tmp_files: True
-    clean_asm_files: False
-    compilation:
-        compiler: ["clang"] # icc, gcc, clang
-        language: "C++" # cpp, c++, C++, CXX, CPP, cc, c, C, GNU/C...
-        fixed_flags: " -O3 -D__PURE_INTEL_C99_HEADERS__ -DNPACK=4 "
-        common_flags: " "
-        asm_analysis: True
-        silent: True
-    configuration:
-        kernel_cfg: ["NPACK=4 MACVETH=true", "NPACK=4"]
-        features:
-            X_: "it.combinations(range(0, 4), 4)"
-        macveth_path_build: ""
-        macveth_flags: " -misa=avx2 "
-    execution:
-        threshold_outliers: 3
-        nexec: 7
-        nruns: 1000000
-        flops: "4*2"
-        args: "OMP_NUM_THREADS=1 GOMP_CPU_AFFINITY=7"
-    output:
-        name: ""
-        columns: "all"
-        verbose: True
+
+def inv_dict(d):
     """
+    Invert string dictionary, and lowercase all keys and values
 
-    return config_file
+    :param d: String dictionary
+    :type d: [type]
+    :raises TypeError: Input is not a dictionary, or keys are not strings, or
+    values are not in a list
+    :return: Inverted string dictionary
+    :rtype: dict
+    """
+    new_dict = {}
+    if type(d) != dict():
+        return new_dict
+    for k in d.keys():
+        if type(k) != str or type(d[k]) != list:
+            raise TypeError
+        for v in d[k]:
+            if type(v) != str:
+                raise TypeError
+            new_dict[v.lower()] = k.lower()
+    return new_dict
+
+
+lang_equiv_inverted = inv_dict(lang_equiv)
+
+
+def dump_config_file():
+    """
+    Read config template line by line
+
+    :return: List of strings with all lines
+    :rtype: list(str)
+    """
+    config_file = "config_template"
+    with open(config_file) as f:
+        return f.readlines()
 
 
 def save_results(df, common_flags, exec_args, nruns, nexec, filename):
@@ -124,7 +125,7 @@ def compile_parse_asm(
     ret = os.system(comp_str)
 
     if ret != 0:
-        print(f"Error {str(ret)} compiling in {kpath}, quiting...")
+        print(f"Error {str(ret)} compiling in {kpath}, quitting...")
         return {}
     return asm.parse_asm(f"asm_codes/{kname}{suffix_file}.s")
 
@@ -300,7 +301,6 @@ def parse_arguments(list_args):
         or ("-dump" in list_args)
         or ("--dump-config-file" in list_args)
     ):
-        print(list_args)
         required_input = "?"
 
     # Positional argument
@@ -359,6 +359,14 @@ def parse_arguments(list_args):
         required=False,
     )
 
+    optional_named.add_argument(
+        "-G",
+        "--generate-project",
+        action="store_true",
+        help="generate a blank project in current folder, with minimal files in order to work properly",
+        required=False,
+    )
+
     return parser.parse_args(list_args)
 
 
@@ -401,7 +409,7 @@ def profiling_kernel(args, cfg):
     config_output = cfg["kernel"]["output"]
 
     # Compilation configuration
-    compilers_list = config_comp["compiler"]
+    compilers_list = config_comp["compiler_flags"].keys()
     common_flags = config_comp["common_flags"]
     compiler_flags = config_comp["compiler_flags"]
     comp_silent = config_comp["silent"]
@@ -415,7 +423,7 @@ def profiling_kernel(args, cfg):
     nexec = config_exec["nexec"]
     nruns = int(config_exec["nruns"])
     flops = config_exec["flops"]
-    exec_args = config_exec["args"]
+    exec_args = config_exec["prefix"]
     basename = target_file.split(".c")[0]
     params_name, params_values = eval_features(feat)
 
@@ -456,8 +464,9 @@ def profiling_kernel(args, cfg):
     if comp_silent:
         silent = " > /dev/null 2> /dev/null"
 
-    # Print version if not quiet
-    print_version()
+    if not args.quiet:
+        # Print version if not quiet
+        print_version()
 
     # Main loop with progress bar
     with tqdm(total=niterations) as pbar:
@@ -513,17 +522,16 @@ def profiler(list_args):
     args = parse_arguments(list_args)
 
     if args.dump_config_file:
-        s = dump_confg_file()
-        print(s)
+        s = dump_config_file()
+        for line in s:
+            print(line, end="")
         sys.exit(0)
 
     if args.version:
         print(__version__)
         sys.exit(0)
 
-    #############################
-    # Parsing all the arguments from the config.yml
-    #############################
+    # parsing all the arguments from the configuration file
     try:
         from yaml import CLoader as Loader
     except ImportError:
@@ -540,15 +548,11 @@ def profiler(list_args):
         print("Unknown error... quitting")
         sys.exit(1)
 
-    #############################
     # Create folders
-    #############################
     os.system("mkdir -p asm_codes")
     os.system("mkdir -p bin")
 
-    #############################
     # For each kernel configuration
-    #############################
     for cfg in kernel_setup:
         profiling_kernel(args, cfg)
 

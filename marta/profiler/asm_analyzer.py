@@ -49,7 +49,7 @@ class ASMParser:
     @staticmethod
     def parse_asm(asm_file):
         """
-        Parse the
+        Parse the assembly file and get instructions within ROI
 
         :param asm_file: File name containing assembly instructions
         :type asm_file: str
@@ -67,8 +67,6 @@ class ASMParser:
                     continue
                 tok = l.strip().split("#")
                 tok = tok[0].strip().split("\t")
-                if len(tok) == 1:
-                    tok = tok[0].strip().split("\t")
                 if tok[0] == ".cfi_endproc":
                     return raw_inst
                 if tok[0] == ".cfi_startproc":
@@ -76,6 +74,10 @@ class ASMParser:
                     continue
                 if not count or ASMParser.skip_asm_instruction(tok):
                     continue
+                # Fix for Intel Compiler
+                if len(tok) == 1:
+                    tok = tok[0].split(" ")
+                    tok = [t for t in tok if t != "" and t[0] != "#"]
                 raw_asm = ASMParser.get_raw_asm_type(tok)
                 if raw_asm in raw_inst.keys():
                     raw_inst[raw_asm] += 1

@@ -1,0 +1,37 @@
+# Template for configuration file for MARTA profiler
+
+- kernel:
+      name: "Base name of the project and kernel"
+      main_src: "main.cc"
+      target_src: "target.cc" # compiler apart from the main.cc, blank if not
+      description: "Some description for the report"
+      path: "path/to/folder" # path to kernel
+      debug: False
+      clean_tmp_files: True
+      clean_asm_files: False
+      compilation:
+          language: "cpp" # C or C++: cpp, c++, C++, CXX, CPP, cc, c, C, GNU/C...
+          compiler_flags:
+              { "gcc": " -O3 -ftree-vectorize ", "icc": " -O3
+                      -D__PURE_INTEL_C99_HEADERS__ -vec-threshold0 " }
+              # Dictionary with name of compiler and its flags
+          common_flags: " -DVAR=value -DOTHER_FLAG " # Common flags
+          asm_analysis: True # Generate and parse ASM file (-S in compiler)
+          silent: True # Avoid verbose building output, i.e. 2> /dev/null
+      configuration:
+          kernel_cfg: ["NPACK=4 MACVETH=true"]
+          features:
+              X_: "it.combinations(range(0, 4), 4)"
+          macveth_path_build: "" # MACVETH binary path
+          macveth_flags: " -misa=avx2 " # MACVETH flags to use (also included common_flags)
+      execution:
+          threshold_outliers: 3 # MARTA uses |x - mean(X)| < threshold_outliers*std(X)
+          nexec: 7 # number of times whole experiment is repeated
+          nruns: 1000000 # number of times kernel is executed
+          flops: "4*2" # expressions allowed
+          prefix: "OMP_NUM_THREADS=1 GOMP_CPU_AFFINITY=7"
+      output:
+          name: ""
+          columns: "all"
+          report: True # Generate report with info
+          verbose: True
