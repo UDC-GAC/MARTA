@@ -24,9 +24,9 @@ class Report:
         if Report.cinfo == None:
             Report.cinfo = cpu.get_cpu_info()
 
-        cpu_info = f"CPU:\t\t\t\t{Report.cinfo['brand_raw']}\n"
+        cpu_info = f"CPU:\t\t\t{Report.cinfo['brand_raw']}\n"
         cpu_info += f"Architecture:\t\t{cpu.platform.architecture()[0]}\n"
-        cpu_info += f"Memory:\t\t\t\t"
+        cpu_info += f"Memory:\t\t\t\t\n"
         cpu_info += f"Avail. Cores:\t\t{cpu.os.cpu_count()}\n"
         cpu_info += f"OS:\t\t\t\t\t"
         if cpu.platform.win32_ver()[0] != "":

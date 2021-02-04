@@ -1,6 +1,3 @@
-import os
-
-
 class ASMParser:
     @staticmethod
     def get_raw_asm_type(ins):

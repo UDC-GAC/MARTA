@@ -1,9 +1,45 @@
+# - kernel:
+#       name: "randomvectorpacking"
+#       main_src: "main.cc"
+#       target_src: "randompacking.cc"
+#       description: ""
+#       path: "kernels/randompacking"
+#       debug: False
+#       clean_tmp_files: True
+#       clean_asm_files: False
+#       compilation:
+#           language: "C++" # cpp, c++, C++, CXX, CPP, cc, c, C, GNU/C...
+#           compiler_flags: { "gcc": " -O3 -ftree-vectorize ", "icc": " -O3
+#                       -D__PURE_INTEL_C99_HEADERS__ -vec-threshold0 " }
+#           common_flags: " -DNPACK=4 "
+#           asm_analysis: True # TODO
+#           silent: False
+#       configuration:
+#           kernel_cfg: ["NPACK=4 MACVETH=true", "NPACK=4"]
+#           features:
+#               X_: "it.combinations(range(0, 4), 4)"
+#           macveth_path_build: ""
+#           macveth_flags: " -misa=avx2 "
+#       execution:
+#           counters: "PAPI" # 
+#           threshold_outliers: 3
+#           nexec: 7
+#           nruns: 1000000
+#           flops: "4*2"
+#           prefix: "OMP_NUM_THREADS=1 GOMP_CPU_AFFINITY=7"
+#       output:
+#           name: ""
+#           columns: "all"
+#           verbose: True
+#           report: True
+
+
 - kernel:
-      name: "randomvectorpacking"
+      name: "codelet"
       main_src: "main.cc"
-      target_src: "randompacking.cc"
+      target_src: "codelet.cc"
       description: ""
-      path: "kernels/randompacking"
+      path: "kernels/codelet"
       debug: False
       clean_tmp_files: True
       clean_asm_files: False
@@ -11,11 +47,11 @@
           language: "C++" # cpp, c++, C++, CXX, CPP, cc, c, C, GNU/C...
           compiler_flags: { "gcc": " -O3 -ftree-vectorize ", "icc": " -O3
                       -D__PURE_INTEL_C99_HEADERS__ -vec-threshold0 " }
-          common_flags: " -DNPACK=4 "
+          common_flags: "  "
           asm_analysis: True # TODO
-          silent: True
+          silent: False
       configuration:
-          kernel_cfg: ["NPACK=4 MACVETH=true", "NPACK=4"]
+          kernel_cfg: ["MACVETH=true", ""]
           features:
               X_: "it.combinations(range(0, 4), 4)"
           macveth_path_build: ""
@@ -24,8 +60,8 @@
           counters: "PAPI" # 
           threshold_outliers: 3
           nexec: 7
-          nruns: 1000000
-          flops: "4*2"
+          nruns: 100
+          flops: "2056*2"
           prefix: "OMP_NUM_THREADS=1 GOMP_CPU_AFFINITY=7"
       output:
           name: ""

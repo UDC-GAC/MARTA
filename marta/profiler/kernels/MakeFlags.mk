@@ -47,7 +47,7 @@ ifeq ($(MACVETH),true)
 	MACVETH_RULE:=macveth
 	OLD_TARGET:=$(TARGET)
 	TARGET:=$(TARGET)_macveth
-	MACVETH_DB:=$(CUSTOM_FLAGS)
+	MACVETH_DB:=$(COMMON_FLAGS)
 endif
 
 .PHONY: clean
