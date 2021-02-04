@@ -1,7 +1,10 @@
 tqdm
+# Numpy 1.19.4 has a bug in Windows and will not work properly
+numpy==1.19.3
 pandas
 pyyaml==5.3
 Sphinx==3.3.1
 sphinxcontrib-serializinghtml
 rinohtype
 py-cpuinfo
+pytest

@@ -21,6 +21,7 @@
           macveth_path_build: ""
           macveth_flags: " -misa=avx2 "
       execution:
+          counters: "PAPI" # 
           threshold_outliers: 3
           nexec: 7
           nruns: 1000000
