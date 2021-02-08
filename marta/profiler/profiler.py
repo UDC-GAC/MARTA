@@ -20,7 +20,7 @@ from tqdm import tqdm
 from tqdm.auto import tqdm as tqdm_auto
 
 # FIXME: change this at some point
-__version__ = "0.0.1-alpha"
+__version__ = "0.0.0-alpha"
 
 lang_equiv = {"c": ["gnu/c", "c", "cc"], "cpp": ["cpp", ""]}
 lang_equiv_inverted = inv_dict(lang_equiv)
@@ -58,22 +58,29 @@ class Profiler:
         params_name = list()
         params_values = list()
         for f in feature.keys():
-            if type(feature[f]) is str:
+            type_feature = feature[f]["type"]
+            evaluate = feature[f]["evaluate"]
+            if type(feature[f]["value"]) is str:
                 try:
-                    tmp_eval = eval(feature[f])
+                    if evaluate:
+                        tmp_eval = eval(feature[f]["value"])
+                    else:
+                        tmp_eval = feature[f]["value"]
                 except NameError:
                     print(f"Evaluation of expression for {f} went wrong!")
                     sys.exit(1)
-                tmp_eval_copy = copy.deepcopy(tmp_eval)
-                for t in tmp_eval_copy:
-                    size = len(t)
-                    break
-                for i in range(size):
-                    params_name += [f"{f}{str(i)}"]
+                if type_feature == "dynamic":
+                    tmp_eval_copy = copy.deepcopy(tmp_eval)
+                    for t in tmp_eval_copy:
+                        size = len(t)
+                        break
+                    for i in range(size):
+                        params_name += [f"{f}{str(i)}"]
                 params_values += [tmp_eval]
             else:
-                params_name += [f]
                 params_values += [feature[f]]
+            if type_feature == "static":
+                params_name += [f]
         return params_name, params_values
 
     @staticmethod
@@ -200,7 +207,7 @@ class Profiler:
         if self.args.output is None:
             tstamp = dt.now().strftime("%d_%m___%H_%M_%S")
             output_filename = "marta_profiler_"
-            if config_output["name"] == "":
+            if config_output["name"] == "default":
                 output_filename += f"{kernel.basename}_{tstamp}.csv"
             else:
                 output_filename += f"{config_output['name']}_{tstamp}.csv"
@@ -211,7 +218,8 @@ class Profiler:
         if type(output_cols) is not list:
             print("output_cols parameter must be a list or 'all'")
             sys.exit(1)
-        output_cols += ["FLOPSs", "Cycles", "Time", "CFG", "Compiler"]
+        output_cols += ["FLOPSs", "Time", "CFG", "Compiler"]
+        output_cols += kernel.papi_counters
 
         # Compute number of iterations
         params_values_copy = copy.deepcopy(params_values)
@@ -239,25 +247,11 @@ class Profiler:
             for compiler in kernel.compilers_list:
                 for kconfig in kernel.kernel_cfg:
                     backup_params_values = copy.deepcopy(params_values)
-                    for params in it.product(*backup_params_values):
-                        # kern_exec = self.run_kernel(
-                        #     basename,
-                        #     kconfig,
-                        #     [params, params_name],
-                        #     flops,
-                        #     compiler,
-                        #     compiler_flags[compiler],
-                        #     common_flags,
-                        #     nruns,
-                        #     exec_args,
-                        #     nexec,
-                        #     config_cfg,
-                        #     silent,
-                        #     path_kernel,
-                        #     self.args.quit_on_error,
-                        # )
+                    for params_values in it.product(backup_params_values):
+                        print(params_values)
                         kern_exec = kernel.run(
-                            kconfig, [params, params_name], compiler, silent, self.args.quit_on_error)
+                            kconfig, dict(zip(params_name, params_values)),
+                            compiler, silent, self.args.quit_on_error)
                         # There was an error, exit on error, save data first
                         if kern_exec == None:
                             print("Saving file...")
@@ -310,7 +304,8 @@ class Profiler:
             print("Configuration file not found")
             sys.exit(1)
         except Exception:
-            print("Unknown error... quitting")
+            print("Unknown error when opening configuration file.")
+            print("Quitting...")
             sys.exit(1)
 
         # Create folders

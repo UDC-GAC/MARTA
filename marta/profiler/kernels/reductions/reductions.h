@@ -1,7 +1,31 @@
-#ifndef _KERNEL_H
-#define _KERNEL_H
+#ifndef _REDUCTIONS_KERNEL_H
+#define _REDUCTIONS_KERNEL_H
 #include "definitions.h"
 #include "polybench.h"
+
+#ifndef uI
+#define uI 1
+#endif
+
+#ifndef uIt
+#define uIt 1
+#endif
+
+#ifndef uIs
+#define uIs 1
+#endif
+
+#ifndef uJ
+#define uJ 1
+#endif
+
+#ifndef uJt
+#define uJt 1
+#endif
+
+#ifndef uJs
+#define uJs 1
+#endif
 
 void kernel_redux(
     int m, int n, int _uI, int _uIt, int _uIs, int _uJ, int _uJt, int _uJs,

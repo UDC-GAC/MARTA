@@ -1,12 +1,14 @@
 #include "codelet.h"
 
+/* kernel_spmv_fragment_0 S80PI_n1-d1compr-leftover.spf.c */
+
 #define restrict __restrict
 
 void codelet(double *restrict A, double *restrict x, double *restrict y)
 {
   register int i0, i1, i2, i3, i4, i5, i6;
 
-#pragma macveth
+#pragma macveth unroll i0 full
   for (i0 = 0; i0 <= 7; ++i0)
   {
     y[1 * i0 + 5] += A[i0 + 0] * x[1 * i0 + 5];

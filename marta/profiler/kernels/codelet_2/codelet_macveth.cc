@@ -3,14 +3,12 @@
 /* end INFO MACVETH */
 #include "codelet.h"
 
-/* kernel_spmv_fragment_0 S80PI_n1-d1compr-leftover.spf.c */
-
 #define restrict __restrict
 
 void codelet(double *restrict A, double *restrict x, double *restrict y) {
   register int i0, i1, i2, i3, i4, i5, i6;
 
-#pragma macveth unroll i0 full
+#pragma macveth
   __m256d __mv_vop2, __mv_vop0, __mv_vop1, __mv_vop5, __mv_vop3, __mv_vop4,
       __mv_vop1542, __mv_vop1543, __mv_vop8, __mv_vop6, __mv_vop7, __mv_vop11,
       __mv_vop9, __mv_vop10, __mv_vop1544, __mv_vop1545, __mv_vop14, __mv_vop12,
@@ -421,7 +419,7 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
       __mv_vop1534, __mv_vop2052, __mv_vop2053, __mv_vop1538, __mv_vop1536,
       __mv_vop1537, __mv_vop1541, __mv_vop1539, __mv_vop1540, __mv_vop2054,
       __mv_vop2055;
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop0 = _mm256_loadu_pd(&A[(i0 + 0)]);
     __mv_vop1 = _mm256_loadu_pd(&x[((i0 + 0) + 5)]);
     __mv_vop3 = _mm256_loadu_pd(&A[(i0 + 4)]);
@@ -434,7 +432,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 5)], __mv_vop1543);
     // y[1 * i0 + 5] += A[i0 + 0] * x[1 * i0 + 5];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 5] += A[i0 + 0] * x[1 * i0 + 5];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop6 = _mm256_loadu_pd(&A[((i0 + 0) + 8)]);
     __mv_vop7 = _mm256_loadu_pd(&x[((i0 + 0) + 15)]);
     __mv_vop9 = _mm256_loadu_pd(&A[((i0 + 4) + 8)]);
@@ -447,7 +449,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 14)], __mv_vop1545);
     // y[1 * i0 + 14] += A[i0 + 8] * x[1 * i0 + 15];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 14] += A[i0 + 8] * x[1 * i0 + 15];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop12 = _mm256_loadu_pd(&A[((i0 + 0) + 16)]);
     __mv_vop13 = _mm256_loadu_pd(&x[((i0 + 0) + 14)]);
     __mv_vop15 = _mm256_loadu_pd(&A[((i0 + 4) + 16)]);
@@ -460,7 +466,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 15)], __mv_vop1547);
     // y[1 * i0 + 15] += A[i0 + 16] * x[1 * i0 + 14];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 15] += A[i0 + 16] * x[1 * i0 + 14];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop18 = _mm256_loadu_pd(&A[((i0 + 0) + 24)]);
     __mv_vop19 = _mm256_loadu_pd(&x[((i0 + 0) + 23)]);
     __mv_vop21 = _mm256_loadu_pd(&A[((i0 + 4) + 24)]);
@@ -473,7 +483,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 22)], __mv_vop1549);
     // y[1 * i0 + 22] += A[i0 + 24] * x[1 * i0 + 23];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 22] += A[i0 + 24] * x[1 * i0 + 23];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop24 = _mm256_loadu_pd(&A[((i0 + 0) + 32)]);
     __mv_vop25 = _mm256_loadu_pd(&x[((i0 + 0) + 22)]);
     __mv_vop27 = _mm256_loadu_pd(&A[((i0 + 4) + 32)]);
@@ -486,7 +500,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 23)], __mv_vop1551);
     // y[1 * i0 + 23] += A[i0 + 32] * x[1 * i0 + 22];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 23] += A[i0 + 32] * x[1 * i0 + 22];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop30 = _mm256_loadu_pd(&A[((i0 + 0) + 40)]);
     __mv_vop31 = _mm256_loadu_pd(&x[((i0 + 0) + 31)]);
     __mv_vop33 = _mm256_loadu_pd(&A[((i0 + 4) + 40)]);
@@ -499,7 +517,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 30)], __mv_vop1553);
     // y[1 * i0 + 30] += A[i0 + 40] * x[1 * i0 + 31];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 30] += A[i0 + 40] * x[1 * i0 + 31];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop36 = _mm256_loadu_pd(&A[((i0 + 0) + 48)]);
     __mv_vop37 = _mm256_loadu_pd(&x[((i0 + 0) + 30)]);
     __mv_vop39 = _mm256_loadu_pd(&A[((i0 + 4) + 48)]);
@@ -512,7 +534,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 31)], __mv_vop1555);
     // y[1 * i0 + 31] += A[i0 + 48] * x[1 * i0 + 30];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 31] += A[i0 + 48] * x[1 * i0 + 30];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop42 = _mm256_loadu_pd(&A[((i0 + 0) + 56)]);
     __mv_vop43 = _mm256_loadu_pd(&x[((i0 + 0) + 39)]);
     __mv_vop45 = _mm256_loadu_pd(&A[((i0 + 4) + 56)]);
@@ -525,7 +551,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 38)], __mv_vop1557);
     // y[1 * i0 + 38] += A[i0 + 56] * x[1 * i0 + 39];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 38] += A[i0 + 56] * x[1 * i0 + 39];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop48 = _mm256_loadu_pd(&A[((i0 + 0) + 64)]);
     __mv_vop49 = _mm256_loadu_pd(&x[((i0 + 0) + 38)]);
     __mv_vop51 = _mm256_loadu_pd(&A[((i0 + 4) + 64)]);
@@ -538,7 +568,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 39)], __mv_vop1559);
     // y[1 * i0 + 39] += A[i0 + 64] * x[1 * i0 + 38];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 39] += A[i0 + 64] * x[1 * i0 + 38];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop54 = _mm256_loadu_pd(&A[((i0 + 0) + 72)]);
     __mv_vop55 = _mm256_loadu_pd(&x[((i0 + 0) + 47)]);
     __mv_vop57 = _mm256_loadu_pd(&A[((i0 + 4) + 72)]);
@@ -551,7 +585,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 46)], __mv_vop1561);
     // y[1 * i0 + 46] += A[i0 + 72] * x[1 * i0 + 47];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 46] += A[i0 + 72] * x[1 * i0 + 47];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop60 = _mm256_loadu_pd(&A[((i0 + 0) + 80)]);
     __mv_vop61 = _mm256_loadu_pd(&x[((i0 + 0) + 46)]);
     __mv_vop63 = _mm256_loadu_pd(&A[((i0 + 4) + 80)]);
@@ -564,7 +602,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 47)], __mv_vop1563);
     // y[1 * i0 + 47] += A[i0 + 80] * x[1 * i0 + 46];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 47] += A[i0 + 80] * x[1 * i0 + 46];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop66 = _mm256_loadu_pd(&A[((i0 + 0) + 88)]);
     __mv_vop67 = _mm256_loadu_pd(&x[((i0 + 0) + 55)]);
     __mv_vop69 = _mm256_loadu_pd(&A[((i0 + 4) + 88)]);
@@ -577,7 +619,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 54)], __mv_vop1565);
     // y[1 * i0 + 54] += A[i0 + 88] * x[1 * i0 + 55];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 54] += A[i0 + 88] * x[1 * i0 + 55];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop72 = _mm256_loadu_pd(&A[((i0 + 0) + 96)]);
     __mv_vop73 = _mm256_loadu_pd(&x[((i0 + 0) + 54)]);
     __mv_vop75 = _mm256_loadu_pd(&A[((i0 + 4) + 96)]);
@@ -590,7 +636,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 55)], __mv_vop1567);
     // y[1 * i0 + 55] += A[i0 + 96] * x[1 * i0 + 54];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 55] += A[i0 + 96] * x[1 * i0 + 54];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop78 = _mm256_loadu_pd(&A[((i0 + 0) + 104)]);
     __mv_vop79 = _mm256_loadu_pd(&x[((i0 + 0) + 63)]);
     __mv_vop81 = _mm256_loadu_pd(&A[((i0 + 4) + 104)]);
@@ -603,7 +653,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 62)], __mv_vop1569);
     // y[1 * i0 + 62] += A[i0 + 104] * x[1 * i0 + 63];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 62] += A[i0 + 104] * x[1 * i0 + 63];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop84 = _mm256_loadu_pd(&A[((i0 + 0) + 112)]);
     __mv_vop85 = _mm256_loadu_pd(&x[((i0 + 0) + 62)]);
     __mv_vop87 = _mm256_loadu_pd(&A[((i0 + 4) + 112)]);
@@ -616,7 +670,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 63)], __mv_vop1571);
     // y[1 * i0 + 63] += A[i0 + 112] * x[1 * i0 + 62];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 63] += A[i0 + 112] * x[1 * i0 + 62];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop90 = _mm256_loadu_pd(&A[((i0 + 0) + 120)]);
     __mv_vop91 = _mm256_loadu_pd(&x[((i0 + 0) + 71)]);
     __mv_vop93 = _mm256_loadu_pd(&A[((i0 + 4) + 120)]);
@@ -629,7 +687,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 70)], __mv_vop1573);
     // y[1 * i0 + 70] += A[i0 + 120] * x[1 * i0 + 71];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 70] += A[i0 + 120] * x[1 * i0 + 71];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop96 = _mm256_loadu_pd(&A[((i0 + 0) + 128)]);
     __mv_vop97 = _mm256_loadu_pd(&x[((i0 + 0) + 70)]);
     __mv_vop99 = _mm256_loadu_pd(&A[((i0 + 4) + 128)]);
@@ -642,7 +704,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 71)], __mv_vop1575);
     // y[1 * i0 + 71] += A[i0 + 128] * x[1 * i0 + 70];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 71] += A[i0 + 128] * x[1 * i0 + 70];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop102 = _mm256_loadu_pd(&A[((i0 + 0) + 136)]);
     __mv_vop103 = _mm256_loadu_pd(&x[((i0 + 0) + 79)]);
     __mv_vop105 = _mm256_loadu_pd(&A[((i0 + 4) + 136)]);
@@ -655,7 +721,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 78)], __mv_vop1577);
     // y[1 * i0 + 78] += A[i0 + 136] * x[1 * i0 + 79];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 78] += A[i0 + 136] * x[1 * i0 + 79];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop108 = _mm256_loadu_pd(&A[((i0 + 0) + 144)]);
     __mv_vop109 = _mm256_loadu_pd(&x[((i0 + 0) + 78)]);
     __mv_vop111 = _mm256_loadu_pd(&A[((i0 + 4) + 144)]);
@@ -668,7 +738,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 79)], __mv_vop1579);
     // y[1 * i0 + 79] += A[i0 + 144] * x[1 * i0 + 78];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 79] += A[i0 + 144] * x[1 * i0 + 78];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop114 = _mm256_loadu_pd(&A[((i0 + 0) + 152)]);
     __mv_vop115 = _mm256_loadu_pd(&x[((i0 + 0) + 87)]);
     __mv_vop117 = _mm256_loadu_pd(&A[((i0 + 4) + 152)]);
@@ -681,7 +755,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 86)], __mv_vop1581);
     // y[1 * i0 + 86] += A[i0 + 152] * x[1 * i0 + 87];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 86] += A[i0 + 152] * x[1 * i0 + 87];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop120 = _mm256_loadu_pd(&A[((i0 + 0) + 160)]);
     __mv_vop121 = _mm256_loadu_pd(&x[((i0 + 0) + 86)]);
     __mv_vop123 = _mm256_loadu_pd(&A[((i0 + 4) + 160)]);
@@ -694,7 +772,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 87)], __mv_vop1583);
     // y[1 * i0 + 87] += A[i0 + 160] * x[1 * i0 + 86];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 87] += A[i0 + 160] * x[1 * i0 + 86];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop126 = _mm256_loadu_pd(&A[((i0 + 0) + 168)]);
     __mv_vop127 = _mm256_loadu_pd(&x[((i0 + 0) + 95)]);
     __mv_vop129 = _mm256_loadu_pd(&A[((i0 + 4) + 168)]);
@@ -707,7 +789,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 94)], __mv_vop1585);
     // y[1 * i0 + 94] += A[i0 + 168] * x[1 * i0 + 95];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 94] += A[i0 + 168] * x[1 * i0 + 95];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop132 = _mm256_loadu_pd(&A[((i0 + 0) + 176)]);
     __mv_vop133 = _mm256_loadu_pd(&x[((i0 + 0) + 94)]);
     __mv_vop135 = _mm256_loadu_pd(&A[((i0 + 4) + 176)]);
@@ -720,7 +806,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 95)], __mv_vop1587);
     // y[1 * i0 + 95] += A[i0 + 176] * x[1 * i0 + 94];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 95] += A[i0 + 176] * x[1 * i0 + 94];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop138 = _mm256_loadu_pd(&A[((i0 + 0) + 184)]);
     __mv_vop139 = _mm256_loadu_pd(&x[((i0 + 0) + 103)]);
     __mv_vop141 = _mm256_loadu_pd(&A[((i0 + 4) + 184)]);
@@ -733,7 +823,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 102)], __mv_vop1589);
     // y[1 * i0 + 102] += A[i0 + 184] * x[1 * i0 + 103];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 102] += A[i0 + 184] * x[1 * i0 + 103];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop144 = _mm256_loadu_pd(&A[((i0 + 0) + 192)]);
     __mv_vop145 = _mm256_loadu_pd(&x[((i0 + 0) + 102)]);
     __mv_vop147 = _mm256_loadu_pd(&A[((i0 + 4) + 192)]);
@@ -746,7 +840,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 103)], __mv_vop1591);
     // y[1 * i0 + 103] += A[i0 + 192] * x[1 * i0 + 102];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 103] += A[i0 + 192] * x[1 * i0 + 102];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop150 = _mm256_loadu_pd(&A[((i0 + 0) + 200)]);
     __mv_vop151 = _mm256_loadu_pd(&x[((i0 + 0) + 111)]);
     __mv_vop153 = _mm256_loadu_pd(&A[((i0 + 4) + 200)]);
@@ -759,7 +857,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 110)], __mv_vop1593);
     // y[1 * i0 + 110] += A[i0 + 200] * x[1 * i0 + 111];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 110] += A[i0 + 200] * x[1 * i0 + 111];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop156 = _mm256_loadu_pd(&A[((i0 + 0) + 208)]);
     __mv_vop157 = _mm256_loadu_pd(&x[((i0 + 0) + 110)]);
     __mv_vop159 = _mm256_loadu_pd(&A[((i0 + 4) + 208)]);
@@ -772,7 +874,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 111)], __mv_vop1595);
     // y[1 * i0 + 111] += A[i0 + 208] * x[1 * i0 + 110];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 111] += A[i0 + 208] * x[1 * i0 + 110];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop162 = _mm256_loadu_pd(&A[((i0 + 0) + 216)]);
     __mv_vop163 = _mm256_loadu_pd(&x[((i0 + 0) + 119)]);
     __mv_vop165 = _mm256_loadu_pd(&A[((i0 + 4) + 216)]);
@@ -785,7 +891,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 118)], __mv_vop1597);
     // y[1 * i0 + 118] += A[i0 + 216] * x[1 * i0 + 119];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 118] += A[i0 + 216] * x[1 * i0 + 119];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop168 = _mm256_loadu_pd(&A[((i0 + 0) + 224)]);
     __mv_vop169 = _mm256_loadu_pd(&x[((i0 + 0) + 118)]);
     __mv_vop171 = _mm256_loadu_pd(&A[((i0 + 4) + 224)]);
@@ -798,7 +908,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 119)], __mv_vop1599);
     // y[1 * i0 + 119] += A[i0 + 224] * x[1 * i0 + 118];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 119] += A[i0 + 224] * x[1 * i0 + 118];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop174 = _mm256_loadu_pd(&A[((i0 + 0) + 232)]);
     __mv_vop175 = _mm256_loadu_pd(&x[((i0 + 0) + 127)]);
     __mv_vop177 = _mm256_loadu_pd(&A[((i0 + 4) + 232)]);
@@ -811,7 +925,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 126)], __mv_vop1601);
     // y[1 * i0 + 126] += A[i0 + 232] * x[1 * i0 + 127];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 126] += A[i0 + 232] * x[1 * i0 + 127];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop180 = _mm256_loadu_pd(&A[((i0 + 0) + 240)]);
     __mv_vop181 = _mm256_loadu_pd(&x[((i0 + 0) + 126)]);
     __mv_vop183 = _mm256_loadu_pd(&A[((i0 + 4) + 240)]);
@@ -824,7 +942,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 127)], __mv_vop1603);
     // y[1 * i0 + 127] += A[i0 + 240] * x[1 * i0 + 126];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 127] += A[i0 + 240] * x[1 * i0 + 126];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop186 = _mm256_loadu_pd(&A[((i0 + 0) + 248)]);
     __mv_vop187 = _mm256_loadu_pd(&x[((i0 + 0) + 135)]);
     __mv_vop189 = _mm256_loadu_pd(&A[((i0 + 4) + 248)]);
@@ -837,7 +959,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 134)], __mv_vop1605);
     // y[1 * i0 + 134] += A[i0 + 248] * x[1 * i0 + 135];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 134] += A[i0 + 248] * x[1 * i0 + 135];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop192 = _mm256_loadu_pd(&A[((i0 + 0) + 256)]);
     __mv_vop193 = _mm256_loadu_pd(&x[((i0 + 0) + 134)]);
     __mv_vop195 = _mm256_loadu_pd(&A[((i0 + 4) + 256)]);
@@ -850,7 +976,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 135)], __mv_vop1607);
     // y[1 * i0 + 135] += A[i0 + 256] * x[1 * i0 + 134];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 135] += A[i0 + 256] * x[1 * i0 + 134];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop198 = _mm256_loadu_pd(&A[((i0 + 0) + 264)]);
     __mv_vop199 = _mm256_loadu_pd(&x[((i0 + 0) + 143)]);
     __mv_vop201 = _mm256_loadu_pd(&A[((i0 + 4) + 264)]);
@@ -863,7 +993,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 142)], __mv_vop1609);
     // y[1 * i0 + 142] += A[i0 + 264] * x[1 * i0 + 143];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 142] += A[i0 + 264] * x[1 * i0 + 143];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop204 = _mm256_loadu_pd(&A[((i0 + 0) + 272)]);
     __mv_vop205 = _mm256_loadu_pd(&x[((i0 + 0) + 142)]);
     __mv_vop207 = _mm256_loadu_pd(&A[((i0 + 4) + 272)]);
@@ -876,7 +1010,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 143)], __mv_vop1611);
     // y[1 * i0 + 143] += A[i0 + 272] * x[1 * i0 + 142];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 143] += A[i0 + 272] * x[1 * i0 + 142];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop210 = _mm256_loadu_pd(&A[((i0 + 0) + 280)]);
     __mv_vop211 = _mm256_loadu_pd(&x[((i0 + 0) + 151)]);
     __mv_vop213 = _mm256_loadu_pd(&A[((i0 + 4) + 280)]);
@@ -889,7 +1027,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 150)], __mv_vop1613);
     // y[1 * i0 + 150] += A[i0 + 280] * x[1 * i0 + 151];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 150] += A[i0 + 280] * x[1 * i0 + 151];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop216 = _mm256_loadu_pd(&A[((i0 + 0) + 288)]);
     __mv_vop217 = _mm256_loadu_pd(&x[((i0 + 0) + 150)]);
     __mv_vop219 = _mm256_loadu_pd(&A[((i0 + 4) + 288)]);
@@ -902,7 +1044,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 151)], __mv_vop1615);
     // y[1 * i0 + 151] += A[i0 + 288] * x[1 * i0 + 150];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 151] += A[i0 + 288] * x[1 * i0 + 150];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop222 = _mm256_loadu_pd(&A[((i0 + 0) + 296)]);
     __mv_vop223 = _mm256_loadu_pd(&x[((i0 + 0) + 159)]);
     __mv_vop225 = _mm256_loadu_pd(&A[((i0 + 4) + 296)]);
@@ -915,7 +1061,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 158)], __mv_vop1617);
     // y[1 * i0 + 158] += A[i0 + 296] * x[1 * i0 + 159];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 158] += A[i0 + 296] * x[1 * i0 + 159];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop228 = _mm256_loadu_pd(&A[((i0 + 0) + 304)]);
     __mv_vop229 = _mm256_loadu_pd(&x[((i0 + 0) + 158)]);
     __mv_vop231 = _mm256_loadu_pd(&A[((i0 + 4) + 304)]);
@@ -928,7 +1078,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 159)], __mv_vop1619);
     // y[1 * i0 + 159] += A[i0 + 304] * x[1 * i0 + 158];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 159] += A[i0 + 304] * x[1 * i0 + 158];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop234 = _mm256_loadu_pd(&A[((i0 + 0) + 312)]);
     __mv_vop235 = _mm256_loadu_pd(&x[((i0 + 0) + 167)]);
     __mv_vop237 = _mm256_loadu_pd(&A[((i0 + 4) + 312)]);
@@ -941,7 +1095,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 166)], __mv_vop1621);
     // y[1 * i0 + 166] += A[i0 + 312] * x[1 * i0 + 167];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 166] += A[i0 + 312] * x[1 * i0 + 167];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop240 = _mm256_loadu_pd(&A[((i0 + 0) + 320)]);
     __mv_vop241 = _mm256_loadu_pd(&x[((i0 + 0) + 166)]);
     __mv_vop243 = _mm256_loadu_pd(&A[((i0 + 4) + 320)]);
@@ -954,7 +1112,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 167)], __mv_vop1623);
     // y[1 * i0 + 167] += A[i0 + 320] * x[1 * i0 + 166];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 167] += A[i0 + 320] * x[1 * i0 + 166];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop246 = _mm256_loadu_pd(&A[((i0 + 0) + 328)]);
     __mv_vop247 = _mm256_loadu_pd(&x[((i0 + 0) + 175)]);
     __mv_vop249 = _mm256_loadu_pd(&A[((i0 + 4) + 328)]);
@@ -967,7 +1129,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 174)], __mv_vop1625);
     // y[1 * i0 + 174] += A[i0 + 328] * x[1 * i0 + 175];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 174] += A[i0 + 328] * x[1 * i0 + 175];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop252 = _mm256_loadu_pd(&A[((i0 + 0) + 336)]);
     __mv_vop253 = _mm256_loadu_pd(&x[((i0 + 0) + 174)]);
     __mv_vop255 = _mm256_loadu_pd(&A[((i0 + 4) + 336)]);
@@ -980,7 +1146,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 175)], __mv_vop1627);
     // y[1 * i0 + 175] += A[i0 + 336] * x[1 * i0 + 174];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 175] += A[i0 + 336] * x[1 * i0 + 174];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop258 = _mm256_loadu_pd(&A[((i0 + 0) + 344)]);
     __mv_vop259 = _mm256_loadu_pd(&x[((i0 + 0) + 183)]);
     __mv_vop261 = _mm256_loadu_pd(&A[((i0 + 4) + 344)]);
@@ -993,7 +1163,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 182)], __mv_vop1629);
     // y[1 * i0 + 182] += A[i0 + 344] * x[1 * i0 + 183];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 182] += A[i0 + 344] * x[1 * i0 + 183];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop264 = _mm256_loadu_pd(&A[((i0 + 0) + 352)]);
     __mv_vop265 = _mm256_loadu_pd(&x[((i0 + 0) + 182)]);
     __mv_vop267 = _mm256_loadu_pd(&A[((i0 + 4) + 352)]);
@@ -1006,7 +1180,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 183)], __mv_vop1631);
     // y[1 * i0 + 183] += A[i0 + 352] * x[1 * i0 + 182];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 183] += A[i0 + 352] * x[1 * i0 + 182];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop270 = _mm256_loadu_pd(&A[((i0 + 0) + 360)]);
     __mv_vop271 = _mm256_loadu_pd(&x[((i0 + 0) + 191)]);
     __mv_vop273 = _mm256_loadu_pd(&A[((i0 + 4) + 360)]);
@@ -1019,7 +1197,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 190)], __mv_vop1633);
     // y[1 * i0 + 190] += A[i0 + 360] * x[1 * i0 + 191];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 190] += A[i0 + 360] * x[1 * i0 + 191];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop276 = _mm256_loadu_pd(&A[((i0 + 0) + 368)]);
     __mv_vop277 = _mm256_loadu_pd(&x[((i0 + 0) + 190)]);
     __mv_vop279 = _mm256_loadu_pd(&A[((i0 + 4) + 368)]);
@@ -1032,7 +1214,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 191)], __mv_vop1635);
     // y[1 * i0 + 191] += A[i0 + 368] * x[1 * i0 + 190];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 191] += A[i0 + 368] * x[1 * i0 + 190];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop282 = _mm256_loadu_pd(&A[((i0 + 0) + 376)]);
     __mv_vop283 = _mm256_loadu_pd(&x[((i0 + 0) + 199)]);
     __mv_vop285 = _mm256_loadu_pd(&A[((i0 + 4) + 376)]);
@@ -1045,7 +1231,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 198)], __mv_vop1637);
     // y[1 * i0 + 198] += A[i0 + 376] * x[1 * i0 + 199];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 198] += A[i0 + 376] * x[1 * i0 + 199];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop288 = _mm256_loadu_pd(&A[((i0 + 0) + 384)]);
     __mv_vop289 = _mm256_loadu_pd(&x[((i0 + 0) + 198)]);
     __mv_vop291 = _mm256_loadu_pd(&A[((i0 + 4) + 384)]);
@@ -1058,7 +1248,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 199)], __mv_vop1639);
     // y[1 * i0 + 199] += A[i0 + 384] * x[1 * i0 + 198];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 199] += A[i0 + 384] * x[1 * i0 + 198];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop294 = _mm256_loadu_pd(&A[((i0 + 0) + 392)]);
     __mv_vop295 = _mm256_loadu_pd(&x[((i0 + 0) + 207)]);
     __mv_vop297 = _mm256_loadu_pd(&A[((i0 + 4) + 392)]);
@@ -1071,7 +1265,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 206)], __mv_vop1641);
     // y[1 * i0 + 206] += A[i0 + 392] * x[1 * i0 + 207];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 206] += A[i0 + 392] * x[1 * i0 + 207];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop300 = _mm256_loadu_pd(&A[((i0 + 0) + 400)]);
     __mv_vop301 = _mm256_loadu_pd(&x[((i0 + 0) + 206)]);
     __mv_vop303 = _mm256_loadu_pd(&A[((i0 + 4) + 400)]);
@@ -1084,7 +1282,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 207)], __mv_vop1643);
     // y[1 * i0 + 207] += A[i0 + 400] * x[1 * i0 + 206];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 207] += A[i0 + 400] * x[1 * i0 + 206];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop306 = _mm256_loadu_pd(&A[((i0 + 0) + 408)]);
     __mv_vop307 = _mm256_loadu_pd(&x[((i0 + 0) + 215)]);
     __mv_vop309 = _mm256_loadu_pd(&A[((i0 + 4) + 408)]);
@@ -1097,7 +1299,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 214)], __mv_vop1645);
     // y[1 * i0 + 214] += A[i0 + 408] * x[1 * i0 + 215];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 214] += A[i0 + 408] * x[1 * i0 + 215];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop312 = _mm256_loadu_pd(&A[((i0 + 0) + 416)]);
     __mv_vop313 = _mm256_loadu_pd(&x[((i0 + 0) + 214)]);
     __mv_vop315 = _mm256_loadu_pd(&A[((i0 + 4) + 416)]);
@@ -1110,7 +1316,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 215)], __mv_vop1647);
     // y[1 * i0 + 215] += A[i0 + 416] * x[1 * i0 + 214];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 215] += A[i0 + 416] * x[1 * i0 + 214];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop318 = _mm256_loadu_pd(&A[((i0 + 0) + 424)]);
     __mv_vop319 = _mm256_loadu_pd(&x[((i0 + 0) + 223)]);
     __mv_vop321 = _mm256_loadu_pd(&A[((i0 + 4) + 424)]);
@@ -1123,7 +1333,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 222)], __mv_vop1649);
     // y[1 * i0 + 222] += A[i0 + 424] * x[1 * i0 + 223];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 222] += A[i0 + 424] * x[1 * i0 + 223];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop324 = _mm256_loadu_pd(&A[((i0 + 0) + 432)]);
     __mv_vop325 = _mm256_loadu_pd(&x[((i0 + 0) + 222)]);
     __mv_vop327 = _mm256_loadu_pd(&A[((i0 + 4) + 432)]);
@@ -1136,7 +1350,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 223)], __mv_vop1651);
     // y[1 * i0 + 223] += A[i0 + 432] * x[1 * i0 + 222];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 223] += A[i0 + 432] * x[1 * i0 + 222];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop330 = _mm256_loadu_pd(&A[((i0 + 0) + 440)]);
     __mv_vop331 = _mm256_loadu_pd(&x[((i0 + 0) + 231)]);
     __mv_vop333 = _mm256_loadu_pd(&A[((i0 + 4) + 440)]);
@@ -1149,7 +1367,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 230)], __mv_vop1653);
     // y[1 * i0 + 230] += A[i0 + 440] * x[1 * i0 + 231];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 230] += A[i0 + 440] * x[1 * i0 + 231];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop336 = _mm256_loadu_pd(&A[((i0 + 0) + 448)]);
     __mv_vop337 = _mm256_loadu_pd(&x[((i0 + 0) + 230)]);
     __mv_vop339 = _mm256_loadu_pd(&A[((i0 + 4) + 448)]);
@@ -1162,7 +1384,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 231)], __mv_vop1655);
     // y[1 * i0 + 231] += A[i0 + 448] * x[1 * i0 + 230];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 231] += A[i0 + 448] * x[1 * i0 + 230];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop342 = _mm256_loadu_pd(&A[((i0 + 0) + 456)]);
     __mv_vop343 = _mm256_loadu_pd(&x[((i0 + 0) + 239)]);
     __mv_vop345 = _mm256_loadu_pd(&A[((i0 + 4) + 456)]);
@@ -1175,7 +1401,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 238)], __mv_vop1657);
     // y[1 * i0 + 238] += A[i0 + 456] * x[1 * i0 + 239];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 238] += A[i0 + 456] * x[1 * i0 + 239];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop348 = _mm256_loadu_pd(&A[((i0 + 0) + 464)]);
     __mv_vop349 = _mm256_loadu_pd(&x[((i0 + 0) + 238)]);
     __mv_vop351 = _mm256_loadu_pd(&A[((i0 + 4) + 464)]);
@@ -1188,7 +1418,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 239)], __mv_vop1659);
     // y[1 * i0 + 239] += A[i0 + 464] * x[1 * i0 + 238];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 239] += A[i0 + 464] * x[1 * i0 + 238];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop354 = _mm256_loadu_pd(&A[((i0 + 0) + 472)]);
     __mv_vop355 = _mm256_loadu_pd(&x[((i0 + 0) + 247)]);
     __mv_vop357 = _mm256_loadu_pd(&A[((i0 + 4) + 472)]);
@@ -1201,7 +1435,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 246)], __mv_vop1661);
     // y[1 * i0 + 246] += A[i0 + 472] * x[1 * i0 + 247];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 246] += A[i0 + 472] * x[1 * i0 + 247];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop360 = _mm256_loadu_pd(&A[((i0 + 0) + 480)]);
     __mv_vop361 = _mm256_loadu_pd(&x[((i0 + 0) + 246)]);
     __mv_vop363 = _mm256_loadu_pd(&A[((i0 + 4) + 480)]);
@@ -1214,7 +1452,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 247)], __mv_vop1663);
     // y[1 * i0 + 247] += A[i0 + 480] * x[1 * i0 + 246];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 247] += A[i0 + 480] * x[1 * i0 + 246];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop366 = _mm256_loadu_pd(&A[((i0 + 0) + 488)]);
     __mv_vop367 = _mm256_loadu_pd(&x[((i0 + 0) + 255)]);
     __mv_vop369 = _mm256_loadu_pd(&A[((i0 + 4) + 488)]);
@@ -1227,7 +1469,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 254)], __mv_vop1665);
     // y[1 * i0 + 254] += A[i0 + 488] * x[1 * i0 + 255];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 254] += A[i0 + 488] * x[1 * i0 + 255];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop372 = _mm256_loadu_pd(&A[((i0 + 0) + 496)]);
     __mv_vop373 = _mm256_loadu_pd(&x[((i0 + 0) + 254)]);
     __mv_vop375 = _mm256_loadu_pd(&A[((i0 + 4) + 496)]);
@@ -1240,7 +1486,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 255)], __mv_vop1667);
     // y[1 * i0 + 255] += A[i0 + 496] * x[1 * i0 + 254];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 255] += A[i0 + 496] * x[1 * i0 + 254];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop378 = _mm256_loadu_pd(&A[((i0 + 0) + 504)]);
     __mv_vop379 = _mm256_loadu_pd(&x[((i0 + 0) + 263)]);
     __mv_vop381 = _mm256_loadu_pd(&A[((i0 + 4) + 504)]);
@@ -1253,7 +1503,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 262)], __mv_vop1669);
     // y[1 * i0 + 262] += A[i0 + 504] * x[1 * i0 + 263];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 262] += A[i0 + 504] * x[1 * i0 + 263];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop384 = _mm256_loadu_pd(&A[((i0 + 0) + 512)]);
     __mv_vop385 = _mm256_loadu_pd(&x[((i0 + 0) + 262)]);
     __mv_vop387 = _mm256_loadu_pd(&A[((i0 + 4) + 512)]);
@@ -1266,7 +1520,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 263)], __mv_vop1671);
     // y[1 * i0 + 263] += A[i0 + 512] * x[1 * i0 + 262];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 263] += A[i0 + 512] * x[1 * i0 + 262];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop390 = _mm256_loadu_pd(&A[((i0 + 0) + 520)]);
     __mv_vop391 = _mm256_loadu_pd(&x[((i0 + 0) + 271)]);
     __mv_vop393 = _mm256_loadu_pd(&A[((i0 + 4) + 520)]);
@@ -1279,7 +1537,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 270)], __mv_vop1673);
     // y[1 * i0 + 270] += A[i0 + 520] * x[1 * i0 + 271];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 270] += A[i0 + 520] * x[1 * i0 + 271];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop396 = _mm256_loadu_pd(&A[((i0 + 0) + 528)]);
     __mv_vop397 = _mm256_loadu_pd(&x[((i0 + 0) + 270)]);
     __mv_vop399 = _mm256_loadu_pd(&A[((i0 + 4) + 528)]);
@@ -1292,7 +1554,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 271)], __mv_vop1675);
     // y[1 * i0 + 271] += A[i0 + 528] * x[1 * i0 + 270];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 271] += A[i0 + 528] * x[1 * i0 + 270];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop402 = _mm256_loadu_pd(&A[((i0 + 0) + 536)]);
     __mv_vop403 = _mm256_loadu_pd(&x[((i0 + 0) + 279)]);
     __mv_vop405 = _mm256_loadu_pd(&A[((i0 + 4) + 536)]);
@@ -1305,7 +1571,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 278)], __mv_vop1677);
     // y[1 * i0 + 278] += A[i0 + 536] * x[1 * i0 + 279];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 278] += A[i0 + 536] * x[1 * i0 + 279];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop408 = _mm256_loadu_pd(&A[((i0 + 0) + 544)]);
     __mv_vop409 = _mm256_loadu_pd(&x[((i0 + 0) + 278)]);
     __mv_vop411 = _mm256_loadu_pd(&A[((i0 + 4) + 544)]);
@@ -1318,7 +1588,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 279)], __mv_vop1679);
     // y[1 * i0 + 279] += A[i0 + 544] * x[1 * i0 + 278];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 279] += A[i0 + 544] * x[1 * i0 + 278];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop414 = _mm256_loadu_pd(&A[((i0 + 0) + 552)]);
     __mv_vop415 = _mm256_loadu_pd(&x[((i0 + 0) + 287)]);
     __mv_vop417 = _mm256_loadu_pd(&A[((i0 + 4) + 552)]);
@@ -1331,7 +1605,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 286)], __mv_vop1681);
     // y[1 * i0 + 286] += A[i0 + 552] * x[1 * i0 + 287];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 286] += A[i0 + 552] * x[1 * i0 + 287];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop420 = _mm256_loadu_pd(&A[((i0 + 0) + 560)]);
     __mv_vop421 = _mm256_loadu_pd(&x[((i0 + 0) + 286)]);
     __mv_vop423 = _mm256_loadu_pd(&A[((i0 + 4) + 560)]);
@@ -1344,7 +1622,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 287)], __mv_vop1683);
     // y[1 * i0 + 287] += A[i0 + 560] * x[1 * i0 + 286];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 287] += A[i0 + 560] * x[1 * i0 + 286];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop426 = _mm256_loadu_pd(&A[((i0 + 0) + 568)]);
     __mv_vop427 = _mm256_loadu_pd(&x[((i0 + 0) + 295)]);
     __mv_vop429 = _mm256_loadu_pd(&A[((i0 + 4) + 568)]);
@@ -1357,7 +1639,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 294)], __mv_vop1685);
     // y[1 * i0 + 294] += A[i0 + 568] * x[1 * i0 + 295];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 294] += A[i0 + 568] * x[1 * i0 + 295];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop432 = _mm256_loadu_pd(&A[((i0 + 0) + 576)]);
     __mv_vop433 = _mm256_loadu_pd(&x[((i0 + 0) + 294)]);
     __mv_vop435 = _mm256_loadu_pd(&A[((i0 + 4) + 576)]);
@@ -1370,7 +1656,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 295)], __mv_vop1687);
     // y[1 * i0 + 295] += A[i0 + 576] * x[1 * i0 + 294];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 295] += A[i0 + 576] * x[1 * i0 + 294];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop438 = _mm256_loadu_pd(&A[((i0 + 0) + 584)]);
     __mv_vop439 = _mm256_loadu_pd(&x[((i0 + 0) + 303)]);
     __mv_vop441 = _mm256_loadu_pd(&A[((i0 + 4) + 584)]);
@@ -1383,7 +1673,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 302)], __mv_vop1689);
     // y[1 * i0 + 302] += A[i0 + 584] * x[1 * i0 + 303];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 302] += A[i0 + 584] * x[1 * i0 + 303];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop444 = _mm256_loadu_pd(&A[((i0 + 0) + 592)]);
     __mv_vop445 = _mm256_loadu_pd(&x[((i0 + 0) + 302)]);
     __mv_vop447 = _mm256_loadu_pd(&A[((i0 + 4) + 592)]);
@@ -1396,7 +1690,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 303)], __mv_vop1691);
     // y[1 * i0 + 303] += A[i0 + 592] * x[1 * i0 + 302];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 303] += A[i0 + 592] * x[1 * i0 + 302];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop450 = _mm256_loadu_pd(&A[((i0 + 0) + 600)]);
     __mv_vop451 = _mm256_loadu_pd(&x[((i0 + 0) + 311)]);
     __mv_vop453 = _mm256_loadu_pd(&A[((i0 + 4) + 600)]);
@@ -1409,7 +1707,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 310)], __mv_vop1693);
     // y[1 * i0 + 310] += A[i0 + 600] * x[1 * i0 + 311];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 310] += A[i0 + 600] * x[1 * i0 + 311];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop456 = _mm256_loadu_pd(&A[((i0 + 0) + 608)]);
     __mv_vop457 = _mm256_loadu_pd(&x[((i0 + 0) + 310)]);
     __mv_vop459 = _mm256_loadu_pd(&A[((i0 + 4) + 608)]);
@@ -1422,7 +1724,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 311)], __mv_vop1695);
     // y[1 * i0 + 311] += A[i0 + 608] * x[1 * i0 + 310];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 311] += A[i0 + 608] * x[1 * i0 + 310];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop462 = _mm256_loadu_pd(&A[((i0 + 0) + 616)]);
     __mv_vop463 = _mm256_loadu_pd(&x[((i0 + 0) + 319)]);
     __mv_vop465 = _mm256_loadu_pd(&A[((i0 + 4) + 616)]);
@@ -1435,7 +1741,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 318)], __mv_vop1697);
     // y[1 * i0 + 318] += A[i0 + 616] * x[1 * i0 + 319];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 318] += A[i0 + 616] * x[1 * i0 + 319];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop468 = _mm256_loadu_pd(&A[((i0 + 0) + 624)]);
     __mv_vop469 = _mm256_loadu_pd(&x[((i0 + 0) + 318)]);
     __mv_vop471 = _mm256_loadu_pd(&A[((i0 + 4) + 624)]);
@@ -1448,7 +1758,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 319)], __mv_vop1699);
     // y[1 * i0 + 319] += A[i0 + 624] * x[1 * i0 + 318];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 319] += A[i0 + 624] * x[1 * i0 + 318];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop474 = _mm256_loadu_pd(&A[((i0 + 0) + 632)]);
     __mv_vop475 = _mm256_loadu_pd(&x[((i0 + 0) + 327)]);
     __mv_vop477 = _mm256_loadu_pd(&A[((i0 + 4) + 632)]);
@@ -1461,7 +1775,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 326)], __mv_vop1701);
     // y[1 * i0 + 326] += A[i0 + 632] * x[1 * i0 + 327];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 326] += A[i0 + 632] * x[1 * i0 + 327];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop480 = _mm256_loadu_pd(&A[((i0 + 0) + 640)]);
     __mv_vop481 = _mm256_loadu_pd(&x[((i0 + 0) + 326)]);
     __mv_vop483 = _mm256_loadu_pd(&A[((i0 + 4) + 640)]);
@@ -1474,7 +1792,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 327)], __mv_vop1703);
     // y[1 * i0 + 327] += A[i0 + 640] * x[1 * i0 + 326];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 327] += A[i0 + 640] * x[1 * i0 + 326];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop486 = _mm256_loadu_pd(&A[((i0 + 0) + 648)]);
     __mv_vop487 = _mm256_loadu_pd(&x[((i0 + 0) + 336)]);
     __mv_vop489 = _mm256_loadu_pd(&A[((i0 + 4) + 648)]);
@@ -1487,7 +1809,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 335)], __mv_vop1705);
     // y[1 * i0 + 335] += A[i0 + 648] * x[1 * i0 + 336];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 335] += A[i0 + 648] * x[1 * i0 + 336];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop492 = _mm256_loadu_pd(&A[((i0 + 0) + 656)]);
     __mv_vop493 = _mm256_loadu_pd(&x[((i0 + 0) + 335)]);
     __mv_vop495 = _mm256_loadu_pd(&A[((i0 + 4) + 656)]);
@@ -1500,7 +1826,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 336)], __mv_vop1707);
     // y[1 * i0 + 336] += A[i0 + 656] * x[1 * i0 + 335];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 336] += A[i0 + 656] * x[1 * i0 + 335];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop498 = _mm256_loadu_pd(&A[((i0 + 0) + 664)]);
     __mv_vop499 = _mm256_loadu_pd(&x[((i0 + 0) + 344)]);
     __mv_vop501 = _mm256_loadu_pd(&A[((i0 + 4) + 664)]);
@@ -1513,7 +1843,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 343)], __mv_vop1709);
     // y[1 * i0 + 343] += A[i0 + 664] * x[1 * i0 + 344];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 343] += A[i0 + 664] * x[1 * i0 + 344];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop504 = _mm256_loadu_pd(&A[((i0 + 0) + 672)]);
     __mv_vop505 = _mm256_loadu_pd(&x[((i0 + 0) + 343)]);
     __mv_vop507 = _mm256_loadu_pd(&A[((i0 + 4) + 672)]);
@@ -1526,7 +1860,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 344)], __mv_vop1711);
     // y[1 * i0 + 344] += A[i0 + 672] * x[1 * i0 + 343];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 344] += A[i0 + 672] * x[1 * i0 + 343];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop510 = _mm256_loadu_pd(&A[((i0 + 0) + 680)]);
     __mv_vop511 = _mm256_loadu_pd(&x[((i0 + 0) + 352)]);
     __mv_vop513 = _mm256_loadu_pd(&A[((i0 + 4) + 680)]);
@@ -1539,7 +1877,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 351)], __mv_vop1713);
     // y[1 * i0 + 351] += A[i0 + 680] * x[1 * i0 + 352];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 351] += A[i0 + 680] * x[1 * i0 + 352];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop516 = _mm256_loadu_pd(&A[((i0 + 0) + 688)]);
     __mv_vop517 = _mm256_loadu_pd(&x[((i0 + 0) + 351)]);
     __mv_vop519 = _mm256_loadu_pd(&A[((i0 + 4) + 688)]);
@@ -1552,7 +1894,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 352)], __mv_vop1715);
     // y[1 * i0 + 352] += A[i0 + 688] * x[1 * i0 + 351];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 352] += A[i0 + 688] * x[1 * i0 + 351];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop522 = _mm256_loadu_pd(&A[((i0 + 0) + 696)]);
     __mv_vop523 = _mm256_loadu_pd(&x[((i0 + 0) + 360)]);
     __mv_vop525 = _mm256_loadu_pd(&A[((i0 + 4) + 696)]);
@@ -1565,7 +1911,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 359)], __mv_vop1717);
     // y[1 * i0 + 359] += A[i0 + 696] * x[1 * i0 + 360];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 359] += A[i0 + 696] * x[1 * i0 + 360];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop528 = _mm256_loadu_pd(&A[((i0 + 0) + 704)]);
     __mv_vop529 = _mm256_loadu_pd(&x[((i0 + 0) + 359)]);
     __mv_vop531 = _mm256_loadu_pd(&A[((i0 + 4) + 704)]);
@@ -1578,7 +1928,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 360)], __mv_vop1719);
     // y[1 * i0 + 360] += A[i0 + 704] * x[1 * i0 + 359];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 360] += A[i0 + 704] * x[1 * i0 + 359];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop534 = _mm256_loadu_pd(&A[((i0 + 0) + 712)]);
     __mv_vop535 = _mm256_loadu_pd(&x[((i0 + 0) + 368)]);
     __mv_vop537 = _mm256_loadu_pd(&A[((i0 + 4) + 712)]);
@@ -1591,7 +1945,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 367)], __mv_vop1721);
     // y[1 * i0 + 367] += A[i0 + 712] * x[1 * i0 + 368];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 367] += A[i0 + 712] * x[1 * i0 + 368];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop540 = _mm256_loadu_pd(&A[((i0 + 0) + 720)]);
     __mv_vop541 = _mm256_loadu_pd(&x[((i0 + 0) + 367)]);
     __mv_vop543 = _mm256_loadu_pd(&A[((i0 + 4) + 720)]);
@@ -1604,7 +1962,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 368)], __mv_vop1723);
     // y[1 * i0 + 368] += A[i0 + 720] * x[1 * i0 + 367];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 368] += A[i0 + 720] * x[1 * i0 + 367];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop546 = _mm256_loadu_pd(&A[((i0 + 0) + 728)]);
     __mv_vop547 = _mm256_loadu_pd(&x[((i0 + 0) + 376)]);
     __mv_vop549 = _mm256_loadu_pd(&A[((i0 + 4) + 728)]);
@@ -1617,7 +1979,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 375)], __mv_vop1725);
     // y[1 * i0 + 375] += A[i0 + 728] * x[1 * i0 + 376];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 375] += A[i0 + 728] * x[1 * i0 + 376];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop552 = _mm256_loadu_pd(&A[((i0 + 0) + 736)]);
     __mv_vop553 = _mm256_loadu_pd(&x[((i0 + 0) + 375)]);
     __mv_vop555 = _mm256_loadu_pd(&A[((i0 + 4) + 736)]);
@@ -1630,7 +1996,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 376)], __mv_vop1727);
     // y[1 * i0 + 376] += A[i0 + 736] * x[1 * i0 + 375];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 376] += A[i0 + 736] * x[1 * i0 + 375];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop558 = _mm256_loadu_pd(&A[((i0 + 0) + 744)]);
     __mv_vop559 = _mm256_loadu_pd(&x[((i0 + 0) + 384)]);
     __mv_vop561 = _mm256_loadu_pd(&A[((i0 + 4) + 744)]);
@@ -1643,7 +2013,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 383)], __mv_vop1729);
     // y[1 * i0 + 383] += A[i0 + 744] * x[1 * i0 + 384];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 383] += A[i0 + 744] * x[1 * i0 + 384];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop564 = _mm256_loadu_pd(&A[((i0 + 0) + 752)]);
     __mv_vop565 = _mm256_loadu_pd(&x[((i0 + 0) + 383)]);
     __mv_vop567 = _mm256_loadu_pd(&A[((i0 + 4) + 752)]);
@@ -1656,7 +2030,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 384)], __mv_vop1731);
     // y[1 * i0 + 384] += A[i0 + 752] * x[1 * i0 + 383];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 384] += A[i0 + 752] * x[1 * i0 + 383];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop570 = _mm256_loadu_pd(&A[((i0 + 0) + 760)]);
     __mv_vop571 = _mm256_loadu_pd(&x[((i0 + 0) + 392)]);
     __mv_vop573 = _mm256_loadu_pd(&A[((i0 + 4) + 760)]);
@@ -1669,7 +2047,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 391)], __mv_vop1733);
     // y[1 * i0 + 391] += A[i0 + 760] * x[1 * i0 + 392];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 391] += A[i0 + 760] * x[1 * i0 + 392];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop576 = _mm256_loadu_pd(&A[((i0 + 0) + 768)]);
     __mv_vop577 = _mm256_loadu_pd(&x[((i0 + 0) + 391)]);
     __mv_vop579 = _mm256_loadu_pd(&A[((i0 + 4) + 768)]);
@@ -1682,7 +2064,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 392)], __mv_vop1735);
     // y[1 * i0 + 392] += A[i0 + 768] * x[1 * i0 + 391];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 392] += A[i0 + 768] * x[1 * i0 + 391];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop582 = _mm256_loadu_pd(&A[((i0 + 0) + 776)]);
     __mv_vop583 = _mm256_loadu_pd(&x[((i0 + 0) + 400)]);
     __mv_vop585 = _mm256_loadu_pd(&A[((i0 + 4) + 776)]);
@@ -1695,7 +2081,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 399)], __mv_vop1737);
     // y[1 * i0 + 399] += A[i0 + 776] * x[1 * i0 + 400];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 399] += A[i0 + 776] * x[1 * i0 + 400];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop588 = _mm256_loadu_pd(&A[((i0 + 0) + 784)]);
     __mv_vop589 = _mm256_loadu_pd(&x[((i0 + 0) + 399)]);
     __mv_vop591 = _mm256_loadu_pd(&A[((i0 + 4) + 784)]);
@@ -1708,7 +2098,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 400)], __mv_vop1739);
     // y[1 * i0 + 400] += A[i0 + 784] * x[1 * i0 + 399];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 400] += A[i0 + 784] * x[1 * i0 + 399];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop594 = _mm256_loadu_pd(&A[((i0 + 0) + 792)]);
     __mv_vop595 = _mm256_loadu_pd(&x[((i0 + 0) + 408)]);
     __mv_vop597 = _mm256_loadu_pd(&A[((i0 + 4) + 792)]);
@@ -1721,7 +2115,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 407)], __mv_vop1741);
     // y[1 * i0 + 407] += A[i0 + 792] * x[1 * i0 + 408];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 407] += A[i0 + 792] * x[1 * i0 + 408];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop600 = _mm256_loadu_pd(&A[((i0 + 0) + 800)]);
     __mv_vop601 = _mm256_loadu_pd(&x[((i0 + 0) + 407)]);
     __mv_vop603 = _mm256_loadu_pd(&A[((i0 + 4) + 800)]);
@@ -1734,7 +2132,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 408)], __mv_vop1743);
     // y[1 * i0 + 408] += A[i0 + 800] * x[1 * i0 + 407];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 408] += A[i0 + 800] * x[1 * i0 + 407];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop606 = _mm256_loadu_pd(&A[((i0 + 0) + 808)]);
     __mv_vop607 = _mm256_loadu_pd(&x[((i0 + 0) + 416)]);
     __mv_vop609 = _mm256_loadu_pd(&A[((i0 + 4) + 808)]);
@@ -1747,7 +2149,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 415)], __mv_vop1745);
     // y[1 * i0 + 415] += A[i0 + 808] * x[1 * i0 + 416];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 415] += A[i0 + 808] * x[1 * i0 + 416];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop612 = _mm256_loadu_pd(&A[((i0 + 0) + 816)]);
     __mv_vop613 = _mm256_loadu_pd(&x[((i0 + 0) + 415)]);
     __mv_vop615 = _mm256_loadu_pd(&A[((i0 + 4) + 816)]);
@@ -1760,7 +2166,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 416)], __mv_vop1747);
     // y[1 * i0 + 416] += A[i0 + 816] * x[1 * i0 + 415];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 416] += A[i0 + 816] * x[1 * i0 + 415];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop618 = _mm256_loadu_pd(&A[((i0 + 0) + 824)]);
     __mv_vop619 = _mm256_loadu_pd(&x[((i0 + 0) + 424)]);
     __mv_vop621 = _mm256_loadu_pd(&A[((i0 + 4) + 824)]);
@@ -1773,7 +2183,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 423)], __mv_vop1749);
     // y[1 * i0 + 423] += A[i0 + 824] * x[1 * i0 + 424];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 423] += A[i0 + 824] * x[1 * i0 + 424];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop624 = _mm256_loadu_pd(&A[((i0 + 0) + 832)]);
     __mv_vop625 = _mm256_loadu_pd(&x[((i0 + 0) + 423)]);
     __mv_vop627 = _mm256_loadu_pd(&A[((i0 + 4) + 832)]);
@@ -1786,7 +2200,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 424)], __mv_vop1751);
     // y[1 * i0 + 424] += A[i0 + 832] * x[1 * i0 + 423];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 424] += A[i0 + 832] * x[1 * i0 + 423];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop630 = _mm256_loadu_pd(&A[((i0 + 0) + 840)]);
     __mv_vop631 = _mm256_loadu_pd(&x[((i0 + 0) + 432)]);
     __mv_vop633 = _mm256_loadu_pd(&A[((i0 + 4) + 840)]);
@@ -1799,7 +2217,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 431)], __mv_vop1753);
     // y[1 * i0 + 431] += A[i0 + 840] * x[1 * i0 + 432];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 431] += A[i0 + 840] * x[1 * i0 + 432];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop636 = _mm256_loadu_pd(&A[((i0 + 0) + 848)]);
     __mv_vop637 = _mm256_loadu_pd(&x[((i0 + 0) + 431)]);
     __mv_vop639 = _mm256_loadu_pd(&A[((i0 + 4) + 848)]);
@@ -1812,7 +2234,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 432)], __mv_vop1755);
     // y[1 * i0 + 432] += A[i0 + 848] * x[1 * i0 + 431];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 432] += A[i0 + 848] * x[1 * i0 + 431];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop642 = _mm256_loadu_pd(&A[((i0 + 0) + 856)]);
     __mv_vop643 = _mm256_loadu_pd(&x[((i0 + 0) + 440)]);
     __mv_vop645 = _mm256_loadu_pd(&A[((i0 + 4) + 856)]);
@@ -1825,7 +2251,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 439)], __mv_vop1757);
     // y[1 * i0 + 439] += A[i0 + 856] * x[1 * i0 + 440];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 439] += A[i0 + 856] * x[1 * i0 + 440];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop648 = _mm256_loadu_pd(&A[((i0 + 0) + 864)]);
     __mv_vop649 = _mm256_loadu_pd(&x[((i0 + 0) + 439)]);
     __mv_vop651 = _mm256_loadu_pd(&A[((i0 + 4) + 864)]);
@@ -1838,7 +2268,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 440)], __mv_vop1759);
     // y[1 * i0 + 440] += A[i0 + 864] * x[1 * i0 + 439];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 440] += A[i0 + 864] * x[1 * i0 + 439];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop654 = _mm256_loadu_pd(&A[((i0 + 0) + 872)]);
     __mv_vop655 = _mm256_loadu_pd(&x[((i0 + 0) + 448)]);
     __mv_vop657 = _mm256_loadu_pd(&A[((i0 + 4) + 872)]);
@@ -1851,7 +2285,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 447)], __mv_vop1761);
     // y[1 * i0 + 447] += A[i0 + 872] * x[1 * i0 + 448];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 447] += A[i0 + 872] * x[1 * i0 + 448];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop660 = _mm256_loadu_pd(&A[((i0 + 0) + 880)]);
     __mv_vop661 = _mm256_loadu_pd(&x[((i0 + 0) + 447)]);
     __mv_vop663 = _mm256_loadu_pd(&A[((i0 + 4) + 880)]);
@@ -1864,7 +2302,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 448)], __mv_vop1763);
     // y[1 * i0 + 448] += A[i0 + 880] * x[1 * i0 + 447];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 448] += A[i0 + 880] * x[1 * i0 + 447];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop666 = _mm256_loadu_pd(&A[((i0 + 0) + 888)]);
     __mv_vop667 = _mm256_loadu_pd(&x[((i0 + 0) + 456)]);
     __mv_vop669 = _mm256_loadu_pd(&A[((i0 + 4) + 888)]);
@@ -1877,7 +2319,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 455)], __mv_vop1765);
     // y[1 * i0 + 455] += A[i0 + 888] * x[1 * i0 + 456];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 455] += A[i0 + 888] * x[1 * i0 + 456];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop672 = _mm256_loadu_pd(&A[((i0 + 0) + 896)]);
     __mv_vop673 = _mm256_loadu_pd(&x[((i0 + 0) + 455)]);
     __mv_vop675 = _mm256_loadu_pd(&A[((i0 + 4) + 896)]);
@@ -1890,7 +2336,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 456)], __mv_vop1767);
     // y[1 * i0 + 456] += A[i0 + 896] * x[1 * i0 + 455];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 456] += A[i0 + 896] * x[1 * i0 + 455];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop678 = _mm256_loadu_pd(&A[((i0 + 0) + 904)]);
     __mv_vop679 = _mm256_loadu_pd(&x[((i0 + 0) + 464)]);
     __mv_vop681 = _mm256_loadu_pd(&A[((i0 + 4) + 904)]);
@@ -1903,7 +2353,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 463)], __mv_vop1769);
     // y[1 * i0 + 463] += A[i0 + 904] * x[1 * i0 + 464];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 463] += A[i0 + 904] * x[1 * i0 + 464];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop684 = _mm256_loadu_pd(&A[((i0 + 0) + 912)]);
     __mv_vop685 = _mm256_loadu_pd(&x[((i0 + 0) + 463)]);
     __mv_vop687 = _mm256_loadu_pd(&A[((i0 + 4) + 912)]);
@@ -1916,7 +2370,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 464)], __mv_vop1771);
     // y[1 * i0 + 464] += A[i0 + 912] * x[1 * i0 + 463];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 464] += A[i0 + 912] * x[1 * i0 + 463];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop690 = _mm256_loadu_pd(&A[((i0 + 0) + 920)]);
     __mv_vop691 = _mm256_loadu_pd(&x[((i0 + 0) + 472)]);
     __mv_vop693 = _mm256_loadu_pd(&A[((i0 + 4) + 920)]);
@@ -1929,7 +2387,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 471)], __mv_vop1773);
     // y[1 * i0 + 471] += A[i0 + 920] * x[1 * i0 + 472];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 471] += A[i0 + 920] * x[1 * i0 + 472];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop696 = _mm256_loadu_pd(&A[((i0 + 0) + 928)]);
     __mv_vop697 = _mm256_loadu_pd(&x[((i0 + 0) + 471)]);
     __mv_vop699 = _mm256_loadu_pd(&A[((i0 + 4) + 928)]);
@@ -1942,7 +2404,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 472)], __mv_vop1775);
     // y[1 * i0 + 472] += A[i0 + 928] * x[1 * i0 + 471];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 472] += A[i0 + 928] * x[1 * i0 + 471];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop702 = _mm256_loadu_pd(&A[((i0 + 0) + 936)]);
     __mv_vop703 = _mm256_loadu_pd(&x[((i0 + 0) + 480)]);
     __mv_vop705 = _mm256_loadu_pd(&A[((i0 + 4) + 936)]);
@@ -1955,7 +2421,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 479)], __mv_vop1777);
     // y[1 * i0 + 479] += A[i0 + 936] * x[1 * i0 + 480];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 479] += A[i0 + 936] * x[1 * i0 + 480];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop708 = _mm256_loadu_pd(&A[((i0 + 0) + 944)]);
     __mv_vop709 = _mm256_loadu_pd(&x[((i0 + 0) + 479)]);
     __mv_vop711 = _mm256_loadu_pd(&A[((i0 + 4) + 944)]);
@@ -1968,7 +2438,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 480)], __mv_vop1779);
     // y[1 * i0 + 480] += A[i0 + 944] * x[1 * i0 + 479];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 480] += A[i0 + 944] * x[1 * i0 + 479];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop714 = _mm256_loadu_pd(&A[((i0 + 0) + 952)]);
     __mv_vop715 = _mm256_loadu_pd(&x[((i0 + 0) + 496)]);
     __mv_vop717 = _mm256_loadu_pd(&A[((i0 + 4) + 952)]);
@@ -1981,7 +2455,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 495)], __mv_vop1781);
     // y[1 * i0 + 495] += A[i0 + 952] * x[1 * i0 + 496];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 495] += A[i0 + 952] * x[1 * i0 + 496];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop720 = _mm256_loadu_pd(&A[((i0 + 0) + 960)]);
     __mv_vop721 = _mm256_loadu_pd(&x[((i0 + 0) + 495)]);
     __mv_vop723 = _mm256_loadu_pd(&A[((i0 + 4) + 960)]);
@@ -1994,7 +2472,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 496)], __mv_vop1783);
     // y[1 * i0 + 496] += A[i0 + 960] * x[1 * i0 + 495];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 496] += A[i0 + 960] * x[1 * i0 + 495];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop726 = _mm256_loadu_pd(&A[((i0 + 0) + 968)]);
     __mv_vop727 = _mm256_loadu_pd(&x[((i0 + 0) + 504)]);
     __mv_vop729 = _mm256_loadu_pd(&A[((i0 + 4) + 968)]);
@@ -2007,7 +2489,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 503)], __mv_vop1785);
     // y[1 * i0 + 503] += A[i0 + 968] * x[1 * i0 + 504];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 503] += A[i0 + 968] * x[1 * i0 + 504];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop732 = _mm256_loadu_pd(&A[((i0 + 0) + 976)]);
     __mv_vop733 = _mm256_loadu_pd(&x[((i0 + 0) + 503)]);
     __mv_vop735 = _mm256_loadu_pd(&A[((i0 + 4) + 976)]);
@@ -2020,7 +2506,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 504)], __mv_vop1787);
     // y[1 * i0 + 504] += A[i0 + 976] * x[1 * i0 + 503];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 504] += A[i0 + 976] * x[1 * i0 + 503];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop738 = _mm256_loadu_pd(&A[((i0 + 0) + 984)]);
     __mv_vop739 = _mm256_loadu_pd(&x[((i0 + 0) + 512)]);
     __mv_vop741 = _mm256_loadu_pd(&A[((i0 + 4) + 984)]);
@@ -2033,7 +2523,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 511)], __mv_vop1789);
     // y[1 * i0 + 511] += A[i0 + 984] * x[1 * i0 + 512];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 511] += A[i0 + 984] * x[1 * i0 + 512];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop744 = _mm256_loadu_pd(&A[((i0 + 0) + 992)]);
     __mv_vop745 = _mm256_loadu_pd(&x[((i0 + 0) + 511)]);
     __mv_vop747 = _mm256_loadu_pd(&A[((i0 + 4) + 992)]);
@@ -2046,7 +2540,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 512)], __mv_vop1791);
     // y[1 * i0 + 512] += A[i0 + 992] * x[1 * i0 + 511];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 512] += A[i0 + 992] * x[1 * i0 + 511];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop750 = _mm256_loadu_pd(&A[((i0 + 0) + 1000)]);
     __mv_vop751 = _mm256_loadu_pd(&x[((i0 + 0) + 520)]);
     __mv_vop753 = _mm256_loadu_pd(&A[((i0 + 4) + 1000)]);
@@ -2059,7 +2557,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 519)], __mv_vop1793);
     // y[1 * i0 + 519] += A[i0 + 1000] * x[1 * i0 + 520];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 519] += A[i0 + 1000] * x[1 * i0 + 520];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop756 = _mm256_loadu_pd(&A[((i0 + 0) + 1008)]);
     __mv_vop757 = _mm256_loadu_pd(&x[((i0 + 0) + 519)]);
     __mv_vop759 = _mm256_loadu_pd(&A[((i0 + 4) + 1008)]);
@@ -2072,7 +2574,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 520)], __mv_vop1795);
     // y[1 * i0 + 520] += A[i0 + 1008] * x[1 * i0 + 519];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 520] += A[i0 + 1008] * x[1 * i0 + 519];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop762 = _mm256_loadu_pd(&A[((i0 + 0) + 1016)]);
     __mv_vop763 = _mm256_loadu_pd(&x[((i0 + 0) + 528)]);
     __mv_vop765 = _mm256_loadu_pd(&A[((i0 + 4) + 1016)]);
@@ -2085,7 +2591,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 527)], __mv_vop1797);
     // y[1 * i0 + 527] += A[i0 + 1016] * x[1 * i0 + 528];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 527] += A[i0 + 1016] * x[1 * i0 + 528];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop768 = _mm256_loadu_pd(&A[((i0 + 0) + 1024)]);
     __mv_vop769 = _mm256_loadu_pd(&x[((i0 + 0) + 527)]);
     __mv_vop771 = _mm256_loadu_pd(&A[((i0 + 4) + 1024)]);
@@ -2098,7 +2608,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 528)], __mv_vop1799);
     // y[1 * i0 + 528] += A[i0 + 1024] * x[1 * i0 + 527];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 528] += A[i0 + 1024] * x[1 * i0 + 527];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop774 = _mm256_loadu_pd(&A[((i0 + 0) + 1032)]);
     __mv_vop775 = _mm256_loadu_pd(&x[((i0 + 0) + 536)]);
     __mv_vop777 = _mm256_loadu_pd(&A[((i0 + 4) + 1032)]);
@@ -2111,7 +2625,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 535)], __mv_vop1801);
     // y[1 * i0 + 535] += A[i0 + 1032] * x[1 * i0 + 536];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 535] += A[i0 + 1032] * x[1 * i0 + 536];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop780 = _mm256_loadu_pd(&A[((i0 + 0) + 1040)]);
     __mv_vop781 = _mm256_loadu_pd(&x[((i0 + 0) + 535)]);
     __mv_vop783 = _mm256_loadu_pd(&A[((i0 + 4) + 1040)]);
@@ -2124,7 +2642,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 536)], __mv_vop1803);
     // y[1 * i0 + 536] += A[i0 + 1040] * x[1 * i0 + 535];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 536] += A[i0 + 1040] * x[1 * i0 + 535];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop786 = _mm256_loadu_pd(&A[((i0 + 0) + 1048)]);
     __mv_vop787 = _mm256_loadu_pd(&x[((i0 + 0) + 544)]);
     __mv_vop789 = _mm256_loadu_pd(&A[((i0 + 4) + 1048)]);
@@ -2137,7 +2659,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 543)], __mv_vop1805);
     // y[1 * i0 + 543] += A[i0 + 1048] * x[1 * i0 + 544];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 543] += A[i0 + 1048] * x[1 * i0 + 544];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop792 = _mm256_loadu_pd(&A[((i0 + 0) + 1056)]);
     __mv_vop793 = _mm256_loadu_pd(&x[((i0 + 0) + 543)]);
     __mv_vop795 = _mm256_loadu_pd(&A[((i0 + 4) + 1056)]);
@@ -2150,7 +2676,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 544)], __mv_vop1807);
     // y[1 * i0 + 544] += A[i0 + 1056] * x[1 * i0 + 543];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 544] += A[i0 + 1056] * x[1 * i0 + 543];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop798 = _mm256_loadu_pd(&A[((i0 + 0) + 1064)]);
     __mv_vop799 = _mm256_loadu_pd(&x[((i0 + 0) + 552)]);
     __mv_vop801 = _mm256_loadu_pd(&A[((i0 + 4) + 1064)]);
@@ -2163,7 +2693,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 551)], __mv_vop1809);
     // y[1 * i0 + 551] += A[i0 + 1064] * x[1 * i0 + 552];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 551] += A[i0 + 1064] * x[1 * i0 + 552];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop804 = _mm256_loadu_pd(&A[((i0 + 0) + 1072)]);
     __mv_vop805 = _mm256_loadu_pd(&x[((i0 + 0) + 551)]);
     __mv_vop807 = _mm256_loadu_pd(&A[((i0 + 4) + 1072)]);
@@ -2176,7 +2710,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 552)], __mv_vop1811);
     // y[1 * i0 + 552] += A[i0 + 1072] * x[1 * i0 + 551];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 552] += A[i0 + 1072] * x[1 * i0 + 551];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop810 = _mm256_loadu_pd(&A[((i0 + 0) + 1080)]);
     __mv_vop811 = _mm256_loadu_pd(&x[((i0 + 0) + 560)]);
     __mv_vop813 = _mm256_loadu_pd(&A[((i0 + 4) + 1080)]);
@@ -2189,7 +2727,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 559)], __mv_vop1813);
     // y[1 * i0 + 559] += A[i0 + 1080] * x[1 * i0 + 560];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 559] += A[i0 + 1080] * x[1 * i0 + 560];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop816 = _mm256_loadu_pd(&A[((i0 + 0) + 1088)]);
     __mv_vop817 = _mm256_loadu_pd(&x[((i0 + 0) + 559)]);
     __mv_vop819 = _mm256_loadu_pd(&A[((i0 + 4) + 1088)]);
@@ -2202,7 +2744,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 560)], __mv_vop1815);
     // y[1 * i0 + 560] += A[i0 + 1088] * x[1 * i0 + 559];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 560] += A[i0 + 1088] * x[1 * i0 + 559];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop822 = _mm256_loadu_pd(&A[((i0 + 0) + 1096)]);
     __mv_vop823 = _mm256_loadu_pd(&x[((i0 + 0) + 568)]);
     __mv_vop825 = _mm256_loadu_pd(&A[((i0 + 4) + 1096)]);
@@ -2215,7 +2761,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 567)], __mv_vop1817);
     // y[1 * i0 + 567] += A[i0 + 1096] * x[1 * i0 + 568];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 567] += A[i0 + 1096] * x[1 * i0 + 568];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop828 = _mm256_loadu_pd(&A[((i0 + 0) + 1104)]);
     __mv_vop829 = _mm256_loadu_pd(&x[((i0 + 0) + 567)]);
     __mv_vop831 = _mm256_loadu_pd(&A[((i0 + 4) + 1104)]);
@@ -2228,7 +2778,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 568)], __mv_vop1819);
     // y[1 * i0 + 568] += A[i0 + 1104] * x[1 * i0 + 567];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 568] += A[i0 + 1104] * x[1 * i0 + 567];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop834 = _mm256_loadu_pd(&A[((i0 + 0) + 1112)]);
     __mv_vop835 = _mm256_loadu_pd(&x[((i0 + 0) + 576)]);
     __mv_vop837 = _mm256_loadu_pd(&A[((i0 + 4) + 1112)]);
@@ -2241,7 +2795,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 575)], __mv_vop1821);
     // y[1 * i0 + 575] += A[i0 + 1112] * x[1 * i0 + 576];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 575] += A[i0 + 1112] * x[1 * i0 + 576];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop840 = _mm256_loadu_pd(&A[((i0 + 0) + 1120)]);
     __mv_vop841 = _mm256_loadu_pd(&x[((i0 + 0) + 575)]);
     __mv_vop843 = _mm256_loadu_pd(&A[((i0 + 4) + 1120)]);
@@ -2254,7 +2812,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 576)], __mv_vop1823);
     // y[1 * i0 + 576] += A[i0 + 1120] * x[1 * i0 + 575];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 576] += A[i0 + 1120] * x[1 * i0 + 575];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop846 = _mm256_loadu_pd(&A[((i0 + 0) + 1128)]);
     __mv_vop847 = _mm256_loadu_pd(&x[((i0 + 0) + 584)]);
     __mv_vop849 = _mm256_loadu_pd(&A[((i0 + 4) + 1128)]);
@@ -2267,7 +2829,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 583)], __mv_vop1825);
     // y[1 * i0 + 583] += A[i0 + 1128] * x[1 * i0 + 584];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 583] += A[i0 + 1128] * x[1 * i0 + 584];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop852 = _mm256_loadu_pd(&A[((i0 + 0) + 1136)]);
     __mv_vop853 = _mm256_loadu_pd(&x[((i0 + 0) + 583)]);
     __mv_vop855 = _mm256_loadu_pd(&A[((i0 + 4) + 1136)]);
@@ -2280,7 +2846,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 584)], __mv_vop1827);
     // y[1 * i0 + 584] += A[i0 + 1136] * x[1 * i0 + 583];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 584] += A[i0 + 1136] * x[1 * i0 + 583];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop858 = _mm256_loadu_pd(&A[((i0 + 0) + 1144)]);
     __mv_vop859 = _mm256_loadu_pd(&x[((i0 + 0) + 592)]);
     __mv_vop861 = _mm256_loadu_pd(&A[((i0 + 4) + 1144)]);
@@ -2293,7 +2863,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 591)], __mv_vop1829);
     // y[1 * i0 + 591] += A[i0 + 1144] * x[1 * i0 + 592];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 591] += A[i0 + 1144] * x[1 * i0 + 592];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop864 = _mm256_loadu_pd(&A[((i0 + 0) + 1152)]);
     __mv_vop865 = _mm256_loadu_pd(&x[((i0 + 0) + 591)]);
     __mv_vop867 = _mm256_loadu_pd(&A[((i0 + 4) + 1152)]);
@@ -2306,7 +2880,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 592)], __mv_vop1831);
     // y[1 * i0 + 592] += A[i0 + 1152] * x[1 * i0 + 591];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 592] += A[i0 + 1152] * x[1 * i0 + 591];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop870 = _mm256_loadu_pd(&A[((i0 + 0) + 1160)]);
     __mv_vop871 = _mm256_loadu_pd(&x[((i0 + 0) + 600)]);
     __mv_vop873 = _mm256_loadu_pd(&A[((i0 + 4) + 1160)]);
@@ -2319,7 +2897,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 599)], __mv_vop1833);
     // y[1 * i0 + 599] += A[i0 + 1160] * x[1 * i0 + 600];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 599] += A[i0 + 1160] * x[1 * i0 + 600];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop876 = _mm256_loadu_pd(&A[((i0 + 0) + 1168)]);
     __mv_vop877 = _mm256_loadu_pd(&x[((i0 + 0) + 599)]);
     __mv_vop879 = _mm256_loadu_pd(&A[((i0 + 4) + 1168)]);
@@ -2332,7 +2914,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 600)], __mv_vop1835);
     // y[1 * i0 + 600] += A[i0 + 1168] * x[1 * i0 + 599];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 600] += A[i0 + 1168] * x[1 * i0 + 599];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop882 = _mm256_loadu_pd(&A[((i0 + 0) + 1176)]);
     __mv_vop883 = _mm256_loadu_pd(&x[((i0 + 0) + 608)]);
     __mv_vop885 = _mm256_loadu_pd(&A[((i0 + 4) + 1176)]);
@@ -2345,7 +2931,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 607)], __mv_vop1837);
     // y[1 * i0 + 607] += A[i0 + 1176] * x[1 * i0 + 608];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 607] += A[i0 + 1176] * x[1 * i0 + 608];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop888 = _mm256_loadu_pd(&A[((i0 + 0) + 1184)]);
     __mv_vop889 = _mm256_loadu_pd(&x[((i0 + 0) + 607)]);
     __mv_vop891 = _mm256_loadu_pd(&A[((i0 + 4) + 1184)]);
@@ -2358,7 +2948,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 608)], __mv_vop1839);
     // y[1 * i0 + 608] += A[i0 + 1184] * x[1 * i0 + 607];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 608] += A[i0 + 1184] * x[1 * i0 + 607];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop894 = _mm256_loadu_pd(&A[((i0 + 0) + 1192)]);
     __mv_vop895 = _mm256_loadu_pd(&x[((i0 + 0) + 616)]);
     __mv_vop897 = _mm256_loadu_pd(&A[((i0 + 4) + 1192)]);
@@ -2371,7 +2965,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 615)], __mv_vop1841);
     // y[1 * i0 + 615] += A[i0 + 1192] * x[1 * i0 + 616];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 615] += A[i0 + 1192] * x[1 * i0 + 616];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop900 = _mm256_loadu_pd(&A[((i0 + 0) + 1200)]);
     __mv_vop901 = _mm256_loadu_pd(&x[((i0 + 0) + 615)]);
     __mv_vop903 = _mm256_loadu_pd(&A[((i0 + 4) + 1200)]);
@@ -2384,7 +2982,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 616)], __mv_vop1843);
     // y[1 * i0 + 616] += A[i0 + 1200] * x[1 * i0 + 615];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 616] += A[i0 + 1200] * x[1 * i0 + 615];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop906 = _mm256_loadu_pd(&A[((i0 + 0) + 1208)]);
     __mv_vop907 = _mm256_loadu_pd(&x[((i0 + 0) + 624)]);
     __mv_vop909 = _mm256_loadu_pd(&A[((i0 + 4) + 1208)]);
@@ -2397,7 +2999,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 623)], __mv_vop1845);
     // y[1 * i0 + 623] += A[i0 + 1208] * x[1 * i0 + 624];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 623] += A[i0 + 1208] * x[1 * i0 + 624];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop912 = _mm256_loadu_pd(&A[((i0 + 0) + 1216)]);
     __mv_vop913 = _mm256_loadu_pd(&x[((i0 + 0) + 623)]);
     __mv_vop915 = _mm256_loadu_pd(&A[((i0 + 4) + 1216)]);
@@ -2410,7 +3016,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 624)], __mv_vop1847);
     // y[1 * i0 + 624] += A[i0 + 1216] * x[1 * i0 + 623];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 624] += A[i0 + 1216] * x[1 * i0 + 623];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop918 = _mm256_loadu_pd(&A[((i0 + 0) + 1224)]);
     __mv_vop919 = _mm256_loadu_pd(&x[((i0 + 0) + 632)]);
     __mv_vop921 = _mm256_loadu_pd(&A[((i0 + 4) + 1224)]);
@@ -2423,7 +3033,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 631)], __mv_vop1849);
     // y[1 * i0 + 631] += A[i0 + 1224] * x[1 * i0 + 632];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 631] += A[i0 + 1224] * x[1 * i0 + 632];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop924 = _mm256_loadu_pd(&A[((i0 + 0) + 1232)]);
     __mv_vop925 = _mm256_loadu_pd(&x[((i0 + 0) + 631)]);
     __mv_vop927 = _mm256_loadu_pd(&A[((i0 + 4) + 1232)]);
@@ -2436,7 +3050,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 632)], __mv_vop1851);
     // y[1 * i0 + 632] += A[i0 + 1232] * x[1 * i0 + 631];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 632] += A[i0 + 1232] * x[1 * i0 + 631];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop930 = _mm256_loadu_pd(&A[((i0 + 0) + 1240)]);
     __mv_vop931 = _mm256_loadu_pd(&x[((i0 + 0) + 640)]);
     __mv_vop933 = _mm256_loadu_pd(&A[((i0 + 4) + 1240)]);
@@ -2449,7 +3067,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 639)], __mv_vop1853);
     // y[1 * i0 + 639] += A[i0 + 1240] * x[1 * i0 + 640];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 639] += A[i0 + 1240] * x[1 * i0 + 640];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop936 = _mm256_loadu_pd(&A[((i0 + 0) + 1248)]);
     __mv_vop937 = _mm256_loadu_pd(&x[((i0 + 0) + 639)]);
     __mv_vop939 = _mm256_loadu_pd(&A[((i0 + 4) + 1248)]);
@@ -2462,7 +3084,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 640)], __mv_vop1855);
     // y[1 * i0 + 640] += A[i0 + 1248] * x[1 * i0 + 639];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 640] += A[i0 + 1248] * x[1 * i0 + 639];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop942 = _mm256_loadu_pd(&A[((i0 + 0) + 1256)]);
     __mv_vop943 = _mm256_loadu_pd(&x[((i0 + 0) + 655)]);
     __mv_vop945 = _mm256_loadu_pd(&A[((i0 + 4) + 1256)]);
@@ -2475,7 +3101,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 654)], __mv_vop1857);
     // y[1 * i0 + 654] += A[i0 + 1256] * x[1 * i0 + 655];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 654] += A[i0 + 1256] * x[1 * i0 + 655];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop948 = _mm256_loadu_pd(&A[((i0 + 0) + 1264)]);
     __mv_vop949 = _mm256_loadu_pd(&x[((i0 + 0) + 654)]);
     __mv_vop951 = _mm256_loadu_pd(&A[((i0 + 4) + 1264)]);
@@ -2488,7 +3118,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 655)], __mv_vop1859);
     // y[1 * i0 + 655] += A[i0 + 1264] * x[1 * i0 + 654];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 655] += A[i0 + 1264] * x[1 * i0 + 654];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop954 = _mm256_loadu_pd(&A[((i0 + 0) + 1272)]);
     __mv_vop955 = _mm256_loadu_pd(&x[((i0 + 0) + 663)]);
     __mv_vop957 = _mm256_loadu_pd(&A[((i0 + 4) + 1272)]);
@@ -2501,7 +3135,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 662)], __mv_vop1861);
     // y[1 * i0 + 662] += A[i0 + 1272] * x[1 * i0 + 663];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 662] += A[i0 + 1272] * x[1 * i0 + 663];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop960 = _mm256_loadu_pd(&A[((i0 + 0) + 1280)]);
     __mv_vop961 = _mm256_loadu_pd(&x[((i0 + 0) + 662)]);
     __mv_vop963 = _mm256_loadu_pd(&A[((i0 + 4) + 1280)]);
@@ -2514,7 +3152,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 663)], __mv_vop1863);
     // y[1 * i0 + 663] += A[i0 + 1280] * x[1 * i0 + 662];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 663] += A[i0 + 1280] * x[1 * i0 + 662];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop966 = _mm256_loadu_pd(&A[((i0 + 0) + 1288)]);
     __mv_vop967 = _mm256_loadu_pd(&x[((i0 + 0) + 671)]);
     __mv_vop969 = _mm256_loadu_pd(&A[((i0 + 4) + 1288)]);
@@ -2527,7 +3169,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 670)], __mv_vop1865);
     // y[1 * i0 + 670] += A[i0 + 1288] * x[1 * i0 + 671];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 670] += A[i0 + 1288] * x[1 * i0 + 671];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop972 = _mm256_loadu_pd(&A[((i0 + 0) + 1296)]);
     __mv_vop973 = _mm256_loadu_pd(&x[((i0 + 0) + 670)]);
     __mv_vop975 = _mm256_loadu_pd(&A[((i0 + 4) + 1296)]);
@@ -2540,7 +3186,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 671)], __mv_vop1867);
     // y[1 * i0 + 671] += A[i0 + 1296] * x[1 * i0 + 670];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 671] += A[i0 + 1296] * x[1 * i0 + 670];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop978 = _mm256_loadu_pd(&A[((i0 + 0) + 1304)]);
     __mv_vop979 = _mm256_loadu_pd(&x[((i0 + 0) + 679)]);
     __mv_vop981 = _mm256_loadu_pd(&A[((i0 + 4) + 1304)]);
@@ -2553,7 +3203,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 678)], __mv_vop1869);
     // y[1 * i0 + 678] += A[i0 + 1304] * x[1 * i0 + 679];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 678] += A[i0 + 1304] * x[1 * i0 + 679];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop984 = _mm256_loadu_pd(&A[((i0 + 0) + 1312)]);
     __mv_vop985 = _mm256_loadu_pd(&x[((i0 + 0) + 678)]);
     __mv_vop987 = _mm256_loadu_pd(&A[((i0 + 4) + 1312)]);
@@ -2566,7 +3220,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 679)], __mv_vop1871);
     // y[1 * i0 + 679] += A[i0 + 1312] * x[1 * i0 + 678];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 679] += A[i0 + 1312] * x[1 * i0 + 678];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop990 = _mm256_loadu_pd(&A[((i0 + 0) + 1320)]);
     __mv_vop991 = _mm256_loadu_pd(&x[((i0 + 0) + 687)]);
     __mv_vop993 = _mm256_loadu_pd(&A[((i0 + 4) + 1320)]);
@@ -2579,7 +3237,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 686)], __mv_vop1873);
     // y[1 * i0 + 686] += A[i0 + 1320] * x[1 * i0 + 687];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 686] += A[i0 + 1320] * x[1 * i0 + 687];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop996 = _mm256_loadu_pd(&A[((i0 + 0) + 1328)]);
     __mv_vop997 = _mm256_loadu_pd(&x[((i0 + 0) + 686)]);
     __mv_vop999 = _mm256_loadu_pd(&A[((i0 + 4) + 1328)]);
@@ -2592,7 +3254,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 687)], __mv_vop1875);
     // y[1 * i0 + 687] += A[i0 + 1328] * x[1 * i0 + 686];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 687] += A[i0 + 1328] * x[1 * i0 + 686];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1002 = _mm256_loadu_pd(&A[((i0 + 0) + 1336)]);
     __mv_vop1003 = _mm256_loadu_pd(&x[((i0 + 0) + 695)]);
     __mv_vop1005 = _mm256_loadu_pd(&A[((i0 + 4) + 1336)]);
@@ -2605,7 +3271,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 694)], __mv_vop1877);
     // y[1 * i0 + 694] += A[i0 + 1336] * x[1 * i0 + 695];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 694] += A[i0 + 1336] * x[1 * i0 + 695];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1008 = _mm256_loadu_pd(&A[((i0 + 0) + 1344)]);
     __mv_vop1009 = _mm256_loadu_pd(&x[((i0 + 0) + 694)]);
     __mv_vop1011 = _mm256_loadu_pd(&A[((i0 + 4) + 1344)]);
@@ -2618,7 +3288,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 695)], __mv_vop1879);
     // y[1 * i0 + 695] += A[i0 + 1344] * x[1 * i0 + 694];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 695] += A[i0 + 1344] * x[1 * i0 + 694];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1014 = _mm256_loadu_pd(&A[((i0 + 0) + 1352)]);
     __mv_vop1015 = _mm256_loadu_pd(&x[((i0 + 0) + 703)]);
     __mv_vop1017 = _mm256_loadu_pd(&A[((i0 + 4) + 1352)]);
@@ -2631,7 +3305,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 702)], __mv_vop1881);
     // y[1 * i0 + 702] += A[i0 + 1352] * x[1 * i0 + 703];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 702] += A[i0 + 1352] * x[1 * i0 + 703];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1020 = _mm256_loadu_pd(&A[((i0 + 0) + 1360)]);
     __mv_vop1021 = _mm256_loadu_pd(&x[((i0 + 0) + 702)]);
     __mv_vop1023 = _mm256_loadu_pd(&A[((i0 + 4) + 1360)]);
@@ -2644,7 +3322,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 703)], __mv_vop1883);
     // y[1 * i0 + 703] += A[i0 + 1360] * x[1 * i0 + 702];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 703] += A[i0 + 1360] * x[1 * i0 + 702];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1026 = _mm256_loadu_pd(&A[((i0 + 0) + 1368)]);
     __mv_vop1027 = _mm256_loadu_pd(&x[((i0 + 0) + 711)]);
     __mv_vop1029 = _mm256_loadu_pd(&A[((i0 + 4) + 1368)]);
@@ -2657,7 +3339,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 710)], __mv_vop1885);
     // y[1 * i0 + 710] += A[i0 + 1368] * x[1 * i0 + 711];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 710] += A[i0 + 1368] * x[1 * i0 + 711];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1032 = _mm256_loadu_pd(&A[((i0 + 0) + 1376)]);
     __mv_vop1033 = _mm256_loadu_pd(&x[((i0 + 0) + 710)]);
     __mv_vop1035 = _mm256_loadu_pd(&A[((i0 + 4) + 1376)]);
@@ -2670,7 +3356,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 711)], __mv_vop1887);
     // y[1 * i0 + 711] += A[i0 + 1376] * x[1 * i0 + 710];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 711] += A[i0 + 1376] * x[1 * i0 + 710];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1038 = _mm256_loadu_pd(&A[((i0 + 0) + 1384)]);
     __mv_vop1039 = _mm256_loadu_pd(&x[((i0 + 0) + 719)]);
     __mv_vop1041 = _mm256_loadu_pd(&A[((i0 + 4) + 1384)]);
@@ -2683,7 +3373,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 718)], __mv_vop1889);
     // y[1 * i0 + 718] += A[i0 + 1384] * x[1 * i0 + 719];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 718] += A[i0 + 1384] * x[1 * i0 + 719];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1044 = _mm256_loadu_pd(&A[((i0 + 0) + 1392)]);
     __mv_vop1045 = _mm256_loadu_pd(&x[((i0 + 0) + 718)]);
     __mv_vop1047 = _mm256_loadu_pd(&A[((i0 + 4) + 1392)]);
@@ -2696,7 +3390,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 719)], __mv_vop1891);
     // y[1 * i0 + 719] += A[i0 + 1392] * x[1 * i0 + 718];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 719] += A[i0 + 1392] * x[1 * i0 + 718];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1050 = _mm256_loadu_pd(&A[((i0 + 0) + 1400)]);
     __mv_vop1051 = _mm256_loadu_pd(&x[((i0 + 0) + 727)]);
     __mv_vop1053 = _mm256_loadu_pd(&A[((i0 + 4) + 1400)]);
@@ -2709,7 +3407,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 726)], __mv_vop1893);
     // y[1 * i0 + 726] += A[i0 + 1400] * x[1 * i0 + 727];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 726] += A[i0 + 1400] * x[1 * i0 + 727];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1056 = _mm256_loadu_pd(&A[((i0 + 0) + 1408)]);
     __mv_vop1057 = _mm256_loadu_pd(&x[((i0 + 0) + 726)]);
     __mv_vop1059 = _mm256_loadu_pd(&A[((i0 + 4) + 1408)]);
@@ -2722,7 +3424,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 727)], __mv_vop1895);
     // y[1 * i0 + 727] += A[i0 + 1408] * x[1 * i0 + 726];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 727] += A[i0 + 1408] * x[1 * i0 + 726];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1062 = _mm256_loadu_pd(&A[((i0 + 0) + 1416)]);
     __mv_vop1063 = _mm256_loadu_pd(&x[((i0 + 0) + 735)]);
     __mv_vop1065 = _mm256_loadu_pd(&A[((i0 + 4) + 1416)]);
@@ -2735,7 +3441,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 734)], __mv_vop1897);
     // y[1 * i0 + 734] += A[i0 + 1416] * x[1 * i0 + 735];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 734] += A[i0 + 1416] * x[1 * i0 + 735];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1068 = _mm256_loadu_pd(&A[((i0 + 0) + 1424)]);
     __mv_vop1069 = _mm256_loadu_pd(&x[((i0 + 0) + 734)]);
     __mv_vop1071 = _mm256_loadu_pd(&A[((i0 + 4) + 1424)]);
@@ -2748,7 +3458,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 735)], __mv_vop1899);
     // y[1 * i0 + 735] += A[i0 + 1424] * x[1 * i0 + 734];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 735] += A[i0 + 1424] * x[1 * i0 + 734];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1074 = _mm256_loadu_pd(&A[((i0 + 0) + 1432)]);
     __mv_vop1075 = _mm256_loadu_pd(&x[((i0 + 0) + 743)]);
     __mv_vop1077 = _mm256_loadu_pd(&A[((i0 + 4) + 1432)]);
@@ -2761,7 +3475,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 742)], __mv_vop1901);
     // y[1 * i0 + 742] += A[i0 + 1432] * x[1 * i0 + 743];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 742] += A[i0 + 1432] * x[1 * i0 + 743];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1080 = _mm256_loadu_pd(&A[((i0 + 0) + 1440)]);
     __mv_vop1081 = _mm256_loadu_pd(&x[((i0 + 0) + 742)]);
     __mv_vop1083 = _mm256_loadu_pd(&A[((i0 + 4) + 1440)]);
@@ -2774,7 +3492,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 743)], __mv_vop1903);
     // y[1 * i0 + 743] += A[i0 + 1440] * x[1 * i0 + 742];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 743] += A[i0 + 1440] * x[1 * i0 + 742];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1086 = _mm256_loadu_pd(&A[((i0 + 0) + 1448)]);
     __mv_vop1087 = _mm256_loadu_pd(&x[((i0 + 0) + 751)]);
     __mv_vop1089 = _mm256_loadu_pd(&A[((i0 + 4) + 1448)]);
@@ -2787,7 +3509,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 750)], __mv_vop1905);
     // y[1 * i0 + 750] += A[i0 + 1448] * x[1 * i0 + 751];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 750] += A[i0 + 1448] * x[1 * i0 + 751];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1092 = _mm256_loadu_pd(&A[((i0 + 0) + 1456)]);
     __mv_vop1093 = _mm256_loadu_pd(&x[((i0 + 0) + 750)]);
     __mv_vop1095 = _mm256_loadu_pd(&A[((i0 + 4) + 1456)]);
@@ -2800,7 +3526,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 751)], __mv_vop1907);
     // y[1 * i0 + 751] += A[i0 + 1456] * x[1 * i0 + 750];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 751] += A[i0 + 1456] * x[1 * i0 + 750];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1098 = _mm256_loadu_pd(&A[((i0 + 0) + 1464)]);
     __mv_vop1099 = _mm256_loadu_pd(&x[((i0 + 0) + 759)]);
     __mv_vop1101 = _mm256_loadu_pd(&A[((i0 + 4) + 1464)]);
@@ -2813,7 +3543,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 758)], __mv_vop1909);
     // y[1 * i0 + 758] += A[i0 + 1464] * x[1 * i0 + 759];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 758] += A[i0 + 1464] * x[1 * i0 + 759];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1104 = _mm256_loadu_pd(&A[((i0 + 0) + 1472)]);
     __mv_vop1105 = _mm256_loadu_pd(&x[((i0 + 0) + 758)]);
     __mv_vop1107 = _mm256_loadu_pd(&A[((i0 + 4) + 1472)]);
@@ -2826,7 +3560,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 759)], __mv_vop1911);
     // y[1 * i0 + 759] += A[i0 + 1472] * x[1 * i0 + 758];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 759] += A[i0 + 1472] * x[1 * i0 + 758];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1110 = _mm256_loadu_pd(&A[((i0 + 0) + 1480)]);
     __mv_vop1111 = _mm256_loadu_pd(&x[((i0 + 0) + 767)]);
     __mv_vop1113 = _mm256_loadu_pd(&A[((i0 + 4) + 1480)]);
@@ -2839,7 +3577,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 766)], __mv_vop1913);
     // y[1 * i0 + 766] += A[i0 + 1480] * x[1 * i0 + 767];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 766] += A[i0 + 1480] * x[1 * i0 + 767];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1116 = _mm256_loadu_pd(&A[((i0 + 0) + 1488)]);
     __mv_vop1117 = _mm256_loadu_pd(&x[((i0 + 0) + 766)]);
     __mv_vop1119 = _mm256_loadu_pd(&A[((i0 + 4) + 1488)]);
@@ -2852,7 +3594,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 767)], __mv_vop1915);
     // y[1 * i0 + 767] += A[i0 + 1488] * x[1 * i0 + 766];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 767] += A[i0 + 1488] * x[1 * i0 + 766];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1122 = _mm256_loadu_pd(&A[((i0 + 0) + 1496)]);
     __mv_vop1123 = _mm256_loadu_pd(&x[((i0 + 0) + 775)]);
     __mv_vop1125 = _mm256_loadu_pd(&A[((i0 + 4) + 1496)]);
@@ -2865,7 +3611,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 774)], __mv_vop1917);
     // y[1 * i0 + 774] += A[i0 + 1496] * x[1 * i0 + 775];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 774] += A[i0 + 1496] * x[1 * i0 + 775];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1128 = _mm256_loadu_pd(&A[((i0 + 0) + 1504)]);
     __mv_vop1129 = _mm256_loadu_pd(&x[((i0 + 0) + 774)]);
     __mv_vop1131 = _mm256_loadu_pd(&A[((i0 + 4) + 1504)]);
@@ -2878,7 +3628,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 775)], __mv_vop1919);
     // y[1 * i0 + 775] += A[i0 + 1504] * x[1 * i0 + 774];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 775] += A[i0 + 1504] * x[1 * i0 + 774];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1134 = _mm256_loadu_pd(&A[((i0 + 0) + 1512)]);
     __mv_vop1135 = _mm256_loadu_pd(&x[((i0 + 0) + 783)]);
     __mv_vop1137 = _mm256_loadu_pd(&A[((i0 + 4) + 1512)]);
@@ -2891,7 +3645,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 782)], __mv_vop1921);
     // y[1 * i0 + 782] += A[i0 + 1512] * x[1 * i0 + 783];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 782] += A[i0 + 1512] * x[1 * i0 + 783];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1140 = _mm256_loadu_pd(&A[((i0 + 0) + 1520)]);
     __mv_vop1141 = _mm256_loadu_pd(&x[((i0 + 0) + 782)]);
     __mv_vop1143 = _mm256_loadu_pd(&A[((i0 + 4) + 1520)]);
@@ -2904,7 +3662,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 783)], __mv_vop1923);
     // y[1 * i0 + 783] += A[i0 + 1520] * x[1 * i0 + 782];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 783] += A[i0 + 1520] * x[1 * i0 + 782];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1146 = _mm256_loadu_pd(&A[((i0 + 0) + 1528)]);
     __mv_vop1147 = _mm256_loadu_pd(&x[((i0 + 0) + 791)]);
     __mv_vop1149 = _mm256_loadu_pd(&A[((i0 + 4) + 1528)]);
@@ -2917,7 +3679,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 790)], __mv_vop1925);
     // y[1 * i0 + 790] += A[i0 + 1528] * x[1 * i0 + 791];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 790] += A[i0 + 1528] * x[1 * i0 + 791];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1152 = _mm256_loadu_pd(&A[((i0 + 0) + 1536)]);
     __mv_vop1153 = _mm256_loadu_pd(&x[((i0 + 0) + 790)]);
     __mv_vop1155 = _mm256_loadu_pd(&A[((i0 + 4) + 1536)]);
@@ -2930,7 +3696,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 791)], __mv_vop1927);
     // y[1 * i0 + 791] += A[i0 + 1536] * x[1 * i0 + 790];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 791] += A[i0 + 1536] * x[1 * i0 + 790];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1158 = _mm256_loadu_pd(&A[((i0 + 0) + 1544)]);
     __mv_vop1159 = _mm256_loadu_pd(&x[((i0 + 0) + 799)]);
     __mv_vop1161 = _mm256_loadu_pd(&A[((i0 + 4) + 1544)]);
@@ -2943,7 +3713,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 798)], __mv_vop1929);
     // y[1 * i0 + 798] += A[i0 + 1544] * x[1 * i0 + 799];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 798] += A[i0 + 1544] * x[1 * i0 + 799];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1164 = _mm256_loadu_pd(&A[((i0 + 0) + 1552)]);
     __mv_vop1165 = _mm256_loadu_pd(&x[((i0 + 0) + 798)]);
     __mv_vop1167 = _mm256_loadu_pd(&A[((i0 + 4) + 1552)]);
@@ -2956,7 +3730,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 799)], __mv_vop1931);
     // y[1 * i0 + 799] += A[i0 + 1552] * x[1 * i0 + 798];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 799] += A[i0 + 1552] * x[1 * i0 + 798];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1170 = _mm256_loadu_pd(&A[((i0 + 0) + 1560)]);
     __mv_vop1171 = _mm256_loadu_pd(&x[((i0 + 0) + 814)]);
     __mv_vop1173 = _mm256_loadu_pd(&A[((i0 + 4) + 1560)]);
@@ -2969,7 +3747,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 813)], __mv_vop1933);
     // y[1 * i0 + 813] += A[i0 + 1560] * x[1 * i0 + 814];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 813] += A[i0 + 1560] * x[1 * i0 + 814];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1176 = _mm256_loadu_pd(&A[((i0 + 0) + 1568)]);
     __mv_vop1177 = _mm256_loadu_pd(&x[((i0 + 0) + 813)]);
     __mv_vop1179 = _mm256_loadu_pd(&A[((i0 + 4) + 1568)]);
@@ -2982,7 +3764,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 814)], __mv_vop1935);
     // y[1 * i0 + 814] += A[i0 + 1568] * x[1 * i0 + 813];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 814] += A[i0 + 1568] * x[1 * i0 + 813];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1182 = _mm256_loadu_pd(&A[((i0 + 0) + 1576)]);
     __mv_vop1183 = _mm256_loadu_pd(&x[((i0 + 0) + 822)]);
     __mv_vop1185 = _mm256_loadu_pd(&A[((i0 + 4) + 1576)]);
@@ -2995,7 +3781,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 821)], __mv_vop1937);
     // y[1 * i0 + 821] += A[i0 + 1576] * x[1 * i0 + 822];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 821] += A[i0 + 1576] * x[1 * i0 + 822];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1188 = _mm256_loadu_pd(&A[((i0 + 0) + 1584)]);
     __mv_vop1189 = _mm256_loadu_pd(&x[((i0 + 0) + 821)]);
     __mv_vop1191 = _mm256_loadu_pd(&A[((i0 + 4) + 1584)]);
@@ -3008,7 +3798,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 822)], __mv_vop1939);
     // y[1 * i0 + 822] += A[i0 + 1584] * x[1 * i0 + 821];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 822] += A[i0 + 1584] * x[1 * i0 + 821];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1194 = _mm256_loadu_pd(&A[((i0 + 0) + 1592)]);
     __mv_vop1195 = _mm256_loadu_pd(&x[((i0 + 0) + 830)]);
     __mv_vop1197 = _mm256_loadu_pd(&A[((i0 + 4) + 1592)]);
@@ -3021,7 +3815,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 829)], __mv_vop1941);
     // y[1 * i0 + 829] += A[i0 + 1592] * x[1 * i0 + 830];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 829] += A[i0 + 1592] * x[1 * i0 + 830];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1200 = _mm256_loadu_pd(&A[((i0 + 0) + 1600)]);
     __mv_vop1201 = _mm256_loadu_pd(&x[((i0 + 0) + 829)]);
     __mv_vop1203 = _mm256_loadu_pd(&A[((i0 + 4) + 1600)]);
@@ -3034,7 +3832,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 830)], __mv_vop1943);
     // y[1 * i0 + 830] += A[i0 + 1600] * x[1 * i0 + 829];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 830] += A[i0 + 1600] * x[1 * i0 + 829];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1206 = _mm256_loadu_pd(&A[((i0 + 0) + 1608)]);
     __mv_vop1207 = _mm256_loadu_pd(&x[((i0 + 0) + 838)]);
     __mv_vop1209 = _mm256_loadu_pd(&A[((i0 + 4) + 1608)]);
@@ -3047,7 +3849,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 837)], __mv_vop1945);
     // y[1 * i0 + 837] += A[i0 + 1608] * x[1 * i0 + 838];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 837] += A[i0 + 1608] * x[1 * i0 + 838];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1212 = _mm256_loadu_pd(&A[((i0 + 0) + 1616)]);
     __mv_vop1213 = _mm256_loadu_pd(&x[((i0 + 0) + 837)]);
     __mv_vop1215 = _mm256_loadu_pd(&A[((i0 + 4) + 1616)]);
@@ -3060,7 +3866,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 838)], __mv_vop1947);
     // y[1 * i0 + 838] += A[i0 + 1616] * x[1 * i0 + 837];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 838] += A[i0 + 1616] * x[1 * i0 + 837];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1218 = _mm256_loadu_pd(&A[((i0 + 0) + 1624)]);
     __mv_vop1219 = _mm256_loadu_pd(&x[((i0 + 0) + 846)]);
     __mv_vop1221 = _mm256_loadu_pd(&A[((i0 + 4) + 1624)]);
@@ -3073,7 +3883,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 845)], __mv_vop1949);
     // y[1 * i0 + 845] += A[i0 + 1624] * x[1 * i0 + 846];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 845] += A[i0 + 1624] * x[1 * i0 + 846];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1224 = _mm256_loadu_pd(&A[((i0 + 0) + 1632)]);
     __mv_vop1225 = _mm256_loadu_pd(&x[((i0 + 0) + 845)]);
     __mv_vop1227 = _mm256_loadu_pd(&A[((i0 + 4) + 1632)]);
@@ -3086,7 +3900,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 846)], __mv_vop1951);
     // y[1 * i0 + 846] += A[i0 + 1632] * x[1 * i0 + 845];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 846] += A[i0 + 1632] * x[1 * i0 + 845];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1230 = _mm256_loadu_pd(&A[((i0 + 0) + 1640)]);
     __mv_vop1231 = _mm256_loadu_pd(&x[((i0 + 0) + 854)]);
     __mv_vop1233 = _mm256_loadu_pd(&A[((i0 + 4) + 1640)]);
@@ -3099,7 +3917,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 853)], __mv_vop1953);
     // y[1 * i0 + 853] += A[i0 + 1640] * x[1 * i0 + 854];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 853] += A[i0 + 1640] * x[1 * i0 + 854];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1236 = _mm256_loadu_pd(&A[((i0 + 0) + 1648)]);
     __mv_vop1237 = _mm256_loadu_pd(&x[((i0 + 0) + 853)]);
     __mv_vop1239 = _mm256_loadu_pd(&A[((i0 + 4) + 1648)]);
@@ -3112,7 +3934,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 854)], __mv_vop1955);
     // y[1 * i0 + 854] += A[i0 + 1648] * x[1 * i0 + 853];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 854] += A[i0 + 1648] * x[1 * i0 + 853];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1242 = _mm256_loadu_pd(&A[((i0 + 0) + 1656)]);
     __mv_vop1243 = _mm256_loadu_pd(&x[((i0 + 0) + 862)]);
     __mv_vop1245 = _mm256_loadu_pd(&A[((i0 + 4) + 1656)]);
@@ -3125,7 +3951,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 861)], __mv_vop1957);
     // y[1 * i0 + 861] += A[i0 + 1656] * x[1 * i0 + 862];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 861] += A[i0 + 1656] * x[1 * i0 + 862];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1248 = _mm256_loadu_pd(&A[((i0 + 0) + 1664)]);
     __mv_vop1249 = _mm256_loadu_pd(&x[((i0 + 0) + 861)]);
     __mv_vop1251 = _mm256_loadu_pd(&A[((i0 + 4) + 1664)]);
@@ -3138,7 +3968,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 862)], __mv_vop1959);
     // y[1 * i0 + 862] += A[i0 + 1664] * x[1 * i0 + 861];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 862] += A[i0 + 1664] * x[1 * i0 + 861];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1254 = _mm256_loadu_pd(&A[((i0 + 0) + 1672)]);
     __mv_vop1255 = _mm256_loadu_pd(&x[((i0 + 0) + 870)]);
     __mv_vop1257 = _mm256_loadu_pd(&A[((i0 + 4) + 1672)]);
@@ -3151,7 +3985,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 869)], __mv_vop1961);
     // y[1 * i0 + 869] += A[i0 + 1672] * x[1 * i0 + 870];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 869] += A[i0 + 1672] * x[1 * i0 + 870];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1260 = _mm256_loadu_pd(&A[((i0 + 0) + 1680)]);
     __mv_vop1261 = _mm256_loadu_pd(&x[((i0 + 0) + 869)]);
     __mv_vop1263 = _mm256_loadu_pd(&A[((i0 + 4) + 1680)]);
@@ -3164,7 +4002,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 870)], __mv_vop1963);
     // y[1 * i0 + 870] += A[i0 + 1680] * x[1 * i0 + 869];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 870] += A[i0 + 1680] * x[1 * i0 + 869];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1266 = _mm256_loadu_pd(&A[((i0 + 0) + 1688)]);
     __mv_vop1267 = _mm256_loadu_pd(&x[((i0 + 0) + 878)]);
     __mv_vop1269 = _mm256_loadu_pd(&A[((i0 + 4) + 1688)]);
@@ -3177,7 +4019,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 877)], __mv_vop1965);
     // y[1 * i0 + 877] += A[i0 + 1688] * x[1 * i0 + 878];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 877] += A[i0 + 1688] * x[1 * i0 + 878];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1272 = _mm256_loadu_pd(&A[((i0 + 0) + 1696)]);
     __mv_vop1273 = _mm256_loadu_pd(&x[((i0 + 0) + 877)]);
     __mv_vop1275 = _mm256_loadu_pd(&A[((i0 + 4) + 1696)]);
@@ -3190,7 +4036,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 878)], __mv_vop1967);
     // y[1 * i0 + 878] += A[i0 + 1696] * x[1 * i0 + 877];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 878] += A[i0 + 1696] * x[1 * i0 + 877];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1278 = _mm256_loadu_pd(&A[((i0 + 0) + 1704)]);
     __mv_vop1279 = _mm256_loadu_pd(&x[((i0 + 0) + 886)]);
     __mv_vop1281 = _mm256_loadu_pd(&A[((i0 + 4) + 1704)]);
@@ -3203,7 +4053,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 885)], __mv_vop1969);
     // y[1 * i0 + 885] += A[i0 + 1704] * x[1 * i0 + 886];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 885] += A[i0 + 1704] * x[1 * i0 + 886];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1284 = _mm256_loadu_pd(&A[((i0 + 0) + 1712)]);
     __mv_vop1285 = _mm256_loadu_pd(&x[((i0 + 0) + 885)]);
     __mv_vop1287 = _mm256_loadu_pd(&A[((i0 + 4) + 1712)]);
@@ -3216,7 +4070,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 886)], __mv_vop1971);
     // y[1 * i0 + 886] += A[i0 + 1712] * x[1 * i0 + 885];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 886] += A[i0 + 1712] * x[1 * i0 + 885];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1290 = _mm256_loadu_pd(&A[((i0 + 0) + 1720)]);
     __mv_vop1291 = _mm256_loadu_pd(&x[((i0 + 0) + 894)]);
     __mv_vop1293 = _mm256_loadu_pd(&A[((i0 + 4) + 1720)]);
@@ -3229,7 +4087,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 893)], __mv_vop1973);
     // y[1 * i0 + 893] += A[i0 + 1720] * x[1 * i0 + 894];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 893] += A[i0 + 1720] * x[1 * i0 + 894];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1296 = _mm256_loadu_pd(&A[((i0 + 0) + 1728)]);
     __mv_vop1297 = _mm256_loadu_pd(&x[((i0 + 0) + 893)]);
     __mv_vop1299 = _mm256_loadu_pd(&A[((i0 + 4) + 1728)]);
@@ -3242,7 +4104,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 894)], __mv_vop1975);
     // y[1 * i0 + 894] += A[i0 + 1728] * x[1 * i0 + 893];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 894] += A[i0 + 1728] * x[1 * i0 + 893];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1302 = _mm256_loadu_pd(&A[((i0 + 0) + 1736)]);
     __mv_vop1303 = _mm256_loadu_pd(&x[((i0 + 0) + 902)]);
     __mv_vop1305 = _mm256_loadu_pd(&A[((i0 + 4) + 1736)]);
@@ -3255,7 +4121,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 901)], __mv_vop1977);
     // y[1 * i0 + 901] += A[i0 + 1736] * x[1 * i0 + 902];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 901] += A[i0 + 1736] * x[1 * i0 + 902];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1308 = _mm256_loadu_pd(&A[((i0 + 0) + 1744)]);
     __mv_vop1309 = _mm256_loadu_pd(&x[((i0 + 0) + 901)]);
     __mv_vop1311 = _mm256_loadu_pd(&A[((i0 + 4) + 1744)]);
@@ -3268,7 +4138,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 902)], __mv_vop1979);
     // y[1 * i0 + 902] += A[i0 + 1744] * x[1 * i0 + 901];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 902] += A[i0 + 1744] * x[1 * i0 + 901];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1314 = _mm256_loadu_pd(&A[((i0 + 0) + 1752)]);
     __mv_vop1315 = _mm256_loadu_pd(&x[((i0 + 0) + 910)]);
     __mv_vop1317 = _mm256_loadu_pd(&A[((i0 + 4) + 1752)]);
@@ -3281,7 +4155,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 909)], __mv_vop1981);
     // y[1 * i0 + 909] += A[i0 + 1752] * x[1 * i0 + 910];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 909] += A[i0 + 1752] * x[1 * i0 + 910];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1320 = _mm256_loadu_pd(&A[((i0 + 0) + 1760)]);
     __mv_vop1321 = _mm256_loadu_pd(&x[((i0 + 0) + 909)]);
     __mv_vop1323 = _mm256_loadu_pd(&A[((i0 + 4) + 1760)]);
@@ -3294,7 +4172,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 910)], __mv_vop1983);
     // y[1 * i0 + 910] += A[i0 + 1760] * x[1 * i0 + 909];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 910] += A[i0 + 1760] * x[1 * i0 + 909];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1326 = _mm256_loadu_pd(&A[((i0 + 0) + 1768)]);
     __mv_vop1327 = _mm256_loadu_pd(&x[((i0 + 0) + 918)]);
     __mv_vop1329 = _mm256_loadu_pd(&A[((i0 + 4) + 1768)]);
@@ -3307,7 +4189,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 917)], __mv_vop1985);
     // y[1 * i0 + 917] += A[i0 + 1768] * x[1 * i0 + 918];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 917] += A[i0 + 1768] * x[1 * i0 + 918];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1332 = _mm256_loadu_pd(&A[((i0 + 0) + 1776)]);
     __mv_vop1333 = _mm256_loadu_pd(&x[((i0 + 0) + 917)]);
     __mv_vop1335 = _mm256_loadu_pd(&A[((i0 + 4) + 1776)]);
@@ -3320,7 +4206,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 918)], __mv_vop1987);
     // y[1 * i0 + 918] += A[i0 + 1776] * x[1 * i0 + 917];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 918] += A[i0 + 1776] * x[1 * i0 + 917];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1338 = _mm256_loadu_pd(&A[((i0 + 0) + 1784)]);
     __mv_vop1339 = _mm256_loadu_pd(&x[((i0 + 0) + 926)]);
     __mv_vop1341 = _mm256_loadu_pd(&A[((i0 + 4) + 1784)]);
@@ -3333,7 +4223,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 925)], __mv_vop1989);
     // y[1 * i0 + 925] += A[i0 + 1784] * x[1 * i0 + 926];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 925] += A[i0 + 1784] * x[1 * i0 + 926];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1344 = _mm256_loadu_pd(&A[((i0 + 0) + 1792)]);
     __mv_vop1345 = _mm256_loadu_pd(&x[((i0 + 0) + 925)]);
     __mv_vop1347 = _mm256_loadu_pd(&A[((i0 + 4) + 1792)]);
@@ -3346,7 +4240,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 926)], __mv_vop1991);
     // y[1 * i0 + 926] += A[i0 + 1792] * x[1 * i0 + 925];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 926] += A[i0 + 1792] * x[1 * i0 + 925];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1350 = _mm256_loadu_pd(&A[((i0 + 0) + 1800)]);
     __mv_vop1351 = _mm256_loadu_pd(&x[((i0 + 0) + 934)]);
     __mv_vop1353 = _mm256_loadu_pd(&A[((i0 + 4) + 1800)]);
@@ -3359,7 +4257,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 933)], __mv_vop1993);
     // y[1 * i0 + 933] += A[i0 + 1800] * x[1 * i0 + 934];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 933] += A[i0 + 1800] * x[1 * i0 + 934];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1356 = _mm256_loadu_pd(&A[((i0 + 0) + 1808)]);
     __mv_vop1357 = _mm256_loadu_pd(&x[((i0 + 0) + 933)]);
     __mv_vop1359 = _mm256_loadu_pd(&A[((i0 + 4) + 1808)]);
@@ -3372,7 +4274,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 934)], __mv_vop1995);
     // y[1 * i0 + 934] += A[i0 + 1808] * x[1 * i0 + 933];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 934] += A[i0 + 1808] * x[1 * i0 + 933];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1362 = _mm256_loadu_pd(&A[((i0 + 0) + 1816)]);
     __mv_vop1363 = _mm256_loadu_pd(&x[((i0 + 0) + 942)]);
     __mv_vop1365 = _mm256_loadu_pd(&A[((i0 + 4) + 1816)]);
@@ -3385,7 +4291,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 941)], __mv_vop1997);
     // y[1 * i0 + 941] += A[i0 + 1816] * x[1 * i0 + 942];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 941] += A[i0 + 1816] * x[1 * i0 + 942];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1368 = _mm256_loadu_pd(&A[((i0 + 0) + 1824)]);
     __mv_vop1369 = _mm256_loadu_pd(&x[((i0 + 0) + 941)]);
     __mv_vop1371 = _mm256_loadu_pd(&A[((i0 + 4) + 1824)]);
@@ -3398,7 +4308,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 942)], __mv_vop1999);
     // y[1 * i0 + 942] += A[i0 + 1824] * x[1 * i0 + 941];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 942] += A[i0 + 1824] * x[1 * i0 + 941];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1374 = _mm256_loadu_pd(&A[((i0 + 0) + 1832)]);
     __mv_vop1375 = _mm256_loadu_pd(&x[((i0 + 0) + 950)]);
     __mv_vop1377 = _mm256_loadu_pd(&A[((i0 + 4) + 1832)]);
@@ -3411,7 +4325,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 949)], __mv_vop2001);
     // y[1 * i0 + 949] += A[i0 + 1832] * x[1 * i0 + 950];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 949] += A[i0 + 1832] * x[1 * i0 + 950];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1380 = _mm256_loadu_pd(&A[((i0 + 0) + 1840)]);
     __mv_vop1381 = _mm256_loadu_pd(&x[((i0 + 0) + 949)]);
     __mv_vop1383 = _mm256_loadu_pd(&A[((i0 + 4) + 1840)]);
@@ -3424,7 +4342,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 950)], __mv_vop2003);
     // y[1 * i0 + 950] += A[i0 + 1840] * x[1 * i0 + 949];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 950] += A[i0 + 1840] * x[1 * i0 + 949];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1386 = _mm256_loadu_pd(&A[((i0 + 0) + 1848)]);
     __mv_vop1387 = _mm256_loadu_pd(&x[((i0 + 0) + 958)]);
     __mv_vop1389 = _mm256_loadu_pd(&A[((i0 + 4) + 1848)]);
@@ -3437,7 +4359,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 957)], __mv_vop2005);
     // y[1 * i0 + 957] += A[i0 + 1848] * x[1 * i0 + 958];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 957] += A[i0 + 1848] * x[1 * i0 + 958];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1392 = _mm256_loadu_pd(&A[((i0 + 0) + 1856)]);
     __mv_vop1393 = _mm256_loadu_pd(&x[((i0 + 0) + 957)]);
     __mv_vop1395 = _mm256_loadu_pd(&A[((i0 + 4) + 1856)]);
@@ -3450,7 +4376,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 958)], __mv_vop2007);
     // y[1 * i0 + 958] += A[i0 + 1856] * x[1 * i0 + 957];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 958] += A[i0 + 1856] * x[1 * i0 + 957];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1398 = _mm256_loadu_pd(&A[((i0 + 0) + 1864)]);
     __mv_vop1399 = _mm256_loadu_pd(&x[((i0 + 0) + 974)]);
     __mv_vop1401 = _mm256_loadu_pd(&A[((i0 + 4) + 1864)]);
@@ -3463,7 +4393,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 973)], __mv_vop2009);
     // y[1 * i0 + 973] += A[i0 + 1864] * x[1 * i0 + 974];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 973] += A[i0 + 1864] * x[1 * i0 + 974];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1404 = _mm256_loadu_pd(&A[((i0 + 0) + 1872)]);
     __mv_vop1405 = _mm256_loadu_pd(&x[((i0 + 0) + 973)]);
     __mv_vop1407 = _mm256_loadu_pd(&A[((i0 + 4) + 1872)]);
@@ -3476,7 +4410,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 974)], __mv_vop2011);
     // y[1 * i0 + 974] += A[i0 + 1872] * x[1 * i0 + 973];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 974] += A[i0 + 1872] * x[1 * i0 + 973];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1410 = _mm256_loadu_pd(&A[((i0 + 0) + 1880)]);
     __mv_vop1411 = _mm256_loadu_pd(&x[((i0 + 0) + 982)]);
     __mv_vop1413 = _mm256_loadu_pd(&A[((i0 + 4) + 1880)]);
@@ -3489,7 +4427,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 981)], __mv_vop2013);
     // y[1 * i0 + 981] += A[i0 + 1880] * x[1 * i0 + 982];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 981] += A[i0 + 1880] * x[1 * i0 + 982];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1416 = _mm256_loadu_pd(&A[((i0 + 0) + 1888)]);
     __mv_vop1417 = _mm256_loadu_pd(&x[((i0 + 0) + 981)]);
     __mv_vop1419 = _mm256_loadu_pd(&A[((i0 + 4) + 1888)]);
@@ -3502,7 +4444,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 982)], __mv_vop2015);
     // y[1 * i0 + 982] += A[i0 + 1888] * x[1 * i0 + 981];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 982] += A[i0 + 1888] * x[1 * i0 + 981];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1422 = _mm256_loadu_pd(&A[((i0 + 0) + 1896)]);
     __mv_vop1423 = _mm256_loadu_pd(&x[((i0 + 0) + 990)]);
     __mv_vop1425 = _mm256_loadu_pd(&A[((i0 + 4) + 1896)]);
@@ -3515,7 +4461,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 989)], __mv_vop2017);
     // y[1 * i0 + 989] += A[i0 + 1896] * x[1 * i0 + 990];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 989] += A[i0 + 1896] * x[1 * i0 + 990];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1428 = _mm256_loadu_pd(&A[((i0 + 0) + 1904)]);
     __mv_vop1429 = _mm256_loadu_pd(&x[((i0 + 0) + 989)]);
     __mv_vop1431 = _mm256_loadu_pd(&A[((i0 + 4) + 1904)]);
@@ -3528,7 +4478,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 990)], __mv_vop2019);
     // y[1 * i0 + 990] += A[i0 + 1904] * x[1 * i0 + 989];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 990] += A[i0 + 1904] * x[1 * i0 + 989];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1434 = _mm256_loadu_pd(&A[((i0 + 0) + 1912)]);
     __mv_vop1435 = _mm256_loadu_pd(&x[((i0 + 0) + 998)]);
     __mv_vop1437 = _mm256_loadu_pd(&A[((i0 + 4) + 1912)]);
@@ -3541,7 +4495,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 997)], __mv_vop2021);
     // y[1 * i0 + 997] += A[i0 + 1912] * x[1 * i0 + 998];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 997] += A[i0 + 1912] * x[1 * i0 + 998];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1440 = _mm256_loadu_pd(&A[((i0 + 0) + 1920)]);
     __mv_vop1441 = _mm256_loadu_pd(&x[((i0 + 0) + 997)]);
     __mv_vop1443 = _mm256_loadu_pd(&A[((i0 + 4) + 1920)]);
@@ -3554,7 +4512,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 998)], __mv_vop2023);
     // y[1 * i0 + 998] += A[i0 + 1920] * x[1 * i0 + 997];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 998] += A[i0 + 1920] * x[1 * i0 + 997];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1446 = _mm256_loadu_pd(&A[((i0 + 0) + 1928)]);
     __mv_vop1447 = _mm256_loadu_pd(&x[((i0 + 0) + 1006)]);
     __mv_vop1449 = _mm256_loadu_pd(&A[((i0 + 4) + 1928)]);
@@ -3567,7 +4529,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 1005)], __mv_vop2025);
     // y[1 * i0 + 1005] += A[i0 + 1928] * x[1 * i0 + 1006];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 1005] += A[i0 + 1928] * x[1 * i0 + 1006];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1452 = _mm256_loadu_pd(&A[((i0 + 0) + 1936)]);
     __mv_vop1453 = _mm256_loadu_pd(&x[((i0 + 0) + 1005)]);
     __mv_vop1455 = _mm256_loadu_pd(&A[((i0 + 4) + 1936)]);
@@ -3580,7 +4546,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 1006)], __mv_vop2027);
     // y[1 * i0 + 1006] += A[i0 + 1936] * x[1 * i0 + 1005];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 1006] += A[i0 + 1936] * x[1 * i0 + 1005];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1458 = _mm256_loadu_pd(&A[((i0 + 0) + 1944)]);
     __mv_vop1459 = _mm256_loadu_pd(&x[((i0 + 0) + 1014)]);
     __mv_vop1461 = _mm256_loadu_pd(&A[((i0 + 4) + 1944)]);
@@ -3593,7 +4563,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 1013)], __mv_vop2029);
     // y[1 * i0 + 1013] += A[i0 + 1944] * x[1 * i0 + 1014];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 1013] += A[i0 + 1944] * x[1 * i0 + 1014];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1464 = _mm256_loadu_pd(&A[((i0 + 0) + 1952)]);
     __mv_vop1465 = _mm256_loadu_pd(&x[((i0 + 0) + 1013)]);
     __mv_vop1467 = _mm256_loadu_pd(&A[((i0 + 4) + 1952)]);
@@ -3606,7 +4580,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 1014)], __mv_vop2031);
     // y[1 * i0 + 1014] += A[i0 + 1952] * x[1 * i0 + 1013];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 1014] += A[i0 + 1952] * x[1 * i0 + 1013];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1470 = _mm256_loadu_pd(&A[((i0 + 0) + 1960)]);
     __mv_vop1471 = _mm256_loadu_pd(&x[((i0 + 0) + 1022)]);
     __mv_vop1473 = _mm256_loadu_pd(&A[((i0 + 4) + 1960)]);
@@ -3619,7 +4597,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 1021)], __mv_vop2033);
     // y[1 * i0 + 1021] += A[i0 + 1960] * x[1 * i0 + 1022];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 1021] += A[i0 + 1960] * x[1 * i0 + 1022];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1476 = _mm256_loadu_pd(&A[((i0 + 0) + 1968)]);
     __mv_vop1477 = _mm256_loadu_pd(&x[((i0 + 0) + 1021)]);
     __mv_vop1479 = _mm256_loadu_pd(&A[((i0 + 4) + 1968)]);
@@ -3632,7 +4614,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 1022)], __mv_vop2035);
     // y[1 * i0 + 1022] += A[i0 + 1968] * x[1 * i0 + 1021];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 1022] += A[i0 + 1968] * x[1 * i0 + 1021];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1482 = _mm256_loadu_pd(&A[((i0 + 0) + 1976)]);
     __mv_vop1483 = _mm256_loadu_pd(&x[((i0 + 0) + 1030)]);
     __mv_vop1485 = _mm256_loadu_pd(&A[((i0 + 4) + 1976)]);
@@ -3645,7 +4631,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 1029)], __mv_vop2037);
     // y[1 * i0 + 1029] += A[i0 + 1976] * x[1 * i0 + 1030];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 1029] += A[i0 + 1976] * x[1 * i0 + 1030];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1488 = _mm256_loadu_pd(&A[((i0 + 0) + 1984)]);
     __mv_vop1489 = _mm256_loadu_pd(&x[((i0 + 0) + 1029)]);
     __mv_vop1491 = _mm256_loadu_pd(&A[((i0 + 4) + 1984)]);
@@ -3658,7 +4648,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 1030)], __mv_vop2039);
     // y[1 * i0 + 1030] += A[i0 + 1984] * x[1 * i0 + 1029];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 1030] += A[i0 + 1984] * x[1 * i0 + 1029];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1494 = _mm256_loadu_pd(&A[((i0 + 0) + 1992)]);
     __mv_vop1495 = _mm256_loadu_pd(&x[((i0 + 0) + 1038)]);
     __mv_vop1497 = _mm256_loadu_pd(&A[((i0 + 4) + 1992)]);
@@ -3671,7 +4665,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 1037)], __mv_vop2041);
     // y[1 * i0 + 1037] += A[i0 + 1992] * x[1 * i0 + 1038];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 1037] += A[i0 + 1992] * x[1 * i0 + 1038];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1500 = _mm256_loadu_pd(&A[((i0 + 0) + 2000)]);
     __mv_vop1501 = _mm256_loadu_pd(&x[((i0 + 0) + 1037)]);
     __mv_vop1503 = _mm256_loadu_pd(&A[((i0 + 4) + 2000)]);
@@ -3684,7 +4682,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 1038)], __mv_vop2043);
     // y[1 * i0 + 1038] += A[i0 + 2000] * x[1 * i0 + 1037];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 1038] += A[i0 + 2000] * x[1 * i0 + 1037];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1506 = _mm256_loadu_pd(&A[((i0 + 0) + 2008)]);
     __mv_vop1507 = _mm256_loadu_pd(&x[((i0 + 0) + 1046)]);
     __mv_vop1509 = _mm256_loadu_pd(&A[((i0 + 4) + 2008)]);
@@ -3697,7 +4699,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 1045)], __mv_vop2045);
     // y[1 * i0 + 1045] += A[i0 + 2008] * x[1 * i0 + 1046];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 1045] += A[i0 + 2008] * x[1 * i0 + 1046];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1512 = _mm256_loadu_pd(&A[((i0 + 0) + 2016)]);
     __mv_vop1513 = _mm256_loadu_pd(&x[((i0 + 0) + 1045)]);
     __mv_vop1515 = _mm256_loadu_pd(&A[((i0 + 4) + 2016)]);
@@ -3710,7 +4716,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 1046)], __mv_vop2047);
     // y[1 * i0 + 1046] += A[i0 + 2016] * x[1 * i0 + 1045];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 1046] += A[i0 + 2016] * x[1 * i0 + 1045];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1518 = _mm256_loadu_pd(&A[((i0 + 0) + 2024)]);
     __mv_vop1519 = _mm256_loadu_pd(&x[((i0 + 0) + 1054)]);
     __mv_vop1521 = _mm256_loadu_pd(&A[((i0 + 4) + 2024)]);
@@ -3723,7 +4733,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 1053)], __mv_vop2049);
     // y[1 * i0 + 1053] += A[i0 + 2024] * x[1 * i0 + 1054];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 1053] += A[i0 + 2024] * x[1 * i0 + 1054];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1524 = _mm256_loadu_pd(&A[((i0 + 0) + 2032)]);
     __mv_vop1525 = _mm256_loadu_pd(&x[((i0 + 0) + 1053)]);
     __mv_vop1527 = _mm256_loadu_pd(&A[((i0 + 4) + 2032)]);
@@ -3736,7 +4750,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 1054)], __mv_vop2051);
     // y[1 * i0 + 1054] += A[i0 + 2032] * x[1 * i0 + 1053];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 1054] += A[i0 + 2032] * x[1 * i0 + 1053];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1530 = _mm256_loadu_pd(&A[((i0 + 0) + 2040)]);
     __mv_vop1531 = _mm256_loadu_pd(&x[((i0 + 0) + 1062)]);
     __mv_vop1533 = _mm256_loadu_pd(&A[((i0 + 4) + 2040)]);
@@ -3749,7 +4767,11 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 1061)], __mv_vop2053);
     // y[1 * i0 + 1061] += A[i0 + 2040] * x[1 * i0 + 1062];
   }
-  for (i0 = 0; i0 <= 7; i0 += 8) {
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 1061] += A[i0 + 2040] * x[1 * i0 + 1062];
+  }
+
+  for (i0 = 0; (i0 + 8) <= 7; i0 += 8) {
     __mv_vop1536 = _mm256_loadu_pd(&A[((i0 + 0) + 2048)]);
     __mv_vop1537 = _mm256_loadu_pd(&x[((i0 + 0) + 1061)]);
     __mv_vop1539 = _mm256_loadu_pd(&A[((i0 + 4) + 2048)]);
@@ -3762,5 +4784,9 @@ void codelet(double *restrict A, double *restrict x, double *restrict y) {
     _mm256_storeu_pd(&y[((i0 + 4) + 1062)], __mv_vop2055);
     // y[1 * i0 + 1062] += A[i0 + 2048] * x[1 * i0 + 1061];
   }
+  for (i0 = i0; i0 < 7; i0 += 1) {
+    y[1 * i0 + 1062] += A[i0 + 2048] * x[1 * i0 + 1061];
+  }
+
 #pragma endmacveth
 }

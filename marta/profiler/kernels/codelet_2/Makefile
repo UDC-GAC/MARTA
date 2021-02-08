@@ -1,6 +1,6 @@
-BINARY_NAME=reductions
+BINARY_NAME=codelet_2
 MAIN_SRC=main
 MAIN_SUFFIX=.cc
-TARGET=reductions
+TARGET=codelet_2
 
 include ../MakeFlags.mk

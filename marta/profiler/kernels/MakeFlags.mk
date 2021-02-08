@@ -1,14 +1,13 @@
-#################################
-# Generic Makefile for runing kernels in MARTA
-#################################
+################################################################################
+#																			   #
+# 				Generic Makefile for runing kernels in MARTA				   #
+#																			   #
+################################################################################
 
 # Some paths
 BIN_DIR=../../bin/
 ASM_DIR=../../asm_codes/
 USRDIR=$(HOME)
-
-# Optional flags proper from the kernel
-FLAGS=$(KERNEL_FLAGS)
 
 # Flags for PolyBench/C
 POLYBENCH_FLAGS = -I ../utilities ../utilities/polybench.c
@@ -19,22 +18,16 @@ POLY_PFLAGS= -DPOLYBENCH_PAPI $(POLYBENCH_FLAGS) -L/share/apps/papi/gnu8/6.0.0/l
 ifeq ($(COMP),icc)
 	CC=icc
 	CXX=icpc
-	VFLAGS= $(VF) -vec-threshold0 -qoverride-limits -march=native -mfma
 else ifeq ($(COMP),gcc)
 	CC=gcc
 	CXX=g++
-	VFLAGS= $(VF) -march=native -mfma -ftree-vectorize -fvect-cost-model=unlimited -fsimd-cost-model=unlimited -fprefetch-loop-arrays
 else ifeq ($(COMP),clang)
 	CC=clang
-	CXX=clang
-	VFLAGS= $(VF) -march=native -mfma -ftree-vectorize
+	CXX=clang++
 endif
 
-# Merging all flags
-VFLAGS+= $(COMMON_FLAGS)
-
 # Adding all flags
-FLAGS+= $(VFLAGS)
+FLAGS+= $(KERNEL_CONFIG) $(COMMON_FLAGS)
 
 MAIN_FILE=$(MAIN_SRC)$(MAIN_SUFFIX)
 # if @ specified, then not verbose
@@ -61,17 +54,19 @@ asm_code:
 	$(V)$(CC) -c $(FLAGS) $(TARGET).cc -S
 	$(V)mv $(TARGET).s $(ASM_DIR)$(BASENAME)$(SUFFIX_ASM).s
 
-kernel_cyc: 
+kernel_papi: 
 	$(V)$(CC) -c $(POLY_PFLAGS) $(FLAGS) $(TARGET).cc 
-	$(V)mv $(TARGET).o $(TARGET)cyc.o
+	$(V)mv $(TARGET).o $(TARGET)papi.o
 
 kernel_time:
 	$(V)$(CC) -c $(POLY_TFLAGS) $(FLAGS) $(TARGET).cc
 	$(V)mv $(TARGET).o $(TARGET)time.o
 
-$(BINARY_NAME): $(MACVETH_RULE) asm_code kernel_cyc kernel_time $(MAIN_SRC)$(MAIN_SUFFIX) 
+$(BINARY_NAME): $(MACVETH_RULE) asm_code kernel_papi kernel_time $(MAIN_SRC)$(MAIN_SUFFIX) 
 	$(V)$(CC) $(FLAGS) $(POLY_TFLAGS) $(MAIN_FILE) $(TARGET)time.o -o $(BIN_DIR)/$(BASENAME)_time.o
-	$(V)$(CC) $(FLAGS) $(POLY_PFLAGS) $(MAIN_FILE) $(TARGET)cyc.o -o $(BIN_DIR)/$(BASENAME)_cyc.o
+	$(V)$(CC) $(FLAGS) $(POLY_TFLAGS) $(MAIN_FILE) $(TARGET)time.o -S
+	$(V)$(CC) $(FLAGS) $(POLY_PFLAGS) $(MAIN_FILE) $(TARGET)papi.o -o $(BIN_DIR)/$(BASENAME)_papi.o
+	$(V)$(CC) $(FLAGS) $(POLY_PFLAGS) $(MAIN_FILE) $(TARGET)papi.o -S
 	
 	
 clean:

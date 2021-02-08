@@ -1,5 +1,9 @@
-/**
- * Last Modified : Wed 10 Jun 2020 09:38 +02:00
+/*
+ * File			: tests/perftest/randompacking/randompacking.cc
+ * Author       : Marcos Horro
+ * Date		    : Fri 13 Nov 2020 10:27 +01:00
+ *
+ * Last Modified : Fri 13 Nov 2020 10:38 +01:00
  * Modified By	 : Marcos Horro (marcos.horro@udc.gal>)
  *
  * MIT License
@@ -25,98 +29,25 @@
  * SOFTWARE.
  */
 
-#ifndef _VECTOR_RANDOM_PACKING_H
-#define _VECTOR_RANDOM_PACKING_H
+#include "marta_wrapper.h"
+#include "codelet.h"
 
-#define restrict __restrict
+MARTA_BENCHMARK_BEGIN(MARTA_NO_HEADER);
 
-#ifndef NPACK
-#define NPACK 4
-#endif
+// Initialization section
+POLYBENCH_1D_ARRAY_DECL(y, DATA_TYPE, N, n);
+POLYBENCH_1D_ARRAY_DECL(A, DATA_TYPE, N, n);
+POLYBENCH_1D_ARRAY_DECL(x, DATA_TYPE, N, n);
 
-#ifndef N
-#define N 1024
-#endif
+init_1darray(n, POLYBENCH_ARRAY(y));
+init_1darray(n, POLYBENCH_ARRAY(A));
+init_1darray(n, POLYBENCH_ARRAY(x));
 
-#ifndef X_0
-#define X_0 0
-#endif
+// Kernel section
+PROFILE_FUNCTION_SINGLE_VAL(NRUNS, codelet(POLYBENCH_ARRAY(A), POLYBENCH_ARRAY(x),
+                                           POLYBENCH_ARRAY(y)));
 
-#ifndef X_1
-#define X_1 1
-#endif
+// Avoid DCE section
+polybench_prevent_dce(print_array1d(4, POLYBENCH_ARRAY(y)));
 
-#ifndef X_2
-#define X_2 2
-#endif
-
-#ifndef X_3
-#define X_3 3
-#endif
-
-#ifndef X_4
-#define X_4 4
-#endif
-
-#ifndef X_5
-#define X_5 5
-#endif
-
-#ifndef X_6
-#define X_6 6
-#endif
-
-#ifndef X_7
-#define X_7 7
-#endif
-
-#define NOLOOP
-
-#ifdef LOOP1D
-#undef NOLOOP
-
-#ifndef UPPER_BOUND
-#define UPPER_BOUND 4
-#endif
-
-#ifndef STEP
-#define STEP 1
-#endif
-#endif
-
-#ifdef LOOP2D
-#undef NOLOOP
-
-#ifndef UPPER_BOUND_I
-#define UPPER_BOUND_I 4
-#endif
-
-#ifndef UPPER_BOUND_J
-#define UPPER_BOUND_J 4
-#endif
-
-#ifndef STEP_I
-#define STEP_I 1
-#endif
-
-#ifndef STEP_J
-#define STEP_J 1
-#endif
-
-#ifndef C_X
-#define C_X 0
-#endif
-
-#ifndef C_A
-#define C_A 0
-#endif
-
-#ifndef C_Y
-#define C_Y 0
-#endif
-
-#endif
-
-void vpack(double *restrict A, double *restrict x, double *restrict y);
-
-#endif
+MARTA_BENCHMARK_END;

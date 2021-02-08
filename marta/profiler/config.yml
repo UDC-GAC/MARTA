@@ -13,11 +13,11 @@
 #                       -D__PURE_INTEL_C99_HEADERS__ -vec-threshold0 " }
 #           common_flags: " -DNPACK=4 "
 #           asm_analysis: True # TODO
-#           silent: False
+#           silent: True
 #       configuration:
 #           kernel_cfg: ["NPACK=4 MACVETH=true", "NPACK=4"]
 #           features:
-#               X_: "it.combinations(range(0, 4), 4)"
+#               X_: "it.combinations(range(0, 8), 4)"
 #           macveth_path_build: ""
 #           macveth_flags: " -misa=avx2 "
 #       execution:
@@ -34,37 +34,205 @@
 #           report: True
 
 
+# - kernel:
+#       name: "randomvectorpacking"
+#       main_src: "main.cc"
+#       target_src: "randompacking.cc"
+#       description: ""
+#       path: "kernels/randompacking"
+#       debug: False
+#       clean_tmp_files: True
+#       clean_asm_files: False
+#       compilation:
+#           language: "C++" # cpp, c++, C++, CXX, CPP, cc, c, C, GNU/C...
+#           compiler_flags: { "gcc": " -O3 -ftree-vectorize ", "icc": " -O3
+#                       -D__PURE_INTEL_C99_HEADERS__ -vec-threshold0 " }
+#           common_flags: " -DLOOP2D "
+#           asm_analysis: True # TODO
+#           silent: False
+#       configuration:
+#           kernel_cfg: ["MACVETH=true", " "]
+#           features:
+#               UPPER_BOUND_I: [4]
+#               UPPER_BOUND_J: [4]
+#               STEP_I: [1]
+#               STEP_J: [1]
+#               C_X: [0]
+#               C_A: [0]
+#               C_Y: [0]
+#           macveth_path_build: ""
+#           macveth_flags: " -misa=avx2 "
+#       execution:
+#           threshold_outliers: 3
+#           nexec: 7
+#           nruns: 1000000
+#           flops: "4*2"
+#           prefix: "OMP_NUM_THREADS=1 GOMP_CPU_AFFINITY=7"
+#       output:
+#           name: "2dloops_spmv"
+#           columns: "all"
+#           verbose: True
+#           report: True
+
+# - kernel:
+#       name: "codelet"
+#       main_src: "main.cc"
+#       target_src: "codelet.cc"
+#       description: ""
+#       path: "kernels/codelet"
+#       debug: False
+#       clean_tmp_files: True
+#       clean_asm_files: False
+#       compilation:
+#           language: "C++" # cpp, c++, C++, CXX, CPP, cc, c, C, GNU/C...
+#           compiler_flags: { "gcc": " -O3 -ftree-vectorize ", "icc": " -O3
+#                       -D__PURE_INTEL_C99_HEADERS__ -vec-threshold0 " }
+#           common_flags: "  "
+#           asm_analysis: True # TODO
+#           silent: False
+#       configuration:
+#           kernel_cfg: ["MACVETH=true", ""]
+#           features:
+#               X_: "it.combinations(range(0, 4), 4)"
+#           macveth_path_build: ""
+#           macveth_flags: " -misa=avx2 "
+#       execution:
+#           counters: "PAPI" # 
+#           threshold_outliers: 3
+#           nexec: 7
+#           nruns: 100
+#           flops: "2056*2"
+#           prefix: "OMP_NUM_THREADS=1 GOMP_CPU_AFFINITY=7"
+#       output:
+#           name: ""
+#           columns: "all"
+#           verbose: True
+#           report: True
+
+# - kernel:
+#       name: "codelet_2"
+#       main_src: "main.cc"
+#       target_src: "codelet_2.cc"
+#       description: ""
+#       path: "kernels/codelet_2"
+#       debug: False
+#       clean_tmp_files: True
+#       clean_asm_files: False
+#       compilation:
+#           language: "C++" # cpp, c++, C++, CXX, CPP, cc, c, C, GNU/C...
+#           compiler_flags: { "gcc": " -O3 -ftree-vectorize -march=native ", "icc": " -O3
+#                       -D__PURE_INTEL_C99_HEADERS__ -vec-threshold0 -xHost " }
+#           common_flags: "  "
+#           asm_analysis: True # TODO
+#           silent: True
+#       configuration:
+#           kernel_cfg: ["MACVETH=true", ""]
+#           features:
+#               X_: "it.combinations(range(0, 4), 4)"
+#           macveth_path_build: ""
+#           macveth_flags: " -misa=avx2 "
+#       execution:
+#           counters: "PAPI" # 
+#           threshold_outliers: 3
+#           nexec: 7
+#           nruns: 1000000
+#           flops: "6"
+#           prefix: "OMP_NUM_THREADS=1 GOMP_CPU_AFFINITY=7"
+#       output:
+#           name: ""
+#           columns: "all"
+#           verbose: True
+#           report: True
+
+
+# - kernel:
+#       name: "codelet_3"
+#       main_src: "main.cc"
+#       target_src: "codelet_3.cc"
+#       description: ""
+#       path: "kernels/codelet_3"
+#       debug: False
+#       clean_tmp_files: True
+#       clean_asm_files: False
+#       compilation:
+#           language: "C++" # cpp, c++, C++, CXX, CPP, cc, c, C, GNU/C...
+#           compiler_flags: { "gcc": " -O3 -ftree-vectorize ", "icc": " -O3
+#                       -D__PURE_INTEL_C99_HEADERS__ -vec-threshold0 " }
+#           common_flags: "  "
+#           asm_analysis: True # TODO
+#           silent: True
+#       configuration:
+#           kernel_cfg: ["MACVETH=true", ""]
+#           features:
+#               X_: "it.combinations(range(0, 4), 4)"
+#           macveth_path_build: ""
+#           macveth_flags: " -misa=avx2 "
+#       execution:
+#           counters: "PAPI" # 
+#           threshold_outliers: 3
+#           nexec: 7  
+#           nruns: 10000000
+#           flops: "39"
+#           prefix: "OMP_NUM_THREADS=1 GOMP_CPU_AFFINITY=7"
+#       output:
+#           name: ""
+#           columns: "all"
+#           verbose: True
+#           report: True
+
+
 - kernel:
-      name: "codelet"
+      name: "micro_codelet"
       main_src: "main.cc"
-      target_src: "codelet.cc"
+      target_src: "micro_codelet.cc"
       description: ""
-      path: "kernels/codelet"
+      path: "kernels/micro_codelet"
       debug: False
       clean_tmp_files: True
       clean_asm_files: False
       compilation:
-          language: "C++" # cpp, c++, C++, CXX, CPP, cc, c, C, GNU/C...
-          compiler_flags: { "gcc": " -O3 -ftree-vectorize ", "icc": " -O3
-                      -D__PURE_INTEL_C99_HEADERS__ -vec-threshold0 " }
+          language: "C++"
+          compiler_flags: 
+            { 
+                "gcc": " -O3 -ftree-vectorize ", 
+                "icc": " -O3 -D__PURE_INTEL_C99_HEADERS__ -vec-threshold0 " 
+            }
           common_flags: "  "
-          asm_analysis: True # TODO
+          asm_analysis: True 
           silent: False
       configuration:
-          kernel_cfg: ["MACVETH=true", ""]
+          kernel_cfg: [" -mavx2 "]
           features:
-              X_: "it.combinations(range(0, 4), 4)"
-          macveth_path_build: ""
-          macveth_flags: " -misa=avx2 "
+                MICRO_CODELET_FILE_NAME:
+                    evaluate: True
+                    type: "static"
+                    value: "[f\"patterns/codelet_{i:08d}.c\" for i in range(5)]"
+                X_:
+                    evaluate: True
+                    type: "dynamic"
+                    value: "[0,1,2,3]"    
       execution:
-          counters: "PAPI" # 
+          papi_counters: [
+                "CPU_CLK_THREAD_UNHALTED:THREAD_P", 
+                "UNHALTED_REFERENCE_CYCLES",
+                "INST_RETIRED:ANY_P",
+                "UOPS_ISSUED:ALL",
+                "UOPS_RETIRED:ALL",
+                "PAPI_SP_OPS", 
+                "PAPI_VEC_SP",
+                "PAPI_DP_OPS", 
+                "PAPI_VEC_DP",
+                "PAPI_BR_TKN",
+                "PAPI_BR_MSP",
+                ]
           threshold_outliers: 3
-          nexec: 7
-          nruns: 100
-          flops: "2056*2"
+          nexec: 7  
+          nruns: 100000
+          flops: "39"
           prefix: "OMP_NUM_THREADS=1 GOMP_CPU_AFFINITY=7"
       output:
-          name: ""
+          name: "default"
           columns: "all"
           verbose: True
           report: True
+

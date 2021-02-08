@@ -3,14 +3,20 @@ import pandas as pd
 from asm_analyzer import ASMParser as asm
 from timing import Timing
 import os
+import sys
 
 
 class Kernel:
+    debug = False
+
+    @staticmethod
+    def dprint(msg):
+        if Kernel.debug:
+            print(msg)
 
     def save_results(self, df, filename):
         """
         Save data as a pandas.DataFrame
-
 
         :param df:
         :type df: class:pandas.DataFrame
@@ -59,11 +65,12 @@ class Kernel:
         """
         comp_str = (
             f"make -B -C {kpath} COMP={comp}"
-            f" {kconfig} "
+            f" KERNEL_CONFIG='{kconfig}' "
             f" COMMON_FLAGS='{common_flags}'"
             f" SUFFIX_ASM='{suffix_file}'"
             f" {silent}"
         )
+        Kernel.dprint(comp_str)
         ret = os.system(comp_str)
 
         if ret != 0:
@@ -97,24 +104,27 @@ class Kernel:
         else:
             return 0
 
-    def run(self, kconfig, p, compiler, silent,  quit_on_error=False):
+    def run(self, kconfig, params, compiler, silent,  quit_on_error=False):
+        """[summary]
+
+        Args:
+            kconfig ([type]): [description]
+            params ([type]): [description]
+            compiler ([type]): [description]
+            silent ([type]): [description]
+            quit_on_error (bool, optional): [description]. Defaults to False.
+
+        Returns:
+            [type]: [description]
         """
-        """
-        try:
-            params = p[0]
-            params = list(*params)
-        except Exception:
-            pass
-        params_name = p[1]
         n = 0
-        tmp_dict = {}
+        tmp_dict = params.copy()
         custom_flags = ""
         suffix_file = ""
-        for p in params:
-            tmp_dict[params_name[n]] = p
-            custom_flags += f" -D{params_name[n]}={p}"
-            suffix_file += f"_{params_name[n]}{p}"
-            flops_eval = self.flops.replace(params_name[n], str(p))
+        for pname in params.keys():
+            custom_flags += f" -D{pname}={params[pname]}"
+            suffix_file += f"_{pname}{params[pname]}"
+            flops_eval = self.flops.replace(pname, params[pname])
             n = n + 1
         custom_flags += self.compiler_flags[compiler]
         local_common_flags = self.common_flags + custom_flags
@@ -136,10 +146,11 @@ class Kernel:
             silent,
         )
 
+        avg_papi_counters = dict.fromkeys(self.papi_counters)
         if asm_cols != {}:
-            # Average cycles
-            avg_cycles = Timing.measure_benchmark(
-                self.basename, "cyc", self.exec_args, self.nexec)
+            # Average papi counters
+            avg_papi_counters = Timing.measure_benchmark(
+                self.basename, self.papi_counters, self.exec_args, self.nexec)
             # Average time
             avg_time = Timing.measure_benchmark(
                 self.basename, "time", self.exec_args, self.nexec)
@@ -152,12 +163,12 @@ class Kernel:
         tmp_dict.update(
             {
                 "FLOPSs": Kernel.compute_flops(flops_eval, self.nruns, avg_time),
-                "Cycles": avg_cycles,
                 "Time": avg_time,
                 "CFG": kconfig,
                 "Compiler": compiler,
             }
         )
+        tmp_dict.update(avg_papi_counters)
         tmp_dict.update(asm_cols)
         return tmp_dict
 
@@ -191,6 +202,7 @@ class Kernel:
         self.threshold_outliers = self.config_exec["threshold_outliers"]
         self.nexec = self.config_exec["nexec"]
         self.nruns = int(self.config_exec["nruns"])
+        self.papi_counters = self.config_exec["papi_counters"]
         self.flops = self.config_exec["flops"]
         self.exec_args = self.config_exec["prefix"]
         self.basename = self.target_file.split(".c")[0]

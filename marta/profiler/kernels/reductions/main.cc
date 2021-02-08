@@ -1,4 +1,4 @@
-#include "kernel_redux.h"
+#include "reductions.h"
 #include "marta_wrapper.h"
 
 MARTA_BENCHMARK_BEGIN(0);
@@ -13,11 +13,10 @@ init_2darray(n, POLYBENCH_ARRAY(A));
 init_1darray(n, POLYBENCH_ARRAY(x));
 init_1darray(n, POLYBENCH_ARRAY(y));
 
-PROFILE_FUNCTION(nsteps,
-                 KERNEL_NAME(m, n, uI, uIt, uIs, uJ, uJt, uJs,
-                             POLYBENCH_ARRAY(A), POLYBENCH_ARRAY(x),
-                             POLYBENCH_ARRAY(y)),
-                 FUNC_STR, "A,x,y", nsteps *FUNC_OPS * 2L, 0);
+PROFILE_FUNCTION_SINGLE_VAL(NRUNS,
+                            KERNEL_NAME(m, n, uI, uIt, uIs, uJ, uJt, uJs,
+                                        POLYBENCH_ARRAY(A), POLYBENCH_ARRAY(x),
+                                        POLYBENCH_ARRAY(y)));
 
 /* Prevent dead-code elimination. All live-out data must be printed
    by the function call in argument. */
