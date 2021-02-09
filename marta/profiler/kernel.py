@@ -12,7 +12,7 @@ class Kernel:
     @staticmethod
     def dprint(msg):
         if Kernel.debug:
-            print(msg)
+            print(f"[MARTA DEBUG]: {msg}")
 
     def save_results(self, df, filename):
         """
@@ -63,6 +63,7 @@ class Kernel:
         :return: Dictionary of ASM occurrences
         :rtype: dict
         """
+        suffix_file = suffix_file.split("/")[-1].replace(".c", "")
         comp_str = (
             f"make -B -C {kpath} COMP={comp}"
             f" KERNEL_CONFIG='{kconfig}' "
@@ -76,7 +77,13 @@ class Kernel:
         if ret != 0:
             print(f"Error {str(ret)} compiling in {kpath}, quitting...")
             return {}
-        return asm.parse_asm(f"asm_codes/{kname}{suffix_file}.s")
+        return asm.parse_asm(f"asm_codes/{kname}{suffix_file}_{comp}.s")
+
+    def define_papi_counters(self):
+        papi_counter_file = "kernels/utilities/papi_counters.list"
+        with open(papi_counter_file, "w") as f:
+            for ctr in self.papi_counters:
+                f.write("\"" + str(ctr) + "\",\n")
 
     @staticmethod
     def compute_flops(flops, nruns, avg_time):
@@ -95,6 +102,8 @@ class Kernel:
         """
         try:
             flops_eval = eval(flops)
+        except TypeError:
+            flops_eval = flops
         except NameError:
             print("FLOPS formula is not valid; please review it!")
             sys.exit(1)
@@ -121,10 +130,15 @@ class Kernel:
         tmp_dict = params.copy()
         custom_flags = ""
         suffix_file = ""
+        flops_eval = "1"
         for pname in params.keys():
-            custom_flags += f" -D{pname}={params[pname]}"
+            try:
+                param_val_parsed = int(params[pname])
+            except ValueError:
+                param_val_parsed = "\\\"" + params[pname] + "\\\""
+            custom_flags += f" -D{pname}={param_val_parsed}"
             suffix_file += f"_{pname}{params[pname]}"
-            flops_eval = self.flops.replace(pname, params[pname])
+            flops_eval = self.flops.replace(pname, str(params[pname]))
             n = n + 1
         custom_flags += self.compiler_flags[compiler]
         local_common_flags = self.common_flags + custom_flags
@@ -136,6 +150,7 @@ class Kernel:
             kconfig += " MACVETH_FLAGS='" + \
                 self.config_cfg["macveth_flags"] + "'"
 
+        self.define_papi_counters()
         asm_cols = Kernel.compile_parse_asm(
             self.basename,
             self.path_kernel,
@@ -147,39 +162,39 @@ class Kernel:
         )
 
         avg_papi_counters = dict.fromkeys(self.papi_counters)
+        avg_time = {}
+        tmp_dict.update(asm_cols)
         if asm_cols != {}:
             # Average papi counters
-            avg_papi_counters = Timing.measure_benchmark(
-                self.basename, self.papi_counters, self.exec_args, self.nexec)
+            if len(self.papi_counters) > 0:
+                avg_papi_counters = Timing.measure_benchmark(
+                    self.basename, self.papi_counters, self.exec_args, compiler, self.nexec)
+                tmp_dict.update(avg_papi_counters)
             # Average time
             avg_time = Timing.measure_benchmark(
-                self.basename, "time", self.exec_args, self.nexec)
+                self.basename, "time", self.exec_args, compiler, self.nexec)
+            tmp_dict.update(avg_time)
         else:
             if quit_on_error:
                 return None
-            avg_cycles = 0
-            avg_time = 0
+            avg_time["time"] = 0
+            tmp_dict.update(avg_time)
 
         tmp_dict.update(
             {
-                "FLOPSs": Kernel.compute_flops(flops_eval, self.nruns, avg_time),
-                "Time": avg_time,
+                "FLOPSs": Kernel.compute_flops(flops_eval, self.nruns, avg_time["time"]),
                 "CFG": kconfig,
                 "Compiler": compiler,
             }
         )
-        tmp_dict.update(avg_papi_counters)
-        tmp_dict.update(asm_cols)
         return tmp_dict
 
     def __init__(self, cfg):
         # General configuration
         self.kernel = cfg["kernel"]["name"]
-        self.main_file = cfg["kernel"]["main_src"]
-        self.target_file = cfg["kernel"]["target_src"]
         self.descr = cfg["kernel"]["description"]
         self.path_kernel = cfg["kernel"]["path"]
-        self.debug = cfg["kernel"]["debug"]
+        Kernel.debug = cfg["kernel"]["debug"]
 
         # compilation:
         self.config_comp = cfg["kernel"]["compilation"]
@@ -197,12 +212,12 @@ class Kernel:
         # Configuration
         self.kernel_cfg = self.config_cfg["kernel_cfg"]
         self.feat = self.config_cfg["features"]
+        self.flops = self.config_cfg["flops"]
 
         # Execution arguments
         self.threshold_outliers = self.config_exec["threshold_outliers"]
         self.nexec = self.config_exec["nexec"]
         self.nruns = int(self.config_exec["nruns"])
         self.papi_counters = self.config_exec["papi_counters"]
-        self.flops = self.config_exec["flops"]
         self.exec_args = self.config_exec["prefix"]
-        self.basename = self.target_file.split(".c")[0]
+        self.basename = self.kernel

@@ -66,14 +66,21 @@ class Report:
 
         # TODO: get compilation flags and so
         content += f"\n# -- COMPILATION\n"
+        with open("___tmp.stdout") as f:
+            for l in f.readlines():
+                content += l
+        os.system("rm ___tmp.stdout")
 
         # TODO: generate errors
         content += f"\n# -- ERRORS\n"
-
+        with open("___tmp.stderr") as f:
+            for l in f.readlines():
+                content += l
+        os.system("rm ___tmp.stderr")
         # TODO: generate warnings
-        content += f"\n# -- WARNINGS\n"
+        # content += f"\n# -- WARNINGS\n"
 
         # TODO: generate issues
-        content += f"\n# -- ISSUES\n"
+        # content += f"\n# -- ISSUES\n"
 
         return content

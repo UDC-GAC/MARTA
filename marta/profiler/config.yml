@@ -183,34 +183,43 @@
 
 - kernel:
       name: "micro_codelet"
-      main_src: "main.cc"
-      target_src: "micro_codelet.cc"
-      description: ""
       path: "kernels/micro_codelet"
+      description: "Setup for micro_codelets"
       debug: False
-      clean_tmp_files: True
-      clean_asm_files: False
       compilation:
           language: "C++"
           compiler_flags: 
             { 
-                "gcc": " -O3 -ftree-vectorize ", 
-                "icc": " -O3 -D__PURE_INTEL_C99_HEADERS__ -vec-threshold0 " 
+                "gcc": " -O3 -ftree-vectorize -flto ",
+                "icc": " -O3 -ftree-vectorize -flto -vec-threshold0",
             }
           common_flags: "  "
           asm_analysis: True 
-          silent: False
+          silent: True
       configuration:
-          kernel_cfg: [" -mavx2 "]
+          kernel_cfg: [" -msse4.2 "," -mavx2 "," -mavx512f "]
           features:
                 MICRO_CODELET_FILE_NAME:
                     evaluate: True
                     type: "static"
-                    value: "[f\"patterns/codelet_{i:08d}.c\" for i in range(5)]"
-                X_:
+                    val_type: "string"
+                    value: "[f\"patterns/codelet_{i:08d}.c\" for i in range(40)]"
+                ORIG_y:
                     evaluate: True
-                    type: "dynamic"
-                    value: "[0,1,2,3]"    
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[0,1,2,3]"
+                ORIG_A:    
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[0,1,2,3]"
+                ORIG_x:    
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[0,1,2,3]"
+          flops: "0"
       execution:
           papi_counters: [
                 "CPU_CLK_THREAD_UNHALTED:THREAD_P", 
@@ -226,13 +235,13 @@
                 "PAPI_BR_MSP",
                 ]
           threshold_outliers: 3
-          nexec: 7  
-          nruns: 100000
-          flops: "39"
+          nexec: 7
+          nruns: 10000
           prefix: "OMP_NUM_THREADS=1 GOMP_CPU_AFFINITY=7"
       output:
           name: "default"
           columns: "all"
           verbose: True
           report: True
-
+      clean_tmp_files: False
+      clean_asm_files: False

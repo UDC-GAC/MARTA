@@ -30,7 +30,7 @@
  */
 
 #include "marta_wrapper.h"
-#include "codelet.h"
+#include "micro_codelet.h"
 
 MARTA_BENCHMARK_BEGIN(MARTA_NO_HEADER);
 

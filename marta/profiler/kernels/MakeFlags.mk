@@ -10,9 +10,13 @@ ASM_DIR=../../asm_codes/
 USRDIR=$(HOME)
 
 # Flags for PolyBench/C
+#PAPI_LIB?=/share/apps/papi/gnu8/6.0.0/lib
+PAPI_LIB?=$(USRDIR)/lib
+PAPI_INCLUDE?=$(USRDIR)/include
+PAPI_FLAGS=-I$(PAPI_INCLUDE) -L$(PAPI_LIB) -lpapi
 POLYBENCH_FLAGS = -I ../utilities ../utilities/polybench.c
 POLY_TFLAGS= -DPOLYBENCH_TIME -DPOLYBENCH_CYCLE_ACCURATE_TIME $(POLYBENCH_FLAGS)
-POLY_PFLAGS= -DPOLYBENCH_PAPI $(POLYBENCH_FLAGS) -L/share/apps/papi/gnu8/6.0.0/lib -lpapi
+POLY_PFLAGS= -DPOLYBENCH_PAPI $(POLYBENCH_FLAGS) $(PAPI_FLAGS)
 
 # Hate doing if/else in Makefile, tho
 ifeq ($(COMP),icc)
@@ -45,6 +49,8 @@ endif
 
 .PHONY: clean
 
+BASE_BIN_NAME?=$(BIN_DIR)/$(BASENAME)_$(COMP)
+
 all: $(BINARY_NAME)
 
 macveth: 
@@ -52,21 +58,21 @@ macveth:
 	
 asm_code: 
 	$(V)$(CC) -c $(FLAGS) $(TARGET).cc -S
-	$(V)mv $(TARGET).s $(ASM_DIR)$(BASENAME)$(SUFFIX_ASM).s
+	$(V)mv $(TARGET).s $(ASM_DIR)$(TARGET)$(SUFFIX_ASM)_$(COMP).s
 
 kernel_papi: 
 	$(V)$(CC) -c $(POLY_PFLAGS) $(FLAGS) $(TARGET).cc 
-	$(V)mv $(TARGET).o $(TARGET)papi.o
+	$(V)mv $(TARGET).o $(TARGET)_papi.o
 
 kernel_time:
 	$(V)$(CC) -c $(POLY_TFLAGS) $(FLAGS) $(TARGET).cc
-	$(V)mv $(TARGET).o $(TARGET)time.o
+	$(V)mv $(TARGET).o $(TARGET)_time.o
 
 $(BINARY_NAME): $(MACVETH_RULE) asm_code kernel_papi kernel_time $(MAIN_SRC)$(MAIN_SUFFIX) 
-	$(V)$(CC) $(FLAGS) $(POLY_TFLAGS) $(MAIN_FILE) $(TARGET)time.o -o $(BIN_DIR)/$(BASENAME)_time.o
-	$(V)$(CC) $(FLAGS) $(POLY_TFLAGS) $(MAIN_FILE) $(TARGET)time.o -S
-	$(V)$(CC) $(FLAGS) $(POLY_PFLAGS) $(MAIN_FILE) $(TARGET)papi.o -o $(BIN_DIR)/$(BASENAME)_papi.o
-	$(V)$(CC) $(FLAGS) $(POLY_PFLAGS) $(MAIN_FILE) $(TARGET)papi.o -S
+	$(V)$(CC) $(FLAGS) $(POLY_TFLAGS) $(MAIN_FILE) $(TARGET)_time.o -o $(BASE_BIN_NAME)_time.o
+	$(V)$(CC) $(FLAGS) $(POLY_TFLAGS) $(MAIN_FILE) $(TARGET)_time.o -S
+	$(V)$(CC) $(FLAGS) $(POLY_PFLAGS) $(MAIN_FILE) $(TARGET)_papi.o -o $(BASE_BIN_NAME)_papi.o
+	$(V)$(CC) $(FLAGS) $(POLY_PFLAGS) $(MAIN_FILE) $(TARGET)_papi.o -S
 	
 	
 clean:

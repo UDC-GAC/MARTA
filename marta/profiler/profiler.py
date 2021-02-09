@@ -10,23 +10,23 @@ import sys
 import yaml
 import argparse
 import pandas as pd
+import numpy as np
 import itertools as it
 import os
 import copy
 from datetime import datetime as dt
 from kernel import Kernel
-from utils import inv_dict
 from tqdm import tqdm
 from tqdm.auto import tqdm as tqdm_auto
 
 # FIXME: change this at some point
 __version__ = "0.0.0-alpha"
 
-lang_equiv = {"c": ["gnu/c", "c", "cc"], "cpp": ["cpp", ""]}
-lang_equiv_inverted = inv_dict(lang_equiv)
-
 
 class Profiler:
+    """
+    Profiler class: helper class to set up experiments.
+    """
     @staticmethod
     def dump_config_file():
         """
@@ -38,50 +38,6 @@ class Profiler:
         config_file = "config_template"
         with open(config_file) as f:
             return f.readlines()
-
-    @staticmethod
-    def eval_features(feature):
-        """
-        Evaluate features from configuration file
-
-        Example:
-
-        "it.combinations(range(0,4),2)"
-
-        This would generate a list of values such as: (0,1), (0,2), (0,3), (1,2), etc.
-
-        :param feat: Dictionary of strings
-        :type feat: dict
-        :return: Retuns a tuple of lists with parameters names and their values
-        :rtype: tuple
-        """
-        params_name = list()
-        params_values = list()
-        for f in feature.keys():
-            type_feature = feature[f]["type"]
-            evaluate = feature[f]["evaluate"]
-            if type(feature[f]["value"]) is str:
-                try:
-                    if evaluate:
-                        tmp_eval = eval(feature[f]["value"])
-                    else:
-                        tmp_eval = feature[f]["value"]
-                except NameError:
-                    print(f"Evaluation of expression for {f} went wrong!")
-                    sys.exit(1)
-                if type_feature == "dynamic":
-                    tmp_eval_copy = copy.deepcopy(tmp_eval)
-                    for t in tmp_eval_copy:
-                        size = len(t)
-                        break
-                    for i in range(size):
-                        params_name += [f"{f}{str(i)}"]
-                params_values += [tmp_eval]
-            else:
-                params_values += [feature[f]]
-            if type_feature == "static":
-                params_name += [f]
-        return params_name, params_values
 
     @staticmethod
     def parse_arguments(list_args):
@@ -175,6 +131,63 @@ class Profiler:
         return parser.parse_args(list_args)
 
     @staticmethod
+    def eval_features(feature):
+        """
+        Evaluate features from configuration file
+
+        Example:
+
+        "it.combinations(range(0,4),2)"
+
+        This would generate a list of values such as: (0,1), (0,2), (0,3), (1,2), etc.
+
+        :param feat: Dictionary of strings
+        :type feat: dict
+        :return: Retuns a dict with all features or parameters properly expanded
+        :rtype: dict
+        """
+        params_dict = {}
+        for f in feature.keys():
+            type_feature = feature[f]["type"]
+            evaluate = feature[f]["evaluate"]
+            params_values = []
+            if type(feature[f]["value"]) is str:
+                try:
+                    if evaluate:
+                        params_values = eval(feature[f]["value"])
+                    else:
+                        params_values = feature[f]["value"]
+                except NameError:
+                    print(f"Evaluation of expression for {f} went wrong!")
+                    sys.exit(1)
+                if type_feature == "dynamic":
+                    try:
+                        size = len(params_values)
+                    except TypeError:
+                        tmp_eval_copy = copy.deepcopy(params_values)
+                        for t in tmp_eval_copy:
+                            size = len(t)
+                            break
+                    for i in range(size):
+                        params_dict[f"{f}{str(i)}"] = [params_values]
+            else:
+                params_values = [feature[f]]
+            if type_feature == "static":
+                params_dict[f] = params_values
+        return params_dict
+
+    @staticmethod
+    def comp_nvals(params_values):
+        # Compute number of iterations
+        if type(params_values) is list:
+            return len(params_values)
+        params_values_copy = copy.deepcopy(params_values)
+        try:
+            return len(list(*params_values_copy))
+        except Exception:
+            return len(list(it.product(*params_values_copy)))
+
+    @staticmethod
     def print_version():
         """
         Print version and copyright message (if not quiet execution)
@@ -185,6 +198,17 @@ class Profiler:
             f"(c) Universidade da Coruna 2020-2021\n",
             end="",
         )
+
+    @staticmethod
+    def dict_product(dicts):
+        """
+        >>> list(dict_product(dict(number=[1,2], character='ab')))
+        [{'character': 'a', 'number': 1},
+        {'character': 'a', 'number': 2},
+        {'character': 'b', 'number': 1},
+        {'character': 'b', 'number': 2}]
+        """
+        return (dict(zip(dicts, x)) for x in it.product(*dicts.values()))
 
     def profiling_kernels(self, cfg):
         """
@@ -198,12 +222,11 @@ class Profiler:
 
         kernel = Kernel(cfg)
         config_output = cfg["kernel"]["output"]
-        params_name, params_values = Profiler.eval_features(kernel.feat)
+        params_dict = Profiler.eval_features(kernel.feat)
 
         # Output configuration
         # file names
         output_cols = config_output["columns"]
-        output_verbose = config_output["verbose"]
         if self.args.output is None:
             tstamp = dt.now().strftime("%d_%m___%H_%M_%S")
             output_filename = "marta_profiler_"
@@ -213,21 +236,19 @@ class Profiler:
                 output_filename += f"{config_output['name']}_{tstamp}.csv"
         else:
             output_filename = self.args.output
+
         if output_cols == "all":
-            output_cols = params_name.copy()
-        if type(output_cols) is not list:
+            output_cols = list(params_dict.keys())
+
+        if type(output_cols) != list:
             print("output_cols parameter must be a list or 'all'")
             sys.exit(1)
-        output_cols += ["FLOPSs", "Time", "CFG", "Compiler"]
+
+        output_cols += ["CFG", "Compiler", "FLOPSs", "time"]
         output_cols += kernel.papi_counters
 
-        # Compute number of iterations
-        params_values_copy = copy.deepcopy(params_values)
-        try:
-            niterations = len(list(*params_values_copy))
-        except Exception:
-            niterations = len(list(it.product(*params_values_copy)))
-
+        niterations = np.prod([Profiler.comp_nvals(params_dict[k])
+                               for k in params_dict])
         niterations *= len(kernel.kernel_cfg) * len(kernel.compilers_list)
 
         # Structure for storing results and ploting
@@ -236,7 +257,7 @@ class Profiler:
         # Silent compilation or not
         silent = ""
         if kernel.comp_silent:
-            silent = " > /dev/null 2> /dev/null"
+            silent = f" >> ___tmp.stdout 2>> ___tmp.stderr"
 
         if not self.args.quiet:
             # Print version if not quiet
@@ -246,11 +267,10 @@ class Profiler:
         with tqdm(total=niterations) as pbar:
             for compiler in kernel.compilers_list:
                 for kconfig in kernel.kernel_cfg:
-                    backup_params_values = copy.deepcopy(params_values)
-                    for params_values in it.product(backup_params_values):
-                        print(params_values)
+                    product = Profiler.dict_product(params_dict)
+                    for params_val in product:
                         kern_exec = kernel.run(
-                            kconfig, dict(zip(params_name, params_values)),
+                            kconfig, params_val,
                             compiler, silent, self.args.quit_on_error)
                         # There was an error, exit on error, save data first
                         if kern_exec == None:
