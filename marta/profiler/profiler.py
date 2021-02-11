@@ -255,13 +255,20 @@ class Profiler:
         df = pd.DataFrame(columns=output_cols)
 
         # Silent compilation or not
-        silent = ""
-        if kernel.comp_silent:
-            silent = f" >> ___tmp.stdout 2>> ___tmp.stderr"
+        debug = ""
+        if kernel.comp_debug:
+            debug = f" >> ___tmp.stdout 2>> ___tmp.stderr"
 
         if not self.args.quiet:
             # Print version if not quiet
             Profiler.print_version()
+
+        if cfg["kernel"]["preamble"]["command"] != "":
+            try:
+                os.system(f'{cfg["kernel"]["preamble"]["command"]}')
+            except Exception:
+                print("[ERROR] Preamble command went wrong...")
+                sys.exit(1)
 
         # Main loop with progress bar
         with tqdm(total=niterations) as pbar:
@@ -271,7 +278,7 @@ class Profiler:
                     for params_val in product:
                         kern_exec = kernel.run(
                             kconfig, params_val,
-                            compiler, silent, self.args.quit_on_error)
+                            compiler, debug, self.args.quit_on_error)
                         # There was an error, exit on error, save data first
                         if kern_exec == None:
                             print("Saving file...")
@@ -279,16 +286,23 @@ class Profiler:
                             sys.exit(1)
                         df = df.append(kern_exec, ignore_index=True)
                         pbar.update(1)
-                    if cfg["kernel"]["clean_asm_files"]:
-                        os.system("rm asm_codes/*")
 
         # Storing results and generating report file
         # TODO: add some spinner or something here
         kernel.save_results(df, output_filename)
 
-        # Clean directory properly
-        if cfg["kernel"]["clean_tmp_files"]:
-            os.system(f"rm -Rf tmp bin")
+        # Cleaning directories
+        if cfg["kernel"]["finalize"]["clean_tmp_files"]:
+            os.system(f"rm -Rf tmp/")
+        if cfg["kernel"]["finalize"]["clean_bin_files"]:
+            os.system(f"rm -Rf bin/")
+        if cfg["kernel"]["finalize"]["clean_asm_files"]:
+            os.system(f"rm -Rf asm/")
+        if cfg["kernel"]["finalize"]["command"] != "":
+            try:
+                os.system(f'{cfg["kernel"]["finalize"]["command"]}')
+            except Exception:
+                print("[ERROR] Finalize command went wrong...")
 
     def __init__(self, list_args):
         """
@@ -329,8 +343,11 @@ class Profiler:
             sys.exit(1)
 
         # Create folders
-        os.system("mkdir -p asm_codes")
-        os.system("mkdir -p bin")
+        try:
+            os.mkdir("asm_codes")
+            os.mkdir("bin")
+        except FileExistsError:
+            pass
 
         # For each kernel configuration
         for cfg in kernel_setup:

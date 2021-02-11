@@ -1,14 +1,20 @@
 #if !defined(_MARTA_WRAPPER_H)
 #define _MARTA_WRAPPER_H
 
+#define _GNU_SOURCE
+
 #include "definitions.h"
 #include "polybench.h"
 
-#include <algorithm>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sched.h>
+
+#if !defined(MARTA_CPU_AFFINITY)
+#define MARTA_CPU_AFFINITY 3
+#endif
 
 #ifndef NRUNS
 #define NRUNS 10000
@@ -162,14 +168,18 @@ static void init_2darray(int n, DATA_TYPE POLYBENCH_2D(A, N, N, n, n))
     exit(1);                                                   \
   }
 
-#define MARTA_BENCHMARK_BEGIN(cond) \
-  int main(int argc, char **argv)   \
-  {                                 \
-    int i = 0;                      \
-    int n = N;                      \
-    int m = M;                      \
-    MARTA_CHECK_HEADERS(cond);      \
-    if (cond)                       \
+#define MARTA_BENCHMARK_BEGIN(cond)                         \
+  int main(int argc, char **argv)                           \
+  {                                                         \
+    int i = 0;                                              \
+    int n = N;                                              \
+    int m = M;                                              \
+    MARTA_CHECK_HEADERS(cond);                              \
+    cpu_set_t mask;                                         \
+    CPU_ZERO(&mask);                                        \
+    CPU_SET(MARTA_CPU_AFFINITY, &mask);                     \
+    int result = sched_setaffinity(0, sizeof(mask), &mask); \
+    if (cond)                                               \
       printf("name,features,flops,time,gflops\n");
 
 #define MARTA_BENCHMARK_END \

@@ -18,7 +18,13 @@
 #define ORIG_y 0
 #endif
 
-void codelet(double *restrict A, double *restrict x, double *restrict y)
+#if defined(INTEL_COMPILER)
+#define INLINE_PREFIX __forceinline
+#else
+#define INLINE_PREFIX inline
+#endif
+
+INLINE_PREFIX void codelet(double *restrict A, double *restrict x, double *restrict y)
 {
   register int i, j;
 

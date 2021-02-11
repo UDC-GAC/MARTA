@@ -17,7 +17,7 @@
               # Dictionary with name of compiler and its flags
           common_flags: " -DVAR=value -DOTHER_FLAG " # Common flags
           asm_analysis: True # Generate and parse ASM file (-S in compiler)
-          silent: True # Avoid verbose building output, i.e. 2> /dev/null
+          debug: True # Avoid verbose building output, i.e. 2> /dev/null
       configuration:
           kernel_cfg: ["NPACK=4 MACVETH=true"]
           features:

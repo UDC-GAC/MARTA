@@ -13,7 +13,7 @@
 #                       -D__PURE_INTEL_C99_HEADERS__ -vec-threshold0 " }
 #           common_flags: " -DNPACK=4 "
 #           asm_analysis: True # TODO
-#           silent: True
+#           debug: True
 #       configuration:
 #           kernel_cfg: ["NPACK=4 MACVETH=true", "NPACK=4"]
 #           features:
@@ -49,7 +49,7 @@
 #                       -D__PURE_INTEL_C99_HEADERS__ -vec-threshold0 " }
 #           common_flags: " -DLOOP2D "
 #           asm_analysis: True # TODO
-#           silent: False
+#           debug: False
 #       configuration:
 #           kernel_cfg: ["MACVETH=true", " "]
 #           features:
@@ -89,7 +89,7 @@
 #                       -D__PURE_INTEL_C99_HEADERS__ -vec-threshold0 " }
 #           common_flags: "  "
 #           asm_analysis: True # TODO
-#           silent: False
+#           debug: False
 #       configuration:
 #           kernel_cfg: ["MACVETH=true", ""]
 #           features:
@@ -124,7 +124,7 @@
 #                       -D__PURE_INTEL_C99_HEADERS__ -vec-threshold0 -xHost " }
 #           common_flags: "  "
 #           asm_analysis: True # TODO
-#           silent: True
+#           debug: True
 #       configuration:
 #           kernel_cfg: ["MACVETH=true", ""]
 #           features:
@@ -160,7 +160,7 @@
 #                       -D__PURE_INTEL_C99_HEADERS__ -vec-threshold0 " }
 #           common_flags: "  "
 #           asm_analysis: True # TODO
-#           silent: True
+#           debug: True
 #       configuration:
 #           kernel_cfg: ["MACVETH=true", ""]
 #           features:
@@ -186,39 +186,49 @@
       path: "kernels/micro_codelet"
       description: "Setup for micro_codelets"
       debug: False
+      preamble:
+          command: "sudo cpupower frequency-set -u 2.1GHz && sudo cpupower frequency-set -d 2.1GHz"
+      finalize:
+          clean_tmp_files: False
+          clean_asm_files: False
+          clean_bin_files: False
+          command: ""
       compilation:
-          language: "C++"
+          language: "C"
           compiler_flags: 
             { 
                 "gcc": " -O3 -ftree-vectorize -flto ",
-                "icc": " -O3 -ftree-vectorize -flto -vec-threshold0",
+                "icc": " -O3 -ipo -ftree-vectorize -vec-threshold0 -inline-forceinline",
             }
           common_flags: "  "
           asm_analysis: True 
-          silent: True
+          debug: False
       configuration:
-          kernel_cfg: [" -msse4.2 "," -mavx2 "," -mavx512f "]
+          kernel_cfg: [ " -mavx512f "]
           features:
                 MICRO_CODELET_FILE_NAME:
                     evaluate: True
                     type: "static"
                     val_type: "string"
-                    value: "[f\"patterns/codelet_{i:08d}.c\" for i in range(40)]"
+                    value: "[f\"patterns/codelet_{i:08d}.c\" for i in range(1)]"
                 ORIG_y:
                     evaluate: True
                     type: "static"
                     val_type: "numeric"
-                    value: "[0,1,2,3]"
+                    value: "[0,1,2,3,4,5,6,7]"
+                    #value: "[0]"
                 ORIG_A:    
                     evaluate: True
                     type: "static"
                     val_type: "numeric"
-                    value: "[0,1,2,3]"
+                    value: "[0,1,2,3,4,5,6,7]"
+                    #value: "[0]"
                 ORIG_x:    
                     evaluate: True
                     type: "static"
                     val_type: "numeric"
-                    value: "[0,1,2,3]"
+                    value: "[0,1,2,3,4,5,6,7]"
+                    #value: "[0]"
           flops: "0"
       execution:
           papi_counters: [
@@ -237,11 +247,10 @@
           threshold_outliers: 3
           nexec: 7
           nruns: 10000
-          prefix: "OMP_NUM_THREADS=1 GOMP_CPU_AFFINITY=7"
+          cpu_affinity: 11
+          prefix: ""
       output:
           name: "default"
           columns: "all"
-          verbose: True
           report: True
-      clean_tmp_files: False
-      clean_asm_files: False
+          verbose: True

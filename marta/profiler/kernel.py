@@ -4,10 +4,12 @@ from asm_analyzer import ASMParser as asm
 from timing import Timing
 import os
 import sys
+from timeit import default_timer as timer
 
 
 class Kernel:
     debug = False
+    start_time = timer()
 
     @staticmethod
     def dprint(msg):
@@ -36,18 +38,14 @@ class Kernel:
         df.to_csv(filename, index=False)
 
         # saving all data to file
+        self.end_time = timer()
         report_filename = filename.replace(".csv", ".log")
         with open(report_filename, "w") as f:
-            f.write(
-                Report.generate_report(
-                    [self.common_flags, self.exec_args, [
-                        "runs and execs:", self.nruns, self.nexec]]
-                )
-            )
+            f.write(Report.generate_report(self))
 
     @staticmethod
     def compile_parse_asm(
-        kname, kpath, comp, common_flags, kconfig, suffix_file="", silent=""
+        kname, kpath, comp, common_flags, kconfig, suffix_file="", debug=""
     ):
         """
         Compile benchmark according to a set of flags, suffixes and so
@@ -58,8 +56,8 @@ class Kernel:
         :type custom_flags: str
         :param suffix_file: Suffix
         :type suffix_file: str
-        :param silent: Suffix for execution command in order to redirect output if any
-        :type silent: str
+        :param debug: Suffix for execution command in order to redirect output if any
+        :type debug: str
         :return: Dictionary of ASM occurrences
         :rtype: dict
         """
@@ -69,7 +67,7 @@ class Kernel:
             f" KERNEL_CONFIG='{kconfig}' "
             f" COMMON_FLAGS='{common_flags}'"
             f" SUFFIX_ASM='{suffix_file}'"
-            f" {silent}"
+            f" {debug}"
         )
         Kernel.dprint(comp_str)
         ret = os.system(comp_str)
@@ -113,14 +111,14 @@ class Kernel:
         else:
             return 0
 
-    def run(self, kconfig, params, compiler, silent,  quit_on_error=False):
+    def run(self, kconfig, params, compiler, debug,  quit_on_error=False):
         """[summary]
 
         Args:
             kconfig ([type]): [description]
             params ([type]): [description]
             compiler ([type]): [description]
-            silent ([type]): [description]
+            debug ([type]): [description]
             quit_on_error (bool, optional): [description]. Defaults to False.
 
         Returns:
@@ -143,6 +141,8 @@ class Kernel:
         custom_flags += self.compiler_flags[compiler]
         local_common_flags = self.common_flags + custom_flags
         local_common_flags += f" -DNRUNS={self.nruns} "
+        if self.cpu_affinity != -1:
+            local_common_flags += f" -DMARTA_CPU_AFFINITY={self.cpu_affinity} "
 
         if "MACVETH=true" in kconfig:
             suffix_file += "_macveth"
@@ -158,7 +158,7 @@ class Kernel:
             local_common_flags,
             kconfig,
             suffix_file,
-            silent,
+            debug,
         )
 
         avg_papi_counters = dict.fromkeys(self.papi_counters)
@@ -167,11 +167,11 @@ class Kernel:
         if asm_cols != {}:
             # Average papi counters
             if len(self.papi_counters) > 0:
-                avg_papi_counters = Timing.measure_benchmark(
+                avg_papi_counters, self.dev_warning_papi = Timing.measure_benchmark(
                     self.basename, self.papi_counters, self.exec_args, compiler, self.nexec)
                 tmp_dict.update(avg_papi_counters)
             # Average time
-            avg_time = Timing.measure_benchmark(
+            avg_time, self.dev_warning_time = Timing.measure_benchmark(
                 self.basename, "time", self.exec_args, compiler, self.nexec)
             tmp_dict.update(avg_time)
         else:
@@ -207,7 +207,7 @@ class Kernel:
         self.compilers_list = self.config_comp["compiler_flags"].keys()
         self.common_flags = self.config_comp["common_flags"]
         self.compiler_flags = self.config_comp["compiler_flags"]
-        self.comp_silent = self.config_comp["silent"]
+        self.comp_debug = self.config_comp["debug"]
 
         # Configuration
         self.kernel_cfg = self.config_cfg["kernel_cfg"]
@@ -218,6 +218,7 @@ class Kernel:
         self.threshold_outliers = self.config_exec["threshold_outliers"]
         self.nexec = self.config_exec["nexec"]
         self.nruns = int(self.config_exec["nruns"])
+        self.cpu_affinity = int(self.config_exec["cpu_affinity"])
         self.papi_counters = self.config_exec["papi_counters"]
         self.exec_args = self.config_exec["prefix"]
         self.basename = self.kernel

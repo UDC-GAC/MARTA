@@ -30,10 +30,45 @@
 
 #define restrict __restrict
 
-#ifndef N
-#define N 4096
+#ifdef N
+#undef N
+#define N 180358
 #endif
 
 void codelet(double *restrict A, double *restrict x, double *restrict y);
+
+#if defined(__CODE_INLINED)
+
+#ifdef(__INTEL_COMPILER)
+#define INLINE_K __inline
+#else
+#define INLINE_K inline
+#endif
+
+#ifndef MICRO_CODELET_FILE_NAME
+#define MICRO_CODELET_FILE_NAME "patterns/codelet_00000001.c"
+#endif
+
+#ifndef ORIG_A
+#define ORIG_A 0
+#endif
+
+#ifndef ORIG_x
+#define ORIG_x 0
+#endif
+
+#ifndef ORIG_y
+#define ORIG_y 0
+#endif
+
+INLINE_K void codelet(double *restrict A, double *restrict x, double *restrict y)
+{
+    register int i, j;
+
+//#pragma macveth unroll i full j full
+#include MICRO_CODELET_FILE_NAME
+    //#pragma endmacveth
+}
+#endif
 
 #endif

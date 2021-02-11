@@ -1,6 +1,7 @@
 import os
 import sys
 import cpuinfo as cpu
+import datetime
 
 
 class Report:
@@ -25,21 +26,21 @@ class Report:
             Report.cinfo = cpu.get_cpu_info()
 
         cpu_info = f"CPU:\t\t\t{Report.cinfo['brand_raw']}\n"
-        cpu_info += f"Architecture:\t\t{cpu.platform.architecture()[0]}\n"
-        cpu_info += f"Memory:\t\t\t\t\n"
-        cpu_info += f"Avail. Cores:\t\t{cpu.os.cpu_count()}\n"
-        cpu_info += f"OS:\t\t\t\t\t"
+        cpu_info += f"Architecture:\t{cpu.platform.architecture()[0]}\n"
+        #cpu_info += f"Memory:\t\t\t\n"
+        cpu_info += f"Avail. Cores:\t{cpu.os.cpu_count()}\n"
+        cpu_info += f"Host OS:\t\t"
         if cpu.platform.win32_ver()[0] != "":
-            cpu_info += f"{cpu.platform.win32_ver()[0]}\n"
+            cpu_info += f"{cpu.platform.win32_ver()[0]}"
         elif cpu.platform.mac_ver()[0] != "":
-            cpu_info += f"{cpu.platform.mac_ver()[0]}\n"
+            cpu_info += f"{cpu.platform.mac_ver()[0]}"
         else:
-            cpu_info += f"{cpu.platform.uname()[3]}\n"
+            cpu_info += f"Kernel: {cpu.platform.uname()[2]}"
 
-        return cpu_info
+        return cpu_info + "\n"
 
     @staticmethod
-    def generate_report(params, verbose=True) -> str:
+    def generate_report(kernel, verbose=True) -> str:
         """
         Generate custom header for CSV file
 
@@ -51,36 +52,55 @@ class Report:
         :rtype: str
         """
         content = f"#" * 80 + "\n"
-        content += f"# MARTA Configuration file report\n"
+        content += f"#\t\tMARTA Configuration file report\n"
         content += f"#" * 80 + "\n"
         if verbose:
-            content += f"# -- MACHINE INFO\n"
+            content += f"\n# -- MACHINE INFO\n"
             content += Report.get_machine_info()
-        content += f"# -- EXPERIMENT PARAMETERS\n"
-        for p in params:
-            if type(p) == dict:
-                for k, v in p.items():
-                    content += f"{str(k)}-> {str(v)}\n"
-            else:
-                content += f"{str(p)}\n"
 
-        # TODO: get compilation flags and so
+        content += f"\nTIME ELAPSED : { str(datetime.timedelta(seconds=kernel.end_time - kernel.start_time))}\n"
+
+        content += f"\n# -- EXPERIMENT PARAMETERS\n"
+        content += f"- Kernel name: {kernel.basename}\n"
+        content += f"- Description: {kernel.descr}\n"
+        content += f"- Compilers used:\n"
+        for compiler in kernel.compiler_flags:
+            content += f"\t{compiler} -> {kernel.compiler_flags[compiler]}"
+        content += f"- FLOPS: {kernel.flops}\n"
+        content += f"- Loop iterations: {kernel.nexec}\n"
+        content += f"- Number of repetitions: {kernel.nruns}\n"
+        content += f"- CPU affinity (if any): {kernel.cpu_affinity}\n"
+        content += f"- PAPI counters used (if any):\n"
+        for l in kernel.papi_counters:
+            content += f"\t{l}\n"
+
+        # Issues or warnings
+        content += f"\n# -- ISSUES\n"
+        if kernel.dev_warning_time:
+            content += f"* Deviation over threshold (threshold_outliers) for time execution!\n"
+        if kernel.dev_warning_papi:
+            content += f"* Deviation over threshold (threshold_outliers) for some PAPI counters!\n"
+        if not (kernel.dev_warning_papi and kernel.dev_warning_papi):
+            content += f"No issues found during execution!\n"
+
+        # Get compilation flags and so
         content += f"\n# -- COMPILATION\n"
-        with open("___tmp.stdout") as f:
-            for l in f.readlines():
-                content += l
-        os.system("rm ___tmp.stdout")
+        try:
+            with open("___tmp.stdout") as f:
+                for l in f.readlines():
+                    content += l
+            os.system("rm ___tmp.stdout")
+        except FileNotFoundError:
+            content += "stdout was redirected manually.\n"
 
-        # TODO: generate errors
+        # Generate errors
         content += f"\n# -- ERRORS\n"
-        with open("___tmp.stderr") as f:
-            for l in f.readlines():
-                content += l
-        os.system("rm ___tmp.stderr")
-        # TODO: generate warnings
-        # content += f"\n# -- WARNINGS\n"
-
-        # TODO: generate issues
-        # content += f"\n# -- ISSUES\n"
+        try:
+            with open("___tmp.stderr") as f:
+                for l in f.readlines():
+                    content += l
+            os.system("rm ___tmp.stderr")
+        except FileNotFoundError:
+            content += "stderr was redirected manually.\n"
 
         return content

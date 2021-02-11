@@ -1,13 +1,15 @@
 # temp files
 __*
 macveth_output.c*
-
+codelet*.c
 # bytecode
 __pycache__/
 *cpython*
 *.pyc
 *.o
 *.a
+*.optrpt
+tmp/
 
 # results
 old_files/
