@@ -256,7 +256,7 @@ class Profiler:
 
         # Silent compilation or not
         debug = ""
-        if kernel.comp_debug:
+        if not kernel.comp_debug:
             debug = f" >> ___tmp.stdout 2>> ___tmp.stderr"
 
         if not self.args.quiet:
