@@ -28,7 +28,7 @@ INLINE_PREFIX void codelet(double *restrict A, double *restrict x, double *restr
 {
   register int i, j;
 
-//#pragma macveth unroll i full j full
+#pragma macveth unroll i full j full
 #include MICRO_CODELET_FILE_NAME
-  //#pragma endmacveth
+#pragma endmacveth
 }

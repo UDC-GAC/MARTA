@@ -58,14 +58,14 @@ class Report:
             content += f"\n# -- MACHINE INFO\n"
             content += Report.get_machine_info()
 
-        content += f"\nTIME ELAPSED : { str(datetime.timedelta(seconds=kernel.end_time - kernel.start_time))}\n"
+        content += f"\n# -- TIME ELAPSED : { str(datetime.timedelta(seconds=kernel.end_time - kernel.start_time))}\n\n"
 
         content += f"\n# -- EXPERIMENT PARAMETERS\n"
         content += f"- Kernel name: {kernel.basename}\n"
         content += f"- Description: {kernel.descr}\n"
         content += f"- Compilers used:\n"
         for compiler in kernel.compiler_flags:
-            content += f"\t{compiler} -> {kernel.compiler_flags[compiler]}"
+            content += f"\t{compiler} -> {kernel.compiler_flags[compiler]}\n"
         content += f"- FLOPS: {kernel.flops}\n"
         content += f"- Loop iterations: {kernel.nexec}\n"
         content += f"- Number of repetitions: {kernel.nruns}\n"
@@ -73,15 +73,6 @@ class Report:
         content += f"- PAPI counters used (if any):\n"
         for l in kernel.papi_counters:
             content += f"\t{l}\n"
-
-        # Issues or warnings
-        content += f"\n# -- ISSUES\n"
-        if kernel.dev_warning_time:
-            content += f"* Deviation over threshold (threshold_outliers) for time execution!\n"
-        if kernel.dev_warning_papi:
-            content += f"* Deviation over threshold (threshold_outliers) for some PAPI counters!\n"
-        if not (kernel.dev_warning_papi and kernel.dev_warning_papi):
-            content += f"No issues found during execution!\n"
 
         # Get compilation flags and so
         content += f"\n# -- COMPILATION\n"

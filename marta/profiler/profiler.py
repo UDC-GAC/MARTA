@@ -5,19 +5,18 @@
    :synopsis: This module enables measurements given a configuration file
 .. moduleauthor:: Marcos Horro <marcos.horro@udc.es>
 """
-
+import os
+import copy
 import sys
 import yaml
 import argparse
 import pandas as pd
 import numpy as np
 import itertools as it
-import os
-import copy
 from datetime import datetime as dt
 from kernel import Kernel
 from tqdm import tqdm
-from tqdm.auto import tqdm as tqdm_auto
+from tqdm.auto import tqdm
 
 # FIXME: change this at some point
 __version__ = "0.0.0-alpha"
@@ -302,7 +301,8 @@ class Profiler:
             try:
                 os.system(f'{cfg["kernel"]["finalize"]["command"]}')
             except Exception:
-                print("[ERROR] Finalize command went wrong...")
+                print(
+                    f"[ERROR] Finalize command went wrong for {kernel.basename}")
 
     def __init__(self, list_args):
         """

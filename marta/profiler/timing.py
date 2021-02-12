@@ -45,9 +45,8 @@ class Timing:
                   "changing to this minimum value...")
             nexec = 5
 
-        # Save values in an array
+        # Save execution values in an array
         aval = np.array([])
-
         suffix = f"{name}" if type(name) == str else "papi"
         bin_file = f"{exec_opts} ./bin/{code}_{compiler}_{suffix}.o"
         tmp_file = f"tmp/____tmp_{code}_{compiler}_{suffix}"
@@ -60,22 +59,20 @@ class Timing:
         except ValueError:
             line = ""
             with open(tmp_file) as f:
-                for l in f:
-                    if "FAILED" in l:
-                        line = l
-                        break
+                line = [l for l in f if "FAILED" in l].join(" ")
             Timing.error_and_exit(line, name)
 
+        # Filter values
         mask = ~(abs(aval - aval.mean(axis=0)) <=
                  threshold_outliers * aval.std(axis=0))
         filtered_vals = np.where(mask, np.nan, aval)
         mean_values = np.nanmean(filtered_vals, axis=0)
 
-        # If there is a deviation over more than 40% of values, then a warning
-        # is shown in the report
-        dev_warning = (np.count_nonzero(mask) > aval.size * .4)
+        # Retrieve percentage of discarded values
+        discarded_values = float(mask.sum())/aval.size
 
+        # Return mean values in a dictionary fashion
         if type(name) is list:
-            return dict(zip(name, mean_values)), dev_warning
+            return dict(zip(name, mean_values)), discarded_values
         else:
-            return {name: mean_values}, dev_warning
+            return {name: mean_values}, discarded_values

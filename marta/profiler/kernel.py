@@ -45,7 +45,7 @@ class Kernel:
 
     @staticmethod
     def compile_parse_asm(
-        kname, kpath, comp, common_flags, kconfig, suffix_file="", debug=""
+        kname, kpath, comp, common_flags, kconfig, other_flags="", suffix_file="", debug=""
     ):
         """
         Compile benchmark according to a set of flags, suffixes and so
@@ -65,8 +65,9 @@ class Kernel:
         comp_str = (
             f"make -B -C {kpath} COMP={comp}"
             f" KERNEL_CONFIG='{kconfig}' "
-            f" COMMON_FLAGS='{common_flags}'"
-            f" SUFFIX_ASM='{suffix_file}'"
+            f" COMMON_FLAGS='{common_flags}' "
+            f" SUFFIX_ASM='{suffix_file}' "
+            f" {other_flags} "
             f" {debug}"
         )
         Kernel.dprint(comp_str)
@@ -78,6 +79,8 @@ class Kernel:
         return asm.parse_asm(f"asm_codes/{kname}{suffix_file}_{comp}.s")
 
     def define_papi_counters(self):
+        """Define PAPI counters in a new file recognized by PolyBench/C
+        """
         papi_counter_file = "kernels/utilities/papi_counters.list"
         with open(papi_counter_file, "w") as f:
             for ctr in self.papi_counters:
@@ -144,12 +147,26 @@ class Kernel:
         if self.cpu_affinity != -1:
             local_common_flags += f" -DMARTA_CPU_AFFINITY={self.cpu_affinity} "
 
-        if "MACVETH=true" in kconfig:
+        other_flags = ""
+        if "MACVETH" in kconfig:
+            kconfig = kconfig.replace("MACVETH", "")
+            other_flags = " MACVETH=true "
             suffix_file += "_macveth"
-            kconfig += " MVPATH=" + self.config_cfg["macveth_path_build"]
-            kconfig += " MACVETH_FLAGS='" + \
-                self.config_cfg["macveth_flags"] + "'"
+            try:
+                mvpath = self.config_cfg["macveth_path_build"]
+            except KeyError:
+                mvpath = ""
+            finally:
+                other_flags += " MVPATH=" + mvpath
+            try:
+                other_flags += " MACVETH_FLAGS='" + \
+                    self.config_cfg["macveth_flags"] + "'"
+            except KeyError:
+                print(
+                    f"[ERROR] Need to set key 'macveth_flags' in configuration file. Exiting...")
+                sys.exit(1)
 
+        print
         self.define_papi_counters()
         asm_cols = Kernel.compile_parse_asm(
             self.basename,
@@ -157,6 +174,7 @@ class Kernel:
             compiler,
             local_common_flags,
             kconfig,
+            other_flags,
             suffix_file,
             debug,
         )
@@ -167,11 +185,11 @@ class Kernel:
         if asm_cols != {}:
             # Average papi counters
             if len(self.papi_counters) > 0:
-                avg_papi_counters, self.dev_warning_papi = Timing.measure_benchmark(
+                avg_papi_counters, discarded_papi_values = Timing.measure_benchmark(
                     self.basename, self.papi_counters, self.exec_args, compiler, self.nexec)
                 tmp_dict.update(avg_papi_counters)
             # Average time
-            avg_time, self.dev_warning_time = Timing.measure_benchmark(
+            avg_time, discarded_time_values = Timing.measure_benchmark(
                 self.basename, "time", self.exec_args, compiler, self.nexec)
             tmp_dict.update(avg_time)
         else:
@@ -185,11 +203,18 @@ class Kernel:
                 "FLOPSs": Kernel.compute_flops(flops_eval, self.nruns, avg_time["time"]),
                 "CFG": kconfig,
                 "Compiler": compiler,
+                "DiscardedTimeValues": discarded_time_values,
+                "DiscardedPapiValues": discarded_papi_values,
             }
         )
         return tmp_dict
 
     def __init__(self, cfg):
+        """[summary]
+
+        Args:
+            cfg ([type]): [description]
+        """
         # General configuration
         self.kernel = cfg["kernel"]["name"]
         self.descr = cfg["kernel"]["description"]
