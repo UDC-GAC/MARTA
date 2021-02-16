@@ -5,16 +5,37 @@ from timing import Timing
 import os
 import sys
 from timeit import default_timer as timer
+import time
+import multiprocessing as mp
+import functools
+import pickle
+from itertools import repeat as repit
+
+
+# def __test_compile_process(instance, arg):
+#     return instance.compile(arg)
 
 
 class Kernel:
     debug = False
-    start_time = timer()
+    total_time = time.time()
+    compilation_time = 0
+    execution_time = 0
 
     @staticmethod
     def dprint(msg):
         if Kernel.debug:
             print(f"[MARTA DEBUG]: {msg}")
+
+    @staticmethod
+    def start_timer():
+        return time.time()
+
+    def accm_timer(self, timer_type, t0):
+        if timer_type == "compilation":
+            self.compilation_time += time.time() - t0
+        else:
+            self.execution_time += time.time() - t0
 
     def save_results(self, df, filename):
         """
@@ -38,7 +59,7 @@ class Kernel:
         df.to_csv(filename, index=False)
 
         # saving all data to file
-        self.end_time = timer()
+        self.total_time = time.time() - self.total_time
         report_filename = filename.replace(".csv", ".log")
         with open(report_filename, "w") as f:
             f.write(Report.generate_report(self))
@@ -61,7 +82,6 @@ class Kernel:
         :return: Dictionary of ASM occurrences
         :rtype: dict
         """
-        suffix_file = suffix_file.split("/")[-1].replace(".c", "")
         comp_str = (
             f"make -B -C {kpath} COMP={comp}"
             f" KERNEL_CONFIG='{kconfig}' "
@@ -76,7 +96,7 @@ class Kernel:
         if ret != 0:
             print(f"Error {str(ret)} compiling in {kpath}, quitting...")
             return {}
-        return asm.parse_asm(f"asm_codes/{kname}{suffix_file}_{comp}.s")
+        return asm.parse_asm(f"asm_codes/{kname}_{suffix_file}_{comp}.s")
 
     def define_papi_counters(self):
         """Define PAPI counters in a new file recognized by PolyBench/C
@@ -114,7 +134,22 @@ class Kernel:
         else:
             return 0
 
-    def run(self, kconfig, params, compiler, debug,  quit_on_error=False):
+    @staticmethod
+    def get_suffix_and_flags(params_str):
+        custom_flags = ""
+        suffix_file = ""
+        params = pickle.loads(params_str)
+        for pname in params.keys():
+            try:
+                param_val_parsed = int(params[pname])
+            except ValueError:
+                param_val_parsed = "\\\"" + params[pname] + "\\\""
+            custom_flags += f" -D{pname}={param_val_parsed}"
+            suffix_file += f"_{pname}{params[pname]}"
+        suffix_file = suffix_file.split("/")[-1].replace(".c", "")
+        return suffix_file, custom_flags
+
+    def compile(self, kconfig, params_str, compiler, debug,  quit_on_error=False):
         """[summary]
 
         Args:
@@ -127,20 +162,9 @@ class Kernel:
         Returns:
             [type]: [description]
         """
-        n = 0
-        tmp_dict = params.copy()
-        custom_flags = ""
-        suffix_file = ""
-        flops_eval = "1"
-        for pname in params.keys():
-            try:
-                param_val_parsed = int(params[pname])
-            except ValueError:
-                param_val_parsed = "\\\"" + params[pname] + "\\\""
-            custom_flags += f" -D{pname}={param_val_parsed}"
-            suffix_file += f"_{pname}{params[pname]}"
-            flops_eval = self.flops.replace(pname, str(params[pname]))
-            n = n + 1
+        suffix_file, custom_flags = Kernel.get_suffix_and_flags(params_str)
+
+        # FIXME
         custom_flags += self.compiler_flags[compiler]
         local_common_flags = self.common_flags + custom_flags
         local_common_flags += f" -DNRUNS={self.nruns} "
@@ -152,22 +176,9 @@ class Kernel:
             kconfig = kconfig.replace("MACVETH", "")
             other_flags = " MACVETH=true "
             suffix_file += "_macveth"
-            try:
-                mvpath = self.config_cfg["macveth_path_build"]
-            except KeyError:
-                mvpath = ""
-            finally:
-                other_flags += " MVPATH=" + mvpath
-            try:
-                other_flags += " MACVETH_FLAGS='" + \
-                    self.config_cfg["macveth_flags"] + "'"
-            except KeyError:
-                print(
-                    f"[ERROR] Need to set key 'macveth_flags' in configuration file. Exiting...")
-                sys.exit(1)
+            other_flags += " MVPATH=" + self.mvpath + " MACVETH_FLAGS='" + \
+                self.macveth_flags + "'"
 
-        print
-        self.define_papi_counters()
         asm_cols = Kernel.compile_parse_asm(
             self.basename,
             self.path_kernel,
@@ -178,29 +189,31 @@ class Kernel:
             suffix_file,
             debug,
         )
+        if asm_cols == {} and quit_on_error:
+            return None
+        return []
 
+    def run(self, kconfig, params, compiler, debug,  quit_on_error=False):
+        tmp_dict = {}
         avg_papi_counters = dict.fromkeys(self.papi_counters)
         avg_time = {}
-        tmp_dict.update(asm_cols)
-        if asm_cols != {}:
-            # Average papi counters
-            if len(self.papi_counters) > 0:
-                avg_papi_counters, discarded_papi_values = Timing.measure_benchmark(
-                    self.basename, self.papi_counters, self.exec_args, compiler, self.nexec)
-                tmp_dict.update(avg_papi_counters)
-            # Average time
-            avg_time, discarded_time_values = Timing.measure_benchmark(
-                self.basename, "time", self.exec_args, compiler, self.nexec)
-            tmp_dict.update(avg_time)
-        else:
-            if quit_on_error:
-                return None
-            avg_time["time"] = 0
-            tmp_dict.update(avg_time)
+        name_bin, _ = Kernel.get_suffix_and_flags(params)
+        name_bin = self.basename + "_" + name_bin
+        # Average papi counters
+        if len(self.papi_counters) > 0:
+            self.define_papi_counters()
+            avg_papi_counters, discarded_papi_values = Timing.measure_benchmark(
+                name_bin, self.papi_counters, self.exec_args, compiler, self.nexec)
+            tmp_dict.update(avg_papi_counters)
+        # Average time
+        avg_time, discarded_time_values = Timing.measure_benchmark(
+            name_bin, "time", self.exec_args, compiler, self.nexec)
+        tmp_dict.update(avg_time)
 
         tmp_dict.update(
             {
-                "FLOPSs": Kernel.compute_flops(flops_eval, self.nruns, avg_time["time"]),
+                # TODO: compute FLOPS
+                "FLOPSs": Kernel.compute_flops("0", self.nruns, avg_time["time"]),
                 "CFG": kconfig,
                 "Compiler": compiler,
                 "DiscardedTimeValues": discarded_time_values,
@@ -222,28 +235,49 @@ class Kernel:
         Kernel.debug = cfg["kernel"]["debug"]
 
         # compilation:
-        self.config_comp = cfg["kernel"]["compilation"]
+        config_comp = cfg["kernel"]["compilation"]
         # configuration:
-        self.config_cfg = cfg["kernel"]["configuration"]
+        config_cfg = cfg["kernel"]["configuration"]
         # execution:
-        self.config_exec = cfg["kernel"]["execution"]
+        config_exec = cfg["kernel"]["execution"]
 
         # Compilation configuration
-        self.compilers_list = self.config_comp["compiler_flags"].keys()
-        self.common_flags = self.config_comp["common_flags"]
-        self.compiler_flags = self.config_comp["compiler_flags"]
-        self.comp_debug = self.config_comp["debug"]
+        self.needs_to_compile = config_comp["need_to_compile"]
+        try:
+            self.parallelism = int(config_comp["parallelism"])
+            if self.parallelism < 1:
+                raise ValueError
+            if self.parallelism > 16:
+                print(
+                    "[WARNING] Careful with high degree of parallelism for compilation")
+        except ValueError:
+            print("[ERROR] parallelism must be an integer greater or equal to one")
+            sys.exit(1)
+        except KeyError:
+            self.parallelism = 1
+        self.compilers_list = list(config_comp["compiler_flags"].keys())
+        self.common_flags = config_comp["common_flags"]
+        self.compiler_flags = config_comp["compiler_flags"]
+        self.comp_debug = config_comp["debug"]
 
         # Configuration
-        self.kernel_cfg = self.config_cfg["kernel_cfg"]
-        self.feat = self.config_cfg["features"]
-        self.flops = self.config_cfg["flops"]
+        self.kernel_cfg = config_cfg["kernel_cfg"]
+        self.feat = config_cfg["features"]
+        self.flops = config_cfg["flops"]
+        try:
+            self.mvpath = config_cfg["macveth_path_build"]
+        except KeyError:
+            self.mvpath = ""
+        try:
+            self.macveth_flags = config_cfg["macveth_flags"]
+        except KeyError:
+            self.macveth_flags = ""
 
         # Execution arguments
-        self.threshold_outliers = self.config_exec["threshold_outliers"]
-        self.nexec = self.config_exec["nexec"]
-        self.nruns = int(self.config_exec["nruns"])
-        self.cpu_affinity = int(self.config_exec["cpu_affinity"])
-        self.papi_counters = self.config_exec["papi_counters"]
-        self.exec_args = self.config_exec["prefix"]
+        self.threshold_outliers = config_exec["threshold_outliers"]
+        self.nexec = config_exec["nexec"]
+        self.nruns = int(config_exec["nruns"])
+        self.cpu_affinity = int(config_exec["cpu_affinity"])
+        self.papi_counters = config_exec["papi_counters"]
+        self.exec_args = config_exec["prefix"]
         self.basename = self.kernel

@@ -48,32 +48,35 @@ ifeq ($(MACVETH),true)
 	MACVETH_DB:=$(COMMON_FLAGS)
 endif
 
-.PHONY: clean
+.PHONY: all clean
 
-BASE_BIN_NAME?=$(BIN_DIR)/$(BASENAME)_$(COMP)
+UNIQUE_NAME?=$(BASENAME)_$(SUFFIX_ASM)_$(COMP)
+
+BASE_BIN_NAME?=$(BIN_DIR)$(UNIQUE_NAME)
+BASE_ASM_NAME?=$(ASM_DIR)$(UNIQUE_NAME)
 
 all: $(BINARY_NAME)
 
 macveth: 
-	$(V)$(MVPATH)macveth $(MACVETH_FLAGS) $(OLD_TARGET).c -o kernels/$(OLD_TARGET)/$(TARGET).c -- $(MACVETH_DB)
+	$(V)$(MVPATH)macveth $(MACVETH_FLAGS) $(OLD_TARGET)$(INLINE).c -o kernels/$(OLD_TARGET)/$(TARGET).c -- $(MACVETH_DB)
 	
 asm_code: 
 	$(V)$(CC) -c $(FLAGS) $(TARGET).c -S
-	$(V)mv $(TARGET).s $(ASM_DIR)$(TARGET)$(SUFFIX_ASM)_$(COMP).s
+	$(V)mv $(TARGET).s $(BASE_ASM_NAME).s
 
 kernel_papi: 
 	$(V)$(CC) -c $(POLY_PFLAGS) $(FLAGS) $(TARGET).c 
-	$(V)mv $(TARGET).o $(TARGET)_papi.o
+	$(V)mv $(TARGET).o $(UNIQUE_NAME)_papi.o
 
 kernel_time:
 	$(V)$(CC) -c $(POLY_TFLAGS) $(FLAGS) $(TARGET).c
-	$(V)mv $(TARGET).o $(TARGET)_time.o
+	$(V)mv $(TARGET).o $(UNIQUE_NAME)_time.o
 
 $(BINARY_NAME): $(MACVETH_RULE) asm_code kernel_papi kernel_time $(MAIN_SRC)$(MAIN_SUFFIX) 
-	$(V)$(CC) $(FLAGS) $(POLY_TFLAGS) $(MAIN_FILE) $(TARGET)_time.o -o $(BASE_BIN_NAME)_time.o
-	$(V)$(CC) $(FLAGS) $(POLY_TFLAGS) $(MAIN_FILE) $(TARGET)_time.o -S
-	$(V)$(CC) $(FLAGS) $(POLY_PFLAGS) $(MAIN_FILE) $(TARGET)_papi.o -o $(BASE_BIN_NAME)_papi.o
-	$(V)$(CC) $(FLAGS) $(POLY_PFLAGS) $(MAIN_FILE) $(TARGET)_papi.o -S
+	$(V)$(CC) $(FLAGS) $(POLY_TFLAGS) $(MAIN_FILE) $(UNIQUE_NAME)_time.o -o $(BASE_BIN_NAME)_time.o
+	$(V)$(CC) $(FLAGS) $(POLY_TFLAGS) $(MAIN_FILE) $(UNIQUE_NAME)_time.o -S
+	$(V)$(CC) $(FLAGS) $(POLY_PFLAGS) $(MAIN_FILE) $(UNIQUE_NAME)_papi.o -o $(BASE_BIN_NAME)_papi.o
+	$(V)$(CC) $(FLAGS) $(POLY_PFLAGS) $(MAIN_FILE) $(UNIQUE_NAME)_papi.o -S
 	
 clean:
 	find . -type f ! -name "*.c" ! -name "*.h" ! -name "*.c" ! -name "Makefile" -delete

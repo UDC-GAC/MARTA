@@ -12,13 +12,17 @@ import yaml
 import argparse
 import pandas as pd
 import numpy as np
+import pickle
 import itertools as it
 from datetime import datetime as dt
 from kernel import Kernel
+# from kernel import __test_compile_process as comp_parallel
 from tqdm import tqdm
 from tqdm.auto import tqdm
+import multiprocessing as mp
+import functools
+from itertools import repeat as repit
 
-# FIXME: change this at some point
 __version__ = "0.0.0-alpha"
 
 
@@ -201,13 +205,16 @@ class Profiler:
     @staticmethod
     def dict_product(dicts):
         """
+        Generate the product of different dictionaries in a serializable
+        fashion, since `dict_keys` is not serializable.
+
         >>> list(dict_product(dict(number=[1,2], character='ab')))
         [{'character': 'a', 'number': 1},
         {'character': 'a', 'number': 2},
         {'character': 'b', 'number': 1},
         {'character': 'b', 'number': 2}]
         """
-        return (dict(zip(dicts, x)) for x in it.product(*dicts.values()))
+        return (pickle.dumps(dict(zip(dicts, x))) for x in it.product(*dicts.values()))
 
     def profiling_kernels(self, cfg):
         """
@@ -262,6 +269,7 @@ class Profiler:
             # Print version if not quiet
             Profiler.print_version()
 
+        # Execute command preceding compilation and execution process
         if cfg["kernel"]["preamble"]["command"] != "":
             try:
                 os.system(f'{cfg["kernel"]["preamble"]["command"]}')
@@ -269,11 +277,39 @@ class Profiler:
                 print("[ERROR] Preamble command went wrong...")
                 sys.exit(1)
 
-        # Main loop with progress bar
+        # Main loop with progress bar for feedback
         with tqdm(total=niterations) as pbar:
             for compiler in kernel.compilers_list:
                 for kconfig in kernel.kernel_cfg:
                     product = Profiler.dict_product(params_dict)
+
+                    # Compilation process can be done in parallel if compilers are
+                    # thread-safe, so user must be aware of this, not the
+                    # profiler (passive-agressive comment :-P)
+                    # FIXME: clean exit when something goes wrong...
+                    if kernel.needs_to_compile:
+                        t0 = kernel.start_timer()
+                        pbar.set_description("Compiling...")
+                        with mp.Pool(processes=kernel.parallelism) as pool:
+                            output = pool.starmap(Kernel.compile, zip(repit(kernel), repit(
+                                kconfig), product, repit(compiler), repit(debug), repit(self.args.quit_on_error)))
+                            if output == None:
+                                print("Error")
+                                sys.exit(1)
+                            pbar.update(0.5)
+                        kernel.accm_timer("compilation", t0)
+                    else:
+                        print("[WARNING] Compilation process disabled!")
+
+                    # IMPORTANT NOTE:
+                    # This section could be parallel as well, if kernels
+                    # running are monolithic. Even though, you would have to
+                    # control properly CPU affinity and be aware if kernels are
+                    # cache sensitive or not. Thus, for simplicity, this is
+                    # still not parallel at all.
+                    pbar.set_description("Executing...")
+                    product = Profiler.dict_product(params_dict)
+                    t0 = kernel.start_timer()
                     for params_val in product:
                         kern_exec = kernel.run(
                             kconfig, params_val,
@@ -284,8 +320,8 @@ class Profiler:
                             kernel.save_results(df, output_filename)
                             sys.exit(1)
                         df = df.append(kern_exec, ignore_index=True)
-                        pbar.update(1)
-
+                        pbar.update(0.5)
+                    kernel.accm_timer("execution", t0)
         # Storing results and generating report file
         # TODO: add some spinner or something here
         kernel.save_results(df, output_filename)

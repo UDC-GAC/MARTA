@@ -1,3 +1,6 @@
+import sys
+
+
 class ASMParser:
     @staticmethod
     def get_raw_asm_type(ins):
@@ -56,29 +59,34 @@ class ASMParser:
 
         raw_inst = {}
         count = False
-        with open(asm_file, "r") as f:
-            # Get the previous contents
-            lines = f.readlines()
-            for l in lines:
-                if l[0] == "#" or l == "\n":
-                    continue
-                tok = l.strip().split("#")
-                tok = tok[0].strip().split("\t")
-                if tok[0] == ".cfi_endproc":
-                    return raw_inst
-                if tok[0] == ".cfi_startproc":
-                    count = True
-                    continue
-                if not count or ASMParser.skip_asm_instruction(tok):
-                    continue
-                # Fix for Intel Compiler
-                if len(tok) == 1:
-                    tok = tok[0].split(" ")
-                    tok = [t for t in tok if t != "" and t[0] != "#"]
-                raw_asm = ASMParser.get_raw_asm_type(tok)
-                if raw_asm in raw_inst.keys():
-                    raw_inst[raw_asm] += 1
-                else:
-                    raw_inst[raw_asm] = 1
-
+        try:
+            with open(asm_file, "r") as f:
+                # Get the previous contents
+                lines = f.readlines()
+                for l in lines:
+                    if l[0] == "#" or l == "\n":
+                        continue
+                    tok = l.strip().split("#")
+                    tok = tok[0].strip().split("\t")
+                    if tok[0] == ".cfi_endproc":
+                        return raw_inst
+                    if tok[0] == ".cfi_startproc":
+                        count = True
+                        continue
+                    if not count or ASMParser.skip_asm_instruction(tok):
+                        continue
+                    # Fix for Intel Compiler
+                    if len(tok) == 1:
+                        tok = tok[0].split(" ")
+                        tok = [t for t in tok if t != "" and t[0] != "#"]
+                    raw_asm = ASMParser.get_raw_asm_type(tok)
+                    if raw_asm in raw_inst.keys():
+                        raw_inst[raw_asm] += 1
+                    else:
+                        raw_inst[raw_asm] = 1
+        except FileNotFoundError:
+            print(
+                f"[ERROR] ASM file {asm_file} not found. Something went wrong during compilation...")
+            print("[ERROR] Quitting...")
+            sys.exit(1)
         return raw_inst

@@ -26,8 +26,7 @@ class Report:
             Report.cinfo = cpu.get_cpu_info()
 
         cpu_info = f"CPU:\t\t\t{Report.cinfo['brand_raw']}\n"
-        cpu_info += f"Architecture:\t{cpu.platform.architecture()[0]}\n"
-        #cpu_info += f"Memory:\t\t\t\n"
+        cpu_info += f"Architecture:\t{Report.cinfo['arch_string_raw']}\n"
         cpu_info += f"Avail. Cores:\t{cpu.os.cpu_count()}\n"
         cpu_info += f"Host OS:\t\t"
         if cpu.platform.win32_ver()[0] != "":
@@ -52,14 +51,16 @@ class Report:
         :rtype: str
         """
         content = f"#" * 80 + "\n"
-        content += f"#\t\tMARTA Configuration file report\n"
+        content += f"#\t\t\t\tMARTA file report: {kernel.basename}\n"
         content += f"#" * 80 + "\n"
         if verbose:
             content += f"\n# -- MACHINE INFO\n"
             content += Report.get_machine_info()
 
-        content += f"\n# -- TIME ELAPSED : { str(datetime.timedelta(seconds=kernel.end_time - kernel.start_time))}\n\n"
-
+        content += f"\n# -- TIME ELAPSED : { str(datetime.timedelta(seconds=kernel.total_time))}\n"
+        content += f"\t- Total Compilation time: {str(datetime.timedelta(seconds=kernel.compilation_time))}\n"
+        content += f"\t- Total Execution time: {str(datetime.timedelta(seconds=kernel.execution_time))}\n"
+        content += f"\n"
         content += f"\n# -- EXPERIMENT PARAMETERS\n"
         content += f"- Kernel name: {kernel.basename}\n"
         content += f"- Description: {kernel.descr}\n"
@@ -67,8 +68,8 @@ class Report:
         for compiler in kernel.compiler_flags:
             content += f"\t{compiler} -> {kernel.compiler_flags[compiler]}\n"
         content += f"- FLOPS: {kernel.flops}\n"
-        content += f"- Loop iterations: {kernel.nexec}\n"
-        content += f"- Number of repetitions: {kernel.nruns}\n"
+        content += f"- Loop iterations: {kernel.nruns}\n"
+        content += f"- Number of repetitions: {kernel.nexec}\n"
         content += f"- CPU affinity (if any): {kernel.cpu_affinity}\n"
         content += f"- PAPI counters used (if any):\n"
         for l in kernel.papi_counters:
