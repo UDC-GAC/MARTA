@@ -244,7 +244,7 @@ class Kernel:
         # Compilation configuration
         self.needs_to_compile = config_comp["need_to_compile"]
         try:
-            self.parallelism = int(config_comp["parallelism"])
+            self.parallelism = int(config_cfg["parallelism"])
             if self.parallelism < 1:
                 raise ValueError
             if self.parallelism > 16:

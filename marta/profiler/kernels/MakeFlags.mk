@@ -61,16 +61,19 @@ macveth:
 	$(V)$(MVPATH)macveth $(MACVETH_FLAGS) $(OLD_TARGET)$(INLINE).c -o kernels/$(OLD_TARGET)/$(TARGET).c -- $(MACVETH_DB)
 	
 asm_code: 
-	$(V)$(CC) -c $(FLAGS) $(TARGET).c -S
-	$(V)mv $(TARGET).s $(BASE_ASM_NAME).s
+	$(V)$(CC) -c $(FLAGS) $(TARGET).c -S -o $(BASE_ASM_NAME).s
 
-kernel_papi: 
-	$(V)$(CC) -c $(POLY_PFLAGS) $(FLAGS) $(TARGET).c 
-	$(V)mv $(TARGET).o $(UNIQUE_NAME)_papi.o
+kernel_papi:
+	$(V)cp $(TARGET).c ___tmp_$(UNIQUE_NAME).c
+	$(V)$(CC) -c $(POLY_PFLAGS) $(FLAGS) ___tmp_$(UNIQUE_NAME).c 
+	$(V)mv ___tmp_$(UNIQUE_NAME).o $(UNIQUE_NAME)_papi.o
+	$(V)rm ___tmp_$(UNIQUE_NAME).c
 
 kernel_time:
-	$(V)$(CC) -c $(POLY_TFLAGS) $(FLAGS) $(TARGET).c
-	$(V)mv $(TARGET).o $(UNIQUE_NAME)_time.o
+	$(V)cp $(TARGET).c ___tmp_$(UNIQUE_NAME).c
+	$(V)$(CC) -c $(POLY_TFLAGS) $(FLAGS) ___tmp_$(UNIQUE_NAME).c
+	$(V)mv ___tmp_$(UNIQUE_NAME).o $(UNIQUE_NAME)_time.o
+	$(V)rm ___tmp_$(UNIQUE_NAME).c
 
 $(BINARY_NAME): $(MACVETH_RULE) asm_code kernel_papi kernel_time $(MAIN_SRC)$(MAIN_SUFFIX) 
 	$(V)$(CC) $(FLAGS) $(POLY_TFLAGS) $(MAIN_FILE) $(UNIQUE_NAME)_time.o -o $(BASE_BIN_NAME)_time.o

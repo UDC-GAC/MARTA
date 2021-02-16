@@ -22,7 +22,7 @@
           asm_analysis: True 
           debug: False
       configuration:
-          parallellism: 4
+          parallelism: 8
           kernel_cfg: [ " -mavx2 "]
           macveth_flags: " -misa=avx2 "
           features:
@@ -35,8 +35,8 @@
                     evaluate: True
                     type: "static"
                     val_type: "numeric"
-                    #value: "[0,1,2,3,4,5,6,7]"
-                    value: "[0]"
+                    value: "[0,1,2,3,4,5,6,7]"
+                    #value: "[0]"
                 ORIG_A:    
                     evaluate: True
                     type: "static"

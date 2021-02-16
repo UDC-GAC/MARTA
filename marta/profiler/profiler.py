@@ -277,6 +277,8 @@ class Profiler:
                 print("[ERROR] Preamble command went wrong...")
                 sys.exit(1)
 
+        print(f"Compiling with {kernel.parallelism} processes")
+
         # Main loop with progress bar for feedback
         with tqdm(total=niterations) as pbar:
             for compiler in kernel.compilers_list:
