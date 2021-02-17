@@ -1,10 +1,12 @@
-from profiler import Profiler
 import sys
 import os
 import pytest
 
 # FIXME: This is a DIY shitty
 sys.path.append(os.path.realpath(os.path.dirname(__file__) + "/.."))
+
+from profiler import Profiler
+
 
 
 def test_number_iterations():
