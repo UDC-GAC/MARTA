@@ -17,14 +17,14 @@
           compiler_flags: 
             { 
                 "gcc": " -O3 -march=native -ftree-vectorize -flto ",
-                #"icc": " -O3 -ipo -ftree-vectorize -vec-threshold0 -inline-forceinline",
+                "icc": " -O3 -ipo -ftree-vectorize -vec-threshold0 -inline-forceinline",
             }
           common_flags: "  "
           asm_analysis: True 
           debug: False
       configuration:
-          parallelism: 16
-          kernel_cfg: [ " -mavx2 "]
+          parallelism: 32
+          kernel_cfg: [" -msse4.2 ", " -mavx2 ", " -mavx512f "]
           macveth_flags: " -misa=avx2 "
           features:
                 MICRO_CODELET_FILE_NAME:
@@ -36,35 +36,44 @@
                     evaluate: True
                     type: "static"
                     val_type: "numeric"
-                    value: "[0,1,2,3,4,5,6,7]"
-                    #value: "[0]"
+                    value: "[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]"
                 ORIG_A:    
                     evaluate: True
                     type: "static"
                     val_type: "numeric"
-                    #value: "[0,1,2,3,4,5,6,7]"
-                    value: "[0]"
+                    value: "[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]"
                 ORIG_x:    
                     evaluate: True
                     type: "static"
                     val_type: "numeric"
-                    #value: "[0,1,2,3,4,5,6,7]"
-                    value: "[0]"
+                    value: "[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]"
           flops: "0"
       execution:
           papi_counters: [
-                "CPU_CLK_THREAD_UNHALTED:THREAD_P", 
-                "UNHALTED_REFERENCE_CYCLES",
-                "INST_RETIRED:ANY_P",
-                "UOPS_ISSUED:ALL",
-                "UOPS_RETIRED:ALL",
-                "PAPI_SP_OPS", 
-                "PAPI_VEC_SP",
-                "PAPI_DP_OPS", 
-                "PAPI_VEC_DP",
-                "PAPI_BR_TKN",
-                "PAPI_BR_MSP",
-                ]
+            "CPU_CLK_THREAD_UNHALTED:THREAD_P",
+            "UNHALTED_REFERENCE_CYCLES",
+            "UOPS_EXECUTED:STALL_CYCLES",
+            "PAPI_RES_STL",
+            "INST_RETIRED:ANY_P",
+            "UOPS_ISSUED:ALL",
+            "UOPS_RETIRED:ALL",
+            "PAPI_DP_OPS",
+            "PAPI_VEC_DP",
+            "FP_ARITH:128B_PACKED_DOUBLE",
+            "FP_ARITH:256B_PACKED_DOUBLE",
+            "FP_ARITH:512B_PACKED_DOUBLE",
+            "PAPI_BR_TKN",
+            "PAPI_BR_MSP",
+            "MEM_LOAD_UOPS_RETIRED:L1_HIT",
+            "MEM_LOAD_UOPS_RETIRED:L1_MISS",
+            "ICACHE_64B:IFTAG_HIT",
+            "ICACHE_64B:IFTAG_MISS",
+            "L2_RQSTS:MISS",
+            "L2_RQSTS:CODE_RD_MISS",
+            "LONGEST_LAT_CACHE:MISS",
+            "L2_RQSTS:PF_MISS",
+            "L2_RQSTS:PF_HIT",
+            ]
           threshold_outliers: 3
           mean_and_discard_outliers: False
           nexec: 5

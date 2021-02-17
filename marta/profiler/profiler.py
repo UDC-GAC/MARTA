@@ -337,7 +337,11 @@ class Profiler:
                         print("Saving file...")
                         kernel.save_results(df, output_filename)
                         sys.exit(1)
-                    df = df.append(kern_exec, ignore_index=True)
+                    if type(kern_exec) == list:
+                        for exec in kern_exec:
+                            df = df.append(exec, ignore_index=True)
+                    else:
+                        df = df.append(kern_exec, ignore_index=True)
                 kernel.accm_timer("execution", t0)
         # Storing results and generating report file
         # TODO: add some spinner or something here

@@ -20,7 +20,7 @@ class Timing:
         sys.exit(1)
 
     @staticmethod
-    def measure_benchmark(code, name, exec_opts, compiler, nexec=10, threshold_outliers=3):
+    def measure_benchmark(code, name, exec_opts, compiler, nexec=10, threshold_outliers=3, mean_and_discard_outliers=True):
         """
         Execute and time given benchmark nexec times
 
@@ -61,6 +61,9 @@ class Timing:
             with open(tmp_file) as f:
                 line = [l for l in f if "FAILED" in l].join(" ")
             Timing.error_and_exit(line, name)
+
+        if not mean_and_discard_outliers:
+            return aval, -1
 
         # Filter values
         mask = ~(abs(aval - aval.mean(axis=0)) <=

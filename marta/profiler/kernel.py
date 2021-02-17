@@ -135,10 +135,15 @@ class Kernel:
             return 0
 
     @staticmethod
-    def get_suffix_and_flags(params_str):
+    def get_dict_from_params(params):
+        params = pickle.loads(params)
+        return params
+
+    @staticmethod
+    def get_suffix_and_flags(params):
         custom_flags = ""
         suffix_file = ""
-        params = pickle.loads(params_str)
+        params = Kernel.get_dict_from_params(params)
         for pname in params.keys():
             try:
                 param_val_parsed = int(params[pname])
@@ -203,24 +208,41 @@ class Kernel:
         if len(self.papi_counters) > 0:
             self.define_papi_counters()
             avg_papi_counters, discarded_papi_values = Timing.measure_benchmark(
-                name_bin, self.papi_counters, self.exec_args, compiler, self.nexec)
-            tmp_dict.update(avg_papi_counters)
+                name_bin, self.papi_counters, self.exec_args, compiler, self.nexec,
+                self.threshold_outliers, self.mean_and_discard_outliers)
+            if discarded_papi_values != -1:
+                tmp_dict.update(avg_papi_counters)
+
         # Average time
         avg_time, discarded_time_values = Timing.measure_benchmark(
-            name_bin, "time", self.exec_args, compiler, self.nexec)
-        tmp_dict.update(avg_time)
+            name_bin, "time", self.exec_args, compiler, self.nexec,
+            self.threshold_outliers, self.mean_and_discard_outliers)
+        if discarded_time_values != -1:
+            tmp_dict.update(avg_time)
 
+        tmp_dict.update(Kernel.get_dict_from_params(params))
         tmp_dict.update(
             {
                 # TODO: compute FLOPS
-                "FLOPSs": Kernel.compute_flops("0", self.nruns, avg_time["time"]),
+                # "FLOPSs": Kernel.compute_flops("0", self.nruns,
+                # avg_time["time"]),
+                "FLOPSs": 0,
                 "CFG": kconfig,
                 "Compiler": compiler,
                 "DiscardedTimeValues": discarded_time_values,
                 "DiscardedPapiValues": discarded_papi_values,
             }
         )
-        return tmp_dict
+        if self.mean_and_discard_outliers:
+            return tmp_dict
+        list_rows = []
+        for execution in range(self.nexec):
+            new_dict = tmp_dict.copy()
+            new_dict.update({"time": avg_time[execution], "nexec": execution})
+            new_dict.update(
+                dict(zip(self.papi_counters, avg_papi_counters[execution])))
+            list_rows += [new_dict]
+        return list_rows
 
     def __init__(self, cfg):
         """[summary]
@@ -276,6 +298,7 @@ class Kernel:
 
         # Execution arguments
         self.threshold_outliers = config_exec["threshold_outliers"]
+        self.mean_and_discard_outliers = config_exec["mean_and_discard_outliers"]
         self.nexec = config_exec["nexec"]
         self.nruns = int(config_exec["nruns"])
         self.cpu_affinity = int(config_exec["cpu_affinity"])
