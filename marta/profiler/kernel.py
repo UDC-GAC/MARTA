@@ -1,19 +1,10 @@
-from report import Report
-import pandas as pd
-from asm_analyzer import ASMParser as asm
-from timing import Timing
 import os
 import sys
-from timeit import default_timer as timer
 import time
-import multiprocessing as mp
-import functools
 import pickle
-from itertools import repeat as repit
-
-
-# def __test_compile_process(instance, arg):
-#     return instance.compile(arg)
+from report import Report
+from asm_analyzer import ASMParser as asm
+from timing import Timing
 
 
 class Kernel:
@@ -99,7 +90,8 @@ class Kernel:
         return asm.parse_asm(f"asm_codes/{kname}_{suffix_file}_{comp}.s")
 
     def define_papi_counters(self):
-        """Define PAPI counters in a new file recognized by PolyBench/C
+        """
+        Define PAPI counters in a new file recognized by PolyBench/C
         """
         papi_counter_file = "kernels/utilities/papi_counters.list"
         with open(papi_counter_file, "w") as f:
@@ -140,10 +132,11 @@ class Kernel:
         return params
 
     @staticmethod
-    def get_suffix_and_flags(params):
+    def get_suffix_and_flags(kconfig, params):
         custom_flags = ""
         suffix_file = ""
         params = Kernel.get_dict_from_params(params)
+        # Parsing parameters
         for pname in params.keys():
             try:
                 param_val_parsed = int(params[pname])
@@ -152,6 +145,9 @@ class Kernel:
             custom_flags += f" -D{pname}={param_val_parsed}"
             suffix_file += f"_{pname}{params[pname]}"
         suffix_file = suffix_file.split("/")[-1].replace(".c", "")
+        # Parsing kconfig
+        for kparam in kconfig.strip().replace("-", "").split(" "):
+            suffix_file += f"_{kparam}"
         return suffix_file, custom_flags
 
     def compile(self, kconfig, params_str, compiler, debug,  quit_on_error=False):
@@ -167,7 +163,8 @@ class Kernel:
         Returns:
             [type]: [description]
         """
-        suffix_file, custom_flags = Kernel.get_suffix_and_flags(params_str)
+        suffix_file, custom_flags = Kernel.get_suffix_and_flags(
+            kconfig, params_str)
 
         # FIXME
         custom_flags += self.compiler_flags[compiler]
@@ -198,11 +195,11 @@ class Kernel:
             return None
         return []
 
-    def run(self, kconfig, params, compiler, debug,  quit_on_error=False):
+    def run(self, kconfig, params, compiler):
         tmp_dict = {}
         avg_papi_counters = dict.fromkeys(self.papi_counters)
         avg_time = {}
-        name_bin, _ = Kernel.get_suffix_and_flags(params)
+        name_bin, _ = Kernel.get_suffix_and_flags(kconfig, params)
         name_bin = self.basename + "_" + name_bin
         # Average papi counters
         if len(self.papi_counters) > 0:
@@ -265,19 +262,19 @@ class Kernel:
         config_exec = cfg["kernel"]["execution"]
 
         # Compilation configuration
-        self.needs_to_compile = config_comp["need_to_compile"]
+        self.compilation_enabled = config_comp["enabled"]
         try:
-            self.parallelism = int(config_cfg["parallelism"])
-            if self.parallelism < 1:
+            self.processes = int(config_comp["processes"])
+            if self.processes < 1:
                 raise ValueError
-            if self.parallelism > 16:
+            if self.processes > 16:
                 print(
-                    "[WARNING] Careful with high degree of parallelism for compilation")
+                    "[WARNING] Careful with high degree of processes for compilation")
         except ValueError:
-            print("[ERROR] parallelism must be an integer greater or equal to one")
+            print("[ERROR] processes must be an integer greater or equal to one")
             sys.exit(1)
         except KeyError:
-            self.parallelism = 1
+            self.processes = 1
         self.compilers_list = list(config_comp["compiler_flags"].keys())
         self.common_flags = config_comp["common_flags"]
         self.compiler_flags = config_comp["compiler_flags"]
@@ -297,6 +294,7 @@ class Kernel:
             self.macveth_flags = ""
 
         # Execution arguments
+        self.execution_enabled = config_exec["enabled"]
         self.threshold_outliers = config_exec["threshold_outliers"]
         self.mean_and_discard_outliers = config_exec["mean_and_discard_outliers"]
         self.nexec = config_exec["nexec"]

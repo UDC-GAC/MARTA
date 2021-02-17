@@ -5,8 +5,7 @@ import sys
 
 
 def istarmap(self, func, iterable, chunksize=1):
-    """starmap-version of imap
-    """
+    # For Python >=3.8
     if sys.version_info[1] >= 8:
         self._check_running()
         if chunksize < 1:
@@ -16,6 +15,7 @@ def istarmap(self, func, iterable, chunksize=1):
 
         task_batches = mpp.Pool._get_tasks(func, iterable, chunksize)
         result = mpp.IMapIterator(self)
+    # For Python <3.8
     else:
         if self._state != mpp.RUN:
             raise ValueError("Pool not running")
@@ -38,4 +38,5 @@ def istarmap(self, func, iterable, chunksize=1):
     return (item for chunk in result for item in chunk)
 
 
+# Adding custom function to multiprocessing.pool.Pool
 mpp.Pool.istarmap = istarmap

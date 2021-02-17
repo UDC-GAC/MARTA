@@ -31,7 +31,7 @@ class Profiler:
     """
     Profiler class: helper class to set up experiments.
     """
-    @ staticmethod
+    @staticmethod
     def dump_config_file():
         """
         Read config template line by line
@@ -43,7 +43,7 @@ class Profiler:
         with open(config_file) as f:
             return f.readlines()
 
-    @ staticmethod
+    @staticmethod
     def parse_arguments(list_args):
         """
         Parse CLI arguments
@@ -134,7 +134,7 @@ class Profiler:
 
         return parser.parse_args(list_args)
 
-    @ staticmethod
+    @staticmethod
     def eval_features(feature):
         """
         Evaluate features from configuration file
@@ -180,7 +180,7 @@ class Profiler:
                 params_dict[f] = params_values
         return params_dict
 
-    @ staticmethod
+    @staticmethod
     def comp_nvals(params_values):
         # Compute number of iterations
         if type(params_values) is list:
@@ -191,7 +191,7 @@ class Profiler:
         except Exception:
             return len(list(it.product(*params_values_copy)))
 
-    @ staticmethod
+    @staticmethod
     def print_version():
         """
         Print version and copyright message (if not quiet execution)
@@ -203,7 +203,7 @@ class Profiler:
             end="",
         )
 
-    @ staticmethod
+    @staticmethod
     def dict_product(dicts):
         """
         Generate the product of different dictionaries in a serializable
@@ -216,10 +216,6 @@ class Profiler:
         {'character': 'b', 'number': 2}]
         """
         return (pickle.dumps(dict(zip(dicts, x))) for x in it.product(*dicts.values()))
-
-    @staticmethod
-    def udpate_pbar():
-        Profiler.progress_bar.update(.5)
 
     def profiling_kernels(self, cfg):
         """
@@ -260,7 +256,6 @@ class Profiler:
 
         niterations = np.prod([Profiler.comp_nvals(params_dict[k])
                                for k in params_dict])
-        #niterations *= len(kernel.kernel_cfg) * len(kernel.compilers_list)
 
         # Structure for storing results and ploting
         df = pd.DataFrame(columns=output_cols)
@@ -282,19 +277,18 @@ class Profiler:
                 print("[ERROR] Preamble command went wrong...")
                 sys.exit(1)
 
-        print(f"Compiling with {kernel.parallelism} processes")
-
+        print(f"Compiling with {kernel.processes} processes")
         for compiler in kernel.compilers_list:
             for kconfig in kernel.kernel_cfg:
-                print(f"For compiler and config: {compiler} -> {kconfig}")
+                print(f"Compiler and flags: {compiler} {kconfig}")
                 product = Profiler.dict_product(params_dict)
 
                 # Compilation process can be done in parallel if compilers are
                 # thread-safe, so user must be aware of this, not the
                 # profiler (passive-agressive comment :-P)
-                if kernel.needs_to_compile:
+                if kernel.compilation_enabled:
                     t0 = kernel.start_timer()
-                    with mp.Pool(processes=kernel.parallelism) as pool:
+                    with mp.Pool(processes=kernel.processes) as pool:
                         iterable = zip(repit(kernel), repit(
                             kconfig), product, repit(compiler), repit(debug), repit(self.args.quit_on_error))
                         if kernel.show_progress_bars:
@@ -321,28 +315,29 @@ class Profiler:
                 # cache sensitive or not. Thus, for simplicity, this is
                 # still not parallel at all.
                 product = Profiler.dict_product(params_dict)
-                if kernel.show_progress_bars:
-                    loop_iterator = tqdm(
-                        product, desc="Executing", total=niterations)
-                else:
-                    loop_iterator = product
-                    print("Executing...")
-                t0 = kernel.start_timer()
-                for params_val in loop_iterator:
-                    kern_exec = kernel.run(
-                        kconfig, params_val,
-                        compiler, debug, self.args.quit_on_error)
-                    # There was an error, exit on error, save data first
-                    if kern_exec == None:
-                        print("Saving file...")
-                        kernel.save_results(df, output_filename)
-                        sys.exit(1)
-                    if type(kern_exec) == list:
-                        for exec in kern_exec:
-                            df = df.append(exec, ignore_index=True)
+                if kernel.execution_enabled:
+                    if kernel.show_progress_bars:
+                        loop_iterator = tqdm(
+                            product, desc="Executing", total=niterations)
                     else:
-                        df = df.append(kern_exec, ignore_index=True)
-                kernel.accm_timer("execution", t0)
+                        loop_iterator = product
+                        print("Executing...")
+                    t0 = kernel.start_timer()
+                    for params_val in loop_iterator:
+                        kern_exec = kernel.run(kconfig, params_val, compiler)
+                        # There was an error, exit on error, save data first
+                        if kern_exec == None:
+                            print("Saving file...")
+                            kernel.save_results(df, output_filename)
+                            sys.exit(1)
+                        if type(kern_exec) == list:
+                            for exec in kern_exec:
+                                df = df.append(exec, ignore_index=True)
+                        else:
+                            df = df.append(kern_exec, ignore_index=True)
+                    kernel.accm_timer("execution", t0)
+                else:
+                    print("[WARNING] Execution process disabled!")
         # Storing results and generating report file
         # TODO: add some spinner or something here
         kernel.save_results(df, output_filename)
@@ -369,6 +364,9 @@ class Profiler:
         "regular" string list
         :type list_args: list(str)
         """
+        if (sys.version_info[0] < 3) or (sys.version_info[0] == 3 and sys.version_info[1] < 6):
+            print("MARTA must run with Python >=3.6")
+            sys.exit(1)
         self.args = Profiler.parse_arguments(list_args)
 
         if self.args.dump_config_file:
