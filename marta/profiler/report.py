@@ -1,5 +1,4 @@
 import os
-import sys
 import cpuinfo as cpu
 import datetime
 
@@ -51,7 +50,7 @@ class Report:
         :rtype: str
         """
         content = f"#" * 80 + "\n"
-        content += f"#\t\t\t\tMARTA file report: {kernel.basename}\n"
+        content += f"#\t\t\tMARTA file report: {kernel.basename}\n"
         content += f"#" * 80 + "\n"
         if verbose:
             content += f"\n# -- MACHINE INFO\n"
@@ -60,7 +59,6 @@ class Report:
         content += f"\n# -- TIME ELAPSED : { str(datetime.timedelta(seconds=kernel.total_time))}\n"
         content += f"\t- Total Compilation time: {str(datetime.timedelta(seconds=kernel.compilation_time))}\n"
         content += f"\t- Total Execution time: {str(datetime.timedelta(seconds=kernel.execution_time))}\n"
-        content += f"\n"
         content += f"\n# -- EXPERIMENT PARAMETERS\n"
         content += f"- Kernel name: {kernel.basename}\n"
         content += f"- Description: {kernel.descr}\n"

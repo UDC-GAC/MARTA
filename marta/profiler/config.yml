@@ -3,6 +3,7 @@
       path: "kernels/micro_codelet"
       description: "Setup for micro_codelets"
       debug: False
+      show_progress_bars: True
       preamble:
           command: "sudo cpupower frequency-set -u 2.1GHz && sudo cpupower frequency-set -d 2.1GHz"
       finalize:
@@ -22,7 +23,7 @@
           asm_analysis: True 
           debug: False
       configuration:
-          parallelism: 8
+          parallelism: 16
           kernel_cfg: [ " -mavx2 "]
           macveth_flags: " -misa=avx2 "
           features:
@@ -65,8 +66,9 @@
                 "PAPI_BR_MSP",
                 ]
           threshold_outliers: 3
-          nexec: 7
-          nruns: 10000
+          mean_and_discard_outliers: False
+          nexec: 5
+          nruns: 1000
           cpu_affinity: 11
           prefix: ""
       output:

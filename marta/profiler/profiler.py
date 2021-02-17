@@ -20,8 +20,9 @@ from kernel import Kernel
 from tqdm import tqdm
 from tqdm.auto import tqdm
 import multiprocessing as mp
-import functools
+import custom_mp
 from itertools import repeat as repit
+from tqdm.contrib.concurrent import process_map  # or thread_map
 
 __version__ = "0.0.0-alpha"
 
@@ -30,7 +31,7 @@ class Profiler:
     """
     Profiler class: helper class to set up experiments.
     """
-    @staticmethod
+    @ staticmethod
     def dump_config_file():
         """
         Read config template line by line
@@ -42,7 +43,7 @@ class Profiler:
         with open(config_file) as f:
             return f.readlines()
 
-    @staticmethod
+    @ staticmethod
     def parse_arguments(list_args):
         """
         Parse CLI arguments
@@ -133,7 +134,7 @@ class Profiler:
 
         return parser.parse_args(list_args)
 
-    @staticmethod
+    @ staticmethod
     def eval_features(feature):
         """
         Evaluate features from configuration file
@@ -179,7 +180,7 @@ class Profiler:
                 params_dict[f] = params_values
         return params_dict
 
-    @staticmethod
+    @ staticmethod
     def comp_nvals(params_values):
         # Compute number of iterations
         if type(params_values) is list:
@@ -190,7 +191,7 @@ class Profiler:
         except Exception:
             return len(list(it.product(*params_values_copy)))
 
-    @staticmethod
+    @ staticmethod
     def print_version():
         """
         Print version and copyright message (if not quiet execution)
@@ -202,7 +203,7 @@ class Profiler:
             end="",
         )
 
-    @staticmethod
+    @ staticmethod
     def dict_product(dicts):
         """
         Generate the product of different dictionaries in a serializable
@@ -215,6 +216,10 @@ class Profiler:
         {'character': 'b', 'number': 2}]
         """
         return (pickle.dumps(dict(zip(dicts, x))) for x in it.product(*dicts.values()))
+
+    @staticmethod
+    def udpate_pbar():
+        Profiler.progress_bar.update(.5)
 
     def profiling_kernels(self, cfg):
         """
@@ -255,7 +260,7 @@ class Profiler:
 
         niterations = np.prod([Profiler.comp_nvals(params_dict[k])
                                for k in params_dict])
-        niterations *= len(kernel.kernel_cfg) * len(kernel.compilers_list)
+        #niterations *= len(kernel.kernel_cfg) * len(kernel.compilers_list)
 
         # Structure for storing results and ploting
         df = pd.DataFrame(columns=output_cols)
@@ -279,51 +284,61 @@ class Profiler:
 
         print(f"Compiling with {kernel.parallelism} processes")
 
-        # Main loop with progress bar for feedback
-        with tqdm(total=niterations) as pbar:
-            for compiler in kernel.compilers_list:
-                for kconfig in kernel.kernel_cfg:
-                    product = Profiler.dict_product(params_dict)
+        for compiler in kernel.compilers_list:
+            for kconfig in kernel.kernel_cfg:
+                print(f"For compiler and config: {compiler} -> {kconfig}")
+                product = Profiler.dict_product(params_dict)
 
-                    # Compilation process can be done in parallel if compilers are
-                    # thread-safe, so user must be aware of this, not the
-                    # profiler (passive-agressive comment :-P)
-                    # FIXME: clean exit when something goes wrong...
-                    if kernel.needs_to_compile:
-                        t0 = kernel.start_timer()
-                        pbar.set_description("Compiling...")
-                        with mp.Pool(processes=kernel.parallelism) as pool:
-                            output = pool.starmap(Kernel.compile, zip(repit(kernel), repit(
-                                kconfig), product, repit(compiler), repit(debug), repit(self.args.quit_on_error)))
-                            if output == None:
-                                print("Error")
-                                sys.exit(1)
-                            pbar.update(0.5)
-                        kernel.accm_timer("compilation", t0)
-                    else:
-                        print("[WARNING] Compilation process disabled!")
-
-                    # IMPORTANT NOTE:
-                    # This section could be parallel as well, if kernels
-                    # running are monolithic. Even though, you would have to
-                    # control properly CPU affinity and be aware if kernels are
-                    # cache sensitive or not. Thus, for simplicity, this is
-                    # still not parallel at all.
-                    pbar.set_description("Executing...")
-                    product = Profiler.dict_product(params_dict)
+                # Compilation process can be done in parallel if compilers are
+                # thread-safe, so user must be aware of this, not the
+                # profiler (passive-agressive comment :-P)
+                if kernel.needs_to_compile:
                     t0 = kernel.start_timer()
-                    for params_val in product:
-                        kern_exec = kernel.run(
-                            kconfig, params_val,
-                            compiler, debug, self.args.quit_on_error)
-                        # There was an error, exit on error, save data first
-                        if kern_exec == None:
-                            print("Saving file...")
-                            kernel.save_results(df, output_filename)
-                            sys.exit(1)
-                        df = df.append(kern_exec, ignore_index=True)
-                        pbar.update(0.5)
-                    kernel.accm_timer("execution", t0)
+                    with mp.Pool(processes=kernel.parallelism) as pool:
+                        iterable = zip(repit(kernel), repit(
+                            kconfig), product, repit(compiler), repit(debug), repit(self.args.quit_on_error))
+                        if kernel.show_progress_bars:
+                            for output in tqdm(pool.istarmap(Kernel.compile,  iterable), total=niterations, desc="Compiling"):
+                                if output == None:
+                                    print("[ERROR] Compilation failed")
+                                    pool.terminate()
+                                    sys.exit(1)
+                        else:
+                            print("Compiling...")
+                            output = pool.starmap(Kernel.compile,  iterable)
+                            if output == None:
+                                print("[ERROR] Compilation failed")
+                                pool.terminate()
+                                sys.exit(1)
+                    kernel.accm_timer("compilation", t0)
+                else:
+                    print("[WARNING] Compilation process disabled!")
+
+                # IMPORTANT NOTE:
+                # This section could be parallel as well, if kernels
+                # running are monolithic. Even though, you would have to
+                # control properly CPU affinity and be aware if kernels are
+                # cache sensitive or not. Thus, for simplicity, this is
+                # still not parallel at all.
+                product = Profiler.dict_product(params_dict)
+                if kernel.show_progress_bars:
+                    loop_iterator = tqdm(
+                        product, desc="Executing", total=niterations)
+                else:
+                    loop_iterator = product
+                    print("Executing...")
+                t0 = kernel.start_timer()
+                for params_val in loop_iterator:
+                    kern_exec = kernel.run(
+                        kconfig, params_val,
+                        compiler, debug, self.args.quit_on_error)
+                    # There was an error, exit on error, save data first
+                    if kern_exec == None:
+                        print("Saving file...")
+                        kernel.save_results(df, output_filename)
+                        sys.exit(1)
+                    df = df.append(kern_exec, ignore_index=True)
+                kernel.accm_timer("execution", t0)
         # Storing results and generating report file
         # TODO: add some spinner or something here
         kernel.save_results(df, output_filename)

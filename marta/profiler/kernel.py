@@ -232,6 +232,7 @@ class Kernel:
         self.kernel = cfg["kernel"]["name"]
         self.descr = cfg["kernel"]["description"]
         self.path_kernel = cfg["kernel"]["path"]
+        self.show_progress_bars = cfg["kernel"]["show_progress_bars"]
         Kernel.debug = cfg["kernel"]["debug"]
 
         # compilation:
