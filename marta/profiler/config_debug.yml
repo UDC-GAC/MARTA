@@ -22,7 +22,7 @@
             }
           common_flags: "  "
           asm_analysis: True 
-          debug: False
+          debug: True
       configuration:
           kernel_cfg: ["-msse4.2", "-mavx2", "-mavx512f"]
           macveth_flags: " -misa=avx2 "
@@ -36,21 +36,18 @@
                     evaluate: True
                     type: "static"
                     val_type: "numeric"
-                    #value: "[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]"
                     value: "[0,2]"
                 ORIG_A:    
                     evaluate: True
                     type: "static"
                     val_type: "numeric"
-                    #value: "[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]"
                     value: "[0]"
                 ORIG_x:    
                     evaluate: True
                     type: "static"
                     val_type: "numeric"
-                    #value: "[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]"
                     value: "[0]"
-          flops: "0" # TODO:
+          flops: "0" 
       execution:
           enabled: True
           papi_counters: [

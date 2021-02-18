@@ -65,6 +65,7 @@ class Report:
         content += f"- Compilers used:\n"
         for compiler in kernel.compiler_flags:
             content += f"\t{compiler} -> {kernel.compiler_flags[compiler]}\n"
+        content += f"- Kernel configurations: {kernel.kernel_cfg}\n"
         content += f"- FLOPS: {kernel.flops}\n"
         content += f"- Loop iterations: {kernel.nruns}\n"
         content += f"- Number of repetitions: {kernel.nexec}\n"

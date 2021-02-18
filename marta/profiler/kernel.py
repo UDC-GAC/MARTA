@@ -220,10 +220,6 @@ class Kernel:
         tmp_dict.update(Kernel.get_dict_from_params(params))
         tmp_dict.update(
             {
-                # TODO: compute FLOPS
-                # "FLOPSs": Kernel.compute_flops("0", self.nruns,
-                # avg_time["time"]),
-                "FLOPSs": 0,
                 "CFG": kconfig,
                 "Compiler": compiler,
                 "DiscardedTimeValues": discarded_time_values,
@@ -231,10 +227,14 @@ class Kernel:
             }
         )
         if self.mean_and_discard_outliers:
+            tmp_dict.update({"FLOPSs": Kernel.compute_flops(
+                self.flops, self.nruns, avg_time["time"])})
             return tmp_dict
         list_rows = []
         for execution in range(self.nexec):
             new_dict = tmp_dict.copy()
+            new_dict.update({"FLOPSs": Kernel.compute_flops(
+                self.flops, self.nruns, avg_time[execution])})
             new_dict.update({"time": avg_time[execution], "nexec": execution})
             new_dict.update(
                 dict(zip(self.papi_counters, avg_papi_counters[execution])))
