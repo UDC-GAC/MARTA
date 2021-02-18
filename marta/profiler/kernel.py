@@ -86,8 +86,8 @@ class Kernel:
 
         if ret != 0:
             print(f"Error {str(ret)} compiling in {kpath}, quitting...")
-            return {}
-        return asm.parse_asm(f"asm_codes/{kname}_{suffix_file}_{comp}.s")
+            return False
+        return True
 
     def define_papi_counters(self):
         """
@@ -181,7 +181,7 @@ class Kernel:
             other_flags += " MVPATH=" + self.mvpath + " MACVETH_FLAGS='" + \
                 self.macveth_flags + "'"
 
-        asm_cols = Kernel.compile_parse_asm(
+        ret = Kernel.compile_parse_asm(
             self.basename,
             self.path_kernel,
             compiler,
@@ -191,7 +191,7 @@ class Kernel:
             suffix_file,
             debug,
         )
-        if asm_cols == {} and quit_on_error:
+        if not ret and quit_on_error:
             return None
         return []
 
@@ -201,6 +201,7 @@ class Kernel:
         avg_time = {}
         name_bin, _ = Kernel.get_suffix_and_flags(kconfig, params)
         name_bin = self.basename + "_" + name_bin
+        asm_dict = asm.parse_asm(f"asm_codes/{name_bin}_{compiler}.s")
         # Average papi counters
         if len(self.papi_counters) > 0:
             self.define_papi_counters()
@@ -217,6 +218,7 @@ class Kernel:
         if discarded_time_values != -1:
             tmp_dict.update(avg_time)
 
+        tmp_dict.update(asm_dict)
         tmp_dict.update(Kernel.get_dict_from_params(params))
         tmp_dict.update(
             {
