@@ -16,13 +16,11 @@ import pickle
 import itertools as it
 from datetime import datetime as dt
 from kernel import Kernel
-# from kernel import __test_compile_process as comp_parallel
 from tqdm import tqdm
 from tqdm.auto import tqdm
 import multiprocessing as mp
 import custom_mp
 from itertools import repeat as repit
-from tqdm.contrib.concurrent import process_map  # or thread_map
 
 __version__ = "0.0.0-alpha"
 

@@ -3,6 +3,18 @@ import sys
 
 class ASMParser:
     @staticmethod
+    def operand_to_suffix(op):
+        op = op.strip().replace(" ", "")
+        if (op == "%zmm") or (op == "%ymm") or (op == "%xmm"):
+            return op[1:].upper()
+        elif op.startswith("$"):
+            return "IMM"
+        elif op.startswith("[0-9]+\("):
+            return "MEM"
+        else:
+            return "GP"
+
+    @staticmethod
     def get_raw_asm_type(ins):
         """
         Get ASM variant, i.e. mnemonic[_operand_type], where operand_type can be a
@@ -17,18 +29,19 @@ class ASMParser:
         op_name = ins[0]
         if len(ins) < 2:
             return op_name
-        operands = ins[1].strip().split(",")
+        if (len(ins) > 2):
+            operands = [i.strip().replace(",", "") for i in ins[1:]]
+        else:
+            operands = ins[1].strip().split(",")
         if len(operands) != 0:
             op_name += "_"
             for op in operands:
+                op_name += f"_{ASMParser.operand_to_suffix(op.strip())}"
                 op = op.strip()
-                if ("%zmm" in op) or ("%ymm" in op) or ("%xmm" in op):
-                    op_name += "r"
-                else:
-                    op_name += "m"
+
         return op_name
 
-    @staticmethod
+    @ staticmethod
     def skip_asm_instruction(ins):
         """
         Auxiliary function for skipping certain ASM operations
@@ -46,7 +59,7 @@ class ASMParser:
                 return True
         return False
 
-    @staticmethod
+    @ staticmethod
     def parse_asm(asm_file):
         """
         Parse the assembly file and get instructions within ROI
@@ -56,7 +69,6 @@ class ASMParser:
         :return: Dictionary containing number of occurrences for an ASM instruction
         :rtype: dict
         """
-
         raw_inst = {}
         count = False
         try:
@@ -75,7 +87,7 @@ class ASMParser:
                         continue
                     if not count or ASMParser.skip_asm_instruction(tok):
                         continue
-                    # Fix for Intel Compiler
+                    # Fix for Intel Compiler ASM output
                     if len(tok) == 1:
                         tok = tok[0].split(" ")
                         tok = [t for t in tok if t != "" and t[0] != "#"]
@@ -85,8 +97,7 @@ class ASMParser:
                     else:
                         raw_inst[raw_asm] = 1
         except FileNotFoundError:
-            print(
-                f"[ERROR] ASM file {asm_file} not found. Something went wrong during compilation...")
-            print("[ERROR] Quitting...")
+            print(f"[ERROR] ASM file {asm_file} not found.")
+            print(f"[ERROR] Quitting...")
             sys.exit(1)
         return raw_inst
