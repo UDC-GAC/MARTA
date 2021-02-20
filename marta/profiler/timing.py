@@ -20,7 +20,7 @@ class Timing:
         sys.exit(1)
 
     @staticmethod
-    def measure_benchmark(code, name, exec_opts, compiler, nexec=10, threshold_outliers=3, mean_and_discard_outliers=True):
+    def measure_benchmark(code, name, exec_opts, compiler, nexec=10, nsteps=1000, threshold_outliers=3, mean_and_discard_outliers=True):
         """
         Execute and time given benchmark nexec times
 
@@ -69,7 +69,7 @@ class Timing:
         mask = ~(abs(aval - aval.mean(axis=0)) <=
                  threshold_outliers * aval.std(axis=0))
         filtered_vals = np.where(mask, np.nan, aval)
-        mean_values = np.nanmean(filtered_vals, axis=0)
+        mean_values = np.nanmean(filtered_vals, axis=0)/nsteps
 
         # Retrieve percentage of discarded values
         discarded_values = float(mask.sum())/aval.size

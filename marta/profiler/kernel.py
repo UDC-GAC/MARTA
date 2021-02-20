@@ -169,7 +169,7 @@ class Kernel:
         # FIXME
         custom_flags += self.compiler_flags[compiler]
         local_common_flags = self.common_flags + custom_flags
-        local_common_flags += f" -DNRUNS={self.nruns} "
+        local_common_flags += f" -DNRUNS={self.nsteps} "
         if self.cpu_affinity != -1:
             local_common_flags += f" -DMARTA_CPU_AFFINITY={self.cpu_affinity} "
 
@@ -202,19 +202,20 @@ class Kernel:
         name_bin, _ = Kernel.get_suffix_and_flags(kconfig, params)
         name_bin = self.basename + "_" + name_bin
         asm_dict = asm.parse_asm(f"asm_codes/{name_bin}_{compiler}.s")
+
         # Average papi counters
         if len(self.papi_counters) > 0:
             self.define_papi_counters()
             avg_papi_counters, discarded_papi_values = Timing.measure_benchmark(
                 name_bin, self.papi_counters, self.exec_args, compiler, self.nexec,
-                self.threshold_outliers, self.mean_and_discard_outliers)
+                self.nsteps, self.threshold_outliers, self.mean_and_discard_outliers)
             if discarded_papi_values != -1:
                 tmp_dict.update(avg_papi_counters)
 
         # Average time
         avg_time, discarded_time_values = Timing.measure_benchmark(
             name_bin, "time", self.exec_args, compiler, self.nexec,
-            self.threshold_outliers, self.mean_and_discard_outliers)
+            self.nsteps, self.threshold_outliers, self.mean_and_discard_outliers)
         if discarded_time_values != -1:
             tmp_dict.update(avg_time)
 
@@ -230,13 +231,13 @@ class Kernel:
         )
         if self.mean_and_discard_outliers:
             tmp_dict.update({"FLOPSs": Kernel.compute_flops(
-                self.flops, self.nruns, avg_time["time"])})
+                self.flops, self.nsteps, avg_time["time"])})
             return tmp_dict
         list_rows = []
         for execution in range(self.nexec):
             new_dict = tmp_dict.copy()
             new_dict.update({"FLOPSs": Kernel.compute_flops(
-                self.flops, self.nruns, avg_time[execution])})
+                self.flops, self.nsteps, avg_time[execution])})
             new_dict.update({"time": avg_time[execution], "nexec": execution})
             new_dict.update(
                 dict(zip(self.papi_counters, avg_papi_counters[execution])))
@@ -300,7 +301,7 @@ class Kernel:
         self.threshold_outliers = config_exec["threshold_outliers"]
         self.mean_and_discard_outliers = config_exec["mean_and_discard_outliers"]
         self.nexec = config_exec["nexec"]
-        self.nruns = int(config_exec["nruns"])
+        self.nsteps = int(config_exec["nsteps"])
         self.cpu_affinity = int(config_exec["cpu_affinity"])
         self.papi_counters = config_exec["papi_counters"]
         self.exec_args = config_exec["prefix"]

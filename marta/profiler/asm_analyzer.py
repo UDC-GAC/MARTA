@@ -1,16 +1,19 @@
 import sys
+import re
 
 
 class ASMParser:
     @staticmethod
     def operand_to_suffix(op):
         op = op.strip().replace(" ", "")
-        if (op == "%zmm") or (op == "%ymm") or (op == "%xmm"):
-            return op[1:].upper()
+        if (op.startswith("%zmm")) or (op.startswith("%ymm")) or (op.startswith("%xmm")):
+            return op[1:4].upper()
         elif op.startswith("$"):
             return "IMM"
-        elif op.startswith("[0-9]+\("):
+        elif re.match("^[-0-9]*\(", op):
             return "MEM"
+        elif op.startswith("."):
+            return "LABEL"
         else:
             return "GP"
 
@@ -30,18 +33,18 @@ class ASMParser:
         if len(ins) < 2:
             return op_name
         if (len(ins) > 2):
-            operands = [i.strip().replace(",", "") for i in ins[1:]]
+            operands = [op[:-1] if op[-1] ==
+                        "," else op for op in ins[1:]]
         else:
-            operands = ins[1].strip().split(",")
+            operands = [op[:-1] if op[-1] ==
+                        "," else op for op in ins[1].strip().split(" ")]
         if len(operands) != 0:
-            op_name += "_"
             for op in operands:
                 op_name += f"_{ASMParser.operand_to_suffix(op.strip())}"
                 op = op.strip()
-
         return op_name
 
-    @ staticmethod
+    @staticmethod
     def skip_asm_instruction(ins):
         """
         Auxiliary function for skipping certain ASM operations
