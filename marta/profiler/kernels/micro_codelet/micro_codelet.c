@@ -24,7 +24,7 @@
 #define INLINE_PREFIX inline
 #endif
 
-void codelet(double *restrict A, double *restrict x, double *restrict y)
+INLINE_PREFIX void codelet(double *restrict A, double *restrict x, double *restrict y)
 {
   register int i, j;
 

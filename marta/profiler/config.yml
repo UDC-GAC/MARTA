@@ -17,14 +17,14 @@
           language: "C"
           compiler_flags: 
             { 
-                "gcc": " -O3 -march=native -ftree-vectorize -flto -fsimd-cost-model=unlimited -fvect-cost-model=unlimited ",
-                "icc": " -O3 -ipo -axCASCADELAKE -ftree-vectorize -vec-threshold0 -inline-forceinline",
+                "gcc": " -O3 -mtune=cascadelake -ftree-vectorize -flto -fsimd-cost-model=unlimited -fvect-cost-model=unlimited ",
+                "icc": " -O3 -ipo -mtune=cascadelake -ftree-vectorize -vec-threshold0 -inline-forceinline",
             }
           common_flags: "  "
           asm_analysis: True 
           debug: False
       configuration:
-          kernel_cfg: ["-msse4.2", "-mavx2", "-mavx512f"]
+          kernel_cfg: ["-msse4.2", "-mavx2 -mfma", "-mavx512f -mfma"]
           macveth_flags: " -misa=avx2 "
           features:
                 MICRO_CODELET_FILE_NAME:

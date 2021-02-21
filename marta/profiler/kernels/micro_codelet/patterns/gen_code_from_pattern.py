@@ -14,7 +14,7 @@ def generate_codelet_2d(t1, t2, orig_y="ORIG_y", orig_A="ORIG_A", orig_x="ORIG_x
     print(f"for (i = {t2[2]}; i <= {t2[0]}; ++i) {{")
     print(f"    for (j = {t2[3]}; j <={t2[1]}; ++j) {{")
     print(
-        f"        y[{t1[0]}*i + {t1[1]}*j + {orig_y}] += A[{int(t2[1])+1}*i + j + {orig_A}] * x[{t1[2]}*i + {t1[3]} + {orig_x}];")
+        f"        y[{t1[0]}*i + {t1[1]}*j + {orig_y}] += A[{int(t2[1])+1}*i + j + {orig_A}] * x[{t1[2]}*i + {t1[3]}*j + {orig_x}];")
     print(f"     }}")
     print(f"}}")
 
