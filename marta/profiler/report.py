@@ -5,15 +5,6 @@ import datetime
 
 class Report:
     cinfo = None
-    errors = None
-
-    @staticmethod
-    def get_compilation_options():
-        return ""
-
-    @staticmethod
-    def get_errors():
-        return Report.errors
 
     @staticmethod
     def get_machine_info():
@@ -67,7 +58,7 @@ class Report:
             content += f"\t{compiler} -> {kernel.compiler_flags[compiler]}\n"
         content += f"- Kernel configurations: {kernel.kernel_cfg}\n"
         content += f"- FLOPS: {kernel.flops}\n"
-        content += f"- Loop iterations: {kernel.nruns}\n"
+        content += f"- Loop iterations: {kernel.nsteps}\n"
         content += f"- Number of repetitions: {kernel.nexec}\n"
         content += f"- CPU affinity (if any): {kernel.cpu_affinity}\n"
         content += f"- PAPI counters used (if any):\n"

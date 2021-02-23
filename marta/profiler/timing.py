@@ -62,6 +62,8 @@ class Timing:
                 line = [l for l in f if "FAILED" in l].join(" ")
             Timing.error_and_exit(line, name)
 
+        aval /= nsteps
+
         if not mean_and_discard_outliers:
             return aval, -1
 
@@ -69,7 +71,7 @@ class Timing:
         mask = ~(abs(aval - aval.mean(axis=0)) <=
                  threshold_outliers * aval.std(axis=0))
         filtered_vals = np.where(mask, np.nan, aval)
-        mean_values = np.nanmean(filtered_vals, axis=0)/nsteps
+        mean_values = np.nanmean(filtered_vals, axis=0)
 
         # Retrieve percentage of discarded values
         discarded_values = float(mask.sum())/aval.size

@@ -39,9 +39,9 @@ POLYBENCH_1D_ARRAY_DECL(y, DATA_TYPE, N, n);
 POLYBENCH_1D_ARRAY_DECL(A, DATA_TYPE, N, n);
 POLYBENCH_1D_ARRAY_DECL(x, DATA_TYPE, N, n);
 
-init_1darray(n, POLYBENCH_ARRAY(y));
-init_1darray(n, POLYBENCH_ARRAY(A));
-init_1darray(n, POLYBENCH_ARRAY(x));
+//init_1darray(n, POLYBENCH_ARRAY(y));
+//init_1darray(n, POLYBENCH_ARRAY(A));
+//init_1darray(n, POLYBENCH_ARRAY(x));
 
 // Kernel section
 PROFILE_FUNCTION_SINGLE_VAL(NRUNS, codelet(POLYBENCH_ARRAY(A), POLYBENCH_ARRAY(x),

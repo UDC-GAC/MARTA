@@ -10,7 +10,6 @@ ASM_DIR=../../asm_codes/
 USRDIR=$(HOME)
 
 # Flags for PolyBench/C
-#PAPI_LIB?=/share/apps/papi/gnu8/6.0.0/lib
 PAPI_LIB?=$(USRDIR)/lib
 PAPI_INCLUDE?=$(USRDIR)/include
 PAPI_FLAGS=-I$(PAPI_INCLUDE) -L$(PAPI_LIB) -lpapi
@@ -33,8 +32,8 @@ endif
 
 # Adding all flags
 FLAGS+= $(KERNEL_CONFIG) $(COMMON_FLAGS)
-
 MAIN_FILE=$(MAIN_SRC)$(MAIN_SUFFIX)
+
 # if @ specified, then not verbose
 V = 
 
@@ -77,9 +76,11 @@ kernel_time:
 
 $(BINARY_NAME): $(MACVETH_RULE) asm_code kernel_papi kernel_time $(MAIN_SRC)$(MAIN_SUFFIX) 
 	$(V)$(CC) $(FLAGS) $(POLY_TFLAGS) $(MAIN_FILE) $(UNIQUE_NAME)_time.o -o $(BASE_BIN_NAME)_time.o
-	$(V)$(CC) $(FLAGS) $(POLY_TFLAGS) $(MAIN_FILE) $(UNIQUE_NAME)_time.o -S
 	$(V)$(CC) $(FLAGS) $(POLY_PFLAGS) $(MAIN_FILE) $(UNIQUE_NAME)_papi.o -o $(BASE_BIN_NAME)_papi.o
-	$(V)$(CC) $(FLAGS) $(POLY_PFLAGS) $(MAIN_FILE) $(UNIQUE_NAME)_papi.o -S
-	
+	$(V)rm $(UNIQUE_NAME)_papi.o $(UNIQUE_NAME)_time.o
+#	$(V)$(CC) $(FLAGS) $(POLY_PFLAGS) $(MAIN_FILE) $(UNIQUE_NAME)_papi.o -S
+#	$(V)$(CC) $(FLAGS) $(POLY_TFLAGS) $(MAIN_FILE) $(UNIQUE_NAME)_time.o -S
+
+
 clean:
 	find . -type f ! -name "*.c" ! -name "*.h" ! -name "*.c" ! -name "Makefile" -delete

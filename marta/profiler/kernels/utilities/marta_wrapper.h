@@ -7,10 +7,10 @@
 #include "polybench.h"
 
 #include <math.h>
+#include <sched.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sched.h>
 
 #if !defined(MARTA_CPU_AFFINITY)
 #define MARTA_CPU_AFFINITY 3
@@ -52,9 +52,15 @@ void update_row(char *name, char *features, long flops, int t, long_long val)
 }
 #endif
 
+/**
+ *  _Pragma(X) syntax works for this type of macros >=C99. This way we avoid
+ *  type of loop optimizations, such as loopnest interchange, in order to
+ *  properly inline a function within this loop.
+ */
 #define PROFILE_FUNCTION_SINGLE_VAL(STEPS, X) \
   {                                           \
     polybench_start_instruments;              \
+    _Pragma("nounroll_and_jam");              \
     for (int t = 0; t < STEPS; ++t)           \
     {                                         \
       X;                                      \

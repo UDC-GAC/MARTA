@@ -14,12 +14,12 @@ import pandas as pd
 import numpy as np
 import pickle
 import itertools as it
+import multiprocessing as mp
+import utils.custom_mp
 from datetime import datetime as dt
 from kernel import Kernel
 from tqdm import tqdm
 from tqdm.auto import tqdm
-import multiprocessing as mp
-import custom_mp
 from itertools import repeat as repit
 
 __version__ = "0.0.0-alpha"
@@ -37,7 +37,7 @@ class Profiler:
         :return: List of strings with all lines
         :rtype: list(str)
         """
-        config_file = "config_template"
+        config_file = "utils/config_template"
         with open(config_file) as f:
             return f.readlines()
 
@@ -275,6 +275,16 @@ class Profiler:
                 print("[ERROR] Preamble command went wrong...")
                 sys.exit(1)
 
+        # Create folders if needed
+        try:
+            os.mkdir("asm_codes")
+        except FileExistsError:
+            pass
+        try:
+            os.mkdir("bin")
+        except FileExistsError:
+            pass
+
         print(f"Compiling with {kernel.processes} processes")
         for compiler in kernel.compilers_list:
             for kconfig in kernel.kernel_cfg:
@@ -346,7 +356,7 @@ class Profiler:
         if cfg["kernel"]["finalize"]["clean_bin_files"]:
             os.system(f"rm -Rf bin/")
         if cfg["kernel"]["finalize"]["clean_asm_files"]:
-            os.system(f"rm -Rf asm/")
+            os.system(f"rm -Rf asm_codes/")
         if cfg["kernel"]["finalize"]["command"] != "":
             try:
                 os.system(f'{cfg["kernel"]["finalize"]["command"]}')
@@ -394,13 +404,6 @@ class Profiler:
             print("Unknown error when opening configuration file.")
             print("Quitting...")
             sys.exit(1)
-
-        # Create folders
-        try:
-            os.mkdir("asm_codes")
-            os.mkdir("bin")
-        except FileExistsError:
-            pass
 
         # For each kernel configuration
         for cfg in kernel_setup:
