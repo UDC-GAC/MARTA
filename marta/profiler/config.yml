@@ -17,7 +17,7 @@
           language: "C"
           compiler_flags: 
             { 
-                #"gcc": " -O3 -mtune=cascadelake -fno-loop-interchange -flto -ftree-vectorize -fsimd-cost-model=unlimited -fvect-cost-model=unlimited ",
+                "gcc": " -O3 -mtune=cascadelake -fno-loop-interchange -flto -ftree-vectorize -fsimd-cost-model=unlimited -fvect-cost-model=unlimited ",
                 "icc": " -O3 -mtune=cascadelake -ipo -ffat-lto-objects -ftree-vectorize -vec-threshold0 -inline-forceinline ",
             }
           common_flags: "  "

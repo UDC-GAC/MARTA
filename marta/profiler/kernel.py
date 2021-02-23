@@ -94,7 +94,12 @@ class Kernel:
         Define PAPI counters in a new file recognized by PolyBench/C
         """
         papi_counter_file = "kernels/utilities/papi_counters.list"
-        with open(papi_counter_file, "w") as f:
+        try:
+            f = open(papi_counter_file, "w")
+        except Exception:
+            print("[FATAL ERROR] PAPI counters file could not have been set.")
+            sys.exit(1)
+        with f:
             for ctr in self.papi_counters:
                 f.write("\"" + str(ctr) + "\",\n")
 
@@ -122,7 +127,7 @@ class Kernel:
             sys.exit(1)
 
         if avg_time > 0:
-            return (flops_eval * nruns) / avg_time
+            return (flops_eval) / avg_time
         else:
             return 0
 
@@ -205,7 +210,6 @@ class Kernel:
 
         # Average papi counters
         if len(self.papi_counters) > 0:
-            self.define_papi_counters()
             avg_papi_counters, discarded_papi_values = Timing.measure_benchmark(
                 name_bin, self.papi_counters, self.exec_args, compiler, self.nexec,
                 self.nsteps, self.threshold_outliers, self.mean_and_discard_outliers)
@@ -304,5 +308,7 @@ class Kernel:
         self.nsteps = int(config_exec["nsteps"])
         self.cpu_affinity = int(config_exec["cpu_affinity"])
         self.papi_counters = config_exec["papi_counters"]
+        if (len(self.papi_counters) > 0):
+            self.define_papi_counters()
         self.exec_args = config_exec["prefix"]
         self.basename = self.kernel
