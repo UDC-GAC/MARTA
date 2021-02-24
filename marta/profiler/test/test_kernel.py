@@ -7,6 +7,7 @@ sys.path.append(os.path.realpath(os.path.dirname(__file__) + "/.."))
 
 from kernel import Kernel
 
+
 def test_compute_flops():
     assert Kernel.compute_flops("4*8", 100, 1) == 4 * 8 / 1
 

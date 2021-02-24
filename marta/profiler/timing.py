@@ -11,16 +11,23 @@ class Timing:
             print(f"ERROR = {line}")
             print("Executions need to have access to PAPI library")
             print("Seems you do not have access, try: ")
-            print(
-                "\tsudo sh -c 'echo -1 >/proc/sys/kernel/perf_event_paranoid'"
-            )
+            print("\tsudo sh -c 'echo -1 >/proc/sys/kernel/perf_event_paranoid'")
             print("Or maybe you just misspelled an event:")
             for e in events:
                 print(e)
         sys.exit(1)
 
     @staticmethod
-    def measure_benchmark(code, name, exec_opts, compiler, nexec=10, nsteps=1000, threshold_outliers=3, mean_and_discard_outliers=True):
+    def measure_benchmark(
+        code,
+        name,
+        exec_opts,
+        compiler,
+        nexec=10,
+        nsteps=1000,
+        threshold_outliers=3,
+        mean_and_discard_outliers=True,
+    ):
         """
         Execute and time given benchmark nexec times
 
@@ -41,8 +48,10 @@ class Timing:
             pass
 
         if nexec < 5:
-            print("For time_bench nexec must be, at least, 5; " +
-                  "changing to this minimum value...")
+            print(
+                "For time_bench nexec must be, at least, 5; "
+                + "changing to this minimum value..."
+            )
             nexec = 5
 
         # Save execution values in an array
@@ -67,13 +76,15 @@ class Timing:
             return results, -1
 
         # Filter values
-        mask = ~(abs(results - results.mean(axis=0)) <=
-                 threshold_outliers * results.std(axis=0))
+        mask = ~(
+            abs(results - results.mean(axis=0))
+            <= threshold_outliers * results.std(axis=0)
+        )
         filtered_results = np.where(mask, np.nan, results)
         mean_results = np.nanmean(filtered_results, axis=0)
 
         # Retrieve percentage of discarded values
-        discarded_values = float(mask.sum())/results.size
+        discarded_values = float(mask.sum()) / results.size
 
         # Return mean values in a dictionary fashion
         if type(name) is list:

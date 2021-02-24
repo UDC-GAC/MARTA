@@ -1,7 +1,7 @@
 - kernel:
-      name: "micro_codelet"
-      path: "kernels/micro_codelet"
-      description: "Setup for micro_codelets"
+      name: "data_packing"
+      path: "kernels/data_packing"
+      description: "Setup for data_packings"
       debug: False
       show_progress_bars: True
       preamble:
@@ -13,7 +13,7 @@
           command: ""
       compilation:
           enabled: True
-          processes: 64
+          processes: 32
           language: "C"
           compiler_flags: 
             { 
@@ -27,7 +27,7 @@
           kernel_cfg: [" -mavx512f -mfma -mprefer-vector-width=512 ", " -mfma -mavx2 ", " -msse4.2 "]
           macveth_flags: " -misa=avx2 "
           features:
-                MICRO_CODELET_FILE_NAME:
+                data_packing_FILE_NAME:
                     evaluate: True
                     type: "static"
                     val_type: "string"

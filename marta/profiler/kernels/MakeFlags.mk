@@ -28,6 +28,8 @@ else ifeq ($(COMP),gcc)
 else ifeq ($(COMP),clang)
 	CC=clang
 	CXX=clang++
+else
+	echo "Compiler unknown, using GNU/GCC"
 endif
 
 # Adding all flags
@@ -50,6 +52,8 @@ endif
 .PHONY: all clean
 
 UNIQUE_NAME?=$(BASENAME)_$(SUFFIX_ASM)_$(COMP)
+TMP_SRC?=___tmp_$(UNIQUE_NAME).c
+TMP_BIN?=___tmp_$(UNIQUE_NAME).o
 
 BASE_BIN_NAME?=$(BIN_DIR)$(UNIQUE_NAME)
 BASE_ASM_NAME?=$(ASM_DIR)$(UNIQUE_NAME)
@@ -63,23 +67,21 @@ asm_code:
 	$(V)$(CC) -c $(FLAGS) $(TARGET).c -S -o $(BASE_ASM_NAME).s
 
 kernel_papi:
-	$(V)cp $(TARGET).c ___tmp_$(UNIQUE_NAME).c
-	$(V)$(CC) -c $(POLY_PFLAGS) $(FLAGS) ___tmp_$(UNIQUE_NAME).c 
-	$(V)mv ___tmp_$(UNIQUE_NAME).o $(UNIQUE_NAME)_papi.o
-	$(V)rm ___tmp_$(UNIQUE_NAME).c
+	$(V)cp $(TARGET).c $(TMP_SRC)
+	$(V)$(CC) -c $(POLY_PFLAGS) $(FLAGS) $(TMP_SRC) 
+	$(V)mv $(TMP_BIN) $(UNIQUE_NAME)_papi.o
+	$(V)rm $(TMP_SRC)
 
 kernel_time:
-	$(V)cp $(TARGET).c ___tmp_$(UNIQUE_NAME).c
-	$(V)$(CC) -c $(POLY_TFLAGS) $(FLAGS) ___tmp_$(UNIQUE_NAME).c
-	$(V)mv ___tmp_$(UNIQUE_NAME).o $(UNIQUE_NAME)_time.o
-	$(V)rm ___tmp_$(UNIQUE_NAME).c
+	$(V)cp $(TARGET).c $(TMP_SRC)
+	$(V)$(CC) -c $(POLY_TFLAGS) $(FLAGS) $(TMP_SRC)
+	$(V)mv $(TMP_BIN) $(UNIQUE_NAME)_time.o
+	$(V)rm $(TMP_SRC)
 
 $(BINARY_NAME): $(MACVETH_RULE) asm_code kernel_papi kernel_time $(MAIN_SRC)$(MAIN_SUFFIX) 
 	$(V)$(CC) $(FLAGS) $(POLY_TFLAGS) $(MAIN_FILE) $(UNIQUE_NAME)_time.o -o $(BASE_BIN_NAME)_time.o
 	$(V)$(CC) $(FLAGS) $(POLY_PFLAGS) $(MAIN_FILE) $(UNIQUE_NAME)_papi.o -o $(BASE_BIN_NAME)_papi.o
 	$(V)rm $(UNIQUE_NAME)_papi.o $(UNIQUE_NAME)_time.o
-#	$(V)$(CC) $(FLAGS) $(POLY_PFLAGS) $(MAIN_FILE) $(UNIQUE_NAME)_papi.o -S
-#	$(V)$(CC) $(FLAGS) $(POLY_TFLAGS) $(MAIN_FILE) $(UNIQUE_NAME)_time.o -S
 
 
 clean:

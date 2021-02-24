@@ -29,6 +29,7 @@ class Profiler:
     """
     Profiler class: helper class to set up experiments.
     """
+
     @staticmethod
     def dump_config_file():
         """
@@ -252,8 +253,9 @@ class Profiler:
         output_cols += ["CFG", "Compiler", "FLOPSs", "time"]
         output_cols += kernel.papi_counters
 
-        niterations = np.prod([Profiler.comp_nvals(params_dict[k])
-                               for k in params_dict])
+        niterations = np.prod(
+            [Profiler.comp_nvals(params_dict[k]) for k in params_dict]
+        )
 
         # Structure for storing results and ploting
         df = pd.DataFrame(columns=output_cols)
@@ -297,17 +299,27 @@ class Profiler:
                 if kernel.compilation_enabled:
                     t0 = kernel.start_timer()
                     with mp.Pool(processes=kernel.processes) as pool:
-                        iterable = zip(repit(kernel), repit(
-                            kconfig), product, repit(compiler), repit(debug), repit(self.args.quit_on_error))
+                        iterable = zip(
+                            repit(kernel),
+                            repit(kconfig),
+                            product,
+                            repit(compiler),
+                            repit(debug),
+                            repit(self.args.quit_on_error),
+                        )
                         if kernel.show_progress_bars:
-                            for output in tqdm(pool.istarmap(Kernel.compile,  iterable), total=niterations, desc="Compiling"):
+                            for output in tqdm(
+                                pool.istarmap(Kernel.compile, iterable),
+                                total=niterations,
+                                desc="Compiling",
+                            ):
                                 if output == None:
                                     print("[ERROR] Compilation failed")
                                     pool.terminate()
                                     sys.exit(1)
                         else:
                             print("Compiling...")
-                            output = pool.starmap(Kernel.compile,  iterable)
+                            output = pool.starmap(Kernel.compile, iterable)
                             if output == None:
                                 print("[ERROR] Compilation failed")
                                 pool.terminate()
@@ -326,7 +338,8 @@ class Profiler:
                 if kernel.execution_enabled:
                     if kernel.show_progress_bars:
                         loop_iterator = tqdm(
-                            product, desc="Executing", total=niterations)
+                            product, desc="Executing", total=niterations
+                        )
                     else:
                         loop_iterator = product
                         print("Executing...")
@@ -347,7 +360,6 @@ class Profiler:
                 else:
                     print("[WARNING] Execution process disabled!")
         # Storing results and generating report file
-        # TODO: add some spinner or something here
         kernel.save_results(df, output_filename)
 
         # Cleaning directories
@@ -361,8 +373,7 @@ class Profiler:
             try:
                 os.system(f'{cfg["kernel"]["finalize"]["command"]}')
             except Exception:
-                print(
-                    f"[ERROR] Finalize command went wrong for {kernel.basename}")
+                print(f"[ERROR] Finalize command went wrong for {kernel.basename}")
 
     def __init__(self, list_args):
         """
@@ -372,7 +383,9 @@ class Profiler:
         "regular" string list
         :type list_args: list(str)
         """
-        if (sys.version_info[0] < 3) or (sys.version_info[0] == 3 and sys.version_info[1] < 6):
+        if (sys.version_info[0] < 3) or (
+            sys.version_info[0] == 3 and sys.version_info[1] < 6
+        ):
             print("MARTA must run with Python >=3.6")
             sys.exit(1)
         self.args = Profiler.parse_arguments(list_args)

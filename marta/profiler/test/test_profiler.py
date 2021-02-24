@@ -9,4 +9,3 @@ sys.path.append(os.path.realpath(os.path.dirname(__file__) + "/.."))
 
 def test_number_iterations():
     assert Profiler.comp_nvals([0, 1, 2, 3]) == 4
-    #assert Profiler.comp_nvals(range(4)) == 4

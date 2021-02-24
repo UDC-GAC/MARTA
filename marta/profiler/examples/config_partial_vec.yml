@@ -13,7 +13,7 @@
           command: ""
       compilation:
           enabled: True
-          processes: 64
+          processes: 32
           language: "C"
           compiler_flags: 
             { 
@@ -31,22 +31,32 @@
                     evaluate: True
                     type: "static"
                     val_type: "string"
-                    value: "[f\"patterns/codelet_{i:08d}.c\" for i in range(1)]"
+                    value: "[f\"patterns/codelet_custom.c\"]"
+                UB_I:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[2]"
+                UB_J:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[1,2,3,4,5,6,7]"
                 ORIG_y:
                     evaluate: True
                     type: "static"
                     val_type: "numeric"
-                    value: "[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]"
+                    value: "[0,1]"
                 ORIG_A:    
                     evaluate: True
                     type: "static"
                     val_type: "numeric"
-                    value: "[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]"
+                    value: "[0,1]"
                 ORIG_x:    
                     evaluate: True
                     type: "static"
                     val_type: "numeric"
-                    value: "[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]"
+                    value: "[0,1]"
           flops: "592"
       execution:
           enabled: True

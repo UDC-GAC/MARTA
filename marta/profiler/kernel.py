@@ -57,7 +57,14 @@ class Kernel:
 
     @staticmethod
     def compile_parse_asm(
-        kname, kpath, comp, common_flags, kconfig, other_flags="", suffix_file="", debug=""
+        kname,
+        kpath,
+        comp,
+        common_flags,
+        kconfig,
+        other_flags="",
+        suffix_file="",
+        debug="",
     ):
         """
         Compile benchmark according to a set of flags, suffixes and so
@@ -101,7 +108,7 @@ class Kernel:
             sys.exit(1)
         with f:
             for ctr in self.papi_counters:
-                f.write("\"" + str(ctr) + "\",\n")
+                f.write('"' + str(ctr) + '",\n')
 
     @staticmethod
     def compute_flops(flops, nruns, avg_time):
@@ -146,7 +153,7 @@ class Kernel:
             try:
                 param_val_parsed = int(params[pname])
             except ValueError:
-                param_val_parsed = "\\\"" + params[pname] + "\\\""
+                param_val_parsed = '\\"' + params[pname] + '\\"'
             custom_flags += f" -D{pname}={param_val_parsed}"
             suffix_file += f"_{pname}{params[pname]}"
         suffix_file = suffix_file.split("/")[-1].replace(".c", "")
@@ -155,7 +162,7 @@ class Kernel:
             suffix_file += f"_{kparam}"
         return suffix_file, custom_flags
 
-    def compile(self, kconfig, params_str, compiler, debug,  quit_on_error=False):
+    def compile(self, kconfig, params_str, compiler, debug, quit_on_error=False):
         """[summary]
 
         Args:
@@ -168,8 +175,7 @@ class Kernel:
         Returns:
             [type]: [description]
         """
-        suffix_file, custom_flags = Kernel.get_suffix_and_flags(
-            kconfig, params_str)
+        suffix_file, custom_flags = Kernel.get_suffix_and_flags(kconfig, params_str)
 
         # FIXME
         custom_flags += self.compiler_flags[compiler]
@@ -183,8 +189,9 @@ class Kernel:
             kconfig = kconfig.replace("MACVETH", "")
             other_flags = " MACVETH=true "
             suffix_file += "_macveth"
-            other_flags += " MVPATH=" + self.mvpath + " MACVETH_FLAGS='" + \
-                self.macveth_flags + "'"
+            other_flags += (
+                " MVPATH=" + self.mvpath + " MACVETH_FLAGS='" + self.macveth_flags + "'"
+            )
 
         ret = Kernel.compile_parse_asm(
             self.basename,
@@ -211,15 +218,28 @@ class Kernel:
         # Average papi counters
         if len(self.papi_counters) > 0:
             avg_papi_counters, discarded_papi_values = Timing.measure_benchmark(
-                name_bin, self.papi_counters, self.exec_args, compiler, self.nexec,
-                self.nsteps, self.threshold_outliers, self.mean_and_discard_outliers)
+                name_bin,
+                self.papi_counters,
+                self.exec_args,
+                compiler,
+                self.nexec,
+                self.nsteps,
+                self.threshold_outliers,
+                self.mean_and_discard_outliers,
+            )
             if discarded_papi_values != -1:
                 tmp_dict.update(avg_papi_counters)
 
-        # Average time
         avg_time, discarded_time_values = Timing.measure_benchmark(
-            name_bin, "time", self.exec_args, compiler, self.nexec,
-            self.nsteps, self.threshold_outliers, self.mean_and_discard_outliers)
+            name_bin,
+            "time",
+            self.exec_args,
+            compiler,
+            self.nexec,
+            self.nsteps,
+            self.threshold_outliers,
+            self.mean_and_discard_outliers,
+        )
         if discarded_time_values != -1:
             tmp_dict.update(avg_time)
 
@@ -234,49 +254,47 @@ class Kernel:
             }
         )
         if self.mean_and_discard_outliers:
-            tmp_dict.update({"FLOPSs": Kernel.compute_flops(
-                self.flops, self.nsteps, avg_time["time"])})
+            tmp_dict.update(
+                {
+                    "FLOPSs": Kernel.compute_flops(
+                        self.flops, self.nsteps, avg_time["time"]
+                    )
+                }
+            )
             return tmp_dict
         list_rows = []
         for execution in range(self.nexec):
             new_dict = tmp_dict.copy()
-            new_dict.update({"FLOPSs": Kernel.compute_flops(
-                self.flops, self.nsteps, avg_time[execution])})
-            new_dict.update({"time": avg_time[execution], "nexec": execution})
             new_dict.update(
-                dict(zip(self.papi_counters, avg_papi_counters[execution])))
+                {
+                    "FLOPSs": Kernel.compute_flops(
+                        self.flops, self.nsteps, avg_time[execution]
+                    )
+                }
+            )
+            new_dict.update({"time": avg_time[execution], "nexec": execution})
+            new_dict.update(dict(zip(self.papi_counters, avg_papi_counters[execution])))
             list_rows += [new_dict]
         return list_rows
 
     def __init__(self, cfg):
-        """[summary]
-
-        Args:
-            cfg ([type]): [description]
-        """
-        # General configuration
         self.kernel = cfg["kernel"]["name"]
         self.descr = cfg["kernel"]["description"]
         self.path_kernel = cfg["kernel"]["path"]
         self.show_progress_bars = cfg["kernel"]["show_progress_bars"]
         Kernel.debug = cfg["kernel"]["debug"]
 
-        # compilation:
         config_comp = cfg["kernel"]["compilation"]
-        # configuration:
         config_cfg = cfg["kernel"]["configuration"]
-        # execution:
         config_exec = cfg["kernel"]["execution"]
 
-        # Compilation configuration
         self.compilation_enabled = config_comp["enabled"]
         try:
             self.processes = int(config_comp["processes"])
             if self.processes < 1:
                 raise ValueError
             if self.processes > 16:
-                print(
-                    "[WARNING] Careful with high degree of processes for compilation")
+                print("[WARNING] Careful with high degree of processes for compilation")
         except ValueError:
             print("[ERROR] processes must be an integer greater or equal to one")
             sys.exit(1)
@@ -308,7 +326,7 @@ class Kernel:
         self.nsteps = int(config_exec["nsteps"])
         self.cpu_affinity = int(config_exec["cpu_affinity"])
         self.papi_counters = config_exec["papi_counters"]
-        if (len(self.papi_counters) > 0):
+        if len(self.papi_counters) > 0:
             self.define_papi_counters()
         self.exec_args = config_exec["prefix"]
         self.basename = self.kernel

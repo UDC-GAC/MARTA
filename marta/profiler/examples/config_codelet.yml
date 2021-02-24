@@ -13,7 +13,7 @@
           command: ""
       compilation:
           enabled: True
-          processes: 64
+          processes: 32
           language: "C"
           compiler_flags: 
             { 
