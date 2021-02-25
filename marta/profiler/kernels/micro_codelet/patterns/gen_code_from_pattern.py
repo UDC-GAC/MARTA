@@ -66,21 +66,24 @@ def generate_header_file(name, t1, t2):
     orig_A = 0
     orig_x = 0
     orig_y = 0
-    n_value = abs((t1.reshape((2, -1)) * t2[: len(t2) // 2]).sum(axis=1)).max() + 1
+    tmp = abs((t1.reshape((2, -1)) * t2[: len(t2) // 2]).sum(axis=1))
+    n_value = np.maximum(tmp.max() + 1, np.prod(np.array(tmp + 1)))
     print(f"#ifndef {header_name}")
     print(f"#define {header_name}")
     print(f"")
     print(f"#ifndef ORIG_y")
-    print(f"#define ORIG_y {orig_y}")
-    print(f"#endif")
-    print(f"#ifndef ORIG_A")
-    print(f"#define ORIG_A {orig_A}")
-    print(f"#endif")
-    print(f"#ifndef ORIG_x")
-    print(f"#define ORIG_x {orig_x}")
+    print(f"#define ORIG_y\t{orig_y}")
     print(f"#endif")
     print(f"")
-    print(f"#define N {n_value}\n")
+    print(f"#ifndef ORIG_A")
+    print(f"#define ORIG_A\t{orig_A}")
+    print(f"#endif")
+    print(f"")
+    print(f"#ifndef ORIG_x")
+    print(f"#define ORIG_x\t{orig_x}")
+    print(f"#endif")
+    print(f"")
+    print(f"#define N\t{n_value}\n")
     print(f"#endif /* {header_name} */")
 
 
