@@ -2,6 +2,7 @@
 __*
 macveth_output.c*
 codelet*.c
+codelet*.h
 # bytecode
 __pycache__/
 *cpython*

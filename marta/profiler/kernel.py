@@ -153,7 +153,9 @@ class Kernel:
             try:
                 param_val_parsed = int(params[pname])
             except ValueError:
-                param_val_parsed = '\\"' + params[pname] + '\\"'
+                # NOTE: for includes or other paths, \"string\" notation is
+                # needed, but this is not MARTA's reponsability.
+                param_val_parsed = '"' + params[pname] + '"'
             custom_flags += f" -D{pname}={param_val_parsed}"
             suffix_file += f"_{pname}{params[pname]}"
         suffix_file = suffix_file.split("/")[-1].replace(".c", "")
@@ -163,18 +165,6 @@ class Kernel:
         return suffix_file, custom_flags
 
     def compile(self, kconfig, params_str, compiler, debug, quit_on_error=False):
-        """[summary]
-
-        Args:
-            kconfig ([type]): [description]
-            params ([type]): [description]
-            compiler ([type]): [description]
-            debug ([type]): [description]
-            quit_on_error (bool, optional): [description]. Defaults to False.
-
-        Returns:
-            [type]: [description]
-        """
         suffix_file, custom_flags = Kernel.get_suffix_and_flags(kconfig, params_str)
 
         # FIXME

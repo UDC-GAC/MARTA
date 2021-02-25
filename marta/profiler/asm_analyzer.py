@@ -6,7 +6,11 @@ class ASMParser:
     @staticmethod
     def operand_to_suffix(op):
         op = op.strip().replace(" ", "")
-        if (op.startswith("%zmm")) or (op.startswith("%ymm")) or (op.startswith("%xmm")):
+        if (
+            (op.startswith("%zmm"))
+            or (op.startswith("%ymm"))
+            or (op.startswith("%xmm"))
+        ):
             return op[1:4].upper()
         elif op.startswith("$"):
             return "IMM"
@@ -32,12 +36,12 @@ class ASMParser:
         op_name = ins[0]
         if len(ins) < 2:
             return op_name
-        if (len(ins) > 2):
-            operands = [op[:-1] if op[-1] ==
-                        "," else op for op in ins[1:]]
+        if len(ins) > 2:
+            operands = [op[:-1] if op[-1] == "," else op for op in ins[1:]]
         else:
-            operands = [op[:-1] if op[-1] ==
-                        "," else op for op in ins[1].strip().split(" ")]
+            operands = [
+                op[:-1] if op[-1] == "," else op for op in ins[1].strip().split(" ")
+            ]
         if len(operands) != 0:
             for op in operands:
                 op_name += f"_{ASMParser.operand_to_suffix(op.strip())}"
@@ -62,7 +66,7 @@ class ASMParser:
                 return True
         return False
 
-    @ staticmethod
+    @staticmethod
     def parse_asm(asm_file):
         """
         Parse the assembly file and get instructions within ROI

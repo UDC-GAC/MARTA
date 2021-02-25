@@ -1,23 +1,5 @@
 #include "micro_codelet.h"
 
-#define restrict __restrict
-
-#ifndef MICRO_CODELET_FILE_NAME
-#define MICRO_CODELET_FILE_NAME "patterns/codelet_00000000.c"
-#endif
-
-#ifndef ORIG_A
-#define ORIG_A 0
-#endif
-
-#ifndef ORIG_x
-#define ORIG_x 0
-#endif
-
-#ifndef ORIG_y
-#define ORIG_y 0
-#endif
-
 #if defined(INTEL_COMPILER)
 #define INLINE_PREFIX __forceinline
 #else
@@ -30,7 +12,7 @@ INLINE_PREFIX void codelet(double *restrict A, double *restrict x, double *restr
 #ifdef MACVETH
 #pragma macveth 
 #endif
-#include MICRO_CODELET_FILE_NAME
+#include TO_STRING(MICRO_CODELET_SRC)
 #ifdef MACVETH
 #pragma endmacveth
 #endif

@@ -25,16 +25,19 @@
  * SOFTWARE.
  */
 
-#ifndef _VECTOR_CODELET_H
-#define _VECTOR_CODELET_H
+#ifndef _CODELET_HEADER_H
+#define _CODELET_HEADER_H
+
+#define EXPAND_STRING(s) #s
+#define TO_STRING(s) EXPAND_STRING(s)
+
+#define MICRO_CODELET_HEADER MICRO_CODELET_FILE_NAME.h
+#define MICRO_CODELET_SRC MICRO_CODELET_FILE_NAME.c
+
+#include TO_STRING(MICRO_CODELET_HEADER)
 
 #define restrict __restrict
 
-#ifdef N
-#undef N
-#define N 180358
-#endif
-
 void codelet(double *restrict A, double *restrict x, double *restrict y);
 
-#endif
+#endif /* _CODELET_HEADER_H */
