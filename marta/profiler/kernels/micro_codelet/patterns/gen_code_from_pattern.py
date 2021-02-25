@@ -66,8 +66,15 @@ def generate_header_file(name, t1, t2):
     orig_A = 0
     orig_x = 0
     orig_y = 0
+
+    # n_value = np.maximum(tmp.max() + 1, np.prod(np.array(tmp + 1)))
     tmp = abs((t1.reshape((2, -1)) * t2[: len(t2) // 2]).sum(axis=1))
-    n_value = np.maximum(tmp.max() + 1, np.prod(np.array(tmp + 1)))
+    n_value = tmp.max() + 1
+    if t1[2] < t2[1] + 1:
+        n_value = np.prod(np.array(tmp + 1))
+    # just in case...
+    if n_value > 1e9:
+        n_value = int(1e8)
     print(f"#ifndef {header_name}")
     print(f"#define {header_name}")
     print(f"")
