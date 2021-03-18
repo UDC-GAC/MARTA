@@ -56,7 +56,7 @@ class Timing:
 
         # Save execution values in an array
         suffix = f"{name}" if type(name) == str else "papi"
-        bin_file = f"{exec_opts} ./bin/{code}_{compiler}_{suffix}.o"
+        bin_file = f"{exec_opts} ./bin/{code}_{compiler}_{suffix}.o {nsteps}"
         tmp_file = f"tmp/____tmp_{code}_{compiler}_{suffix}"
         os.system(f"{bin_file}  > {tmp_file}")
         for _ in range(1, nexec):

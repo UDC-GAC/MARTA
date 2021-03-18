@@ -70,6 +70,15 @@ void update_row(char *name, char *features, long flops, int t, long_long val)
   }
 
 /**
+ */
+#define DO_NOT_OPTIMIZE(VAR) asm volatile("" \
+                                          : "+g"(VAR))
+
+#define CLOBBER_MEM asm volatile("" \
+                                 :  \
+                                 :  \
+                                 : "memory")
+/**
  * Macro to encapsulate a function call in the main function to enable
  * its profiling with the PolyBench harness.
  */
@@ -149,6 +158,7 @@ static void init_1darray(int n, DATA_TYPE POLYBENCH_1D(x, N, n))
 
   for (i = 0; i < n; i++)
   {
+    //printf("i = %d\n", i);
     x[i] = 42;
   }
 }

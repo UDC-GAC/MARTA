@@ -3,7 +3,7 @@ import sys
 import time
 import pickle
 from report import Report
-from asm_analyzer import ASMParser as asm
+from asm_analyzer import ASMParserFactory
 from timing import Timing
 
 
@@ -57,7 +57,6 @@ class Kernel:
 
     @staticmethod
     def compile_parse_asm(
-        kname,
         kpath,
         comp,
         common_flags,
@@ -80,6 +79,14 @@ class Kernel:
         :return: Dictionary of ASM occurrences
         :rtype: dict
         """
+
+        # Check if options in kernel config string:
+        tok = kconfig.split(" ")
+        for t in tok:
+            if "=" in t:
+                kconfig = kconfig.replace(t, "")
+                other_flags += f" {t} "
+
         comp_str = (
             f"make -B -C {kpath} COMP={comp}"
             f" KERNEL_CONFIG='{kconfig}' "
@@ -174,6 +181,7 @@ class Kernel:
         if self.cpu_affinity != -1:
             local_common_flags += f" -DMARTA_CPU_AFFINITY={self.cpu_affinity} "
 
+        # MACVETH flags
         other_flags = ""
         if "MACVETH" in kconfig:
             kconfig = kconfig.replace("MACVETH", "")
@@ -182,9 +190,10 @@ class Kernel:
             other_flags += (
                 " MVPATH=" + self.mvpath + " MACVETH_FLAGS='" + self.macveth_flags + "'"
             )
+        # MACVETH syntax flags
+        other_flags += f" ASM_SYNTAX={self.asm_syntax} "
 
         ret = Kernel.compile_parse_asm(
-            self.basename,
             self.path_kernel,
             compiler,
             local_common_flags,
@@ -203,7 +212,9 @@ class Kernel:
         avg_time = {}
         name_bin, _ = Kernel.get_suffix_and_flags(kconfig, params)
         name_bin = self.basename + "_" + name_bin
-        asm_dict = asm.parse_asm(f"asm_codes/{name_bin}_{compiler}.s")
+        asm_dict = ASMParserFactory.parse_asm(
+            self.asm_syntax, f"asm_codes/{name_bin}_{compiler}.s"
+        )
 
         # Average papi counters
         if len(self.papi_counters) > 0:
@@ -230,6 +241,10 @@ class Kernel:
             self.threshold_outliers,
             self.mean_and_discard_outliers,
         )
+        if len(avg_time) == 0:
+            print("[ERROR] Something went wrong... Quitting...")
+            sys.exit(1)
+
         if discarded_time_values != -1:
             tmp_dict.update(avg_time)
 
@@ -293,6 +308,11 @@ class Kernel:
         self.compilers_list = list(config_comp["compiler_flags"].keys())
         self.common_flags = config_comp["common_flags"]
         self.compiler_flags = config_comp["compiler_flags"]
+        if "asm_analysis" in config_comp:
+            self.asm_analysis = config_comp["asm_analysis"]
+        self.asm_syntax = "att"
+        if "asm_syntax" in config_comp:
+            self.asm_syntax = config_comp["asm_syntax"]
         self.comp_debug = config_comp["debug"]
 
         # Configuration

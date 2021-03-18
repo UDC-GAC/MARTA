@@ -24,7 +24,7 @@ class Report:
         elif cpu.platform.mac_ver()[0] != "":
             cpu_info += f"{cpu.platform.mac_ver()[0]}"
         else:
-            cpu_info += f"Kernel: {cpu.platform.uname()[2]}"
+            cpu_info += f"kernel {cpu.platform.uname()[2]}"
 
         return cpu_info + "\n"
 
@@ -66,7 +66,7 @@ class Report:
             content += f"\t{l}\n"
 
         # Get compilation flags and so
-        content += f"\n# -- COMPILATION\n"
+        content += f"\n# -- COMPILATION (stdout)\n"
         try:
             with open("___tmp.stdout") as f:
                 for l in f.readlines():
@@ -76,7 +76,7 @@ class Report:
             content += "stdout was redirected manually.\n"
 
         # Generate errors
-        content += f"\n# -- ERRORS\n"
+        content += f"\n# -- WARNINGS/ERRORS (stderr)\n"
         try:
             with open("___tmp.stderr") as f:
                 for l in f.readlines():
