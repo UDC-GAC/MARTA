@@ -1,0 +1,144 @@
+- kernel:
+      name: "cost_model"
+      path: "kernels/cost_model"
+      description: "Setup for experiment cost_model"
+      debug: False
+      show_progress_bars: True
+      preamble:
+          command: "rm -Rf bin asm_codes && sudo cpupower frequency-set -u 2.1GHz && sudo cpupower frequency-set -d 2.1GHz"
+      finalize:
+          clean_tmp_files: False
+          clean_asm_files: False
+          clean_bin_files: False
+          command: "echo 'alright!'"
+      compilation:
+          enabled: True
+          processes: 4
+          language: "C"
+          compiler_flags: 
+            { 
+                "gcc": " -mtune=cascadelake ",
+                #"icc": " -mtune=cascadelake ",
+            }
+          common_flags: " -mfma -mavx2 -DTHREE_VECTOR "
+          inlined_kernel: True
+          asm_syntax: "intel"
+          asm_analysis: False
+          debug: False
+      configuration:
+          kernel_cfg: [
+            # THREE ELEMENTS
+            # three cache lines
+            "-DV_LEN=4 -DX_N=3 -DY_N=3 -DA_N=3 -DCL=3 -DX_IDX_A=0 -DX_IDX_B=1
+            -DX_IDX_C=2 -DA_IDX_A=0 -DA_IDX_B=1
+            -DA_IDX_C=2 -DY_IDX_A=0 -DY_IDX_B=1
+            -DY_IDX_C=2",
+            "-DV_LEN=4 -DX_N=3 -DY_N=3 -DA_N=3 -DCL=3 -DX_IDX_A=0 -DX_IDX_B=1
+            -DX_IDX_C=7 -DA_IDX_A=0 -DA_IDX_B=1
+            -DA_IDX_C=11 -DY_IDX_A=0 -DY_IDX_B=1
+            -DY_IDX_C=13",
+            # six cache lines
+            "-DV_LEN=4 -DX_N=3 -DY_N=3 -DA_N=3 -DCL=6 -DX_IDX_A=0 -DX_IDX_B=1
+            -DX_IDX_C=17 -DA_IDX_A=0 -DA_IDX_B=1
+            -DA_IDX_C=23 -DY_IDX_A=0 -DY_IDX_B=1
+            -DY_IDX_C=42",
+            "-DV_LEN=4 -DX_N=3 -DY_N=3 -DA_N=3 -DCL=6 -DX_IDX_A=0 -DX_IDX_B=7
+            -DX_IDX_C=17 -DA_IDX_A=0 -DA_IDX_B=9
+            -DA_IDX_C=23 -DY_IDX_A=0 -DY_IDX_B=4
+            -DY_IDX_C=42",
+            # nine cache lines
+            "-DV_LEN=4 -DX_N=3 -DY_N=3 -DA_N=3 -DCL=9 -DX_IDX_A=0 -DX_IDX_B=1
+            -DX_IDX_C=2 -DA_IDX_A=0 -DA_IDX_B=1
+            -DA_IDX_C=2 -DY_IDX_A=0 -DY_IDX_B=1
+            -DY_IDX_C=2",
+            # FOUR ELEMENTS
+            # three cache lines
+            "-DV_LEN=4 -DX_N=4 -DY_N=4 -DA_N=4 -DCL=3 -DX_IDX_A=0 -DX_IDX_B=1
+            -DX_IDX_C=2 -DX_IDX_D=3 -DA_IDX_A=0 -DA_IDX_B=1
+            -DA_IDX_C=2 -DA_IDX_D=3 -DY_IDX_A=0 -DY_IDX_B=1
+            -DY_IDX_C=2 -DY_IDX_D=3",
+            # x2 data movements
+            "-DV_LEN=4 -DX_N=4 -DY_N=4 -DA_N=4 -DCL=3 -DX_IDX_A=0 -DX_IDX_B=1
+            -DX_IDX_C=4 -DX_IDX_D=5 -DA_IDX_A=0 -DA_IDX_B=1
+            -DA_IDX_C=5 -DA_IDX_D=6 -DY_IDX_A=0 -DY_IDX_B=1
+            -DY_IDX_C=9 -DY_IDX_D=10",
+            # six cache lines
+            "-DV_LEN=4 -DX_N=4 -DY_N=4 -DA_N=4 -DCL=6 -DX_IDX_A=0 -DX_IDX_B=1
+            -DX_IDX_C=20 -DX_IDX_D=21 -DA_IDX_A=1 -DA_IDX_B=2
+            -DA_IDX_C=17 -DA_IDX_D=19 -DY_IDX_A=0 -DY_IDX_B=1
+            -DY_IDX_C=16 -DY_IDX_D=23",
+            # 6 CL but added a gather
+            "-DV_LEN=4 -DX_N=4 -DY_N=4 -DA_N=4 -DCL=6 -DX_IDX_A=0 -DX_IDX_B=1
+            -DX_IDX_C=20 -DX_IDX_D=21 -DA_IDX_A=1 -DA_IDX_B=7
+            -DA_IDX_C=17 -DA_IDX_D=19 -DY_IDX_A=0 -DY_IDX_B=1
+            -DY_IDX_C=16 -DY_IDX_D=23",
+            # nine cache lines
+            "-DV_LEN=4 -DX_N=4 -DY_N=4 -DA_N=4 -DCL=9 -DX_IDX_A=0 -DX_IDX_B=1
+            -DX_IDX_C=2 -DX_IDX_D=3 -DA_IDX_A=0 -DA_IDX_B=1
+            -DA_IDX_C=2 -DA_IDX_D=3 -DY_IDX_A=0 -DY_IDX_B=1
+            -DY_IDX_C=16 -DY_IDX_D=48",
+            # twelve cache lines
+            "-DV_LEN=4 -DX_N=4 -DY_N=4 -DA_N=4 -DCL=12 -DX_IDX_A=2 -DX_IDX_B=17
+            -DX_IDX_C=42 -DX_IDX_D=86 -DA_IDX_A=0 -DA_IDX_B=23
+            -DA_IDX_C=38 -DA_IDX_D=99 -DY_IDX_A=1 -DY_IDX_B=19
+            -DY_IDX_C=39 -DY_IDX_D=87", 
+          ]
+          d_features:
+                X_ORIG:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[0,1]"
+                A_ORIG:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[0,1]"
+                Y_ORIG:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[0,1]"
+          flops: "0"
+      execution:
+          enabled: True
+          papi_counters: [
+            "CPU_CLK_THREAD_UNHALTED:THREAD_P",
+            "INST_RETIRED:ANY_P",
+            "UOPS_RETIRED:ALL",
+            "UOPS_ISSUED:ALL",
+            "UOPS_EXECUTED:THREAD",            
+            "UOPS_RETIRED:STALL_CYCLES",
+            "UOPS_ISSUED:STALL_CYCLES",
+            "UOPS_EXECUTED:STALL_CYCLES",
+            #"CPU_CLK_UNHALTED",
+            #"ix86arch::UNHALTED_REFERENCE_CYCLES",
+            #"UNHALTED_REFERENCE_CYCLES",
+            #"UOPS_EXECUTED:CORE_CYCLES_NONE",
+            #"UOPS_ISSUED:STALL_CYCLES",
+            #"INST_RETIRED:ANY_P",
+            #"UOPS_ISSUED:ALL",
+            #"UOPS_RETIRED:ALL",
+            #"FP_ARITH:SCALAR_DOUBLE",
+            #"FP_ARITH:128B_PACKED_DOUBLE",
+            #"FP_ARITH:256B_PACKED_DOUBLE",
+            #"FP_ARITH:512B_PACKED_DOUBLE",
+            #"PAPI_BR_TKN",
+            #"PAPI_BR_MSP",
+            #"MEM_LOAD_UOPS_RETIRED:L1_HIT",
+            #"MEM_LOAD_UOPS_RETIRED:L1_MISS",
+            #"ICACHE_64B:IFTAG_HIT",
+            ]
+          time: False
+          tsc: False
+          threshold_outliers: 3
+          mean_and_discard_outliers: True
+          nexec: 5
+          nsteps: 1000000
+          cpu_affinity: 11
+          prefix: ""
+      output:
+          name: "default"
+          columns: "all"
+          report: True
+          verbose: True

@@ -1,0 +1,169 @@
+- kernel:
+      name: "cost_model"
+      path: "kernels/cost_model"
+      description: "Setup for experiment cost_model"
+      debug: False
+      show_progress_bars: True
+      preamble:
+          command: "rm -Rf bin asm_codes && sudo cpupower frequency-set -u 2.1GHz && sudo cpupower frequency-set -d 2.1GHz"
+      finalize:
+          clean_tmp_files: False
+          clean_asm_files: False
+          clean_bin_files: False
+          command: "echo 'alright!'"
+      compilation:
+          enabled: True
+          processes: 32
+          language: "C"
+          compiler_flags: 
+            { 
+                "gcc": " -mtune=cascadelake ",
+                #"icc": " -mtune=cascadelake ",
+            }
+          common_flags: " -mfma -mavx2 "
+          inlined_kernel: True
+          asm_syntax: "intel"
+          asm_analysis: False
+          debug: False
+      configuration:
+          kernel_cfg: [" -DV_LEN=4 -DFULL_128BITS "]
+          d_features:
+                X_ORIG:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[0]"
+                CL_X:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[1]"
+                CL_A:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[1]"
+                CL_Y:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[1]"
+                X_N:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[4]"
+                X_IDX_A:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[0]"
+                X_IDX_B:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[1]"
+                X_IDX_C:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[2]"
+                    #value: "[2]"
+                X_IDX_D:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[3]"
+                A_N:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[4]"
+                A_IDX_A:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[0]"
+                A_IDX_B:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[1]"
+                A_IDX_C:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[2]"
+                A_IDX_D:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[3]"
+                Y_N:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[4]"
+                Y_IDX_A:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[0]"
+                Y_IDX_B:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[0,1]"
+                Y_IDX_C:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[0,16,2]"
+                Y_IDX_D:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[0,16,3]"
+          flops: "0"
+      execution:
+          enabled: True
+          papi_counters: [
+            "CPU_CLK_THREAD_UNHALTED:THREAD_P",
+            "INST_RETIRED:ANY_P",
+            "UOPS_RETIRED:ALL",
+            "UOPS_ISSUED:ALL",
+            "UOPS_EXECUTED:THREAD",            
+            "UOPS_RETIRED:STALL_CYCLES",
+            "UOPS_ISSUED:STALL_CYCLES",
+            "UOPS_EXECUTED:STALL_CYCLES",
+            #"CPU_CLK_UNHALTED",
+            #"ix86arch::UNHALTED_REFERENCE_CYCLES",
+            #"UNHALTED_REFERENCE_CYCLES",
+            #"UOPS_EXECUTED:CORE_CYCLES_NONE",
+            #"UOPS_ISSUED:STALL_CYCLES",
+            #"INST_RETIRED:ANY_P",
+            #"UOPS_ISSUED:ALL",
+            #"UOPS_RETIRED:ALL",
+            #"FP_ARITH:SCALAR_DOUBLE",
+            #"FP_ARITH:128B_PACKED_DOUBLE",
+            #"FP_ARITH:256B_PACKED_DOUBLE",
+            #"FP_ARITH:512B_PACKED_DOUBLE",
+            #"PAPI_BR_TKN",
+            #"PAPI_BR_MSP",
+            #"MEM_LOAD_UOPS_RETIRED:L1_HIT",
+            #"MEM_LOAD_UOPS_RETIRED:L1_MISS",
+            #"ICACHE_64B:IFTAG_HIT",
+            ]
+          time: False
+          tsc: False
+          threshold_outliers: 3
+          mean_and_discard_outliers: True
+          nexec: 5
+          nsteps: 1000000
+          cpu_affinity: 11
+          prefix: ""
+      output:
+          name: "default"
+          columns: "all"
+          report: True
+          verbose: True
