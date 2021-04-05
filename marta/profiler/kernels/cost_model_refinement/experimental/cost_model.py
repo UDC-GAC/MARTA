@@ -169,7 +169,7 @@ class Program:
         # find loops, get structure
         programs = []
         loops = []
-        print("input code")
+        print("Input programs:")
         for line in lines:
             print(line, end="")
             if re.match("[ \t]*for", line):
@@ -196,7 +196,6 @@ class Program:
             mul = Operation.get_operation(ops[1], ops[2], "*")
             operations.extend([mul])
             operations.extend([Operation.get_operation(ops[0], mul, "+")])
-            # get IDS of operands
 
         return operations
 
@@ -217,11 +216,11 @@ class Program:
         self.sentence = sentence
         self.unrolled_sentences = Program.unroll(loops, sentence)
         self.operands = self.get_operands()
-        for op in self.operands:
-            print(op)
+        # for op in self.operands:
+        #     print(op)
         self.operations = self.get_operations()
-        for op in self.operations:
-            print(op)
+        # for op in self.operations:
+        #     print(op)
 
 
 class CostModel:
@@ -266,21 +265,23 @@ class CostModel:
             "X_N": len(ops),
             "Cont": contiguous,
         }
-        return CostModel.query("cycles", query)
+        return CostModel.query("CPU_CLK_THREAD_UNHALTED:THREAD_P", query)
 
     @staticmethod
     def query(output, q) -> int:
         import numpy as np
 
         tmp = CostModel.data
-        synonyms = {"cycles": "CPU_CLK_THREAD_UNHALTED:THREAD_P"}
         n_cl = f"({q['X_N']}, {q['CL']})"
         df_query = tmp[(tmp["N_CL"] == n_cl) & (tmp["V_LEN"] == q["V_LEN"])]
         found = df_query.size
         if not found:
             value = np.inf
         else:
-            value = round(df_query[synonyms[output]].mean())
+            if q["Cont"]:
+                value = round(df_query[output].min())
+            else:
+                value = round(df_query[output].max())
         return value
 
     @staticmethod
@@ -306,7 +307,14 @@ class CostModel:
         # reductions simultaneously it could just be: 2*log(n/2), since there
         # are half of steps
         n_reductions = np.unique(pos_vcacheline).size
-        if n_reductions != len(ops):
+        if n_reductions != len(ops) / 2:
+            print(
+                (
+                    2 * log(len(ops) / n_reductions, 2)
+                    + n_reductions
+                    + experimental_bias_reduction
+                )
+            )
             return (
                 2 * log(len(ops) / n_reductions, 2)
                 + n_reductions
@@ -335,6 +343,9 @@ class CostModel:
     def compute_cost_program(program: list) -> int:
         cost = 0
         # Cost of packing
+        print(f"packing x = {CostModel.packing_cost(program, 'x')}")
+        print(f"packing y = {CostModel.packing_cost(program, 'y')}")
+        print(f"packing A = {CostModel.packing_cost(program, 'A')}")
         cost += CostModel.packing_cost(program, "x")
         cost += CostModel.packing_cost(program, "A")
         cost += CostModel.packing_cost(program, "y")
@@ -368,6 +379,7 @@ class CostModel:
         if type(program) == Program:
             # only one program
             return (c0, c0)
+        # If there is a list of programs, compute values individually
         for pi in program:
             c1 += CostModel.compute_cost_program(pi)
 
@@ -383,6 +395,6 @@ if __name__ == "__main__":
         subprograms = Program.get_subprograms(f.readlines())
         c0, c1 = CostModel.compute_cost(subprograms)
         if len(subprograms) == 1:
-            print(f"Single program cost = {c0}")
+            print(f"\n\tSingle program cost = {c0}")
         else:
-            print(f"Fused cost = {c0}; Individual cost = {c1}")
+            print(f"\n\tFused cost = {c0}\n\tIndividual program costs added = {c1}")

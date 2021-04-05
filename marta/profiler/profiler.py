@@ -163,6 +163,7 @@ class Profiler:
                 except NameError:
                     print(f"Evaluation of expression for {f} went wrong!")
                     sys.exit(1)
+                # This is useful for iterators, such as permutations, combinations...
                 if type_feature == "dynamic":
                     try:
                         size = len(params_values)
@@ -228,7 +229,13 @@ class Profiler:
 
         kernel = Kernel(cfg)
         config_output = cfg["kernel"]["output"]
-        params_dict = Profiler.eval_features(kernel.feat)
+        print("Holi")
+        if len(kernel.d_features) > 0:
+            params_kernel = Profiler.eval_features(kernel.d_features)
+        else:
+            params_kernel = kernel.d_flags
+
+        print(params_kernel)
 
         # Output configuration
         # file names
@@ -244,7 +251,10 @@ class Profiler:
             output_filename = self.args.output
 
         if output_cols == "all":
-            output_cols = list(params_dict.keys())
+            if type(params_kernel) is dict:
+                output_cols = list(params_kernel.keys())
+            else:
+                output_cols = []
 
         if type(output_cols) != list:
             print("output_cols parameter must be a list or 'all'")
@@ -253,9 +263,12 @@ class Profiler:
         output_cols += ["CFG", "Compiler", "FLOPSs", "time"]
         output_cols += kernel.papi_counters
 
-        niterations = np.prod(
-            [Profiler.comp_nvals(params_dict[k]) for k in params_dict]
-        )
+        if type(params_kernel) is dict:
+            niterations = np.prod(
+                [Profiler.comp_nvals(params_kernel[k]) for k in params_kernel]
+            )
+        else:
+            niterations = len(params_kernel)
 
         # Structure for storing results and ploting
         df = pd.DataFrame(columns=output_cols)
@@ -291,8 +304,10 @@ class Profiler:
         for compiler in kernel.compilers_list:
             for kconfig in kernel.kernel_cfg:
                 print(f"Compiler and flags: {compiler} {kconfig}")
-                product = Profiler.dict_product(params_dict)
-
+                if type(params_kernel) is dict:
+                    product = Profiler.dict_product(params_kernel)
+                else:
+                    product = params_kernel
                 # Compilation process can be done in parallel if compilers are
                 # thread-safe, so user must be aware of this, not the
                 # profiler (passive-agressive comment :-P)
@@ -334,7 +349,10 @@ class Profiler:
                 # control properly CPU affinity and be aware if kernels are
                 # cache sensitive or not. Thus, for simplicity, this is
                 # still not parallel at all.
-                product = Profiler.dict_product(params_dict)
+                if type(params_kernel) is dict:
+                    product = Profiler.dict_product(params_kernel)
+                else:
+                    product = params_kernel
                 if kernel.execution_enabled:
                     if kernel.show_progress_bars:
                         loop_iterator = tqdm(

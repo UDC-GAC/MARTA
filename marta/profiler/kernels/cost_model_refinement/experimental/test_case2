@@ -1,3 +1,9 @@
-for (i = 42; i <= 43; ++i)
-   for (j = 69; j <= 70; ++j)
-      y[4*i + 1024] += A[32*i + 4096] * x[64*i + (i-j)*172 + 1234];
+for (i = 0; i <= 1; ++i)
+   for (j = 0; j <= 1; ++j)
+      y[2*i+j] += A[2*i+j] * x[2*i+j];
+for (i = 2; i <= 3; ++i)
+   for (j = 0; j <= 1; ++j)
+      y[2*i+j] += A[2*i+j] * x[2*i+j];
+
+// REAL MEASUREMENT individual cost: 6 cycles
+// REAL MEASUREMENT fused cost: 3 cycles

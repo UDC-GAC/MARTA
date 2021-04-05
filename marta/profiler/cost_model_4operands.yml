@@ -20,7 +20,7 @@
                 "gcc": " -mtune=cascadelake ",
                 #"icc": " -mtune=cascadelake ",
             }
-          common_flags: " -mfma -mavx2 -DONLY_PACKING "
+          common_flags: " -mfma -mavx2 -DONLY_PACKING_4OPS "
           inlined_kernel: True
           asm_syntax: "intel"
           asm_analysis: False
@@ -86,7 +86,7 @@
                     evaluate: True
                     type: "static"
                     val_type: "numeric"
-                    value: "[0,1,2]"
+                    value: "[0]"
           flops: "0"
       execution:
           enabled: True

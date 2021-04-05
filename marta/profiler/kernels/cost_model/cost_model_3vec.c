@@ -1,4 +1,4 @@
-__m128 aux0, aux1;
+    __m128 aux0, aux1;
 #if X_N == 4
 // 4-elements
 

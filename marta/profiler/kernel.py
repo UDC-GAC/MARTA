@@ -46,7 +46,7 @@ class Kernel:
         :type filename: str
         """
         # storing results with metadata
-        df = df.fillna(0.0)
+        df = df.fillna(-1)
         df.to_csv(filename, index=False)
 
         # saving all data to file
@@ -57,13 +57,7 @@ class Kernel:
 
     @staticmethod
     def compile_parse_asm(
-        kpath,
-        comp,
-        common_flags,
-        kconfig,
-        other_flags="",
-        suffix_file="",
-        debug="",
+        kpath, comp, common_flags, kconfig, other_flags="", suffix_file="", debug="",
     ):
         """
         Compile benchmark according to a set of flags, suffixes and so
@@ -83,6 +77,10 @@ class Kernel:
         # Check if options in kernel config string:
         tok = kconfig.split(" ")
         for t in tok:
+            if "-D" in t:
+                kconfig = kconfig.replace(t, "")
+                common_flags += f" {t} "
+                continue
             if "=" in t:
                 kconfig = kconfig.replace(t, "")
                 other_flags += f" {t} "
@@ -147,14 +145,61 @@ class Kernel:
 
     @staticmethod
     def get_dict_from_params(params):
-        params = pickle.loads(params)
+        try:
+            params = pickle.loads(params)
+        except TypeError:
+            pass
         return params
+
+    @staticmethod
+    def get_dict_from_d_flags(params):
+        d = {}
+        for tok in params.split(" "):
+            tmp = tok.split("=")
+            key = tmp[0].replace("-D", "")
+            if len(tmp) == 1:
+                value = 1
+            else:
+                value = tmp[1]
+            d.update({key: value})
+        return d
 
     @staticmethod
     def get_suffix_and_flags(kconfig, params):
         custom_flags = ""
         suffix_file = ""
         params = Kernel.get_dict_from_params(params)
+        # Parsing parameters
+        if type(params) is dict:
+            for pname in params.keys():
+                try:
+                    param_val_parsed = int(params[pname])
+                except ValueError:
+                    # NOTE: for includes or other paths, \"string\" notation is
+                    # needed, but this is not MARTA's responsibility.
+                    param_val_parsed = '"' + params[pname] + '"'
+                # FIXME:
+                if pname != "ASM_NAME":
+                    custom_flags += f" -D{pname}={param_val_parsed}"
+                suffix_file += f"_{pname}{params[pname]}"
+            suffix_file = suffix_file.split("/")[-1].replace(".c", "")
+        else:
+            custom_flags = params
+            for p in params.strip().replace("-", "").replace("D", "").split(" "):
+                suffix_file += f"_{p}"
+        # Parsing kconfig
+        for kparam in kconfig.strip().replace("-", "").split(" "):
+            suffix_file += f"_{kparam}"
+        # Avoid very long names
+        if len(suffix_file) > 200:
+            suffix_file = suffix_file[:200]
+        return suffix_file, custom_flags
+
+    @staticmethod
+    def get_asm_name(params):
+        params = Kernel.get_dict_from_params(params)
+        if not type(params) is dict:
+            return ""
         # Parsing parameters
         for pname in params.keys():
             try:
@@ -163,18 +208,15 @@ class Kernel:
                 # NOTE: for includes or other paths, \"string\" notation is
                 # needed, but this is not MARTA's reponsability.
                 param_val_parsed = '"' + params[pname] + '"'
-            custom_flags += f" -D{pname}={param_val_parsed}"
-            suffix_file += f"_{pname}{params[pname]}"
-        suffix_file = suffix_file.split("/")[-1].replace(".c", "")
-        # Parsing kconfig
-        for kparam in kconfig.strip().replace("-", "").split(" "):
-            suffix_file += f"_{kparam}"
-        return suffix_file, custom_flags
+            # FIXME:
+            if pname == "ASM_NAME":
+                return f" {pname}={param_val_parsed}"
+        return ""
 
     def compile(self, kconfig, params_str, compiler, debug, quit_on_error=False):
         suffix_file, custom_flags = Kernel.get_suffix_and_flags(kconfig, params_str)
 
-        # FIXME
+        # FIXME:
         custom_flags += self.compiler_flags[compiler]
         local_common_flags = self.common_flags + custom_flags
         local_common_flags += f" -DNRUNS={self.nsteps} "
@@ -182,7 +224,7 @@ class Kernel:
             local_common_flags += f" -DMARTA_CPU_AFFINITY={self.cpu_affinity} "
 
         # MACVETH flags
-        other_flags = ""
+        other_flags = Kernel.get_asm_name(params_str) + " "
         if "MACVETH" in kconfig:
             kconfig = kconfig.replace("MACVETH", "")
             other_flags = " MACVETH=true "
@@ -192,6 +234,21 @@ class Kernel:
             )
         # MACVETH syntax flags
         other_flags += f" ASM_SYNTAX={self.asm_syntax} "
+
+        if self.measure_time:
+            other_flags += f" TIME=true "
+
+        if self.measure_tsc:
+            other_flags += f" TSC=true "
+
+        if len(self.papi_counters) > 0:
+            other_flags += f" PAPI=true "
+
+        if not self.inlined:
+            other_flags += f" COMPILE_KERNEL=true "
+
+        if self.asm_analysis:
+            other_flags += f" ASM_CODE=true "
 
         ret = Kernel.compile_parse_asm(
             self.path_kernel,
@@ -212,9 +269,11 @@ class Kernel:
         avg_time = {}
         name_bin, _ = Kernel.get_suffix_and_flags(kconfig, params)
         name_bin = self.basename + "_" + name_bin
-        asm_dict = ASMParserFactory.parse_asm(
-            self.asm_syntax, f"asm_codes/{name_bin}_{compiler}.s"
-        )
+        asm_dict = {}
+        if self.asm_analysis:
+            asm_dict = ASMParserFactory.parse_asm(
+                self.asm_syntax, f"asm_codes/{name_bin}_{compiler}.s"
+            )
 
         # Average papi counters
         if len(self.papi_counters) > 0:
@@ -230,42 +289,59 @@ class Kernel:
             )
             if discarded_papi_values != -1:
                 tmp_dict.update(avg_papi_counters)
+                tmp_dict.update({"DiscardedPapiValues": discarded_papi_values})
 
-        avg_time, discarded_time_values = Timing.measure_benchmark(
-            name_bin,
-            "time",
-            self.exec_args,
-            compiler,
-            self.nexec,
-            self.nsteps,
-            self.threshold_outliers,
-            self.mean_and_discard_outliers,
-        )
-        if len(avg_time) == 0:
-            print("[ERROR] Something went wrong... Quitting...")
-            sys.exit(1)
+        if self.measure_time:
+            avg_time, discarded_time_values = Timing.measure_benchmark(
+                name_bin,
+                "time",
+                self.exec_args,
+                compiler,
+                self.nexec,
+                self.nsteps,
+                self.threshold_outliers,
+                self.mean_and_discard_outliers,
+            )
+            if len(avg_time) == 0:
+                print("[ERROR] Something went wrong... Quitting...")
+                sys.exit(1)
+            if discarded_time_values != -1:
+                tmp_dict.update(avg_time)
+                tmp_dict.update({"DiscardedTimeValues": discarded_time_values})
 
-        if discarded_time_values != -1:
-            tmp_dict.update(avg_time)
-
+        if self.measure_tsc:
+            avg_tsc, discarded_tsc_values = Timing.measure_benchmark(
+                name_bin,
+                "tsc",
+                self.exec_args,
+                compiler,
+                self.nexec,
+                self.nsteps,
+                self.threshold_outliers,
+                self.mean_and_discard_outliers,
+            )
+            if len(avg_tsc) == 0:
+                print("[ERROR] Something went wrong... Quitting...")
+                sys.exit(1)
+            if discarded_tsc_values != -1:
+                tmp_dict.update(avg_tsc)
+                tmp_dict.update({"DiscardedTscValues": discarded_tsc_values})
         tmp_dict.update(asm_dict)
-        tmp_dict.update(Kernel.get_dict_from_params(params))
+        if type(params) is not list:
+            tmp_dict.update(Kernel.get_dict_from_params(params))
+        tmp_dict.update(Kernel.get_dict_from_d_flags(kconfig))
         tmp_dict.update(
-            {
-                "CFG": kconfig,
-                "Compiler": compiler,
-                "DiscardedTimeValues": discarded_time_values,
-                "DiscardedPapiValues": discarded_papi_values,
-            }
+            {"CFG": kconfig, "Compiler": compiler,}
         )
         if self.mean_and_discard_outliers:
-            tmp_dict.update(
-                {
-                    "FLOPSs": Kernel.compute_flops(
-                        self.flops, self.nsteps, avg_time["time"]
-                    )
-                }
-            )
+            if self.measure_time:
+                tmp_dict.update(
+                    {
+                        "FLOPSs": Kernel.compute_flops(
+                            self.flops, self.nsteps, avg_time["time"]
+                        )
+                    }
+                )
             return tmp_dict
         list_rows = []
         for execution in range(self.nexec):
@@ -277,8 +353,15 @@ class Kernel:
                     )
                 }
             )
-            new_dict.update({"time": avg_time[execution], "nexec": execution})
-            new_dict.update(dict(zip(self.papi_counters, avg_papi_counters[execution])))
+            new_dict.update({"nexec": execution})
+            if self.measure_tsc:
+                new_dict.update({"tsc": avg_time[execution]})
+            if self.measure_time:
+                new_dict.update({"time": avg_time[execution]})
+            if len(self.papi_counters) > 0:
+                new_dict.update(
+                    dict(zip(self.papi_counters, avg_papi_counters[execution]))
+                )
             list_rows += [new_dict]
         return list_rows
 
@@ -308,16 +391,25 @@ class Kernel:
         self.compilers_list = list(config_comp["compiler_flags"].keys())
         self.common_flags = config_comp["common_flags"]
         self.compiler_flags = config_comp["compiler_flags"]
-        if "asm_analysis" in config_comp:
-            self.asm_analysis = config_comp["asm_analysis"]
-        self.asm_syntax = "att"
-        if "asm_syntax" in config_comp:
-            self.asm_syntax = config_comp["asm_syntax"]
+        self.inlined = (
+            True
+            if not "inlined_kernel" in config_comp
+            else config_comp["inlined_kernel"]
+        )
+        self.asm_analysis = (
+            config_comp["asm_analysis"] if "asm_analysis" in config_comp else False
+        )
+        self.asm_syntax = (
+            "att" if "asm_syntax" in config_comp else config_comp["asm_syntax"]
+        )
         self.comp_debug = config_comp["debug"]
 
         # Configuration
         self.kernel_cfg = config_cfg["kernel_cfg"]
-        self.feat = config_cfg["features"]
+        self.d_features = (
+            [] if not "d_features" in config_cfg else config_cfg["d_features"]
+        )
+        self.d_flags = [] if not "d_flags" in config_cfg else config_cfg["d_flags"]
         self.flops = config_cfg["flops"]
         try:
             self.mvpath = config_cfg["macveth_path_build"]
@@ -330,6 +422,8 @@ class Kernel:
 
         # Execution arguments
         self.execution_enabled = config_exec["enabled"]
+        self.measure_time = False if not "time" in config_exec else config_exec["time"]
+        self.measure_tsc = False if not "tsc" in config_exec else config_exec["tsc"]
         self.threshold_outliers = config_exec["threshold_outliers"]
         self.mean_and_discard_outliers = config_exec["mean_and_discard_outliers"]
         self.nexec = config_exec["nexec"]

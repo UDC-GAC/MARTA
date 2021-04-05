@@ -26,104 +26,135 @@
           asm_analysis: False
           debug: False
       configuration:
-          kernel_cfg: [" -DV_LEN=4 -DFULL_128BITS "]
+          kernel_cfg: [
+          #" -DF256B -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=2
+          #-DX_IDX_D=3 -DX_IDX_E=4 -DX_IDX_F=5 -DX_IDX_G=6 -DX_IDX_H=7 -DA_IDX_A=0 -DA_IDX_B=1 -DA_IDX_C=2
+          #-DA_IDX_D=3 -DA_IDX_E=4 -DA_IDX_F=5 -DA_IDX_G=6 -DA_IDX_H=7 -DY_IDX_A=0 -DY_IDX_B=1 -DY_IDX_C=2
+          #-DY_IDX_D=3 -DY_IDX_E=4 -DY_IDX_F=5 -DY_IDX_G=6 -DY_IDX_H=7"
+          " -DF256B "
+          ]
           d_features:
-                X_ORIG:
-                    evaluate: True
-                    type: "static"
-                    val_type: "numeric"
-                    value: "[0]"
-                CL_X:
-                    evaluate: True
-                    type: "static"
-                    val_type: "numeric"
-                    value: "[1]"
-                CL_A:
-                    evaluate: True
-                    type: "static"
-                    val_type: "numeric"
-                    value: "[1]"
-                CL_Y:
-                    evaluate: True
-                    type: "static"
-                    val_type: "numeric"
-                    value: "[1]"
-                X_N:
-                    evaluate: True
-                    type: "static"
-                    val_type: "numeric"
-                    value: "[4]"
                 X_IDX_A:
                     evaluate: True
                     type: "static"
                     val_type: "numeric"
-                    value: "[0]"
+                    value: "[1006]"
                 X_IDX_B:
                     evaluate: True
                     type: "static"
                     val_type: "numeric"
-                    value: "[1]"
+                    value: "[898]"
                 X_IDX_C:
                     evaluate: True
                     type: "static"
                     val_type: "numeric"
-                    value: "[2]"
+                    value: "[1178]"
                     #value: "[2]"
                 X_IDX_D:
                     evaluate: True
                     type: "static"
                     val_type: "numeric"
-                    value: "[3]"
-                A_N:
+                    value: "[1070]"
+                X_IDX_E:
                     evaluate: True
                     type: "static"
                     val_type: "numeric"
-                    value: "[4]"
+                    value: "[4567]"
+                X_IDX_F:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[4583]"
+                X_IDX_G:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[4567]"
+                X_IDX_H:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[4583]"
                 A_IDX_A:
                     evaluate: True
                     type: "static"
                     val_type: "numeric"
-                    value: "[0]"
+                    value: "[5440]"
                 A_IDX_B:
                     evaluate: True
                     type: "static"
                     val_type: "numeric"
-                    value: "[1]"
+                    value: "[5440]"
                 A_IDX_C:
                     evaluate: True
                     type: "static"
                     val_type: "numeric"
-                    value: "[2]"
+                    value: "[5472]"
                 A_IDX_D:
                     evaluate: True
                     type: "static"
                     val_type: "numeric"
-                    value: "[3]"
-                Y_N:
+                    value: "[5472]"
+                A_IDX_E:
                     evaluate: True
                     type: "static"
                     val_type: "numeric"
-                    value: "[4]"
+                    value: "[4800]"
+                A_IDX_F:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[4800]"
+                A_IDX_G:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[4816]"
+                A_IDX_H:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[4816]"
                 Y_IDX_A:
                     evaluate: True
                     type: "static"
                     val_type: "numeric"
-                    value: "[0]"
+                    value: "[1192]"
                 Y_IDX_B:
                     evaluate: True
                     type: "static"
                     val_type: "numeric"
-                    value: "[0,1]"
+                    value: "[1192]"
                 Y_IDX_C:
                     evaluate: True
                     type: "static"
                     val_type: "numeric"
-                    value: "[0,16,2]"
+                    value: "[1196]"
                 Y_IDX_D:
                     evaluate: True
                     type: "static"
                     val_type: "numeric"
-                    value: "[0,16,3]"
+                    value: "[1196]"
+                Y_IDX_E:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[1728]"
+                Y_IDX_F:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[1728]"
+                Y_IDX_G:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[1744]"
+                Y_IDX_H:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[1744]"
           flops: "0"
       execution:
           enabled: True

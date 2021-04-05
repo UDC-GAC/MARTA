@@ -90,9 +90,7 @@ static unsigned long long int rdtsc() {
   unsigned int cycles_lo;
   unsigned int cycles_hi;
   __asm__ volatile("RDTSC" : "=a"(cycles_lo), "=d"(cycles_hi));
-  ret = (unsigned long long int)cycles_hi << 32 | cycles_lo;
-
-  return ret;
+  return (unsigned long long int)cycles_hi << 32 | cycles_lo;
 }
 #endif
 

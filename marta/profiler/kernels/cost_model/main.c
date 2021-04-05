@@ -38,10 +38,12 @@
 #include "marta_wrapper.h"
 #include <immintrin.h>
 
-#ifdef FULL_128BITS
+#if defined(FULL_128BITS) || defined(F256B)
 #include "cost_model_all.c"
 #else
 #include "cost_model_1vec.c"
+#include "cost_model_8ops.c"
+//#include "cost_model_gather.c"
 #endif
 
 MARTA_BENCHMARK_BEGIN(MARTA_NO_HEADER);
@@ -65,10 +67,11 @@ init_1darray(n, POLYBENCH_ARRAY(y));
 
 #ifdef THREE_VECTOR
 __m128 tmp0, tmp1, tmp2;
-#elif defined(FUSED_OP)
+#elif defined(FUSED_OP) || (defined(GATHER_EXP) && defined(B256))
 __m256 tmp;
 #else
 __m128 tmp, tmp0, tmp1, tmp2, fma0;
+__m256 tmp256, fma256, tmp2560, tmp2561, tmp2562;
 #endif
 
 polybench_start_instruments;
@@ -114,10 +117,14 @@ for (int t = 0; t < TSTEPS; ++t) {
   [6] += POLYBENCH_ARRAY(A)[6] * POLYBENCH_ARRAY(x)[X1_ORIG + X1_IDX_C];
   POLYBENCH_ARRAY(y)
   [7] += POLYBENCH_ARRAY(A)[7] * POLYBENCH_ARRAY(x)[X1_ORIG + X1_IDX_D];
-#elif defined(ONLY_PACKING)
+#elif defined(ONLY_PACKING_4OPS)
   DO_NOT_TOUCH(x);
   DO_NOT_TOUCH_WRITE(tmp);
   tmp = cost_model_x(POLYBENCH_ARRAY(x));
+#elif defined(ONLY_PACKING_8OPS)
+  DO_NOT_TOUCH(x);
+  DO_NOT_TOUCH_WRITE(tmp256);
+  tmp256 = cost_model_8ops(POLYBENCH_ARRAY(x));
 #elif defined(ONLY_ONE_128BITS)
   DO_NOT_TOUCH(x);
   DO_NOT_TOUCH(A);
@@ -137,6 +144,19 @@ for (int t = 0; t < TSTEPS; ++t) {
   tmp2 = vpack_y(POLYBENCH_ARRAY(y));
   fma0 = _mm_fmadd_ps(tmp0, tmp1, tmp2);
   vstore_y(fma0, POLYBENCH_ARRAY(y));
+#elif defined(F256B)
+  DO_NOT_TOUCH(x);
+  DO_NOT_TOUCH(A);
+  DO_NOT_TOUCH_WRITE(y);
+  tmp2560 = vpack_x_256(POLYBENCH_ARRAY(x));
+  tmp2561 = vpack_A_256(POLYBENCH_ARRAY(A));
+  tmp2562 = vpack_y_256(POLYBENCH_ARRAY(y));
+  fma256 = _mm256_fmadd_ps(tmp2560, tmp2561, tmp2562);
+  vstore_y_256(fma256, POLYBENCH_ARRAY(y));
+#elif defined(GATHER_EXP)
+  DO_NOT_TOUCH(x);
+  DO_NOT_TOUCH_WRITE(tmp);
+  tmp = cost_model_gather(POLYBENCH_ARRAY(x));
 #else
   DO_NOT_TOUCH(x);
   DO_NOT_TOUCH(A);

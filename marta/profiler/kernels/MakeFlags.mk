@@ -4,12 +4,12 @@
 #																			   #
 ################################################################################
 
-# Some paths
+# Some useful paths
 BIN_DIR=../../bin/
 ASM_DIR=../../asm_codes/
 USRDIR=$(HOME)
 
-# Inline code
+# EXPERIMENTAL: inline code
 INLINE_TOOL:=python3 ../../utils/inline_code.py
 
 # Flags for PolyBench/C
@@ -17,7 +17,8 @@ PAPI_LIB?=$(USRDIR)/lib
 PAPI_INCLUDE?=$(USRDIR)/include
 PAPI_FLAGS=-I$(PAPI_INCLUDE) -L$(PAPI_LIB) -lpapi
 POLYBENCH_FLAGS = -I ../utilities ../utilities/polybench.c
-POLY_TFLAGS= -DPOLYBENCH_TIME -DPOLYBENCH_CYCLE_ACCURATE_TIME $(POLYBENCH_FLAGS)
+POLY_TFLAGS= -DPOLYBENCH_TIME $(POLYBENCH_FLAGS)
+POLY_RFLAGS= -DPOLYBENCH_TIME -DPOLYBENCH_CYCLE_ACCURATE_TIMER $(POLYBENCH_FLAGS)
 POLY_PFLAGS= -DPOLYBENCH_PAPI $(POLYBENCH_FLAGS) $(PAPI_FLAGS)
 
 ASM_SYNTAX?=intel
@@ -34,8 +35,8 @@ ifeq ($(COMP),icc)
 	ifeq ($(AUTOVEC),true)
 		FLAGS_KERN+= -vec-threshold0
 	endif
-	FLAGS_KERN+= -O3 -ipo 
-	FLAGS_MAIN+= -O3 -ipo
+	FLAGS_KERN+= -O3 
+	FLAGS_MAIN+= -O3 
 	FLAGS_ASM+= -O3
 else ifeq ($(COMP),gcc)
 	ifeq ($(GCC),10)
@@ -44,9 +45,10 @@ else ifeq ($(COMP),gcc)
 		CC=gcc
 	endif
 	CXX=g++
-	FLAGS_MAIN+= -O3 -flto -fno-aggressive-loop-optimizations -fno-tree-dominator-opts -finline-functions -fno-move-loop-invariants -fno-loop-interchange 
+	FLAGS_MAIN+= -O3 -D_GNU_SOURCE -fno-dce -fno-tree-dce -fno-tree-builtin-call-dce
 	ifeq ($(AUTOVEC),true)
 		FLAGS_KERN+= -ftree-vectorize
+		FLAGS_MAIN+= -ftree-vectorize
 	endif
 	FLAGS_KERN+= -O3 -flto -fsimd-cost-model=unlimited -fvect-cost-model=unlimited
 	FLAGS_ASM+= -O3 -fsimd-cost-model=unlimited -fvect-cost-model=unlimited
@@ -75,14 +77,47 @@ endif
 
 .PHONY: all clean
 
-UNIQUE_NAME?=$(BASENAME)_$(SUFFIX_ASM)_$(COMP)
-TMP_SRC?=___tmp_$(UNIQUE_NAME).c
-TMP_BIN?=___tmp_$(UNIQUE_NAME).o
+KERNEL_NAME?=$(BASENAME)_$(SUFFIX_ASM)_$(COMP)
+TMP_SRC?=___tmp_$(KERNEL_NAME).c
+TMP_BIN?=___tmp_$(KERNEL_NAME).o
 
-BASE_BIN_NAME?=$(BIN_DIR)$(UNIQUE_NAME)
-BASE_ASM_NAME?=$(ASM_DIR)$(UNIQUE_NAME)
+BASE_BIN_NAME?=$(BIN_DIR)$(KERNEL_NAME)
+BASE_ASM_NAME?=$(ASM_DIR)$(KERNEL_NAME)
 
-all: $(BINARY_NAME)
+#MAIN_RULES:= $(MACVETH_RULE) asm_code kernel $(MAIN_FILE)
+MAIN_RULES:= $(MACVETH_RULE) $(MAIN_FILE)
+
+ifeq ($(COMPILE_KERNEL),true)
+	MAIN_RULES+= kernel
+	FLAGS_MAIN+= $(KERNEL_NAME).o
+endif
+
+ifeq ($(ASM_CODE),true)
+	MAIN_RULES+= asm_code
+endif
+
+
+# Experimental
+ifeq ($(COMPILE_ASM),true)
+	MAIN_RULES+= custom_asm
+endif
+
+# Compilation targets: depending on what we are measuring
+TARGETS=
+ifeq ($(TIME),true)
+	TARGETS+= $(BINARY_NAME)_time
+endif
+
+ifeq ($(TSC),true)
+	TARGETS+= $(BINARY_NAME)_tsc
+endif
+
+ifeq ($(PAPI),true)
+	TARGETS+= $(BINARY_NAME)_papi
+endif
+
+# Targets to compile
+all: $(TARGETS)
 
 macveth: 
 	$(V)$(MVPATH)macveth $(MACVETH_FLAGS) $(OLD_TARGET)$(INLINE).c -o kernels/$(OLD_TARGET)/$(TARGET).c -- $(MACVETH_DB)
@@ -93,33 +128,21 @@ asm_code:
 kernel:
 	$(V)cp $(TARGET).c $(TMP_SRC)
 	$(V)$(CC) -c $(FLAGS_KERN) $(TMP_SRC)
-	$(V)mv $(TMP_BIN) $(UNIQUE_NAME).o
+	$(V)mv $(TMP_BIN) $(KERNEL_NAME).o
 	$(V)rm $(TMP_SRC)
 
-hand_asm:
-	$(V)$(CC) -c $(FLAGS_KERN) test.s
+custom_asm:
+	$(V)$(CC) -c $(FLAGS_KERN) $(ASM_NAME).s -o $(KERNEL_NAME).o
 
-#$(BINARY_NAME): $(MACVETH_RULE) asm_code kernel $(MAIN_SRC)$(MAIN_SUFFIX) 
-$(BINARY_NAME): $(MACVETH_RULE) asm_code hand_asm $(MAIN_SRC)$(MAIN_SUFFIX) 
-# ifeq ($(AUTOVEC), true) 
-# 	$(V)$(CC) $(FLAGS_MAIN) $(POLY_TFLAGS) $(MAIN_FILE) $(UNIQUE_NAME).o -S
-# 	$(V)$(INLINE_TOOL) $(MAIN_SRC).s $(BASE_ASM_NAME).s $(TARGET) $(COMP)
-# 	$(V)$(CC) $(FLAGS_MAIN) $(POLY_TFLAGS) $(UNIQUE_NAME).o $(MAIN_SRC).s -o $(BASE_BIN_NAME)_time.o
-# 	$(V)$(CC) $(FLAGS_MAIN) $(POLY_PFLAGS) $(MAIN_FILE) $(UNIQUE_NAME).o -S
-# 	$(V)$(INLINE_TOOL) $(MAIN_SRC).s $(BASE_ASM_NAME).s $(TARGET) $(COMP)
-# 	$(V)$(CC) $(FLAGS_MAIN) $(POLY_PFLAGS) $(UNIQUE_NAME).o $(MAIN_SRC).s -o $(BASE_BIN_NAME)_papi.o
-# else
-	#$(V)$(CC) $(FLAGS_MAIN) $(POLY_TFLAGS) $(MAIN_FILE) $(UNIQUE_NAME).o -o
-	#$(BASE_BIN_NAME)_time.o
-	$(V)$(CC) $(FLAGS_MAIN) $(POLY_TFLAGS) $(MAIN_FILE) test.o -o $(BASE_BIN_NAME)_time.o
-	#$(V)$(CC) $(FLAGS_MAIN) $(POLY_PFLAGS) $(MAIN_FILE) $(UNIQUE_NAME).o -o
-	#$(BASE_BIN_NAME)_papi.o
-	$(V)$(CC) $(FLAGS_MAIN) $(POLY_PFLAGS) $(MAIN_FILE) test.o -o $(BASE_BIN_NAME)_papi.o
-# endif
-#$(V)$(CC) $(FLAGS_MAIN) $(POLY_PFLAGS) $(MAIN_FILE) $(UNIQUE_NAME).o -S
-#$(V)mv $(UNIQUE_NAME).o $(BIN_DIR)/$(UNIQUE_NAME)_kernel.o
-#(V)rm $(UNIQUE_NAME)_papi.o $(UNIQUE_NAME)_time.o
+# Compile main files
+$(BINARY_NAME)_time: $(MAIN_RULES)
+	$(V)$(CC) $(FLAGS_MAIN) $(POLY_TFLAGS) $(MAIN_FILE) -o $(BASE_BIN_NAME)_time.o
 
+$(BINARY_NAME)_tsc: $(MAIN_RULES)
+	$(V)$(CC) $(FLAGS_MAIN) $(POLY_RFLAGS) $(MAIN_FILE) -o $(BASE_BIN_NAME)_tsc.o
+
+$(BINARY_NAME)_papi: $(MAIN_RULES)
+	$(V)$(CC) $(FLAGS_MAIN) $(POLY_PFLAGS) $(MAIN_FILE) -o $(BASE_BIN_NAME)_papi.o
 
 clean:
 	find . -type f ! -name "*.c" ! -name "*.h" ! -name "*.c" ! -name "Makefile" -delete
