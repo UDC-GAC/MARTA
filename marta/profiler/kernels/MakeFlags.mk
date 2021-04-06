@@ -39,11 +39,7 @@ ifeq ($(COMP),icc)
 	FLAGS_MAIN+= -O3 
 	FLAGS_ASM+= -O3
 else ifeq ($(COMP),gcc)
-	ifeq ($(GCC),10)
-		CC=/home/marcos.horro/bin/gcc
-	else
-		CC=gcc
-	endif
+	CC=gcc
 	CXX=g++
 	FLAGS_MAIN+= -O3 -D_GNU_SOURCE -fno-dce -fno-tree-dce -fno-tree-builtin-call-dce
 	ifeq ($(AUTOVEC),true)
@@ -55,8 +51,15 @@ else ifeq ($(COMP),gcc)
 else ifeq ($(COMP),clang)
 	CC=clang
 	CXX=clang++
+	FLAGS_MAIN+= -O3 -D_GNU_SOURCE -fno-dce -fno-tree-dce -fno-tree-builtin-call-dce
+	ifeq ($(AUTOVEC),true)
+		FLAGS_KERN+= -ftree-vectorize
+		FLAGS_MAIN+= -ftree-vectorize
+	endif
+	FLAGS_KERN+= -O3 -flto -fsimd-cost-model=unlimited -fvect-cost-model=unlimited
+	FLAGS_ASM+= -O3 -fsimd-cost-model=unlimited -fvect-cost-model=unlimited
 else
-	echo "Compiler unknown, using GNU/GCC"
+	echo "Compiler unknown"
 	exit 1
 endif
 
@@ -134,13 +137,15 @@ kernel:
 custom_asm:
 	$(V)$(CC) -c $(FLAGS_KERN) $(ASM_NAME).s -o $(KERNEL_NAME).o
 
-# Compile main files
+# -DPOLYBENCH_TIME
 $(BINARY_NAME)_time: $(MAIN_RULES)
 	$(V)$(CC) $(FLAGS_MAIN) $(POLY_TFLAGS) $(MAIN_FILE) -o $(BASE_BIN_NAME)_time.o
 
+# -DPOLYBENCH_TIME -DPOLYBENCH_CYCLE_ACCURATE_TIMER
 $(BINARY_NAME)_tsc: $(MAIN_RULES)
 	$(V)$(CC) $(FLAGS_MAIN) $(POLY_RFLAGS) $(MAIN_FILE) -o $(BASE_BIN_NAME)_tsc.o
 
+# -DPOLYBENCH_PAPI
 $(BINARY_NAME)_papi: $(MAIN_RULES)
 	$(V)$(CC) $(FLAGS_MAIN) $(POLY_PFLAGS) $(MAIN_FILE) -o $(BASE_BIN_NAME)_papi.o
 

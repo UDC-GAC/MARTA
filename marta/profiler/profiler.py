@@ -415,7 +415,6 @@ class Profiler:
             print(__version__)
             sys.exit(0)
 
-        # parsing all the arguments from the configuration file
         try:
             from yaml import CLoader as Loader
         except ImportError:
@@ -437,7 +436,6 @@ class Profiler:
         for cfg in kernel_setup:
             self.profiling_kernels(cfg)
 
-        # Quit with no error
         sys.exit(0)
 
 

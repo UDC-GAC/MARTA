@@ -86,6 +86,9 @@ class Timing:
         # Retrieve percentage of discarded values
         discarded_values = float(mask.sum()) / results.size
 
+        if type(mean_results) == np.float64:
+            mean_results = np.array(mean_results)
+
         # Return mean values in a dictionary fashion
         if type(name) is list:
             return dict(zip(name, mean_results)), discarded_values
