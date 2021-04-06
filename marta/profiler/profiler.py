@@ -248,7 +248,7 @@ class Profiler:
         else:
             output_filename = self.args.output
 
-        if output_cols == "all":
+        if type(output_cols) == str and output_cols == "all":
             if type(params_kernel) is dict:
                 output_cols = list(params_kernel.keys())
             else:
@@ -258,7 +258,7 @@ class Profiler:
             print("output_cols parameter must be a list or 'all'")
             sys.exit(1)
 
-        output_cols += ["CFG", "Compiler", "FLOPSs", "time"]
+        output_cols += ["CFG", "Compiler"]
         output_cols += kernel.papi_counters
 
         if type(params_kernel) is dict:
@@ -302,8 +302,6 @@ class Profiler:
 
         print(f"Compiling with {kernel.processes} processes")
         for compiler in kernel.compilers_list:
-            # for kconfig in kernel.kernel_cfg:
-            # print(f"Compiler and flags: {compiler} {kconfig}")
             print(f"Compiler and flags: {compiler}")
             if type(params_kernel) is dict:
                 product = Profiler.dict_product(params_kernel, kernel.kernel_cfg)
@@ -318,9 +316,6 @@ class Profiler:
                 with mp.Pool(processes=kernel.processes) as pool:
                     iterable = zip(
                         repit(kernel),
-                        # repit(kernel.kernel_cfg),
-                        # it.product(kernel.kernel_cfg),
-                        # repit(kconfig),
                         product,
                         repit(compiler),
                         repit(debug),

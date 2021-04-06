@@ -142,7 +142,7 @@ class Kernel:
     @staticmethod
     def get_dict_from_d_flags(params):
         d = {}
-        for tok in params.split(" "):
+        for tok in params.strip().split(" "):
             tmp = tok.split("=")
             key = tmp[0].replace("-D", "")
             if len(tmp) == 1:
@@ -255,18 +255,17 @@ class Kernel:
     def run(self, product_params, compiler):
         tmp_dict = {}
         avg_papi_counters = dict.fromkeys(self.papi_counters)
-        avg_time = {}
         tmp = pickle.loads(product_params)
         kconfig = tmp["KERNEL_CFG"]
         del tmp["KERNEL_CFG"]
         params_dict = tmp
         name_bin, _ = Kernel.get_suffix_and_flags(kconfig, params_dict)
         name_bin = self.basename + "_" + name_bin
-        asm_dict = {}
         if self.asm_analysis:
             asm_dict = ASMParserFactory.parse_asm(
                 self.asm_syntax, f"asm_codes/{name_bin}_{compiler}.s"
             )
+            tmp_dict.update(asm_dict)
 
         # Average papi counters
         if len(self.papi_counters) > 0:
@@ -319,10 +318,11 @@ class Kernel:
             if discarded_tsc_values != -1:
                 tmp_dict.update(avg_tsc)
                 tmp_dict.update({"DiscardedTscValues": discarded_tsc_values})
-        tmp_dict.update(asm_dict)
         if type(params_dict) is not list:
             tmp_dict.update(params_dict)
-        tmp_dict.update(Kernel.get_dict_from_d_flags(kconfig))
+        d = Kernel.get_dict_from_d_flags(kconfig)
+        if len(d.keys()) > 0:
+            tmp_dict.update(d)
         tmp_dict.update(
             {"CFG": kconfig, "Compiler": compiler,}
         )

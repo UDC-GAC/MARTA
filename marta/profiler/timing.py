@@ -92,4 +92,6 @@ class Timing:
         if type(name) is list and len(name) > 1:
             return dict(zip(name, mean_results)), discarded_values
         else:
+            if type(name) is list:
+                name = name[0]
             return {name: mean_results}, discarded_values
