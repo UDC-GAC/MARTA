@@ -6,15 +6,17 @@ import numpy as np
 class Timing:
     @staticmethod
     def error_and_exit(line, events):
-        print(f"Execution did not return a numeric value: {line} {events}")
+        print(f"Execution did not return a numeric value: \n'{line}'")
         if "FAILED" in line:
-            print(f"ERROR = {line}")
             print("Executions need to have access to PAPI library")
             print("Seems you do not have access, try: ")
             print("\tsudo sh -c 'echo -1 >/proc/sys/kernel/perf_event_paranoid'")
             print("Or maybe you just misspelled an event:")
             for e in events:
-                print(e)
+                print(f"\t{e}")
+            print(
+                "Check if listed events are available in the machine using 'papi_avail' or 'papi_native_avail'"
+            )
         sys.exit(1)
 
     @staticmethod
@@ -67,7 +69,7 @@ class Timing:
         except ValueError:
             line = ""
             with open(tmp_file) as f:
-                line = [l for l in f if "FAILED" in l].join(" ")
+                line = " ".join([l for l in f if "FAILED" in l])
             Timing.error_and_exit(line, name)
 
         results /= nsteps
