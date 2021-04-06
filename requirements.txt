@@ -1,6 +1,5 @@
 tqdm
-# Numpy 1.19.4 has a bug in Windows and will not work properly (LOL)
-numpy==1.19.3
+numpy==1.19.5
 pandas
 pyyaml==5.3
 Sphinx==3.3.1
