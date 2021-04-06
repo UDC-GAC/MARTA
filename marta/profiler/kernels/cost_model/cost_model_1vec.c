@@ -109,3 +109,26 @@ INLINE_PREFIX __m128 cost_model_x(DATA_TYPE *restrict x) {
 #include "cost_model_vlen4.c"
   return tmp;
 }
+
+#ifndef X_IDX_E
+#define X_IDX_E 0
+#endif
+
+#ifndef X_IDX_F
+#define X_IDX_F 0
+#endif
+
+#ifndef X_IDX_G
+#define X_IDX_G 0
+#endif
+
+#ifndef X_IDX_H
+#define X_IDX_H 0
+#endif
+
+INLINE_PREFIX __m256 cost_model_8ops(DATA_TYPE *restrict x) {
+
+  __m256 tmp;
+#include "cost_model_vlen8.c"
+  return tmp;
+}

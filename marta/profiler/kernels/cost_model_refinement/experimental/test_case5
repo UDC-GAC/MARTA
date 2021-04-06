@@ -1,0 +1,9 @@
+for (i = 0; i <= 1; ++i)
+   for (j = 2; j <= 3; ++j)
+      y[1] += A[23*i+36*j] * x[82*i+49*j];
+for (i = 2; i <= 3; ++i)
+   for (j = 6; j <= 7; ++j)
+      y[27] += A[29*i+72*j] * x[190*i+88*j];
+
+// REAL MEASUREMENT individual cost: 6 cycles
+// REAL MEASUREMENT fused cost: 3 cycles

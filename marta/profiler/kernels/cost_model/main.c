@@ -38,11 +38,10 @@
 #include "marta_wrapper.h"
 #include <immintrin.h>
 
-#if defined(FULL_128BITS) || defined(F256B)
-#include "cost_model_all.c"
+#if defined(FULL_128BITS) || defined(FULL_256BITS)
+#include "cost_model.c"
 #else
 #include "cost_model_1vec.c"
-#include "cost_model_8ops.c"
 //#include "cost_model_gather.c"
 #endif
 
@@ -144,7 +143,7 @@ for (int t = 0; t < TSTEPS; ++t) {
   tmp2 = vpack_y(POLYBENCH_ARRAY(y));
   fma0 = _mm_fmadd_ps(tmp0, tmp1, tmp2);
   vstore_y(fma0, POLYBENCH_ARRAY(y));
-#elif defined(F256B)
+#elif defined(FULL_256BITS)
   DO_NOT_TOUCH(x);
   DO_NOT_TOUCH(A);
   DO_NOT_TOUCH_WRITE(y);

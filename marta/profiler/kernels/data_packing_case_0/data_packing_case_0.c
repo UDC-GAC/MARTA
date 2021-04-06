@@ -21,17 +21,6 @@
 #define INLINE_PREFIX __attribute__((always_inline)) inline
 #endif
 
-#if defined(LOADU2_LOAD) && !defined(INTEL_COMPILER)
-#undef LOADU2_LOAD
-#define SET_LOAD
-#endif
-
-#ifdef SIMD_CODE
-#define __OPTIMIZE__
-#endif
-
-//#define SIMD_CODE
-
 INLINE_PREFIX void data_packing_case_0(DATA_TYPE *restrict A, DATA_TYPE *restrict x, DATA_TYPE *restrict y)
 {
     int I = 0;
@@ -49,6 +38,9 @@ INLINE_PREFIX void data_packing_case_0(DATA_TYPE *restrict A, DATA_TYPE *restric
     int i,j;
 
 
+    //asm volatile("" : : "r,m"(y) : "memory");
+    //asm volatile("" : : "r,m"(A) : "memory");
+    //asm volatile("" : : "r,m"(x) : "memory");
     asm volatile("" : "+g"(y));
     asm volatile("" : "+g"(A));
     asm volatile("" : "+g"(x));
@@ -157,16 +149,8 @@ INLINE_PREFIX void data_packing_case_0(DATA_TYPE *restrict A, DATA_TYPE *restric
     __m128 fma = _mm_fmadd_ps(accm0, accm1, accm2);
     __m128 add = _mm_add_ps(fma, mul);
     
-    
-    // UGLY HACK for scattering data: x2 vextractps
-    _mm_store_sd((double *)&y[0],_mm_castps_pd(add));
-    //_mm_store_sd((double *)&y[0],_mm_castps_pd(add));
-    // Manual scattering, even worse
-    // y[0] = add[0];
-    // y[1] = add[1];
-    y[42] = add[2];
-    y[43] = add[3];
-
+    _mm_storel_pi(&y[0],add);
+    _mm_storeh_pi(&y[42],add);
 #endif
 
 #ifdef VERSION_FULL_VECTOR
@@ -207,7 +191,6 @@ INLINE_PREFIX void data_packing_case_0(DATA_TYPE *restrict A, DATA_TYPE *restric
     y[43] = __mv_vop2[5];
 #endif
 #endif
-
 #endif
   
   // FLUSHING EVERYTHING TO MEMORY; GOOD BARRIER

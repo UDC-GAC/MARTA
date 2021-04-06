@@ -340,8 +340,13 @@ class CostModel:
         return 0
 
     @staticmethod
-    def compute_cost_program(program: list) -> int:
+    def compute_cost_program(full_program: list, vlen=256, data_size=32) -> int:
         cost = 0
+        # full_vector = vlen / data_size
+        # niters = len(full_program.unrolled_sentences) / full_vector
+        # for i in range(niters):
+
+        program = full_program
         # Cost of packing
         print(f"packing x = {CostModel.packing_cost(program, 'x')}")
         print(f"packing y = {CostModel.packing_cost(program, 'y')}")
@@ -375,13 +380,13 @@ class CostModel:
         CostModel.load_table()
 
         # Cost is basically: packing + FMA + store
-        c0 = CostModel.compute_cost_program(Program.fuse_programs(program))
+        c0 = CostModel.compute_cost_program(Program.fuse_programs(program), 256)
         if type(program) == Program:
             # only one program
             return (c0, c0)
         # If there is a list of programs, compute values individually
         for pi in program:
-            c1 += CostModel.compute_cost_program(pi)
+            c1 += CostModel.compute_cost_program(pi, 128)
 
         return (c0, c1)
 

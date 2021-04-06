@@ -27,134 +27,61 @@
           debug: False
       configuration:
           kernel_cfg: [
-          #" -DF256B -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=2
-          #-DX_IDX_D=3 -DX_IDX_E=4 -DX_IDX_F=5 -DX_IDX_G=6 -DX_IDX_H=7 -DA_IDX_A=0 -DA_IDX_B=1 -DA_IDX_C=2
-          #-DA_IDX_D=3 -DA_IDX_E=4 -DA_IDX_F=5 -DA_IDX_G=6 -DA_IDX_H=7 -DY_IDX_A=0 -DY_IDX_B=1 -DY_IDX_C=2
-          #-DY_IDX_D=3 -DY_IDX_E=4 -DY_IDX_F=5 -DY_IDX_G=6 -DY_IDX_H=7"
-          " -DF256B "
+            # test_case0: fusing x2 128 bits operations, random values
+          " -DFULL_256BITS -DX_N=8 -DY_N=8 -DA_N=8
+            -DX_IDX_A=1006 -DX_IDX_B=898 -DX_IDX_C=1178 -DX_IDX_D=1070
+            -DX_IDX_E=4567 -DX_IDX_F=4583 -DX_IDX_G=4567 -DX_IDX_H=4583 
+            -DA_IDX_A=5440 -DA_IDX_B=5440 -DA_IDX_C=5472 -DA_IDX_D=5472 
+            -DA_IDX_E=4800 -DA_IDX_F=4800 -DA_IDX_G=4816 -DA_IDX_H=4816 
+            -DY_IDX_A=1192 -DY_IDX_B=1192 -DY_IDX_C=1196 -DY_IDX_D=1196 
+            -DY_IDX_E=1728 -DY_IDX_F=1728 -DY_IDX_G=1744 -DY_IDX_H=1744",
+            # test_case1: full reduction
+          " -DFULL_256BITS -DX_N=8 -DY_N=8 -DA_N=8
+            -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=2 -DX_IDX_D=3
+            -DX_IDX_E=32 -DX_IDX_F=33 -DX_IDX_G=34 -DX_IDX_H=35 
+            -DA_IDX_A=0 -DA_IDX_B=1 -DA_IDX_C=2 -DA_IDX_D=3 
+            -DA_IDX_E=32 -DA_IDX_F=33 -DA_IDX_G=34 -DA_IDX_H=35 
+            -DY_IDX_A=0 -DY_IDX_B=0 -DY_IDX_C=0 -DY_IDX_D=0 
+            -DY_IDX_E=0 -DY_IDX_F=0 -DY_IDX_G=0 -DY_IDX_H=0",
+            # test_case2: perfectly aligned
+            " -DFULL_256BITS -DX_N=8 -DY_N=8 -DA_N=8
+            -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=2 -DX_IDX_D=3
+            -DX_IDX_E=4 -DX_IDX_F=5 -DX_IDX_G=6 -DX_IDX_H=7 
+            -DA_IDX_A=0 -DA_IDX_B=1 -DA_IDX_C=2 -DA_IDX_D=3 
+            -DA_IDX_E=4 -DA_IDX_F=5 -DA_IDX_G=6 -DA_IDX_H=7 
+            -DY_IDX_A=0 -DY_IDX_B=1 -DY_IDX_C=2 -DY_IDX_D=3 
+            -DY_IDX_E=4 -DY_IDX_F=5 -DY_IDX_G=6 -DY_IDX_H=7",
+            # test_case3: fusing x2 128 bits operations, random values
+            " -DFULL_256BITS -DX_N=8 -DY_N=8 -DA_N=8
+            -DX_IDX_A=1006 -DX_IDX_B=898 -DX_IDX_C=1178 -DX_IDX_D=1070
+            -DX_IDX_E=4611 -DX_IDX_F=4627 -DX_IDX_G=4612 -DX_IDX_H=4628
+            -DA_IDX_A=5440 -DA_IDX_B=5440 -DA_IDX_C=5472 -DA_IDX_D=5472 
+            -DA_IDX_E=4800 -DA_IDX_F=4801 -DA_IDX_G=4816 -DA_IDX_H=4817 
+            -DY_IDX_A=1192 -DY_IDX_B=1192 -DY_IDX_C=1196 -DY_IDX_D=1196 
+            -DY_IDX_E=1728 -DY_IDX_F=1729 -DY_IDX_G=1744 -DY_IDX_H=1745",
+            # test_case4: 2 reductions full gather same CL
+            " -DFULL_256BITS -DX_N=8 -DY_N=8 -DA_N=8
+            -DX_IDX_A=0 -DX_IDX_B=3 -DX_IDX_C=2 -DX_IDX_D=5
+            -DX_IDX_E=4 -DX_IDX_F=8 -DX_IDX_G=6 -DX_IDX_H=10
+            -DA_IDX_A=0 -DA_IDX_B=2 -DA_IDX_C=2 -DA_IDX_D=4
+            -DA_IDX_E=4 -DA_IDX_F=9 -DA_IDX_G=6 -DA_IDX_H=11 
+            -DY_IDX_A=0 -DY_IDX_B=0 -DY_IDX_C=0 -DY_IDX_D=0 
+            -DY_IDX_E=27 -DY_IDX_F=27 -DY_IDX_G=27 -DY_IDX_H=27", 
+            # test_case5: fusing x2 64 bits onto full vector
+            " -DFULL_256BITS -DX_N=8 -DY_N=8 -DA_N=8
+            -DX_IDX_A=98 -DX_IDX_B=147 -DX_IDX_C=180 -DX_IDX_D=229
+            -DX_IDX_E=908 -DX_IDX_F=996 -DX_IDX_G=1098 -DX_IDX_H=1186
+            -DA_IDX_A=72 -DA_IDX_B=108 -DA_IDX_C=95 -DA_IDX_D=131
+            -DA_IDX_E=490 -DA_IDX_F=562 -DA_IDX_G=519 -DA_IDX_H=591 
+            -DY_IDX_A=1 -DY_IDX_B=1 -DY_IDX_C=1 -DY_IDX_D=1
+            -DY_IDX_E=27 -DY_IDX_F=27 -DY_IDX_G=27 -DY_IDX_H=27",  
           ]
           d_features:
-                X_IDX_A:
+                X_ORIG:
                     evaluate: True
                     type: "static"
                     val_type: "numeric"
-                    value: "[1006]"
-                X_IDX_B:
-                    evaluate: True
-                    type: "static"
-                    val_type: "numeric"
-                    value: "[898]"
-                X_IDX_C:
-                    evaluate: True
-                    type: "static"
-                    val_type: "numeric"
-                    value: "[1178]"
-                    #value: "[2]"
-                X_IDX_D:
-                    evaluate: True
-                    type: "static"
-                    val_type: "numeric"
-                    value: "[1070]"
-                X_IDX_E:
-                    evaluate: True
-                    type: "static"
-                    val_type: "numeric"
-                    value: "[4567]"
-                X_IDX_F:
-                    evaluate: True
-                    type: "static"
-                    val_type: "numeric"
-                    value: "[4583]"
-                X_IDX_G:
-                    evaluate: True
-                    type: "static"
-                    val_type: "numeric"
-                    value: "[4567]"
-                X_IDX_H:
-                    evaluate: True
-                    type: "static"
-                    val_type: "numeric"
-                    value: "[4583]"
-                A_IDX_A:
-                    evaluate: True
-                    type: "static"
-                    val_type: "numeric"
-                    value: "[5440]"
-                A_IDX_B:
-                    evaluate: True
-                    type: "static"
-                    val_type: "numeric"
-                    value: "[5440]"
-                A_IDX_C:
-                    evaluate: True
-                    type: "static"
-                    val_type: "numeric"
-                    value: "[5472]"
-                A_IDX_D:
-                    evaluate: True
-                    type: "static"
-                    val_type: "numeric"
-                    value: "[5472]"
-                A_IDX_E:
-                    evaluate: True
-                    type: "static"
-                    val_type: "numeric"
-                    value: "[4800]"
-                A_IDX_F:
-                    evaluate: True
-                    type: "static"
-                    val_type: "numeric"
-                    value: "[4800]"
-                A_IDX_G:
-                    evaluate: True
-                    type: "static"
-                    val_type: "numeric"
-                    value: "[4816]"
-                A_IDX_H:
-                    evaluate: True
-                    type: "static"
-                    val_type: "numeric"
-                    value: "[4816]"
-                Y_IDX_A:
-                    evaluate: True
-                    type: "static"
-                    val_type: "numeric"
-                    value: "[1192]"
-                Y_IDX_B:
-                    evaluate: True
-                    type: "static"
-                    val_type: "numeric"
-                    value: "[1192]"
-                Y_IDX_C:
-                    evaluate: True
-                    type: "static"
-                    val_type: "numeric"
-                    value: "[1196]"
-                Y_IDX_D:
-                    evaluate: True
-                    type: "static"
-                    val_type: "numeric"
-                    value: "[1196]"
-                Y_IDX_E:
-                    evaluate: True
-                    type: "static"
-                    val_type: "numeric"
-                    value: "[1728]"
-                Y_IDX_F:
-                    evaluate: True
-                    type: "static"
-                    val_type: "numeric"
-                    value: "[1728]"
-                Y_IDX_G:
-                    evaluate: True
-                    type: "static"
-                    val_type: "numeric"
-                    value: "[1744]"
-                Y_IDX_H:
-                    evaluate: True
-                    type: "static"
-                    val_type: "numeric"
-                    value: "[1744]"
+                    value: "[0]"
           flops: "0"
       execution:
           enabled: True
