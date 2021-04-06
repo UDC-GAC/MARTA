@@ -1,3 +1,5 @@
+#!/bin/python3
+# -*- coding: utf-8 -*-
 import os
 import sys
 import time
@@ -12,11 +14,6 @@ class Kernel:
     total_time = time.time()
     compilation_time = 0
     execution_time = 0
-
-    @staticmethod
-    def dprint(msg):
-        if Kernel.debug:
-            print(f"[MARTA DEBUG]: {msg}")
 
     @staticmethod
     def start_timer():
@@ -93,7 +90,6 @@ class Kernel:
             f" {other_flags} "
             f" {debug}"
         )
-        Kernel.dprint(comp_str)
         ret = os.system(comp_str)
 
         if ret != 0:
@@ -144,14 +140,6 @@ class Kernel:
             return 0
 
     @staticmethod
-    def get_dict_from_params(params):
-        try:
-            params = pickle.loads(params)
-        except TypeError:
-            pass
-        return params
-
-    @staticmethod
     def get_dict_from_d_flags(params):
         d = {}
         for tok in params.split(" "):
@@ -168,7 +156,6 @@ class Kernel:
     def get_suffix_and_flags(kconfig, params):
         custom_flags = ""
         suffix_file = ""
-        params = Kernel.get_dict_from_params(params)
         # Parsing parameters
         if type(params) is dict:
             for pname in params.keys():
@@ -197,7 +184,6 @@ class Kernel:
 
     @staticmethod
     def get_asm_name(params):
-        params = Kernel.get_dict_from_params(params)
         if not type(params) is dict:
             return ""
         # Parsing parameters
@@ -213,10 +199,13 @@ class Kernel:
                 return f" {pname}={param_val_parsed}"
         return ""
 
-    def compile(self, kconfig, params_str, compiler, debug, quit_on_error=False):
-        suffix_file, custom_flags = Kernel.get_suffix_and_flags(kconfig, params_str)
+    def compile(self, product_params, compiler, debug, quit_on_error=False):
+        tmp = pickle.loads(product_params)
+        kconfig = tmp["KERNEL_CFG"]
+        del tmp["KERNEL_CFG"]
+        params_dict = tmp
+        suffix_file, custom_flags = Kernel.get_suffix_and_flags(kconfig, params_dict)
 
-        # FIXME:
         custom_flags += self.compiler_flags[compiler]
         local_common_flags = self.common_flags + custom_flags
         local_common_flags += f" -DNRUNS={self.nsteps} "
@@ -224,7 +213,7 @@ class Kernel:
             local_common_flags += f" -DMARTA_CPU_AFFINITY={self.cpu_affinity} "
 
         # MACVETH flags
-        other_flags = Kernel.get_asm_name(params_str) + " "
+        other_flags = Kernel.get_asm_name(params_dict) + " "
         if "MACVETH" in kconfig:
             kconfig = kconfig.replace("MACVETH", "")
             other_flags = " MACVETH=true "
@@ -263,11 +252,15 @@ class Kernel:
             return None
         return []
 
-    def run(self, kconfig, params, compiler):
+    def run(self, product_params, compiler):
         tmp_dict = {}
         avg_papi_counters = dict.fromkeys(self.papi_counters)
         avg_time = {}
-        name_bin, _ = Kernel.get_suffix_and_flags(kconfig, params)
+        tmp = pickle.loads(product_params)
+        kconfig = tmp["KERNEL_CFG"]
+        del tmp["KERNEL_CFG"]
+        params_dict = tmp
+        name_bin, _ = Kernel.get_suffix_and_flags(kconfig, params_dict)
         name_bin = self.basename + "_" + name_bin
         asm_dict = {}
         if self.asm_analysis:
@@ -327,8 +320,8 @@ class Kernel:
                 tmp_dict.update(avg_tsc)
                 tmp_dict.update({"DiscardedTscValues": discarded_tsc_values})
         tmp_dict.update(asm_dict)
-        if type(params) is not list:
-            tmp_dict.update(Kernel.get_dict_from_params(params))
+        if type(params_dict) is not list:
+            tmp_dict.update(params_dict)
         tmp_dict.update(Kernel.get_dict_from_d_flags(kconfig))
         tmp_dict.update(
             {"CFG": kconfig, "Compiler": compiler,}
