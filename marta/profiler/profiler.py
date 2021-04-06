@@ -229,13 +229,10 @@ class Profiler:
 
         kernel = Kernel(cfg)
         config_output = cfg["kernel"]["output"]
-        print("Holi")
         if len(kernel.d_features) > 0:
             params_kernel = Profiler.eval_features(kernel.d_features)
         else:
             params_kernel = kernel.d_flags
-
-        print(params_kernel)
 
         # Output configuration
         # file names

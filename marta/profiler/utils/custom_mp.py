@@ -9,9 +9,7 @@ def istarmap(self, func, iterable, chunksize=1):
     if sys.version_info[1] >= 8:
         self._check_running()
         if chunksize < 1:
-            raise ValueError(
-                "Chunksize must be 1+, not {0:n}".format(
-                    chunksize))
+            raise ValueError("Chunksize must be 1+, not {0:n}".format(chunksize))
 
         task_batches = mpp.Pool._get_tasks(func, iterable, chunksize)
         result = mpp.IMapIterator(self)
@@ -21,20 +19,20 @@ def istarmap(self, func, iterable, chunksize=1):
             raise ValueError("Pool not running")
 
         if chunksize < 1:
-            raise ValueError(
-                "Chunksize must be 1+, not {0:n}".format(
-                    chunksize))
+            raise ValueError("Chunksize must be 1+, not {0:n}".format(chunksize))
 
     task_batches = mpp.Pool._get_tasks(func, iterable, chunksize)
-    result = mpp.IMapIterator(self._cache)
+    if sys.version_info[1] >= 8:
+        result = mpp.IMapIterator(self)
+    else:
+        result = mpp.IMapIterator(self._cache)
 
     self._taskqueue.put(
         (
-            self._guarded_task_generation(result._job,
-                                          mpp.starmapstar,
-                                          task_batches),
-            result._set_length
-        ))
+            self._guarded_task_generation(result._job, mpp.starmapstar, task_batches),
+            result._set_length,
+        )
+    )
     return (item for chunk in result for item in chunk)
 
 
