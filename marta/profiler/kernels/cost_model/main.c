@@ -45,6 +45,32 @@
 //#include "cost_model_gather.c"
 #endif
 
+INLINE_PREFIX void no_simd_kernel(DATA_TYPE *restrict y, DATA_TYPE *restrict A,
+                                  DATA_TYPE *restrict x) {
+  y[Y_IDX_A] += A[A_IDX_A] * x[X_IDX_A];
+#if X_N >= 2
+  y[Y_IDX_B] += A[A_IDX_B] * x[X_IDX_B];
+#endif
+#if X_N >= 3
+  y[Y_IDX_C] += A[A_IDX_C] * x[X_IDX_C];
+#endif
+#if X_N >= 4
+  y[Y_IDX_D] += A[A_IDX_D] * x[X_IDX_D];
+#endif
+#if X_N >= 5
+  y[Y_IDX_E] += A[A_IDX_E] * x[X_IDX_E];
+#endif
+#if X_N >= 6
+  y[Y_IDX_F] += A[A_IDX_F] * x[X_IDX_F];
+#endif
+#if X_N >= 7
+  y[Y_IDX_G] += A[A_IDX_G] * x[X_IDX_G];
+#endif
+#if X_N >= 8
+  y[Y_IDX_H] += A[A_IDX_H] * x[X_IDX_H];
+#endif
+}
+
 MARTA_BENCHMARK_BEGIN(MARTA_NO_HEADER);
 
 int TSTEPS = NRUNS;
@@ -96,26 +122,11 @@ for (int t = 0; t < TSTEPS; ++t) {
   __m256 vy = _mm256_loadu_ps(&POLYBENCH_ARRAY(y)[0]);
   __m256 fma = _mm256_fmadd_ps(tmp, vA, vy);
   _mm256_storeu_ps(&POLYBENCH_ARRAY(y)[0], fma);
-#elif defined(NO_SIMD)
-  DO_NOT_TOUCH(x);
-  DO_NOT_TOUCH(A);
-  DO_NOT_TOUCH(y);
-  POLYBENCH_ARRAY(y)
-  [0] += POLYBENCH_ARRAY(A)[0] * POLYBENCH_ARRAY(x)[X0_ORIG + X0_IDX_A];
-  POLYBENCH_ARRAY(y)
-  [1] += POLYBENCH_ARRAY(A)[1] * POLYBENCH_ARRAY(x)[X0_ORIG + X0_IDX_B];
-  POLYBENCH_ARRAY(y)
-  [2] += POLYBENCH_ARRAY(A)[2] * POLYBENCH_ARRAY(x)[X0_ORIG + X0_IDX_C];
-  POLYBENCH_ARRAY(y)
-  [3] += POLYBENCH_ARRAY(A)[3] * POLYBENCH_ARRAY(x)[X0_ORIG + X0_IDX_D];
-  POLYBENCH_ARRAY(y)
-  [4] += POLYBENCH_ARRAY(A)[4] * POLYBENCH_ARRAY(x)[X1_ORIG + X1_IDX_A];
-  POLYBENCH_ARRAY(y)
-  [5] += POLYBENCH_ARRAY(A)[5] * POLYBENCH_ARRAY(x)[X1_ORIG + X1_IDX_B];
-  POLYBENCH_ARRAY(y)
-  [6] += POLYBENCH_ARRAY(A)[6] * POLYBENCH_ARRAY(x)[X1_ORIG + X1_IDX_C];
-  POLYBENCH_ARRAY(y)
-  [7] += POLYBENCH_ARRAY(A)[7] * POLYBENCH_ARRAY(x)[X1_ORIG + X1_IDX_D];
+#elif NO_SIMD == 1
+  // DO_NOT_TOUCH(POLYBENCH_ARRAY(x));
+  // DO_NOT_TOUCH(POLYBENCH_ARRAY(A));
+  //  DO_NOT_TOUCH(y);
+  no_simd_kernel(POLYBENCH_ARRAY(y), POLYBENCH_ARRAY(A), POLYBENCH_ARRAY(x));
 #elif defined(ONLY_PACKING_4OPS)
   DO_NOT_TOUCH(x);
   DO_NOT_TOUCH_WRITE(tmp);
@@ -179,6 +190,7 @@ polybench_stop_instruments;
 polybench_print_instruments;
 
 if (argc >= 42) {
+#if NO_SIMD == 0
 #ifndef THREE_VECTOR
   printf("tmp %f", tmp[2]);
   printf("tmp %f", tmp[1]);
@@ -188,6 +200,9 @@ if (argc >= 42) {
   printf("tmp %f", tmp1[0]);
   printf("tmp %f", tmp2[3]);
   printf("tmp %f", y[3]);
+  printf("tmp %f", y[0]);
+#endif
+#else
   printf("tmp %f", y[0]);
 #endif
 }

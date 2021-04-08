@@ -146,7 +146,7 @@ class Profiler:
 
         :param feat: Dictionary of strings
         :type feat: dict
-        :return: Retuns a dict with all features or parameters properly expanded
+        :return: Returns a dict with all features or parameters properly expanded
         :rtype: dict
         """
         params_dict = {}

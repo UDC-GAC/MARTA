@@ -228,7 +228,7 @@ INLINE_PREFIX void vstore_y_256(__m256 vstore, DATA_TYPE *restrict y) {
   y[Y_IDX_G] += vstore[6];
   y[Y_IDX_H] += vstore[7];
 #endif
-#elif Y == 7
+#elif Y_N == 7
 #if (Y_IDX_A == Y_IDX_B) && (Y_IDX_A == Y_IDX_C) && (Y_IDX_A == Y_IDX_D) &&    \
     (Y_IDX_A == Y_IDX_E) && (Y_IDX_A == Y_IDX_F) && (Y_IDX_A == Y_IDX_G)
   // Reduction
@@ -269,7 +269,7 @@ INLINE_PREFIX void vstore_y_256(__m256 vstore, DATA_TYPE *restrict y) {
   y[Y_IDX_F] += vstore[5];
   y[Y_IDX_G] += vstore[6];
 #endif
-#elif Y == 6
+#elif Y_N == 6
 #if (Y_IDX_A == Y_IDX_B) && (Y_IDX_A == Y_IDX_C) && (Y_IDX_A == Y_IDX_D) &&    \
     (Y_IDX_A == Y_IDX_E) && (Y_IDX_A == Y_IDX_F)
   // Reduction
@@ -305,7 +305,7 @@ INLINE_PREFIX void vstore_y_256(__m256 vstore, DATA_TYPE *restrict y) {
   y[Y_IDX_E] += vstore[4];
   y[Y_IDX_F] += vstore[5];
 #endif
-#elif Y == 5
+#elif Y_N == 5
 #if (Y_IDX_A == Y_IDX_B) && (Y_IDX_A == Y_IDX_C) && (Y_IDX_A == Y_IDX_D) &&    \
     (Y_IDX_A == Y_IDX_E)
   // Reduction

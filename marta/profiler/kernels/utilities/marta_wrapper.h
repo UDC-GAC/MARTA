@@ -94,15 +94,11 @@ void update_row(char *name, char *features, long flops, int t, long_long val) {
 
 #if defined(__INTEL_COMPILER)
 #define DO_NOT_TOUCH(var)
-
 #define DO_NOT_TOUCH_WRITE(var)
-
 #define DO_NOT_TOUCH_READ(var)
 #else
 #define DO_NOT_TOUCH(var) asm volatile("" : "+m,r"(var) : : "memory")
-
 #define DO_NOT_TOUCH_WRITE(var) asm volatile("" : : "rm"(var) : "memory")
-
 #define DO_NOT_TOUCH_READ(var) asm volatile("" : "+r,m"(var))
 #endif
 
@@ -189,20 +185,15 @@ char *__polybench_papi_eventlist[] = {
 
 /* Array initialization: 1-dimensional */
 static void init_1darray(int n, DATA_TYPE POLYBENCH_1D(x, N, n)) {
-  int i;
-
-  for (i = 0; i < n; i++) {
-    // printf("i = %d\n", i);
-    x[i] = 42;
+  for (int i = 0; i < n; i++) {
+    x[i] = 42.0;
   }
 }
 
 /* Array initialization: 2-dimensional */
 static void init_2darray(int n, DATA_TYPE POLYBENCH_2D(A, N, N, n, n)) {
-  int i, j;
-
-  for (i = 0; i < n; i++) {
-    for (j = 0; j < n; j++) {
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j < n; j++) {
       A[i][j] = 42;
     }
   }

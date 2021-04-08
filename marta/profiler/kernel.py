@@ -156,6 +156,7 @@ class Kernel:
     def get_suffix_and_flags(kconfig, params):
         custom_flags = ""
         suffix_file = ""
+        custom_bin_name = None
         # Parsing parameters
         if type(params) is dict:
             for pname in params.keys():
@@ -165,9 +166,10 @@ class Kernel:
                     # NOTE: for includes or other paths, \"string\" notation is
                     # needed, but this is not MARTA's responsibility.
                     param_val_parsed = '"' + params[pname] + '"'
-                # FIXME:
                 if pname != "ASM_NAME":
                     custom_flags += f" -D{pname}={param_val_parsed}"
+                if pname == "BIN_NAME":
+                    custom_bin_name = params[pname]
                 suffix_file += f"_{pname}{params[pname]}"
             suffix_file = suffix_file.split("/")[-1].replace(".c", "")
         else:
@@ -176,10 +178,17 @@ class Kernel:
                 suffix_file += f"_{p}"
         # Parsing kconfig
         for kparam in kconfig.strip().replace("-", "").split(" "):
+            if "BIN_NAME" in kparam:
+                custom_bin_name = kparam.split("=")[1]
             suffix_file += f"_{kparam}"
         # Avoid very long names
-        if len(suffix_file) > 200:
-            suffix_file = suffix_file[:200]
+        if custom_bin_name != None:
+            suffix_file = custom_bin_name
+        if len(suffix_file) > 256:
+            print(
+                "Error: too long binary name. Try '-DBIN_NAME=<suffix>' for each compilation case instead"
+            )
+            sys.exit(1)
         return suffix_file, custom_flags
 
     @staticmethod
@@ -192,7 +201,7 @@ class Kernel:
                 param_val_parsed = int(params[pname])
             except ValueError:
                 # NOTE: for includes or other paths, \"string\" notation is
-                # needed, but this is not MARTA's reponsability.
+                # needed, but this is not MARTA's responsibility.
                 param_val_parsed = '"' + params[pname] + '"'
             # FIXME:
             if pname == "ASM_NAME":
