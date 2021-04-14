@@ -226,7 +226,8 @@ class Kernel:
         if "MACVETH" in kconfig:
             kconfig = kconfig.replace("MACVETH", "")
             other_flags = " MACVETH=true "
-            suffix_file += "_macveth"
+            local_common_flags += " -DMACVETH=1 "
+            # suffix_file += "_macveth"
             other_flags += (
                 " MVPATH=" + self.mvpath + " MACVETH_FLAGS='" + self.macveth_flags + "'"
             )
@@ -416,11 +417,11 @@ class Kernel:
         try:
             self.mvpath = config_cfg["macveth_path_build"]
         except KeyError:
-            self.mvpath = ""
+            self.mvpath = "''"
         try:
             self.macveth_flags = config_cfg["macveth_flags"]
         except KeyError:
-            self.macveth_flags = ""
+            self.macveth_flags = " -misa=avx2 "
 
         # Execution arguments
         self.execution_enabled = config_exec["enabled"]
