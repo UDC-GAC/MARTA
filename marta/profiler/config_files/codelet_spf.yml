@@ -17,24 +17,30 @@
           language: "C"
           compiler_flags: 
             { 
-                "gcc": " -mtune=cascadelake ",
-                #"icc": " -mtune=cascadelake ",
+                "gcc": " -march=cascadelake ",
+                "icc": " -march=cascadelake ",
             }
-          common_flags: " -mfma -mavx2 -DBIN_NAME=test_codelet_hamrle3_partial "
-          inlined_kernel: True
+          common_flags: " -mfma -mavx2 "
+          inlined_kernel: False
           asm_syntax: "intel"
           asm_analysis: False
           debug: False
       configuration:
           kernel_cfg: [
-          " ",
+          #" -DSCATTER_Y_0 ",
+          #" -DSCATTER_Y_1 ",
+          #" -DONE_REDUCTION_Y ",
+          " AUTOVEC=true ",
+          " MACVETH ",
+          #" -DTWO_REDUCTION_Y ",
+          #" -DFOUR_REDUCTION_Y ",
           ]
           d_features:
-                MACVETH:
+                MATRIX:
                     evaluate: True
                     type: "static"
                     val_type: "numeric"
-                    value: "[0,1]"  
+                    value: "[0]"  
           flops: "0"
       execution:
           enabled: True
@@ -46,7 +52,7 @@
             #"UOPS_EXECUTED:THREAD",            
             #"UOPS_RETIRED:STALL_CYCLES",
             #"UOPS_ISSUED:STALL_CYCLES",
-            #"UOPS_EXECUTED:STALL_CYCLES",
+            "UOPS_EXECUTED:STALL_CYCLES",
             #"CPU_CLK_UNHALTED",
             #"ix86arch::UNHALTED_REFERENCE_CYCLES",
             #"UNHALTED_REFERENCE_CYCLES",
@@ -69,8 +75,8 @@
           tsc: False
           threshold_outliers: 3
           mean_and_discard_outliers: True
-          nexec: 5
-          nsteps: 1000
+          nexec: 20
+          nsteps: 1
           cpu_affinity: 11
           prefix: ""
       output:

@@ -23,6 +23,8 @@ POLY_PFLAGS= -DPOLYBENCH_PAPI $(POLYBENCH_FLAGS) $(PAPI_FLAGS)
 
 ASM_SYNTAX?=intel
 
+#MACVETH_TARGET?=$(TARGET)
+
 # Adding all flags
 FLAGS:= $(COMMON_FLAGS) $(KERNEL_CONFIG)
 FLAGS_MAIN:= $(FLAGS)
@@ -32,22 +34,15 @@ FLAGS_ASM:= $(FLAGS)
 ifeq ($(COMP),icc)
 	CC=icc
 	CXX=icpc
-	ifeq ($(AUTOVEC),true)
-		FLAGS_KERN+= -vec-threshold0
-	endif
-	FLAGS_KERN+= -O3 
-	FLAGS_MAIN+= -O3 
-	FLAGS_ASM+= -O3
+	FLAGS_KERN+= -O2 -vec-threshold0
+	FLAGS_MAIN+= -O2 -vec-threshold0
+	FLAGS_ASM+= -O2 -vec-threshold0
 else ifeq ($(COMP),gcc)
 	CC=gcc
 	CXX=g++
 	FLAGS_MAIN+= -O3 -D_GNU_SOURCE -fno-dce -fno-tree-dce -fno-tree-builtin-call-dce
-	ifeq ($(AUTOVEC),true)
-		FLAGS_KERN+= -ftree-vectorize
-		FLAGS_MAIN+= -ftree-vectorize
-	endif
-	FLAGS_KERN+= -O3 -flto -fsimd-cost-model=unlimited -fvect-cost-model=unlimited
-	FLAGS_ASM+= -O3 -fsimd-cost-model=unlimited -fvect-cost-model=unlimited
+	FLAGS_KERN+= -ftree-vectorize -ftree-slp-vectorize -O3 -fsimd-cost-model=unlimited -fvect-cost-model=unlimited
+	FLAGS_ASM+=  -ftree-vectorize -ftree-slp-vectorize -O3 -fsimd-cost-model=unlimited -fvect-cost-model=unlimited
 else ifeq ($(COMP),clang)
 	CC=clang
 	CXX=clang++
@@ -73,7 +68,7 @@ BASENAME:=$(TARGET)
 MACVETH_RULE=
 ifeq ($(MACVETH),true)
 	MACVETH_RULE:=macveth
-	OLD_TARGET:=$(TARGET)
+	OLD_TARGET:=$(MACVETH_TARGET)
 	TARGET:=$(TARGET)_macveth
 	MACVETH_DB:=$(COMMON_FLAGS)
 endif
@@ -119,11 +114,17 @@ ifeq ($(PAPI),true)
 	TARGETS+= $(BINARY_NAME)_papi
 endif
 
+ifeq ($(DUMP),true)
+	TARGETSS+= $(BINARY_NAME)_dump
+endif
+
 # Targets to compile
 all: $(TARGETS)
 
 macveth: 
-	$(V)$(MVPATH)macveth $(MACVETH_FLAGS) $(OLD_TARGET)$(INLINE).c -o kernels/$(OLD_TARGET)/$(TARGET).c -- $(MACVETH_DB)
+#	$(V)$(MVPATH)macveth $(MACVETH_FLAGS) $(OLD_TARGET)$(MACVETH_SUFFIX).c -o
+#	kernels/$(OLD_TARGET)/$(TARGET).c -- $(MACVETH_DB)
+	$(V)$(MVPATH)macveth $(MACVETH_FLAGS) $(OLD_TARGET)$(MACVETH_SUFFIX).c -o $(TARGET).c -- $(MACVETH_DB) 2> ___$(SUFFIX_ASM).log
 	
 asm_code: 
 	$(V)$(CC) -c $(FLAGS_ASM) $(TARGET).c -masm=$(ASM_SYNTAX) -S -o $(BASE_ASM_NAME).s
@@ -148,6 +149,9 @@ $(BINARY_NAME)_tsc: $(MAIN_RULES)
 # -DPOLYBENCH_PAPI
 $(BINARY_NAME)_papi: $(MAIN_RULES)
 	$(V)$(CC) $(FLAGS_MAIN) $(POLY_PFLAGS) $(MAIN_FILE) -o $(BASE_BIN_NAME)_papi.o
+	
+$(BINARY_NAME)_dump: $(MAIN_RULES)
+	$(V)$(CC) $(FLAGS_MAIN) -DPOLYBENCH_DUMP_ARRAYS $(MAIN_FILE) -o $(BASE_BIN_NAME)_dump.o 
 
 clean:
 	find . -type f ! -name "*.c" ! -name "*.h" ! -name "*.c" ! -name "Makefile" -delete

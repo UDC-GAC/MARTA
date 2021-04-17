@@ -18,9 +18,9 @@
           compiler_flags: 
             { 
                 "gcc": " -mtune=cascadelake ",
-                #"icc": " -mtune=cascadelake ",
+                "icc": " -mtune=cascadelake ",
             }
-          common_flags: " -mfma -mavx2 -DFULL_256BITS "
+          common_flags: " -mfma -mavx512f -mavx512vl -DFULL_256BITS "
           inlined_kernel: True
           asm_syntax: "intel"
           asm_analysis: False
@@ -175,7 +175,7 @@
             -DY_IDX_E=29 -DY_IDX_F=30 ", 
           ]
           d_features:
-                NO_SIMD:
+                AUTO_VEC:
                     evaluate: True
                     type: "static"
                     val_type: "numeric"
@@ -215,7 +215,7 @@
           threshold_outliers: 3
           mean_and_discard_outliers: True
           nexec: 5
-          nsteps: 1000000
+          nsteps: 100000
           cpu_affinity: 11
           prefix: ""
       output:

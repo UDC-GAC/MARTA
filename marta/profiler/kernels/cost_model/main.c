@@ -47,27 +47,27 @@
 
 INLINE_PREFIX void no_simd_kernel(DATA_TYPE *restrict y, DATA_TYPE *restrict A,
                                   DATA_TYPE *restrict x) {
-  y[Y_IDX_A] += A[A_IDX_A] * x[X_IDX_A];
+  y[Y_IDX_A] = y[Y_IDX_A] + A[A_IDX_A] * x[X_IDX_A];
 #if X_N >= 2
-  y[Y_IDX_B] += A[A_IDX_B] * x[X_IDX_B];
+  y[Y_IDX_B] = y[Y_IDX_B] + A[A_IDX_B] * x[X_IDX_B];
 #endif
 #if X_N >= 3
-  y[Y_IDX_C] += A[A_IDX_C] * x[X_IDX_C];
+  y[Y_IDX_C] = y[Y_IDX_C] + A[A_IDX_C] * x[X_IDX_C];
 #endif
 #if X_N >= 4
-  y[Y_IDX_D] += A[A_IDX_D] * x[X_IDX_D];
+  y[Y_IDX_D] = y[Y_IDX_D] + A[A_IDX_D] * x[X_IDX_D];
 #endif
 #if X_N >= 5
-  y[Y_IDX_E] += A[A_IDX_E] * x[X_IDX_E];
+  y[Y_IDX_E] = y[Y_IDX_E] + A[A_IDX_E] * x[X_IDX_E];
 #endif
 #if X_N >= 6
-  y[Y_IDX_F] += A[A_IDX_F] * x[X_IDX_F];
+  y[Y_IDX_F] = y[Y_IDX_F] + A[A_IDX_F] * x[X_IDX_F];
 #endif
 #if X_N >= 7
-  y[Y_IDX_G] += A[A_IDX_G] * x[X_IDX_G];
+  y[Y_IDX_G] = y[Y_IDX_G] + A[A_IDX_G] * x[X_IDX_G];
 #endif
 #if X_N >= 8
-  y[Y_IDX_H] += A[A_IDX_H] * x[X_IDX_H];
+  y[Y_IDX_H] = y[Y_IDX_H] + A[A_IDX_H] * x[X_IDX_H];
 #endif
 }
 
@@ -122,10 +122,10 @@ for (int t = 0; t < TSTEPS; ++t) {
   __m256 vy = _mm256_loadu_ps(&POLYBENCH_ARRAY(y)[0]);
   __m256 fma = _mm256_fmadd_ps(tmp, vA, vy);
   _mm256_storeu_ps(&POLYBENCH_ARRAY(y)[0], fma);
-#elif NO_SIMD == 1
+#elif AUTO_VEC == 1
   // DO_NOT_TOUCH(POLYBENCH_ARRAY(x));
   // DO_NOT_TOUCH(POLYBENCH_ARRAY(A));
-  //  DO_NOT_TOUCH(y);
+  // DO_NOT_TOUCH_WRITE(y);
   no_simd_kernel(POLYBENCH_ARRAY(y), POLYBENCH_ARRAY(A), POLYBENCH_ARRAY(x));
 #elif defined(ONLY_PACKING_4OPS)
   DO_NOT_TOUCH(x);
@@ -161,7 +161,18 @@ for (int t = 0; t < TSTEPS; ++t) {
   tmp2560 = vpack_x_256(POLYBENCH_ARRAY(x));
   tmp2561 = vpack_A_256(POLYBENCH_ARRAY(A));
   tmp2562 = vpack_y_256(POLYBENCH_ARRAY(y));
+  // #if ((Y_N == 8) && (Y_IDX_A != Y_IDX_B) && (Y_IDX_C != Y_IDX_D) &&             \
+//      (Y_IDX_E != Y_IDX_F) && (Y_IDX_G != Y_IDX_H)) ||                          \
+//     ((Y_N == 7) && (Y_IDX_A != Y_IDX_B) && (Y_IDX_C != Y_IDX_D) &&             \
+//      (Y_IDX_E != Y_IDX_F)) ||                                                  \
+//     ((Y_N == 6) && (Y_IDX_A != Y_IDX_B) && (Y_IDX_C != Y_IDX_D) &&             \
+//      (Y_IDX_E != Y_IDX_F)) ||                                                  \
+//     ((Y_N == 5) && (Y_IDX_A != Y_IDX_B) && (Y_IDX_C != Y_IDX_D))
   fma256 = _mm256_fmadd_ps(tmp2560, tmp2561, tmp2562);
+  // #else
+  //   // fma256 = _mm256_fmadd_ps(tmp2560, tmp2561, tmp2562);
+  //   fma256 = _mm256_mul_ps(tmp2560, tmp2561);
+  //#endif
   vstore_y_256(fma256, POLYBENCH_ARRAY(y));
 #elif defined(GATHER_EXP)
   DO_NOT_TOUCH(x);
@@ -190,7 +201,7 @@ polybench_stop_instruments;
 polybench_print_instruments;
 
 if (argc >= 42) {
-#if NO_SIMD == 0
+#if AUTO_VEC == 0
 #ifndef THREE_VECTOR
   printf("tmp %f", tmp[2]);
   printf("tmp %f", tmp[1]);

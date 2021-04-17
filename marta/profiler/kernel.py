@@ -90,6 +90,7 @@ class Kernel:
             f" {other_flags} "
             f" {debug}"
         )
+        # print(comp_str)
         ret = os.system(comp_str)
 
         if ret != 0:
@@ -221,16 +222,33 @@ class Kernel:
         if self.cpu_affinity != -1:
             local_common_flags += f" -DMARTA_CPU_AFFINITY={self.cpu_affinity} "
 
+        # MARTA flags
+        if self.init_data:
+            local_common_flags += f" -DMARTA_INIT_DATA=1 "
+        if self.intel_cache_flush:
+            local_common_flags += (
+                f" -DMARTA_INTEL_FLUSH_DATA=1 -DPOLYBENCH_NO_FLUSH_CACHE "
+            )
+
         # MACVETH flags
         other_flags = Kernel.get_asm_name(params_dict) + " "
         if "MACVETH" in kconfig:
             kconfig = kconfig.replace("MACVETH", "")
             other_flags = " MACVETH=true "
             local_common_flags += " -DMACVETH=1 "
-            # suffix_file += "_macveth"
             other_flags += (
                 " MVPATH=" + self.mvpath + " MACVETH_FLAGS='" + self.macveth_flags + "'"
             )
+            if self.macveth_target != "":
+                try:
+                    macveth_target = (
+                        tmp[self.macveth_target].replace(".c", "").replace(".spf", "")
+                    )
+                    other_flags += f" MACVETH_TARGET={macveth_target} "
+                except KeyError:
+                    print("Error: bad key for MACVETH target")
+                    sys.exit(1)
+
         # MACVETH syntax flags
         other_flags += f" ASM_SYNTAX={self.asm_syntax} "
 
@@ -276,6 +294,22 @@ class Kernel:
                 self.asm_syntax, f"asm_codes/{name_bin}_{compiler}.s"
             )
             tmp_dict.update(asm_dict)
+
+        # FIXME:
+        if "MACVETH" in kconfig:
+            file_name = (
+                "kernels/matrices/___" + name_bin.replace("matrices_", "") + ".log"
+            )
+            macveth_cols = ["Scop Vect.", "Scop Skipped"]
+            macveth_info = dict(zip(macveth_cols, [0, 0]))
+            with open(file_name) as f:
+                for l in f.readlines():
+                    if "Region vectorized" in l:
+                        macveth_info["Scop Vect."] += 1
+                    if "Skipping region" in l:
+                        macveth_info["Scop Skipped"] += 1
+                os.system(f"rm {file_name}")
+            tmp_dict.update(macveth_info)
 
         # Average papi counters
         if len(self.papi_counters) > 0:
@@ -423,7 +457,20 @@ class Kernel:
         except KeyError:
             self.macveth_flags = " -misa=avx2 "
 
+        try:
+            self.macveth_target = config_cfg["macveth_target"]
+        except KeyError:
+            self.macveth_target = ""
+
         # Execution arguments
+        try:
+            self.intel_cache_flush = config_exec["intel_cache_flush"]
+        except KeyError:
+            self.intel_cache_flush = False
+        try:
+            self.init_data = config_exec["init_data"]
+        except KeyError:
+            self.init_data = False
         self.execution_enabled = config_exec["enabled"]
         self.measure_time = False if not "time" in config_exec else config_exec["time"]
         self.measure_tsc = False if not "tsc" in config_exec else config_exec["tsc"]

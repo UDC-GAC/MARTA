@@ -1,12 +1,13 @@
-#if !defined(_MARTA_WRAPPER_H)
+#ifndef _MARTA_WRAPPER_H
 #define _MARTA_WRAPPER_H
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif
 
-#include "definitions.h"
 #include "polybench.h"
+
+#include "polybench_definitions.h"
 
 #include <math.h>
 #include <sched.h>
@@ -14,7 +15,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifndef restrict
 #define restrict __restrict
+#endif
 
 #if defined(__INTEL_COMPILER)
 #define INLINE_PREFIX __forceinline
@@ -30,8 +33,39 @@
 #define NRUNS 10000
 #endif
 
+#ifndef MARTA_NO_HEADER
 #define MARTA_NO_HEADER 0
+#endif
+
+#ifndef MARTA_CSV_HEADER
 #define MARTA_CSV_HEADER 1
+#endif
+
+#ifndef MARTA_INIT_DATA
+#define MARTA_INIT_DATA 0
+#endif
+
+#ifndef MARTA_INTEL_FLUSH_DATA
+#define MARTA_INTEL_FLUSH_DATA 0
+#endif
+
+void intel_clflush(volatile void *p, unsigned int allocation_size) {
+  const size_t cache_line = 64;
+  const char *cp = (const char *)p;
+  size_t i = 0;
+
+  if (p == NULL || allocation_size <= 0)
+    return;
+
+  for (i = 0; i < allocation_size; i += cache_line) {
+    asm volatile("clflush (%0)\n\t" : : "r"(&cp[i]) : "memory");
+  }
+
+  /* according to Intel 64 and IA-32 Architectures optimization reference
+   * manual 7.4.9, this instruction is no longer required; but just in case...
+   */
+  asm volatile("sfence\n\t" : : : "memory");
+}
 
 #if defined(POLYBENCH_PAPI_EXPERIMENTAL)
 struct T {
@@ -101,6 +135,25 @@ void update_row(char *name, char *features, long flops, int t, long_long val) {
 #define DO_NOT_TOUCH_WRITE(var) asm volatile("" : : "rm"(var) : "memory")
 #define DO_NOT_TOUCH_READ(var) asm volatile("" : "+r,m"(var))
 #endif
+
+#define PROFILE_FUNCTION_NO_LOOP(X)                                            \
+  {                                                                            \
+    polybench_start_instruments;                                               \
+    X;                                                                         \
+    polybench_stop_instruments;                                                \
+    polybench_print_instruments;                                               \
+  }
+
+#define PROFILE_FUNCTION_TSTEPS_LOOP(X)                                        \
+  {                                                                            \
+    polybench_start_instruments;                                               \
+    _Pragma("nounroll_and_jam");                                               \
+    for (int t = 0; t < TSTEPS; ++t) {                                         \
+      X;                                                                       \
+    }                                                                          \
+    polybench_stop_instruments;                                                \
+    polybench_print_instruments;                                               \
+  }
 
 #define PROFILE_FUNCTION_SINGLE_VAL_DCE(STEPS, X, Y)                           \
   {                                                                            \
@@ -198,6 +251,12 @@ static void init_2darray(int n, DATA_TYPE POLYBENCH_2D(A, N, N, n, n)) {
     }
   }
 }
+
+#define MARTA_AVOID_DCE(y)                                                     \
+  if (argc >= 42) {                                                            \
+    printf("tmp %f", y[0]);                                                    \
+  }                                                                            \
+  polybench_prevent_dce(print_array1d(N, POLYBENCH_ARRAY(y)));
 
 #define MARTA_CHECK_HEADERS(cond)                                              \
   if ((cond != MARTA_NO_HEADER) && (cond != MARTA_CSV_HEADER)) {               \

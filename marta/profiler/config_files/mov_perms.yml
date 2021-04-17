@@ -32,7 +32,6 @@
                 ASM_NAME:
                     evaluate: True
                     type: "static"
-                    makeflag: True
                     val_type: "string"
                     value: "[f\"mov_permutations/perm_{i}\" for i in range(720)]"
           flops: "0"

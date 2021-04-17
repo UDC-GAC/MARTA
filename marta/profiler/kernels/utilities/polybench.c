@@ -323,7 +323,7 @@ long_long polybench_get_val(int evid) {
 #endif
       return polybench_papi_values[evid];
 #ifdef _OPENMP
-    }
+    }º
   }
 #pragma omp barrier
 #endif
