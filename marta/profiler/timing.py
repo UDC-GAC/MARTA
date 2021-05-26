@@ -20,6 +20,18 @@ class Timing:
         sys.exit(1)
 
     @staticmethod
+    def dump_values(code, exec_opts, compiler):
+        try:
+            os.mkdir("dumps")
+        except FileExistsError:
+            pass
+        # Save execution values in an array
+        suffix = f"dump"
+        bin_file = f"{exec_opts} ./bin/{code}_{compiler}_{suffix}.o 1"
+        tmp_file = f"dumps/____tmp_{code}_{compiler}_{suffix}"
+        os.system(f"{bin_file}  > {tmp_file}")
+
+    @staticmethod
     def measure_benchmark(
         code,
         name,

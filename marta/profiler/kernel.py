@@ -4,6 +4,7 @@ import os
 import sys
 import time
 import pickle
+import difflib
 from report import Report
 from asm_analyzer import ASMParserFactory
 from timing import Timing
@@ -258,6 +259,9 @@ class Kernel:
         if self.measure_tsc:
             other_flags += f" TSC=true "
 
+        if self.check_dump:
+            other_flags += f" DUMP=true "
+
         if len(self.papi_counters) > 0:
             other_flags += f" PAPI=true "
 
@@ -295,7 +299,7 @@ class Kernel:
             )
             tmp_dict.update(asm_dict)
 
-        # FIXME:
+        # Parse output from MACVETH to
         if "MACVETH" in kconfig:
             file_name = (
                 "kernels/matrices/___" + name_bin.replace("matrices_", "") + ".log"
@@ -308,8 +312,12 @@ class Kernel:
                         macveth_info["Scop Vect."] += 1
                     if "Skipping region" in l:
                         macveth_info["Scop Skipped"] += 1
-                os.system(f"rm {file_name}")
+                # os.system(f"rm {file_name}")
             tmp_dict.update(macveth_info)
+
+        # Dump values: -DPOLYBENCH_DUMP_ARRAYS
+        if self.check_dump:
+            Timing.dump_values(name_bin, self.exec_args, compiler)
 
         # Average papi counters
         if len(self.papi_counters) > 0:
@@ -471,6 +479,10 @@ class Kernel:
             self.init_data = config_exec["init_data"]
         except KeyError:
             self.init_data = False
+        try:
+            self.check_dump = config_exec["check_dump"]
+        except KeyError:
+            self.check_dump = False
         self.execution_enabled = config_exec["enabled"]
         self.measure_time = False if not "time" in config_exec else config_exec["time"]
         self.measure_tsc = False if not "tsc" in config_exec else config_exec["tsc"]

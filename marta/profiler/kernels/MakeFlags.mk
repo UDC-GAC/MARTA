@@ -7,6 +7,7 @@
 # Some useful paths
 BIN_DIR=../../bin/
 ASM_DIR=../../asm_codes/
+ASM_DIR=../../dumps/
 USRDIR=$(HOME)
 
 # EXPERIMENTAL: inline code
@@ -34,15 +35,28 @@ FLAGS_ASM:= $(FLAGS)
 ifeq ($(COMP),icc)
 	CC=icc
 	CXX=icpc
-	FLAGS_KERN+= -O2 -vec-threshold0
-	FLAGS_MAIN+= -O2 -vec-threshold0
+	ifeq ($(AUTOVEC),true)
+		FLAGS_KERN+= -Ofast -vec-threshold0
+		FLAGS_MAIN+= -Ofast -vec-threshold0
+	else
+		FLAGS_KERN+= -O2 -vec-threshold0
+		FLAGS_MAIN+= -O2 -vec-threshold0
+	endif
 	FLAGS_ASM+= -O2 -vec-threshold0
 else ifeq ($(COMP),gcc)
 	CC=gcc
 	CXX=g++
-	FLAGS_MAIN+= -O3 -D_GNU_SOURCE -fno-dce -fno-tree-dce -fno-tree-builtin-call-dce
-	FLAGS_KERN+= -ftree-vectorize -ftree-slp-vectorize -O3 -fsimd-cost-model=unlimited -fvect-cost-model=unlimited
-	FLAGS_ASM+=  -ftree-vectorize -ftree-slp-vectorize -O3 -fsimd-cost-model=unlimited -fvect-cost-model=unlimited
+#	FLAGS_MAIN+= -O3 -D_GNU_SOURCE -fno-dce -fno-tree-dce
+#	-fno-tree-builtin-call-dce
+	FLAGS_MAIN+= -O3 -D_GNU_SOURCE
+	ifeq ($(AUTOVEC),true)
+		FLAGS_KERN+= -O3 -ftree-vectorize
+	else
+		FLAGS_KERN+= -O2 -ftree-vectorize
+	endif
+#	FLAGS_ASM+=  -O3 -ftree-vectorize -ftree-slp-vectorize
+#	-fsimd-cost-model=unlimited -fvect-cost-model=unlimited
+	FLAGS_ASM+=  -O3 -ftree-vectorize
 else ifeq ($(COMP),clang)
 	CC=clang
 	CXX=clang++
@@ -81,12 +95,17 @@ TMP_BIN?=___tmp_$(KERNEL_NAME).o
 
 BASE_BIN_NAME?=$(BIN_DIR)$(KERNEL_NAME)
 BASE_ASM_NAME?=$(ASM_DIR)$(KERNEL_NAME)
+BASE_DUMP_NAME?=$(DUMP_DIR)$(KERNEL_NAME)
 
 #MAIN_RULES:= $(MACVETH_RULE) asm_code kernel $(MAIN_FILE)
 MAIN_RULES:= $(MACVETH_RULE) $(MAIN_FILE)
 
 ifeq ($(COMPILE_KERNEL),true)
-	MAIN_RULES+= kernel
+	ifeq ($(MACVETH),true)
+		MAIN_RULES+= kernel_macveth
+	else
+		MAIN_RULES+= kernel
+	endif
 	FLAGS_MAIN+= $(KERNEL_NAME).o
 endif
 
@@ -124,16 +143,20 @@ all: $(TARGETS)
 macveth: 
 #	$(V)$(MVPATH)macveth $(MACVETH_FLAGS) $(OLD_TARGET)$(MACVETH_SUFFIX).c -o
 #	kernels/$(OLD_TARGET)/$(TARGET).c -- $(MACVETH_DB)
-	$(V)$(MVPATH)macveth $(MACVETH_FLAGS) $(OLD_TARGET)$(MACVETH_SUFFIX).c -o $(TARGET).c -- $(MACVETH_DB) 2> ___$(SUFFIX_ASM).log
+	$(V)$(MVPATH)macveth $(MACVETH_FLAGS) $(OLD_TARGET)$(MACVETH_SUFFIX).c -o $(TMP_SRC) -- $(MACVETH_DB) 2> ___$(SUFFIX_ASM).log
 	
 asm_code: 
 	$(V)$(CC) -c $(FLAGS_ASM) $(TARGET).c -masm=$(ASM_SYNTAX) -S -o $(BASE_ASM_NAME).s
+
+kernel_macveth: macveth
+	$(V)$(CC) -c $(FLAGS_KERN) $(TMP_SRC)
+	$(V)mv $(TMP_BIN) $(KERNEL_NAME).o
 
 kernel:
 	$(V)cp $(TARGET).c $(TMP_SRC)
 	$(V)$(CC) -c $(FLAGS_KERN) $(TMP_SRC)
 	$(V)mv $(TMP_BIN) $(KERNEL_NAME).o
-	$(V)rm $(TMP_SRC)
+#	$(V)rm $(TMP_SRC)
 
 custom_asm:
 	$(V)$(CC) -c $(FLAGS_KERN) $(ASM_NAME).s -o $(KERNEL_NAME).o
@@ -151,7 +174,7 @@ $(BINARY_NAME)_papi: $(MAIN_RULES)
 	$(V)$(CC) $(FLAGS_MAIN) $(POLY_PFLAGS) $(MAIN_FILE) -o $(BASE_BIN_NAME)_papi.o
 	
 $(BINARY_NAME)_dump: $(MAIN_RULES)
-	$(V)$(CC) $(FLAGS_MAIN) -DPOLYBENCH_DUMP_ARRAYS $(MAIN_FILE) -o $(BASE_BIN_NAME)_dump.o 
+	$(V)$(CC) $(FLAGS_MAIN) -DPOLYBENCH_DUMP_ARRAYS $(MAIN_FILE) -o $(BASE_DUMP_NAME)_dump.o 
 
 clean:
 	find . -type f ! -name "*.c" ! -name "*.h" ! -name "*.c" ! -name "Makefile" -delete

@@ -236,7 +236,6 @@ class Profiler:
             params_kernel = kernel.d_flags
 
         # Output configuration
-        # file names
         output_cols = config_output["columns"]
         if self.args.output is None:
             tstamp = dt.now().strftime("%d_%m___%H_%M_%S")
