@@ -31,12 +31,6 @@
 
 #include "marta_wrapper.h"
 #include "mmv.h"
-#include <immintrin.h>
-
-#ifdef N
-#undef N
-#define N 1024 * 32
-#endif
 
 MARTA_BENCHMARK_BEGIN(MARTA_NO_HEADER);
 
@@ -50,17 +44,17 @@ if (argc > 1) {
 
 // Initialization section
 
-POLYBENCH_1D_ARRAY_DECL(A, DATA_TYPE, (N+I0)*(M*J0), (n*I0)*(m*J0));
+POLYBENCH_1D_ARRAY_DECL(A, DATA_TYPE, (N+I0)*(M+J0), (n+I0)*(m+J0));
 POLYBENCH_1D_ARRAY_DECL(x, DATA_TYPE, (N+I0), (N+I0));
 POLYBENCH_1D_ARRAY_DECL(y, DATA_TYPE, (N+I0), (N+I0));
 
-/*
+
 if (MARTA_INIT_DATA == 1) {
-  init_1darray(n, POLYBENCH_ARRAY(A));
-  init_1darray(n, POLYBENCH_ARRAY(x));
+  init_1darray(n*m, POLYBENCH_ARRAY(A));
+  init_1darray(m, POLYBENCH_ARRAY(x));
   init_1darray(n, POLYBENCH_ARRAY(y));
 }
-*/
+
 
 /*
 if (MARTA_INTEL_FLUSH_DATA == 1) {

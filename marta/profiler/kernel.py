@@ -55,7 +55,13 @@ class Kernel:
 
     @staticmethod
     def compile_parse_asm(
-        kpath, comp, common_flags, kconfig, other_flags="", suffix_file="", debug="",
+        kpath,
+        comp,
+        common_flags,
+        kconfig,
+        other_flags="",
+        suffix_file="",
+        debug="",
     ):
         """
         Compile benchmark according to a set of flags, suffixes and so
@@ -372,12 +378,18 @@ class Kernel:
                 tmp_dict.update({"DiscardedTscValues": discarded_tsc_values})
         if type(params_dict) is not list:
             tmp_dict.update(params_dict)
+            for key in params_dict:
+                self.flops = self.flops.replace(key, str(params_dict[key]))
         d = Kernel.get_dict_from_d_flags(kconfig)
         if len(d.keys()) > 0:
             tmp_dict.update(d)
         tmp_dict.update(
-            {"CFG": kconfig, "Compiler": compiler,}
+            {
+                "CFG": kconfig,
+                "Compiler": compiler,
+            }
         )
+
         if self.mean_and_discard_outliers:
             if self.measure_time:
                 tmp_dict.update(
