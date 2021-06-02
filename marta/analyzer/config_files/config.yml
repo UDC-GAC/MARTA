@@ -6,7 +6,7 @@
       debug: False
       prepare_data:
           cols: I0 J0 STEP_I STEP_J N M
-          rows: { "I0": 0 }
+          #rows: { "I0": 0 }
           target: FLOPSs
           norm:
               enabled: False
@@ -19,13 +19,13 @@
           type: "decisiontree" # randomforest
           dt_settings:
               max_depth: 10
-              max_leaves: 50
+              max_leaves: 10
               criterion: "gini"
               min_score: 0.8
               pruning_mccp_alpha: 0.0
-              text_tree: True
+              text_tree: False
               graph_tree: True
-              orientation: "vertical"
+              orientation: "horizontal"
       recommender:
           pred: FLOPSs
           interest_dim:

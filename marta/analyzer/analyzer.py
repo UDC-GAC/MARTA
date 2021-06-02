@@ -80,6 +80,12 @@ class DecisionTree:
     def export_text_tree(self) -> None:
         print(tree.export_text(self.clf, feature_names=list(self.data.columns)))
 
+    def get_summary(self) -> None:
+        score = self.clf.score(self.data.values, self.target_data.values)
+        print(f"Mean accuracy (score): {score:6.2f}".format())
+        print(f"Number of leaves:      {self.clf.get_n_leaves():3d}".format())
+        print(f"Depth of tree:         {self.clf.get_depth():3d}".format())
+
     def __init__(self, config: DTConfig, data: pd.DataFrame, target: pd.Series):
         self.config = config
         self.clf = tree.DecisionTreeClassifier(
@@ -92,7 +98,7 @@ class DecisionTree:
         self.data = data
         self.target_data = target
         self.labels = target.values.unique().tolist()
-        self.clf = self.clf.fit(self.data.values, target.values)
+        self.clf = self.clf.fit(self.data.values, self.target_data.values)
 
 
 class Analyzer:
@@ -188,6 +194,7 @@ class Analyzer:
                 dt.export_text_tree()
             if self.dt_cfg.graph_tree:
                 dt.export_graph_tree()
+            dt.get_summary()
 
     def perror(self, msg: str, exit_code=1) -> None:
         print(f"[FATAL ERROR] {msg}")
