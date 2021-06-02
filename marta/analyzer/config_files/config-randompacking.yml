@@ -36,30 +36,29 @@
 #                 prepare_data
 
 - general:
-      input: test/test.csv
-      output: output.arff
+      input: "test/test_marta.csv"
+      output: "marta-random.arff"
       overwrite: True
       clean: True
       debug: False
 - prepare_data:
-      cols: I J It Jt Is Js Jters Iters NELEMS
-      rows: Vec_x=1
+      cols: X_0 X_1 X_2 X_3 CFG
+      rows: ""
       pred: FLOPSs
       norm:
           enabled: False
           type: None
       cats:
-          num: 10
+          num: 25
           type: "linear"
-          scale_factor: 1e9
+          scale_factor: 1e10
       dt_settings:
-          name: J48
-          params: "M=20"
-          opts: '"B R"'
-      min_acc: 0.8
+          max_depth: J48
+          
+      min_acc: 0.1
 - recommender:
       pred: FLOPSs
       interest_dim:
-          value: 6.5
+          value: 7.9
           type: numeric
-      dim: I J It Jt Is Js Jters Iters NELEMS
+      dim: X_0 X_1 X_2 X_3 CFG

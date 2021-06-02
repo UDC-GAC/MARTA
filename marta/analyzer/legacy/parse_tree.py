@@ -29,8 +29,6 @@
 # Authors: Marcos Horro
 
 import re
-import os
-import sys
 import numpy as np
 from utils.utilities import pr_col
 from utils.utilities import colors as c
