@@ -5,9 +5,9 @@ import sys
 import time
 import pickle
 import difflib
-from report import Report
-from asm_analyzer import ASMParserFactory
-from timing import Timing
+from .report import Report
+from .asm_analyzer import ASMParserFactory
+from .timing import Timing
 
 
 class Kernel:
@@ -55,13 +55,7 @@ class Kernel:
 
     @staticmethod
     def compile_parse_asm(
-        kpath,
-        comp,
-        common_flags,
-        kconfig,
-        other_flags="",
-        suffix_file="",
-        debug="",
+        kpath, comp, common_flags, kconfig, other_flags="", suffix_file="", debug="",
     ):
         """
         Compile benchmark according to a set of flags, suffixes and so
@@ -384,10 +378,7 @@ class Kernel:
         if len(d.keys()) > 0:
             tmp_dict.update(d)
         tmp_dict.update(
-            {
-                "CFG": kconfig,
-                "Compiler": compiler,
-            }
+            {"CFG": kconfig, "Compiler": compiler,}
         )
 
         if self.mean_and_discard_outliers:

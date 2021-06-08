@@ -1,0 +1,59 @@
+- kernel:
+      name: "micro_ins"
+      path: "kernels/micro_ins"
+      description: "Setup for experiment micro_ins"
+      debug: False
+      show_progress_bars: True
+      preamble:
+          command: "rm -Rf bin asm_codes && sudo cpupower frequency-set -u 2.1GHz && sudo cpupower frequency-set -d 2.1GHz"
+      finalize:
+          clean_tmp_files: False
+          clean_asm_files: False
+          clean_bin_files: False
+          command: "echo 'done!'"
+      compilation:
+          enabled: True
+          processes: 32
+          language: "C"
+          compiler_flags: 
+            { 
+                "gcc": " -march=native -mtune=native -mavx2 ",
+            }
+          common_flags: " -O3 "
+          inlined_kernel: True
+          asm_syntax: "att"
+          asm_analysis: False
+          debug: False
+      configuration:
+          kernel_cfg: [
+          " ",
+          ]
+          d_features:
+                MICRO_INS:
+                    evaluate: True
+                    type: "static"
+                    val_type: "string"
+                    value: "[f\"kernel_{i}_{j}\" for i,j in it.product(range(1), range(1))]"
+          flops: "1"
+      execution:
+          enabled: True
+          papi_counters: [
+            "UNHALTED_CORE_CYCLES",
+            "INSTRUCTIONS_RETIRED"
+            ]
+          time: True
+          tsc: True
+          threshold_outliers: 3
+          mean_and_discard_outliers: False
+          init_data: True
+          intel_cache_flush: False
+          check_dump: False
+          nexec: 10
+          nsteps: 10000 # 50 in another setup
+          cpu_affinity: 11 # check this
+          prefix: ""
+      output:
+          name: "default"
+          columns: "all"
+          report: True
+          verbose: True

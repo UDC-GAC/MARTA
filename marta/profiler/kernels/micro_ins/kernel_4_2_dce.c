@@ -1,0 +1,2 @@
+MARTA_AVOID_DCE(__tmp172, __tmp175);
+MARTA_AVOID_DCE(__tmp157);

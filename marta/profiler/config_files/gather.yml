@@ -1,0 +1,102 @@
+- kernel:
+      name: "gather"
+      path: "kernels/gather"
+      description: "Setup for experiment gather"
+      debug: False
+      show_progress_bars: True
+      preamble:
+          command: "rm -Rf bin asm_codes && sudo cpupower frequency-set -u 2.1GHz && sudo cpupower frequency-set -d 2.1GHz"
+      finalize:
+          clean_tmp_files: False
+          clean_asm_files: False
+          clean_bin_files: False
+          command: "echo 'done!'"
+      compilation:
+          enabled: True
+          processes: 32
+          language: "C"
+          compiler_flags: 
+            { 
+                "gcc": " -march=native ",
+            }
+          common_flags: " -O3 "
+          inlined_kernel: True
+          asm_syntax: "att"
+          asm_analysis: False
+          debug: False
+      configuration:
+          kernel_cfg: [
+          " ",
+          ]
+          d_features:
+                IDX0:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[0]"
+                    #value: "[0,1,2,554]"
+                IDX1:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[1]"
+                    #value: "[1,16,17,234]"
+                IDX2:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[2]"
+                    #value: "[2,32,5,0]"
+                IDX3:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[3]"
+                    #value: "[3,48,19,23]"
+                IDX4:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[4]"
+                    #value: "[4,64,15,99]"
+                IDX5:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[5]"
+                    #value: "[5,80,19,121]"
+                IDX6:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[6]"
+                    #value: "[6,96,109,1]"
+                IDX7:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[7]"
+                    #value: "[7,112,234,0]"
+          flops: "1"
+      execution:
+          enabled: True
+          papi_counters: [
+            "UNHALTED_CORE_CYCLES",
+            "INSTRUCTIONS_RETIRED"
+            ]
+          time: True
+          tsc: True
+          threshold_outliers: 3
+          mean_and_discard_outliers: True
+          init_data: True
+          intel_cache_flush: False
+          check_dump: False
+          nexec: 7
+          nsteps: 10000
+          cpu_affinity: 11
+          prefix: ""
+      output:
+          name: "default"
+          columns: "all"
+          report: True
+          verbose: True

@@ -5,6 +5,7 @@
    :synopsis: This module enables measurements given a configuration file
 .. moduleauthor:: Marcos Horro <marcos.horro@udc.es>
 """
+
 import os
 import copy
 import sys
@@ -15,14 +16,12 @@ import numpy as np
 import pickle
 import itertools as it
 import multiprocessing as mp
-import utils.custom_mp
+from .utils import custom_mp
 from datetime import datetime as dt
-from kernel import Kernel
+from .kernel import Kernel
 from tqdm import tqdm
 from tqdm.auto import tqdm
 from itertools import repeat as repit
-
-__version__ = "0.0.0-alpha"
 
 
 class Profiler:
@@ -436,7 +435,3 @@ class Profiler:
             self.profiling_kernels(cfg)
 
         sys.exit(0)
-
-
-if __name__ == "__main__":
-    Profiler(sys.argv[1:])

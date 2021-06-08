@@ -1,3 +1,12 @@
+/**
+ * This version is stamped on May 10, 2016
+ *
+ * Contact:
+ *   Louis-Noel Pouchet <pouchet.ohio-state.edu>
+ *   Tomofumi Yuki <tomofumi.yuki.fr>
+ *
+ * Web address: http://polybench.sourceforge.net
+ */
 /*
  * polybench.h: this file is part of PolyBench/C
  *

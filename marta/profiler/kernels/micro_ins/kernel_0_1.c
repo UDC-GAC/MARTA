@@ -1,0 +1,15 @@
+__tmp0 = _mm_load_ss(&p[112]);
+__tmp2 = _mm_load_ss(&p[96]);
+__tmp4 = _mm_load_ss(&p[80]);
+__tmp6 = _mm_load_ss(&p[64]);
+__tmp8 = _mm_load_ss(&p[48]);
+__tmp10 = _mm_load_ss(&p[32]);
+__tmp12 = _mm_load_ss(&p[16]);
+__tmp15 = _mm256_loadu_ps(&p[0]);
+__tmp23 = _mm256_shuffle_ps(_mm256_castps128_ps256(__tmp0),_mm256_castps128_ps256(__tmp2),0x8c);DO_NOT_TOUCH(__tmp23);
+__tmp24 = _mm256_shuffle_ps(_mm256_castps128_ps256(__tmp2),_mm256_castps128_ps256(__tmp4),0xbe);DO_NOT_TOUCH(__tmp24);
+__tmp25 = _mm256_shuffle_ps(_mm256_castps128_ps256(__tmp4),_mm256_castps128_ps256(__tmp6),0xb3);DO_NOT_TOUCH(__tmp25);
+__tmp26 = _mm256_shuffle_ps(_mm256_castps128_ps256(__tmp6),_mm256_castps128_ps256(__tmp8),0x85);DO_NOT_TOUCH(__tmp26);
+__tmp27 = _mm256_shuffle_ps(_mm256_castps128_ps256(__tmp8),_mm256_castps128_ps256(__tmp10),0x24);DO_NOT_TOUCH(__tmp27);
+__tmp28 = _mm256_shuffle_ps(_mm256_castps128_ps256(__tmp10),_mm256_castps128_ps256(__tmp12),0x28);DO_NOT_TOUCH(__tmp28);
+__tmp29 = _mm256_shuffle_ps(_mm256_castps128_ps256(__tmp12),__tmp15,0x68);DO_NOT_TOUCH(__tmp29);

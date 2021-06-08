@@ -1,3 +1,14 @@
+/**
+ * This version is stamped on May 10, 2016
+ *
+ * Contact:
+ *   Louis-Noel Pouchet <pouchet.ohio-state.edu>
+ *   Tomofumi Yuki <tomofumi.yuki.fr>
+ *
+ * Web address: http://polybench.sourceforge.net
+ */
+/* polybench.c: this file is part of PolyBench/C */
+
 #include <assert.h>
 #include <math.h>
 #include <sched.h>
@@ -323,7 +334,8 @@ long_long polybench_get_val(int evid) {
 #endif
       return polybench_papi_values[evid];
 #ifdef _OPENMP
-    }º
+    }
+    º
   }
 #pragma omp barrier
 #endif

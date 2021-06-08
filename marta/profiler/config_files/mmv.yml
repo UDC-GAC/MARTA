@@ -18,7 +18,7 @@
           compiler_flags: 
             { 
                 "gcc": " -march=native ",
-                #"icc": "  ",
+                "icc": " -march=native ",
             }
           common_flags: " -O3 "
           inlined_kernel: False
@@ -34,32 +34,32 @@
                     evaluate: True
                     type: "static"
                     val_type: "numeric"
-                    value: "[0]"
+                    value: "[0,1,2,3]"
                 STEP_I:
                     evaluate: True
                     type: "static"
                     val_type: "numeric"
-                    value: "[1,2]"
+                    value: "[1,2,4]"
                 J0:
                     evaluate: True
                     type: "static"
                     val_type: "numeric"
-                    value: "[0]"
+                    value: "[0,1,2,3]"
                 STEP_J:
                     evaluate: True
                     type: "static"
                     val_type: "numeric"
-                    value: "[1,2]"
+                    value: "[1,2,4]"
                 N:
                     evaluate: True
                     type: "static"
                     val_type: "numeric"
-                    value: "[1024]"
+                    value: "[512,1024]"
                 M:
                     evaluate: True
                     type: "static"
                     val_type: "numeric"
-                    value: "[1024]"
+                    value: "[512,1024]"
           flops: "N*M*2/STEP_I/STEP_J"
       execution:
           enabled: True

@@ -7,12 +7,14 @@
  *
  * Web address: http://polybench.sourceforge.net
  */
+/* polybench_definitions.h: this file is based on definitions in PolyBench/C */
+
 #ifndef _KERN_DEF_H
 #define _KERN_DEF_H
 
 /* Default to LARGE_DATASET. */
-#if !defined(MINI_DATASET) && !defined(SMALL_DATASET) &&   \
-    !defined(MEDIUM_DATASET) && !defined(LARGE_DATASET) && \
+#if !defined(MINI_DATASET) && !defined(SMALL_DATASET) &&                       \
+    !defined(MEDIUM_DATASET) && !defined(LARGE_DATASET) &&                     \
     !defined(EXTRALARGE_DATASET)
 #define LARGE_DATASET
 #endif
@@ -50,7 +52,7 @@
 #define _PB_N POLYBENCH_LOOP_BOUND(N, n)
 
 /* Default data type */
-#if !defined(DATA_TYPE_IS_INT) && !defined(DATA_TYPE_IS_FLOAT) && \
+#if !defined(DATA_TYPE_IS_INT) && !defined(DATA_TYPE_IS_FLOAT) &&              \
     !defined(DATA_TYPE_IS_DOUBLE)
 #ifdef DATA_TYPE
 #if DATA_TYPE == float

@@ -1,5 +1,6 @@
 # temp files
 __*
+!__init__.py
 *.list
 macveth_output.c*
 codelet*.c
@@ -57,4 +58,6 @@ cyc_*
 
 # Build
 build/
+dist/
 test-codes/
+*egg-info*

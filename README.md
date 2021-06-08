@@ -1,4 +1,4 @@
-<h2 align="center">MARTA - Micro ARchiTectural Analyzer</h2>
+<h2 align="center">MARTA - Micro ARchitectural Toolkit for Analysis</h2>
 
 <p align="center">
 <a href="https://github.com/psf/black/blob/master/LICENSE"><img alt="License: MIT" src="https://black.readthedocs.io/en/stable/_static/license.svg"></a>
@@ -35,8 +35,7 @@ It is recommended to check out testing configuration files for more clarity.
 
 ## Dependencies
 
-- Python 3.x
-- C/C++ compiler: clang, GNU/GCC or ICC
+- Python >=3.7
 
 ## Getting started
 
@@ -46,9 +45,10 @@ This project has two big and independent components:
   metrics such as cycles, time and FLOPS/s for a concrete kernel with regard to
   a input file specifying all parameters.
 - `analyzer`: given an input in table form (e.g. CSV) and some parameters,
-  using [WEKA (framework for ML)](https://www.cs.waikato.ac.nz/ml/weka/)
-  generates a decision tree in order to **categorize** performance,
-  as well as detecting false positives/negatives.
+  using [scikit-learn](https://scikit-learn.org/stable/index.html)
+  generates a classification system in order to **categorize** performance,
+  as well as detecting false positives/negatives. Typically, this system is
+  either a decision tree or a random forest algorithm.
 
 TODO: What does **categorizing performance** means?
 
