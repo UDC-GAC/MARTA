@@ -75,9 +75,10 @@ class Report:
         content += f"- Loop iterations: {kernel.nsteps}\n"
         content += f"- Number of repetitions: {kernel.nexec}\n"
         content += f"- CPU affinity (if any): {kernel.cpu_affinity}\n"
-        content += f"- Hardware counters used (if any):\n"
-        for l in kernel.papi_counters:
-            content += f"\t{l}\n"
+        if kernel.papi_counters != None:
+            content += f"- Hardware counters used:\n"
+            for l in kernel.papi_counters:
+                content += f"\t{l}\n"
 
         # Get compilation flags and so
         content += f"\n# -- COMPILATION (stdout)\n"

@@ -88,7 +88,7 @@ class Profiler:
 
         optional_named.add_argument(
             "-x",
-            "--quit-on-error",
+            "--no-quit-on-error",
             action="store_true",
             help="quit if there is an error during compilation or execution of the kernel",
             required=False,
@@ -248,7 +248,8 @@ class Profiler:
             sys.exit(1)
 
         output_cols += ["CFG", "Compiler"]
-        output_cols += kernel.papi_counters
+        if kernel.papi_counters != None:
+            output_cols += kernel.papi_counters
 
         if type(params_kernel) is dict:
             niterations = np.prod(
@@ -290,6 +291,8 @@ class Profiler:
         if not os.path.exists("log"):
             os.mkdir("log")
 
+        exit_on_error = not self.args.no_quit_on_error
+
         print(f"Compiling with {kernel.processes} processes")
         for compiler in kernel.compilers_list:
             print(f"Compiler and flags: {compiler}")
@@ -309,22 +312,25 @@ class Profiler:
                         product,
                         repit(compiler),
                         repit(debug),
-                        repit(self.args.quit_on_error),
+                        repit(exit_on_error),
                     )
                     if kernel.show_progress_bars:
-                        for output in tqdm(
+                        pbar = tqdm(
                             pool.istarmap(Kernel.compile, iterable),
                             total=niterations,
                             desc="Compiling",
-                        ):
-                            if output == None:
-                                print("[ERROR] Compilation failed")
+                        )
+                        for output in pbar:
+                            if not output:
                                 pool.terminate()
-                                sys.exit(1)
+                                pbar.clear()
+                                pbar.close()
+                                print("[ERROR] Compilation failed")
+                                return None
                     else:
                         print("Compiling...")
                         output = pool.starmap(Kernel.compile, iterable)
-                        if output == None:
+                        if not output:
                             print("[ERROR] Compilation failed")
                             pool.terminate()
                             sys.exit(1)
@@ -358,7 +364,8 @@ class Profiler:
                         kernel.save_results(
                             df, output_filename, output_format, generate_report
                         )
-                        sys.exit(1)
+                        print("[ERROR] Execution failed")
+                        return None
                     if type(kern_exec) == list:
                         for exec in kern_exec:
                             df = df.append(exec, ignore_index=True)
@@ -438,6 +445,7 @@ class Profiler:
 
         # For each kernel configuration
         for cfg in kernel_setup:
-            self.profiling_kernels(cfg)
+            if self.profiling_kernels(cfg) == None:
+                print("Kernel failed...")
 
         sys.exit(0)

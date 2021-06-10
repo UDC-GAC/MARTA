@@ -12,14 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
 import os
-import sys
 import numpy as np
 
 
 class Timing:
     @staticmethod
-    def error_and_exit(line, events):
+    def show_error(line: str, events: list) -> None:
         print(f"Execution did not return a numeric value: \n'{line}'")
         if "FAILED" in line:
             print("Executions need to have access to PAPI library")
@@ -31,10 +31,9 @@ class Timing:
             print(
                 "Check if listed events are available in the machine using 'papi_avail' or 'papi_native_avail'"
             )
-        sys.exit(1)
 
     @staticmethod
-    def dump_values(code, exec_opts, compiler):
+    def dump_values(code: str, exec_opts: str, compiler: str) -> None:
         try:
             os.mkdir("dumps")
         except FileExistsError:
@@ -55,7 +54,7 @@ class Timing:
         nsteps=1000,
         threshold_outliers=3,
         mean_and_discard_outliers=True,
-    ):
+    ) -> tuple[Union[None, float], int]:
         """
         Execute and time given benchmark nexec times
 
@@ -96,7 +95,8 @@ class Timing:
             line = ""
             with open(tmp_file) as f:
                 line = " ".join([l for l in f if "FAILED" in l])
-            Timing.error_and_exit(line, name)
+            Timing.show_error(line, name)
+            return None, None
 
         results /= nsteps
 

@@ -5,8 +5,8 @@
       description: "Setup for experiment"
       debug: False
       show_progress_bars: True
-      preamble:
-          command: "rm -Rf bin asm_codes && sudo cpupower frequency-set -u 2.1GHz && sudo cpupower frequency-set -d 2.1GHz"
+      #preamble:
+      #    command: "rm -Rf bin asm_codes && sudo cpupower frequency-set -u 2.1GHz && sudo cpupower frequency-set -d 2.1GHz"
       finalize:
           clean_tmp_files: False
           clean_asm_files: False
@@ -14,7 +14,7 @@
           command: "echo 'EXPERIMENT FINISHED :D!'"
       compilation:
           enabled: True
-          processes: 32
+          processes: 16
           language: "C"
           compiler_flags:
             {

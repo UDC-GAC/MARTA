@@ -14,11 +14,13 @@
 # limitations under the License.
 
 # -*- coding: utf-8 -*-
+from __future__ import annotations
+
 import os
 import sys
 import time
 import pickle
-import difflib
+import pandas as pd
 from .report import Report
 from .asm_analyzer import ASMParserFactory
 from .timing import Timing
@@ -31,17 +33,21 @@ class Kernel:
     execution_time = 0
 
     @staticmethod
-    def start_timer():
+    def start_timer() -> float:
         return time.time()
 
-    def accm_timer(self, timer_type, t0):
+    def accm_timer(self, timer_type: str, t0: float) -> None:
         if timer_type == "compilation":
             self.compilation_time += time.time() - t0
         else:
             self.execution_time += time.time() - t0
 
     def save_results(
-        self, df, filename, output_format="csv", generate_report=False
+        self,
+        df: pd.DataFrame,
+        filename: str,
+        output_format="csv",
+        generate_report=False,
     ) -> None:
         """
         Save data as a pandas.DataFrame
@@ -77,7 +83,7 @@ class Kernel:
     @staticmethod
     def compile_parse_asm(
         kpath, comp, common_flags, kconfig, other_flags="", suffix_file="", debug="",
-    ):
+    ) -> bool:
         """
         Compile benchmark according to a set of flags, suffixes and so
 
@@ -112,15 +118,20 @@ class Kernel:
             f" {other_flags} "
             f" {debug}"
         )
-        # print(comp_str)
         ret = os.system(comp_str)
 
         if ret != 0:
-            print(f"Error {str(ret)} compiling in {kpath}, quitting...")
+            # os.system returns a 16-bit value: 8 LSB for the signal, 8 MSB for
+            # the code
+            exit_code = int(ret) >> 8
+            exit_signal = int(ret) & 0xFF
+            print(
+                f"make exited with code '{str(exit_code)}' (signal '{exit_signal}') when compiling in {kpath}."
+            )
             return False
         return True
 
-    def define_papi_counters(self):
+    def define_papi_counters(self) -> None:
         """
         Define PAPI counters in a new file recognized by PolyBench/C
         """
@@ -138,7 +149,7 @@ class Kernel:
                 f.write('"' + str(ctr) + '",\n')
 
     @staticmethod
-    def compute_flops(flops, nruns, avg_time):
+    def compute_flops(flops, nruns, avg_time) -> float:
         """
         Evaluate FLOPS expression provided by user as string and return a floating
         point value
@@ -166,7 +177,7 @@ class Kernel:
             return 0
 
     @staticmethod
-    def get_dict_from_d_flags(params):
+    def get_dict_from_d_flags(params) -> dict:
         d = {}
         for tok in params.strip().split(" "):
             tmp = tok.split("=")
@@ -179,7 +190,7 @@ class Kernel:
         return d
 
     @staticmethod
-    def get_suffix_and_flags(kconfig, params):
+    def get_suffix_and_flags(kconfig, params) -> tuple[str, str]:
         custom_flags = ""
         suffix_file = ""
         custom_bin_name = None
@@ -218,7 +229,7 @@ class Kernel:
         return suffix_file, custom_flags
 
     @staticmethod
-    def get_asm_name(params):
+    def get_asm_name(params) -> str:
         if not type(params) is dict:
             return ""
         # Parsing parameters
@@ -234,7 +245,10 @@ class Kernel:
                 return f" {pname}={param_val_parsed}"
         return ""
 
-    def compile(self, product_params, compiler, debug, quit_on_error=False):
+    def compile(
+        self, product_params, compiler, debug: bool, quit_on_error=False
+    ) -> bool:
+        # FIXME: refactor this garbage, please
         tmp = pickle.loads(product_params)
         kconfig = tmp["KERNEL_CFG"]
         del tmp["KERNEL_CFG"]
@@ -308,12 +322,14 @@ class Kernel:
             debug,
         )
         if not ret and quit_on_error:
-            return None
-        return []
+            return False
+        return True
 
-    def run(self, product_params, compiler):
+    def run(self, product_params, compiler) -> list:
+        # FIXME: refactor this...
         tmp_dict = {}
-        avg_papi_counters = dict.fromkeys(self.papi_counters)
+        if self.papi_counters != None:
+            avg_papi_counters = dict.fromkeys(self.papi_counters)
         tmp = pickle.loads(product_params)
         kconfig = tmp["KERNEL_CFG"]
         del tmp["KERNEL_CFG"]
@@ -358,6 +374,8 @@ class Kernel:
                 self.threshold_outliers,
                 self.mean_and_discard_outliers,
             )
+            if avg_papi_counters == None:
+                return None
             if discarded_papi_values != -1:
                 tmp_dict.update(avg_papi_counters)
                 tmp_dict.update({"DiscardedPapiValues": discarded_papi_values})
@@ -373,9 +391,8 @@ class Kernel:
                 self.threshold_outliers,
                 self.mean_and_discard_outliers,
             )
-            if len(avg_time) == 0:
-                print("[ERROR] Something went wrong... Quitting...")
-                sys.exit(1)
+            if avg_time == None:
+                return None
             if discarded_time_values != -1:
                 tmp_dict.update(avg_time)
                 tmp_dict.update({"DiscardedTimeValues": discarded_time_values})
@@ -391,9 +408,8 @@ class Kernel:
                 self.threshold_outliers,
                 self.mean_and_discard_outliers,
             )
-            if len(avg_tsc) == 0:
-                print("[ERROR] Something went wrong... Quitting...")
-                sys.exit(1)
+            if avg_tsc == None:
+                return None
             if discarded_tsc_values != -1:
                 tmp_dict.update(avg_tsc)
                 tmp_dict.update({"DiscardedTscValues": discarded_tsc_values})
@@ -440,7 +456,7 @@ class Kernel:
             list_rows += [new_dict]
         return list_rows
 
-    def __init__(self, cfg):
+    def __init__(self, cfg: dict) -> None:
         try:
             self.kernel = cfg["kernel"]["name"]
         except KeyError:
@@ -518,8 +534,8 @@ class Kernel:
         self.papi_counters_path = config_exec.get("papi_counters_path")
         self.papi_counters = config_exec.get("papi_counters")
         if self.papi_counters != None:
+            if type(self.papi_counters) != list:
+                print("'papi_counters' must be a list of hardware events!")
+                sys.exit(1)
             self.define_papi_counters()
-        if type(self.papi_counters) != list:
-            print("'papi_counters' must be a list of hardware events!")
-            sys.exit(1)
         self.exec_args = config_exec.get("prefix", "")
