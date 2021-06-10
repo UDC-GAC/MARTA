@@ -1,8 +1,8 @@
 - kernel:
-      name: "new_bench"
+      name: "marta_bench"
       type: "micro"
-      path: "new_bench"
-      description: "Setup for experiment"
+      path: "marta_bench"
+      description: "Setup for inital experiment!"
       debug: False
       show_progress_bars: True
       #preamble:

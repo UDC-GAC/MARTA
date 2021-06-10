@@ -1,5 +1,5 @@
 #ifndef NO_HEADER
-#include "new_bench.h"
+#include "marta_bench.h"
 #endif
 
 void kern(float *A, float *B, float *C) {

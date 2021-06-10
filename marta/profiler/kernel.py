@@ -15,7 +15,7 @@
 
 # -*- coding: utf-8 -*-
 from __future__ import annotations
-
+from typing import Union
 import os
 import sys
 import time
@@ -137,7 +137,7 @@ class Kernel:
         """
         path = os.getcwd()
         if self.papi_counters_path != None:
-            path = f"{path}/{self.papi_counters_path}"
+            path = f"{path}/utilities/{self.papi_counters_path}"
         papi_counter_file = f"{path}/papi_counters.list"
         try:
             f = open(papi_counter_file, "w")
@@ -149,7 +149,7 @@ class Kernel:
                 f.write('"' + str(ctr) + '",\n')
 
     @staticmethod
-    def compute_flops(flops, nruns, avg_time) -> float:
+    def compute_flops(flops: float, avg_time: Union[float, int, str]) -> float:
         """
         Evaluate FLOPS expression provided by user as string and return a floating
         point value
@@ -174,7 +174,7 @@ class Kernel:
         if avg_time > 0:
             return (flops_eval) / avg_time
         else:
-            return 0
+            return 0.0
 
     @staticmethod
     def get_dict_from_d_flags(params) -> dict:
@@ -427,22 +427,14 @@ class Kernel:
         if self.mean_and_discard_outliers:
             if self.measure_time:
                 tmp_dict.update(
-                    {
-                        "FLOPSs": Kernel.compute_flops(
-                            self.flops, self.nsteps, avg_time["time"]
-                        )
-                    }
+                    {"FLOPSs": Kernel.compute_flops(self.flops, avg_time["time"])}
                 )
             return tmp_dict
         list_rows = []
         for execution in range(self.nexec):
             new_dict = tmp_dict.copy()
             new_dict.update(
-                {
-                    "FLOPSs": Kernel.compute_flops(
-                        self.flops, self.nsteps, avg_time[execution]
-                    )
-                }
+                {"FLOPSs": Kernel.compute_flops(self.flops, avg_time[execution])}
             )
             new_dict.update({"nexec": execution})
             if self.measure_tsc:

@@ -35,15 +35,15 @@ class Project:
             sys.exit(1)
 
     @staticmethod
-    def generate_new_project(name="new_bench"):
+    def generate_new_project(name="marta_bench"):
         src = f"{os.path.dirname(__file__)}/data"
         dst = f"{os.getcwd()}/{name}"
         try:
             copytree(src, dst)
         except FileExistsError:
-            print("'new_bench' directory already exists!")
+            print("'marta_bench' directory already exists!")
             sys.exit(1)
         except Exception:
-            print("Something went wrong when creating new project")
+            print("Something went wrong when creating new project 'marta_bench'")
             sys.exit(1)
         return 0

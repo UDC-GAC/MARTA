@@ -419,7 +419,7 @@ class Profiler:
             if code != 0:
                 print("Something went wrong...")
                 sys.exit(code)
-            print("Project generated in folder 'new_bench'!")
+            print("Project generated in folder 'marta_bench'!")
             sys.exit(0)
 
         if self.args.version:

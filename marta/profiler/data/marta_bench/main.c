@@ -3,9 +3,9 @@
 #define NO_HEADER
 
 #if defined(NO_HEADER)
-#include "new_bench.c"
+#include "marta_bench.c"
 #else
-#include "new_bench.h"
+#include "marta_bench.h"
 #endif
 
 MARTA_BENCHMARK_BEGIN(0);

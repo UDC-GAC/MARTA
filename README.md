@@ -62,6 +62,14 @@ existent project.
 
 #### From sources
 
+## Micro-benchmarking
+
+Micro-benchmarking is not an easy task, it requires fine-grained tuning in
+order to measure properly very small and critical regions of interest. We could
+debate what is realistic or not when it comes to measuring instructions, since
+the chain of operations has an impact on the throughput. Nonetheless, this
+toolkit integrates different macros and functions trying to avoid the set 
+
 ## License, copyright and authors
 
 See [LICENSE](LICENSE), [COPYRIGHT](COPYRIGHT) and [AUTHORS](AUTHORS) files, respectively, for further information
