@@ -5,7 +5,7 @@
 <a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
 </p>
 
-MARTA is a toolkit for analyzing peformance in any architecture given any kind,
+MARTA is a toolkit for analyzing performance in any architecture given any kind,
 in form and shape, of C/C++ code and a set of features to take into account.
 
 This toolkit performs in two stages: profiling and analysis. The first component
@@ -56,16 +56,11 @@ TODO: What does **categorizing performance** means?
 
 MARTA supports out-of-tree building and execution. This method could be
 preferred in order to avoid copying files, for instance, in an already
-existence project.
+existent project.
 
 #### Out-of-tree
 
 #### From sources
-
-## Versioning
-
-The version number of this compiler follows the Semantic Versioning
-Specification (<https://semver.org/spec/v2.0.0.html>)
 
 ## License, copyright and authors
 

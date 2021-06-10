@@ -21,7 +21,8 @@ def new_label():
     return new_str
 
 
-def extract_kernel_gcc():
+def extract_kernel_icc():
+    # TODO:
     global kernel_file
     with open(kernel_file) as kern:
         lines = []

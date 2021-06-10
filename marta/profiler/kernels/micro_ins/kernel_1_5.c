@@ -1,9 +1,0 @@
-__tmp59 = _mm256_loadu_ps(&p[49]);
-__tmp61 = _mm256_loadu_ps(&p[48]);
-__tmp65 = _mm256_loadu_ps(&p[32]);
-__tmp69 = _mm256_loadu_ps(&p[16]);
-__tmp73 = _mm256_loadu_ps(&p[0]);
-__tmp93 = _mm256_shuffle_ps(__tmp59,__tmp61,0x94);DO_NOT_TOUCH(__tmp93);
-__tmp94 = _mm256_shuffle_ps(__tmp61,__tmp65,0x96);DO_NOT_TOUCH(__tmp94);
-__tmp95 = _mm256_shuffle_ps(__tmp65,__tmp69,0xfd);DO_NOT_TOUCH(__tmp95);
-__tmp96 = _mm256_shuffle_ps(__tmp69,__tmp73,0xef);DO_NOT_TOUCH(__tmp96);

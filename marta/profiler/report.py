@@ -1,3 +1,17 @@
+# Copyright 2021 Marcos Horro
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import os
 import cpuinfo as cpu
 import datetime
@@ -11,14 +25,14 @@ class Report:
         """
         Get information regarding processor and SO of host machine
         """
-
+        cpu_info = ""
         if Report.cinfo == None:
             Report.cinfo = cpu.get_cpu_info()
 
-        cpu_info = f"CPU:\t\t\t{Report.cinfo['brand_raw']}\n"
-        cpu_info += f"Architecture:\t{Report.cinfo['arch_string_raw']}\n"
-        cpu_info += f"Avail. Cores:\t{cpu.os.cpu_count()}\n"
-        cpu_info += f"Host OS:\t\t"
+        cpu_info += f"CPU:           {Report.cinfo['brand_raw']}\n"
+        cpu_info += f"Architecture:  {Report.cinfo['arch_string_raw']}\n"
+        cpu_info += f"Avail. Cores:  {cpu.os.cpu_count()}\n"
+        cpu_info += f"Host OS:       "
         if cpu.platform.win32_ver()[0] != "":
             cpu_info += f"{cpu.platform.win32_ver()[0]}"
         elif cpu.platform.mac_ver()[0] != "":
@@ -26,7 +40,7 @@ class Report:
         else:
             cpu_info += f"kernel {cpu.platform.uname()[2]}"
 
-        return cpu_info + "\n"
+        return f"{cpu_info}\n"
 
     @staticmethod
     def generate_report(kernel, verbose=True) -> str:
@@ -41,7 +55,7 @@ class Report:
         :rtype: str
         """
         content = f"#" * 80 + "\n"
-        content += f"#\t\t\tMARTA file report: {kernel.basename}\n"
+        content += f"#            MARTA file report: {kernel.basename}\n"
         content += f"#" * 80 + "\n"
         if verbose:
             content += f"\n# -- MACHINE INFO\n"
@@ -61,27 +75,27 @@ class Report:
         content += f"- Loop iterations: {kernel.nsteps}\n"
         content += f"- Number of repetitions: {kernel.nexec}\n"
         content += f"- CPU affinity (if any): {kernel.cpu_affinity}\n"
-        content += f"- PAPI counters used (if any):\n"
+        content += f"- Hardware counters used (if any):\n"
         for l in kernel.papi_counters:
             content += f"\t{l}\n"
 
         # Get compilation flags and so
         content += f"\n# -- COMPILATION (stdout)\n"
         try:
-            with open("___tmp.stdout") as f:
+            with open("log/___tmp.stdout") as f:
                 for l in f.readlines():
                     content += l
-            os.system("rm ___tmp.stdout")
+            os.system("rm log/___tmp.stdout")
         except FileNotFoundError:
             content += "stdout was redirected manually.\n"
 
         # Generate errors
         content += f"\n# -- WARNINGS/ERRORS (stderr)\n"
         try:
-            with open("___tmp.stderr") as f:
+            with open("log/___tmp.stderr") as f:
                 for l in f.readlines():
                     content += l
-            os.system("rm ___tmp.stderr")
+            os.system("rm log/___tmp.stderr")
         except FileNotFoundError:
             content += "stderr was redirected manually.\n"
 

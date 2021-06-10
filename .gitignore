@@ -1,6 +1,8 @@
 # temp files
 __*
 !__init__.py
+!__main__.py
+!__version__
 *.list
 macveth_output.c*
 codelet*.c
@@ -19,7 +21,6 @@ old_files/
 results/
 output/
 results_*/
-data/
 bin/
 *.arff
 *.csv

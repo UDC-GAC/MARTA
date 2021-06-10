@@ -1,4 +1,18 @@
 #!/bin/python3
+# Copyright 2021 Marcos Horro
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 # -*- coding: utf-8 -*-
 import os
 import sys
@@ -26,7 +40,9 @@ class Kernel:
         else:
             self.execution_time += time.time() - t0
 
-    def save_results(self, df, filename):
+    def save_results(
+        self, df, filename, output_format="csv", generate_report=False
+    ) -> None:
         """
         Save data as a pandas.DataFrame
 
@@ -45,13 +61,18 @@ class Kernel:
         """
         # storing results with metadata
         df = df.fillna(-1)
-        df.to_csv(filename, index=False)
+        if output_format == "html":
+            df.to_html(filename, index=False)
+        elif output_format == "json":
+            df.to_json(filename, index=False)
+        else:
+            df.to_csv(filename, index=False)
 
-        # saving all data to file
-        self.total_time = time.time() - self.total_time
-        report_filename = filename.replace(".csv", ".log")
-        with open(report_filename, "w") as f:
-            f.write(Report.generate_report(self))
+        if generate_report:
+            self.total_time = time.time() - self.total_time
+            report_filename = filename.replace(".csv", ".log")
+            with open(report_filename, "w") as f:
+                f.write(Report.generate_report(self))
 
     @staticmethod
     def compile_parse_asm(
@@ -103,7 +124,10 @@ class Kernel:
         """
         Define PAPI counters in a new file recognized by PolyBench/C
         """
-        papi_counter_file = "kernels/utilities/papi_counters.list"
+        path = os.getcwd()
+        if self.papi_counters_path != None:
+            path = f"{path}/{self.papi_counters_path}"
+        papi_counter_file = f"{path}/papi_counters.list"
         try:
             f = open(papi_counter_file, "w")
         except Exception:
@@ -262,10 +286,13 @@ class Kernel:
         if self.check_dump:
             other_flags += f" DUMP=true "
 
-        if len(self.papi_counters) > 0:
+        if self.papi_counters != None:
             other_flags += f" PAPI=true "
 
         if not self.inlined:
+            other_flags += f" KERNEL_INLINED=true "
+
+        if self.kernel_compilation == "apart":
             other_flags += f" COMPILE_KERNEL=true "
 
         if self.asm_analysis:
@@ -292,7 +319,7 @@ class Kernel:
         del tmp["KERNEL_CFG"]
         params_dict = tmp
         name_bin, _ = Kernel.get_suffix_and_flags(kconfig, params_dict)
-        name_bin = self.basename + "_" + name_bin
+        name_bin = self.kernel + "_" + name_bin
         if self.asm_analysis:
             asm_dict = ASMParserFactory.parse_asm(
                 self.asm_syntax, f"asm_codes/{name_bin}_{compiler}.s"
@@ -320,7 +347,7 @@ class Kernel:
             Timing.dump_values(name_bin, self.exec_args, compiler)
 
         # Average papi counters
-        if len(self.papi_counters) > 0:
+        if self.papi_counters != None:
             avg_papi_counters, discarded_papi_values = Timing.measure_benchmark(
                 name_bin,
                 self.papi_counters,
@@ -406,7 +433,7 @@ class Kernel:
                 new_dict.update({"tsc": avg_time[execution]})
             if self.measure_time:
                 new_dict.update({"time": avg_time[execution]})
-            if len(self.papi_counters) > 0:
+            if self.papi_counters != None:
                 new_dict.update(
                     dict(zip(self.papi_counters, avg_papi_counters[execution]))
                 )
@@ -414,17 +441,31 @@ class Kernel:
         return list_rows
 
     def __init__(self, cfg):
-        self.kernel = cfg["kernel"]["name"]
-        self.descr = cfg["kernel"]["description"]
-        self.path_kernel = cfg["kernel"]["path"]
-        self.show_progress_bars = cfg["kernel"]["show_progress_bars"]
-        Kernel.debug = cfg["kernel"]["debug"]
+        try:
+            self.kernel = cfg["kernel"]["name"]
+        except KeyError:
+            print("'name' key is missing!")
+            sys.exit(1)
+        self.type = cfg["kernel"]["type"] if "type" in cfg["kernel"] else "regular"
+        if self.type not in ["regular", "micro"]:
+            print("Error: type of benchmarking must be 'regular' or 'micro'")
+            sys.exit(1)
+        self.descr = cfg["kernel"].get("description", "")
+        self.path_kernel = cfg["kernel"].get("path", "./")
+        self.show_progress_bars = cfg["kernel"].get("show_progress_bars", True)
+        Kernel.debug = cfg["kernel"].get("debug", False)
 
-        config_comp = cfg["kernel"]["compilation"]
-        config_cfg = cfg["kernel"]["configuration"]
-        config_exec = cfg["kernel"]["execution"]
+        try:
+            config_comp = cfg["kernel"]["compilation"]
+            config_cfg = cfg["kernel"]["configuration"]
+            config_exec = cfg["kernel"]["execution"]
+        except KeyError:
+            print(
+                "Check your configuration file: 'compilation', 'configuration' and 'execution' keys could be missing..."
+            )
+            sys.exit(1)
 
-        self.compilation_enabled = config_comp["enabled"]
+        self.compilation_enabled = config_comp.get("enabled", True)
         try:
             self.processes = int(config_comp["processes"])
             if self.processes < 1:
@@ -436,66 +477,49 @@ class Kernel:
             sys.exit(1)
         except KeyError:
             self.processes = 1
-        self.compilers_list = list(config_comp["compiler_flags"].keys())
-        self.common_flags = config_comp["common_flags"]
-        self.compiler_flags = config_comp["compiler_flags"]
-        self.inlined = (
-            True
-            if not "inlined_kernel" in config_comp
-            else config_comp["inlined_kernel"]
+        self.compilers_list = list(
+            config_comp.get("compiler_flags", {"gcc": ""}).keys()
         )
-        self.asm_analysis = (
-            config_comp["asm_analysis"] if "asm_analysis" in config_comp else False
-        )
-        self.asm_syntax = (
-            "att" if "asm_syntax" in config_comp else config_comp["asm_syntax"]
-        )
-        self.comp_debug = config_comp["debug"]
+        self.common_flags = config_comp.get("common_flags", "")
+        self.compiler_flags = config_comp.get("compiler_flags", {"gcc": ""})
+        self.kernel_compilation = config_comp.get("kernel_compilation_type", "infile")
+        self.inlined = config_comp.get("kernel_inlined", False)
+        self.asm_analysis = config_comp.get("asm_analysis", False)
+        self.asm_syntax = config_comp.get("asm_syntax", "att")
+        self.comp_debug = config_comp.get("debug", False)
 
         # Configuration
-        self.kernel_cfg = config_cfg["kernel_cfg"]
-        self.d_features = (
-            [] if not "d_features" in config_cfg else config_cfg["d_features"]
-        )
-        self.d_flags = [] if not "d_flags" in config_cfg else config_cfg["d_flags"]
-        self.flops = config_cfg["flops"]
         try:
-            self.mvpath = config_cfg["macveth_path_build"]
+            self.kernel_cfg = config_cfg["kernel_cfg"]
         except KeyError:
-            self.mvpath = "''"
-        try:
-            self.macveth_flags = config_cfg["macveth_flags"]
-        except KeyError:
-            self.macveth_flags = " -misa=avx2 "
-
-        try:
-            self.macveth_target = config_cfg["macveth_target"]
-        except KeyError:
-            self.macveth_target = ""
+            print("'kernel_cfg' missing...")
+            sys.exit(1)
+        self.d_features = config_cfg.get("d_features", [])
+        self.d_flags = config_cfg.get("d_flags", [])
+        self.flops = config_cfg.get("flops", 1)
+        self.macveth_path = config_cfg.get("macveth_path_buil", "''")
+        self.macveth_flags = config_cfg.get("macveth_flags", "-misa=avx2")
+        self.macveth_target = config_cfg.get("macveth_target", "")
 
         # Execution arguments
-        try:
-            self.intel_cache_flush = config_exec["intel_cache_flush"]
-        except KeyError:
-            self.intel_cache_flush = False
-        try:
-            self.init_data = config_exec["init_data"]
-        except KeyError:
-            self.init_data = False
-        try:
-            self.check_dump = config_exec["check_dump"]
-        except KeyError:
-            self.check_dump = False
-        self.execution_enabled = config_exec["enabled"]
-        self.measure_time = False if not "time" in config_exec else config_exec["time"]
-        self.measure_tsc = False if not "tsc" in config_exec else config_exec["tsc"]
-        self.threshold_outliers = config_exec["threshold_outliers"]
-        self.mean_and_discard_outliers = config_exec["mean_and_discard_outliers"]
-        self.nexec = config_exec["nexec"]
-        self.nsteps = int(config_exec["nsteps"])
-        self.cpu_affinity = int(config_exec["cpu_affinity"])
-        self.papi_counters = config_exec["papi_counters"]
-        if len(self.papi_counters) > 0:
+        self.intel_cache_flush = config_exec.get("intel_cache_flush", False)
+        self.init_data = config_exec.get("init_data", False)
+        self.check_dump = config_exec.get("check_dump", False)
+        self.execution_enabled = config_exec.get("enabled", True)
+        self.measure_time = config_exec.get("time", False)
+        self.measure_tsc = config_exec.get("tsc", False)
+        self.threshold_outliers = config_exec.get("threshold_outliers", 3)
+        self.mean_and_discard_outliers = config_exec.get(
+            "mean_and_discard_outliers", False
+        )
+        self.nexec = config_exec.get("nexec", 7)
+        self.nsteps = config_exec.get("nsteps", 1000)
+        self.cpu_affinity = config_exec.get("cpu_affinity", 0)
+        self.papi_counters_path = config_exec.get("papi_counters_path")
+        self.papi_counters = config_exec.get("papi_counters")
+        if self.papi_counters != None:
             self.define_papi_counters()
-        self.exec_args = config_exec["prefix"]
-        self.basename = self.kernel
+        if type(self.papi_counters) != list:
+            print("'papi_counters' must be a list of hardware events!")
+            sys.exit(1)
+        self.exec_args = config_exec.get("prefix", "")

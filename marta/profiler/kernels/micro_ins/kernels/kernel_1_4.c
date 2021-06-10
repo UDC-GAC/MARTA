@@ -1,0 +1,9 @@
+__tmp59 = _mm256_loadu_ps(&p[49]);
+__tmp60 = _mm_load_ss(&p[48]);
+__tmp65 = _mm256_loadu_ps(&p[32]);
+__tmp69 = _mm256_loadu_ps(&p[16]);
+__tmp73 = _mm256_loadu_ps(&p[0]);
+__tmp89 = _mm256_shuffle_ps(__tmp59,_mm256_castps128_ps256(__tmp60),0x84);DO_NOT_TOUCH(__tmp89);
+__tmp90 = _mm256_shuffle_ps(_mm256_castps128_ps256(__tmp60),__tmp65,0x37);DO_NOT_TOUCH(__tmp90);
+__tmp91 = _mm256_shuffle_ps(__tmp65,__tmp69,0x3f);DO_NOT_TOUCH(__tmp91);
+__tmp92 = _mm256_shuffle_ps(__tmp69,__tmp73,0x35);DO_NOT_TOUCH(__tmp92);

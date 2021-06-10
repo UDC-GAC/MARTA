@@ -13,12 +13,14 @@ import yaml
 import argparse
 import pandas as pd
 import numpy as np
+import pkg_resources
 import pickle
 import itertools as it
 import multiprocessing as mp
+from .kernel import Kernel
+from .project import Project
 from .utils import custom_mp
 from datetime import datetime as dt
-from .kernel import Kernel
 from tqdm import tqdm
 from tqdm.auto import tqdm
 from itertools import repeat as repit
@@ -28,18 +30,6 @@ class Profiler:
     """
     Profiler class: helper class to set up experiments.
     """
-
-    @staticmethod
-    def dump_config_file():
-        """
-        Read config template line by line
-
-        :return: List of strings with all lines
-        :rtype: list(str)
-        """
-        config_file = "utils/config_template"
-        with open(config_file) as f:
-            return f.readlines()
 
     @staticmethod
     def parse_arguments(list_args):
@@ -52,8 +42,8 @@ class Profiler:
         :rtype: class:`argparse`
         """
         parser = argparse.ArgumentParser(
-            prog="mprofiler",
-            description="simple kernel profiler based on compilation files (Makefile) and a configuration file",
+            prog="marta_profiler",
+            description="simple kernel profiler based on compilation files and a configuration file",
         )
 
         # If "version" or "dump" option, then positional is not needed
@@ -63,6 +53,8 @@ class Profiler:
             or ("--version" in list_args)
             or ("-dump" in list_args)
             or ("--dump-config-file" in list_args)
+            or ("--generate-project" in list_args)
+            or ("-G" in list_args)
         ):
             required_input = "?"
 
@@ -195,10 +187,10 @@ class Profiler:
         """
         Print version and copyright message (if not quiet execution)
         """
+        __version__ = pkg_resources.require("marta")[0].version
+
         print(
-            f"Micro ARchiTectural Analyzer (MARTA) - Profiler v{__version__}\n"
-            f"(c) Colorado State University 2019-2021\n"
-            f"(c) Universidade da Coruna 2020-2021\n",
+            f"Micro ARchitectural Toolkit Analysis (MARTA) - Profiler v{__version__}\n",
             end="",
         )
 
@@ -228,21 +220,20 @@ class Profiler:
         """
 
         kernel = Kernel(cfg)
-        config_output = cfg["kernel"]["output"]
         if len(kernel.d_features) > 0:
             params_kernel = Profiler.eval_features(kernel.d_features)
         else:
             params_kernel = kernel.d_flags
 
-        # Output configuration
-        output_cols = config_output["columns"]
+        # Output configuration: default values
+        config_output = cfg["kernel"].get("output", {})
+        output_format = config_output.get("format", "csv")
+        output_cols = config_output.get("columns", "all")
+        generate_report = config_output.get("report", False)
         if self.args.output is None:
-            tstamp = dt.now().strftime("%d_%m___%H_%M_%S")
-            output_filename = "marta_profiler_"
-            if config_output["name"] == "default":
-                output_filename += f"{kernel.basename}_{tstamp}.csv"
-            else:
-                output_filename += f"{config_output['name']}_{tstamp}.csv"
+            fname = config_output.get("name", kernel.kernel)
+            tstamp = dt.now().strftime("%d_%m_%y___%H_%M_%S")
+            output_filename = f"{fname}_marta_profiler_{tstamp}.{output_format}"
         else:
             output_filename = self.args.output
 
@@ -274,29 +265,30 @@ class Profiler:
         # Silent compilation or not
         debug = ""
         if not kernel.comp_debug:
-            debug = f" >> ___tmp.stdout 2>> ___tmp.stderr"
+            debug = f" >> log/___tmp.stdout 2>> log/___tmp.stderr"
 
         if not self.args.quiet:
             # Print version if not quiet
             Profiler.print_version()
 
         # Execute command preceding compilation and execution process
-        if cfg["kernel"]["preamble"]["command"] != "":
+        preamble = cfg["kernel"].get("preamble")
+        if preamble != None and preamble.get("command") != None:
             try:
-                os.system(f'{cfg["kernel"]["preamble"]["command"]}')
+                os.system(f'{preamble.get("command")}')
             except Exception:
                 print("[ERROR] Preamble command went wrong...")
                 sys.exit(1)
 
         # Create folders if needed
-        try:
+        if not os.path.exists("asm_codes"):
             os.mkdir("asm_codes")
-        except FileExistsError:
-            pass
-        try:
+        if not os.path.exists("bin"):
             os.mkdir("bin")
-        except FileExistsError:
-            pass
+        if not os.path.exists("tmp"):
+            os.mkdir("tmp")
+        if not os.path.exists("log"):
+            os.mkdir("log")
 
         print(f"Compiling with {kernel.processes} processes")
         for compiler in kernel.compilers_list:
@@ -346,6 +338,7 @@ class Profiler:
             # control properly CPU affinity and be aware if kernels are
             # cache sensitive or not. Thus, for simplicity, this is
             # still not parallel at all.
+            # Moreover: I think this should not EVER be parallel
             if type(params_kernel) is dict:
                 product = Profiler.dict_product(params_kernel, kernel.kernel_cfg)
             else:
@@ -362,7 +355,9 @@ class Profiler:
                     # There was an error, exit on error, save data first
                     if kern_exec == None:
                         print("Saving file...")
-                        kernel.save_results(df, output_filename)
+                        kernel.save_results(
+                            df, output_filename, output_format, generate_report
+                        )
                         sys.exit(1)
                     if type(kern_exec) == list:
                         for exec in kern_exec:
@@ -375,18 +370,21 @@ class Profiler:
         # Storing results and generating report file
         kernel.save_results(df, output_filename)
 
-        # Cleaning directories
-        if cfg["kernel"]["finalize"]["clean_tmp_files"]:
-            os.system(f"rm -Rf tmp/")
-        if cfg["kernel"]["finalize"]["clean_bin_files"]:
-            os.system(f"rm -Rf bin/")
-        if cfg["kernel"]["finalize"]["clean_asm_files"]:
-            os.system(f"rm -Rf asm_codes/")
-        if cfg["kernel"]["finalize"]["command"] != "":
-            try:
-                os.system(f'{cfg["kernel"]["finalize"]["command"]}')
-            except Exception:
-                print(f"[ERROR] Finalize command went wrong for {kernel.basename}")
+        finalize_actions = cfg["kernel"].get("finalize")
+        if finalize_actions != None:
+            # Cleaning directories
+            if finalize_actions.get("clean_tmp_files", False):
+                os.system(f"rm -Rf tmp/")
+                os.system(f"rm -Rf log/")
+            if finalize_actions.get("clean_bin_files", False):
+                os.system(f"rm -Rf bin/")
+            if finalize_actions.get("clean_asm_files", False):
+                os.system(f"rm -Rf asm_codes/")
+            if finalize_actions.get("command") != None:
+                try:
+                    os.system(f'{finalize_actions.get("command")}')
+                except Exception:
+                    print(f"[ERROR] Finalize command went wrong for {kernel.basename}")
 
     def __init__(self, list_args):
         """
@@ -404,13 +402,21 @@ class Profiler:
         self.args = Profiler.parse_arguments(list_args)
 
         if self.args.dump_config_file:
-            s = Profiler.dump_config_file()
+            s = Project.dump_config_file()
             for line in s:
                 print(line, end="")
             sys.exit(0)
 
+        if self.args.generate_project:
+            code = Project.generate_new_project()
+            if code != 0:
+                print("Something went wrong...")
+                sys.exit(code)
+            print("Project generated in folder 'new_bench'!")
+            sys.exit(0)
+
         if self.args.version:
-            print(__version__)
+            self.print_version()
             sys.exit(0)
 
         try:
