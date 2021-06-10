@@ -33,12 +33,7 @@ echo "Driver: $SCALING_DRIVER, governor: $SCALING_GOVERNOR"
 echo -e "Vendor ID: $VENDOR_ID\nModel name: $MODEL_NAME"
 if [ ${VENDOR_ID}x == "GenuineIntelx" ]; then 
         check_turbo 
-        if [ $# -gt 0 ] && [ $1 -ge 1 ]; then
-                echo "Disabling Turbo"
-                echo 1 > ${NO_TURBO_FILE}
-        else
-                echo "Enabling Turbo"
-                echo 0 > ${NO_TURBO_FILE}
-        fi
+        echo "Disabling Turbo"
+        echo 1 > ${NO_TURBO_FILE}
         check_turbo
 fi

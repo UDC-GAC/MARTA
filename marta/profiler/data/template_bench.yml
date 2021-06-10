@@ -1,12 +1,12 @@
 - kernel:
       name: "marta_bench"
-      type: "micro"
+      type: "regular"
       path: "marta_bench"
       description: "Setup for inital experiment!"
       debug: False
       show_progress_bars: True
-      #preamble:
-      #    command: "rm -Rf bin asm_codes && sudo cpupower frequency-set -u 2.1GHz && sudo cpupower frequency-set -d 2.1GHz"
+      preamble:
+          command: "sudo utilities/setup_freq.sh && sudo utilities/disable_turbo_intel.sh"
       finalize:
           clean_tmp_files: False
           clean_asm_files: False
