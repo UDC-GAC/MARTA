@@ -8,5 +8,4 @@ rinohtype
 py-cpuinfo
 pytest
 graphviz
-itertools
 sklearn
