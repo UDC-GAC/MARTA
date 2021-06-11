@@ -1,6 +1,6 @@
 - kernel:
       name: "micro_ins"
-      path: "kernels/micro_ins"
+      path: "profiler/kernels/micro_ins"
       description: "Setup for experiment micro_ins"
       debug: False
       show_progress_bars: True
@@ -33,7 +33,7 @@
                     evaluate: True
                     type: "static"
                     val_type: "string"
-                    value: "[f\"kernel_{i}_{j}\" for i,j in it.product(range(1), range(1))]"
+                    value: "[f\"kernels/kernel_{i}_{j}\" for i,j in it.product(range(5), range(5))]"
           flops: "1"
       execution:
           enabled: True

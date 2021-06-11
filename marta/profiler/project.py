@@ -41,9 +41,9 @@ class Project:
         try:
             copytree(src, dst)
         except FileExistsError:
-            print("'marta_bench' directory already exists!")
+            print(f"'{name}' directory already exists!")
             sys.exit(1)
         except Exception:
-            print("Something went wrong when creating new project 'marta_bench'")
+            print(f"Something went wrong when creating new project '{name}'")
             sys.exit(1)
         return 0

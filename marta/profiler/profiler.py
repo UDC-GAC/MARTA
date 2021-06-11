@@ -54,7 +54,7 @@ class Profiler:
             or ("-dump" in list_args)
             or ("--dump-config-file" in list_args)
             or ("--generate-project" in list_args)
-            or ("-G" in list_args)
+            or ("project" in list_args)
         ):
             required_input = "?"
 
@@ -114,12 +114,18 @@ class Profiler:
             required=False,
         )
 
-        optional_named.add_argument(
-            "-G",
-            "--generate-project",
-            action="store_true",
+        subparsers = parser.add_subparsers(dest="subparser", help="sub-command help")
+        parser_project = subparsers.add_parser(
+            "project",
+            aliases=["P", "proj"],
             help="generate a blank project in current folder, with minimal files in order to work properly",
+        )
+        parser_project.add_argument(
+            "-n",
+            "--name",
+            help="name of the new project",
             required=False,
+            default="marta_bench",
         )
 
         return parser.parse_args(list_args)
@@ -375,7 +381,7 @@ class Profiler:
             else:
                 print("[WARNING] Execution process disabled!")
         # Storing results and generating report file
-        kernel.save_results(df, output_filename)
+        kernel.save_results(df, output_filename, generate_report)
 
         finalize_actions = cfg["kernel"].get("finalize")
         if finalize_actions != None:
@@ -392,6 +398,7 @@ class Profiler:
                     os.system(f'{finalize_actions.get("command")}')
                 except Exception:
                     print(f"[ERROR] Finalize command went wrong for {kernel.basename}")
+        return 0
 
     def __init__(self, list_args):
         """
@@ -414,12 +421,13 @@ class Profiler:
                 print(line, end="")
             sys.exit(0)
 
-        if self.args.generate_project:
-            code = Project.generate_new_project()
+        if self.args.subparser == "project":
+            name = self.args.name
+            code = Project.generate_new_project(name)
             if code != 0:
                 print("Something went wrong...")
                 sys.exit(code)
-            print("Project generated in folder 'marta_bench'!")
+            print(f"Project generated in folder '{name}'!")
             sys.exit(0)
 
         if self.args.version:

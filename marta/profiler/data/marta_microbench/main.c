@@ -1,12 +1,14 @@
 #include "marta_wrapper.h"
+#include <immintrin.h>
 
-#define NO_HEADER
-
-#if defined(NO_HEADER)
-#include "marta_bench.c"
-#else
-#include "marta_bench.h"
+#ifndef IDX_A
+#define IDX_A 0
 #endif
+
+void kernel(float *A) { 
+    __m256 tmp0 = _mm256_load_ps(&A[IDX_A]);
+    
+}
 
 MARTA_BENCHMARK_BEGIN(0);
 

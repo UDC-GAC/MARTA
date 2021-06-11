@@ -374,7 +374,7 @@ class Kernel:
                 self.threshold_outliers,
                 self.mean_and_discard_outliers,
             )
-            if avg_papi_counters == None:
+            if type(avg_papi_counters) == type(None):
                 return None
             if discarded_papi_values != -1:
                 tmp_dict.update(avg_papi_counters)
@@ -391,7 +391,7 @@ class Kernel:
                 self.threshold_outliers,
                 self.mean_and_discard_outliers,
             )
-            if avg_time == None:
+            if type(avg_time) == type(None):
                 return None
             if discarded_time_values != -1:
                 tmp_dict.update(avg_time)
@@ -408,7 +408,7 @@ class Kernel:
                 self.threshold_outliers,
                 self.mean_and_discard_outliers,
             )
-            if avg_tsc == None:
+            if type(avg_tsc) == type(None):
                 return None
             if discarded_tsc_values != -1:
                 tmp_dict.update(avg_tsc)

@@ -55,7 +55,7 @@ class Report:
         :rtype: str
         """
         content = f"#" * 80 + "\n"
-        content += f"#            MARTA file report: {kernel.basename}\n"
+        content += f"#            MARTA file report: {kernel.kernel}\n"
         content += f"#" * 80 + "\n"
         if verbose:
             content += f"\n# -- MACHINE INFO\n"
@@ -65,7 +65,7 @@ class Report:
         content += f"\t- Total Compilation time: {str(datetime.timedelta(seconds=kernel.compilation_time))}\n"
         content += f"\t- Total Execution time: {str(datetime.timedelta(seconds=kernel.execution_time))}\n"
         content += f"\n# -- EXPERIMENT PARAMETERS\n"
-        content += f"- Kernel name: {kernel.basename}\n"
+        content += f"- Kernel name: {kernel.kernel}\n"
         content += f"- Description: {kernel.descr}\n"
         content += f"- Compilers used:\n"
         for compiler in kernel.compiler_flags:

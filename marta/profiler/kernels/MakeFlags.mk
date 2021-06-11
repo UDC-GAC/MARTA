@@ -5,9 +5,9 @@
 ################################################################################
 
 # Some useful paths
-BIN_DIR=../../bin/
-ASM_DIR=../../asm_codes/
-ASM_DIR=../../dumps/
+BIN_DIR=../../../bin/
+ASM_DIR=../../../asm_codes/
+ASM_DIR=../../../dumps/
 USRDIR=$(HOME)
 
 # EXPERIMENTAL: inline code

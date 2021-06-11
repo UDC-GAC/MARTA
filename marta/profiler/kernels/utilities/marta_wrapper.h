@@ -276,7 +276,6 @@ DATA_TYPE marta_avoid_dce_sum(const char *fmt, ...) {
 
 #define MARTA_CHECK_HEADERS(cond)                                              \
   if ((cond != MARTA_NO_HEADER) && (cond != MARTA_CSV_HEADER)) {               \
-    \  
     fprintf(stderr, "[MARTA] Bad flag for BENCHMARK_BEGIN");                   \
     exit(1);                                                                   \
   }
