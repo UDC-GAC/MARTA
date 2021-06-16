@@ -6,41 +6,28 @@
       show_progress_bars: True
       preamble:
           command: "rm -Rf bin asm_codes && sudo cpupower frequency-set -u 2.1GHz && sudo cpupower frequency-set -d 2.1GHz"
-      finalize:
-          clean_tmp_files: False
-          clean_asm_files: False
-          clean_bin_files: False
-          command: "echo 'done!'"
       compilation:
           enabled: True
           processes: 32
           language: "C"
-          compiler_flags: 
-            { 
-                "gcc": " -march=native -mtune=native -mavx2 ",
-            }
-          common_flags: " -O3 "
-          inlined_kernel: True
+          compiler_flags: { "gcc": [" -O2 ", " -O3 "] }
+          common_flags: " -march=native -mtune=native -mavx2 "
+          kernel_compilation_type: "infile"
           asm_syntax: "att"
-          asm_analysis: False
+          asm_analysis: True
           debug: False
       configuration:
-          kernel_cfg: [
-          " ",
-          ]
+          kernel_cfg: [""]
           d_features:
-                MICRO_INS:
-                    evaluate: True
-                    type: "static"
-                    val_type: "string"
-                    value: "[f\"kernels/kernel_{i}_{j}\" for i,j in it.product(range(5), range(5))]"
+              MICRO_INS:
+                  evaluate: True
+                  type: "static"
+                  val_type: "string"
+                  value: '[f"kernels/kernel_{i}_{j}" for i,j in it.product(range(7), range(10))]'
           flops: "1"
       execution:
           enabled: True
-          papi_counters: [
-            "UNHALTED_CORE_CYCLES",
-            "INSTRUCTIONS_RETIRED"
-            ]
+          papi_counters: ["UNHALTED_CORE_CYCLES", "INSTRUCTIONS_RETIRED"]
           time: True
           tsc: True
           threshold_outliers: 3

@@ -82,7 +82,14 @@ class Kernel:
 
     @staticmethod
     def compile_parse_asm(
-        kpath, comp, common_flags, kconfig, other_flags="", suffix_file="", debug="",
+        kpath,
+        comp,
+        compiler_flags,
+        common_flags,
+        kconfig,
+        other_flags="",
+        suffix_file="",
+        debug="",
     ) -> bool:
         """
         Compile benchmark according to a set of flags, suffixes and so
@@ -110,8 +117,10 @@ class Kernel:
                 kconfig = kconfig.replace(t, "")
                 other_flags += f" {t} "
 
+        compiler_flags_suffix = compiler_flags.replace(" ", "_").replace("-", "")
+
         comp_str = (
-            f"make -B -C {kpath} COMP={comp}"
+            f"make -B -C {kpath} COMP={comp} COMP_FLAGS={compiler_flags_suffix} "
             f" KERNEL_CONFIG='{kconfig}' "
             f" COMMON_FLAGS='{common_flags}' "
             f" SUFFIX_ASM='{suffix_file}' "
@@ -246,7 +255,7 @@ class Kernel:
         return ""
 
     def compile(
-        self, product_params, compiler, debug: bool, quit_on_error=False
+        self, product_params, compiler, compiler_flags, debug: bool, quit_on_error=False
     ) -> bool:
         # FIXME: refactor this garbage, please
         tmp = pickle.loads(product_params)
@@ -255,7 +264,7 @@ class Kernel:
         params_dict = tmp
         suffix_file, custom_flags = Kernel.get_suffix_and_flags(kconfig, params_dict)
 
-        custom_flags += self.compiler_flags[compiler]
+        custom_flags += compiler_flags
         local_common_flags = self.common_flags + custom_flags
         local_common_flags += f" -DNRUNS={self.nsteps} "
         if self.cpu_affinity != -1:
@@ -310,11 +319,15 @@ class Kernel:
             other_flags += f" COMPILE_KERNEL=true "
 
         if self.asm_analysis:
-            other_flags += f" ASM_CODE=true "
+            if self.kernel_compilation == "infile":
+                other_flags += f" ASM_CODE_MAIN=true "
+            else:
+                other_flags += f" ASM_CODE_KERNEL=true "
 
         ret = Kernel.compile_parse_asm(
             self.path_kernel,
             compiler,
+            compiler_flags,
             local_common_flags,
             kconfig,
             other_flags,
@@ -325,9 +338,9 @@ class Kernel:
             return False
         return True
 
-    def run(self, product_params, compiler) -> list:
+    def run(self, product_params, compiler: str, compiler_flags="") -> list:
         # FIXME: refactor this...
-        tmp_dict = {}
+        tmp_dict = {"compiler_flags": compiler_flags}
         if self.papi_counters != None:
             avg_papi_counters = dict.fromkeys(self.papi_counters)
         tmp = pickle.loads(product_params)
@@ -336,9 +349,11 @@ class Kernel:
         params_dict = tmp
         name_bin, _ = Kernel.get_suffix_and_flags(kconfig, params_dict)
         name_bin = self.kernel + "_" + name_bin
+        compiler_flags_suffix = compiler_flags.replace(" ", "_").replace("-", "")
         if self.asm_analysis:
             asm_dict = ASMParserFactory.parse_asm(
-                self.asm_syntax, f"asm_codes/{name_bin}_{compiler}.s"
+                self.asm_syntax,
+                f"asm_codes/{name_bin}_{compiler}_{compiler_flags_suffix}.s",
             )
             tmp_dict.update(asm_dict)
 
@@ -369,6 +384,7 @@ class Kernel:
                 self.papi_counters,
                 self.exec_args,
                 compiler,
+                compiler_flags,
                 self.nexec,
                 self.nsteps,
                 self.threshold_outliers,
@@ -386,6 +402,7 @@ class Kernel:
                 "time",
                 self.exec_args,
                 compiler,
+                compiler_flags,
                 self.nexec,
                 self.nsteps,
                 self.threshold_outliers,
@@ -403,6 +420,7 @@ class Kernel:
                 "tsc",
                 self.exec_args,
                 compiler,
+                compiler_flags,
                 self.nexec,
                 self.nsteps,
                 self.threshold_outliers,
@@ -464,14 +482,19 @@ class Kernel:
         Kernel.debug = cfg["kernel"].get("debug", False)
 
         try:
-            config_comp = cfg["kernel"]["compilation"]
             config_cfg = cfg["kernel"]["configuration"]
             config_exec = cfg["kernel"]["execution"]
         except KeyError:
             print(
-                "Check your configuration file: 'compilation', 'configuration' and 'execution' keys could be missing..."
+                "Check your configuration file: 'configuration' and 'execution' keys could be missing..."
             )
             sys.exit(1)
+
+        try:
+            config_comp = cfg["kernel"]["compilation"]
+        except KeyError:
+            config_comp = {}
+            print("[WARNING] No compilation options selected: using gcc with no flags")
 
         self.compilation_enabled = config_comp.get("enabled", True)
         try:
@@ -485,11 +508,8 @@ class Kernel:
             sys.exit(1)
         except KeyError:
             self.processes = 1
-        self.compilers_list = list(
-            config_comp.get("compiler_flags", {"gcc": ""}).keys()
-        )
+        self.compiler_flags = config_comp.get("compiler_flags", {"gcc": [""]})
         self.common_flags = config_comp.get("common_flags", "")
-        self.compiler_flags = config_comp.get("compiler_flags", {"gcc": ""})
         self.kernel_compilation = config_comp.get("kernel_compilation_type", "infile")
         self.inlined = config_comp.get("kernel_inlined", False)
         self.asm_analysis = config_comp.get("asm_analysis", False)
@@ -497,11 +517,7 @@ class Kernel:
         self.comp_debug = config_comp.get("debug", False)
 
         # Configuration
-        try:
-            self.kernel_cfg = config_cfg["kernel_cfg"]
-        except KeyError:
-            print("'kernel_cfg' missing...")
-            sys.exit(1)
+        self.kernel_cfg = config_cfg.get("kernel_cfg", [""])
         self.d_features = config_cfg.get("d_features", [])
         self.d_flags = config_cfg.get("d_flags", [])
         self.flops = config_cfg.get("flops", 1)

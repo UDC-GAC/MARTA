@@ -110,17 +110,34 @@ void intel_clflush(volatile void *p, unsigned int allocation_size) {
   asm volatile("mov %0, %%eax" : : "r"(TSTEPS) : "eax");                       \
   asm volatile("begin_loop:");
 
+// According to Intel's optimization guide it is better to avoid dec in benefit
+// of sub/add/cmp when using loops
+// Intel® 64 and IA-32 Architectures Optimization Reference Manual
+// https://software.intel.com/content/dam/develop/external/us/en/documents-tps/64-ia-32-architectures-optimization-manual.pdf
+#define END_LOOP                                                               \
+  asm volatile("sub $1, %%eax\n\t"                                             \
+               "jne begin_loop"                                                \
+               :                                                               \
+               :                                                               \
+               :);
+
+#if defined(DEC_END_LOOP)
+#undef END_LOOP
 #define END_LOOP                                                               \
   asm volatile("dec %%eax\n\t"                                                 \
                "jne begin_loop"                                                \
                :                                                               \
                :                                                               \
                :);
+#endif
 
 /**
  * CLOBBER_MEMORY - Acts as a read/write memory barrier.
  */
 #define CLOBBER_MEMORY asm volatile("" : : : "memory")
+
+#define EXPAND_STRING(s) #s
+#define TO_STRING(s) EXPAND_STRING(s)
 
 /**
  * DO_NOT_TOUCH[_WRITE|_READ](x) - Avoid compiler optimizations
@@ -137,14 +154,18 @@ void intel_clflush(volatile void *p, unsigned int allocation_size) {
  *  "r": register allowed as input
  *  "m": memory allowed as input
  */
-
 #if defined(__INTEL_COMPILER)
 #define DO_NOT_TOUCH(var)
 #define DO_NOT_TOUCH_WRITE(var)
 #define DO_NOT_TOUCH_READ(var)
 #else
+// output: var
+// +: read/write
+// "x" for XMM, "t" for YMM, "g" for ZMM
+#define DO_NOT_TOUCH(var)                                                      \
+  asm volatile("" : "+x"(var) : /* no inputs */ : /* no clobbering */);
+#define DO_NOT_TOUCH_IO(var) asm volatile("" : "+"(var)::);
 //#define DO_NOT_TOUCH(var) asm volatile("" : "+m,r"(var) : : "memory")
-#define DO_NOT_TOUCH(var)
 //#define DO_NOT_TOUCH(var) asm volatile("" : : "rm"(var) : "memory")
 #define DO_NOT_TOUCH_WRITE(var) asm volatile("" : : "rm"(var) : "memory")
 #define DO_NOT_TOUCH_READ(var) asm volatile("" : "+r,m"(var))

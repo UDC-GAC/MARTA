@@ -50,6 +50,7 @@ class Timing:
         name,
         exec_opts,
         compiler,
+        compiler_flags: str,
         nexec=10,
         nsteps=1000,
         threshold_outliers=3,
@@ -81,9 +82,11 @@ class Timing:
             )
             nexec = 5
 
+        compiler_flags_suffix = compiler_flags.replace(" ", "_").replace("-","")
+
         # Save execution values in an array
         suffix = f"{name}" if type(name) == str else "papi"
-        bin_file = f"{exec_opts} ./bin/{code}_{compiler}_{suffix}.o {nsteps}"
+        bin_file = f"{exec_opts} ./bin/{code}_{compiler}_{compiler_flags_suffix}_{suffix}.o {nsteps}"
         tmp_file = f"tmp/____tmp_{code}_{compiler}_{suffix}"
         os.system(f"{bin_file}  > {tmp_file}")
         for _ in range(1, nexec):

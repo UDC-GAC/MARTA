@@ -1,13 +1,14 @@
 ################################################################################
-#																			   #
-# 				Generic Makefile for runing kernels in MARTA				   #
-#																			   #
+#                                                                              #
+#               Generic Makefile for runing kernels in MARTA                   #
+#                                                                              #
 ################################################################################
 
 # Some useful paths
-BIN_DIR=../../../bin/
-ASM_DIR=../../../asm_codes/
-ASM_DIR=../../../dumps/
+PARENT_DIR=../../../
+BIN_DIR=$(PARENT_DIR)bin/
+ASM_DIR=$(PARENT_DIR)asm_codes/
+DUMP_DIR=$(PARENT_DIR)dumps/
 USRDIR=$(HOME)
 
 # EXPERIMENTAL: inline code
@@ -36,37 +37,37 @@ ifeq ($(COMP),icc)
 	CC=icc
 	CXX=icpc
 	ifeq ($(AUTOVEC),true)
-		FLAGS_KERN+= -Ofast -vec-threshold0
-		FLAGS_MAIN+= -Ofast -vec-threshold0
-	else
-		FLAGS_KERN+= -O2 -vec-threshold0
-		FLAGS_MAIN+= -O2 -vec-threshold0
+		FLAGS_KERN+= -vec-threshold0
+		FLAGS_MAIN+= -vec-threshold0
+		FLAGS_ASM+= -vec-threshold0
 	endif
-	FLAGS_ASM+= -O2 -vec-threshold0
+	ifeq ($(KERNEL_INLINED),true)
+		FLAGS_MAIN+= -ipo
+	endif
 else ifeq ($(COMP),gcc)
 	CC=gcc
 	CXX=g++
-#	FLAGS_MAIN+= -O3 -D_GNU_SOURCE -fno-dce -fno-tree-dce
-#	-fno-tree-builtin-call-dce
-	FLAGS_MAIN+= -O3 -D_GNU_SOURCE
+	FLAGS_MAIN+= -fno-dce -fno-tree-dce -fno-tree-builtin-call-dce
 	ifeq ($(AUTOVEC),true)
-		FLAGS_KERN+= -O3 -ftree-vectorize
-	else
-		FLAGS_KERN+= -O2 -ftree-vectorize
+		FLAGS_KERN+= -ftree-vectorize -ftree-vectorize -fsimd-cost-model=unlimited -fvect-cost-model=unlimited
 	endif
-#	FLAGS_ASM+=  -O3 -ftree-vectorize -ftree-slp-vectorize
-#	-fsimd-cost-model=unlimited -fvect-cost-model=unlimited
-	FLAGS_ASM+=  -O3 -ftree-vectorize
+	FLAGS_ASM+= $(FLAGS_KERN)
+	FLAGS_MAIN+= $(FLAGS_KERN)
+	ifeq ($(KERNEL_INLINED),true)
+		FLAGS_MAIN+= -flto 
+	endif
 else ifeq ($(COMP),clang)
 	CC=clang
 	CXX=clang++
-	FLAGS_MAIN+= -O3 -D_GNU_SOURCE -fno-dce -fno-tree-dce -fno-tree-builtin-call-dce
+	FLAGS_MAIN+= -fno-dce -fno-tree-dce -fno-tree-builtin-call-dce
 	ifeq ($(AUTOVEC),true)
-		FLAGS_KERN+= -ftree-vectorize
-		FLAGS_MAIN+= -ftree-vectorize
+		FLAGS_KERN+= -ftree-vectorize -fsimd-cost-model=unlimited -fvect-cost-model=unlimited
 	endif
-	FLAGS_KERN+= -O3 -flto -fsimd-cost-model=unlimited -fvect-cost-model=unlimited
-	FLAGS_ASM+= -O3 -fsimd-cost-model=unlimited -fvect-cost-model=unlimited
+	FLAGS_ASM+= $(FLAGS_KERN)
+	FLAGS_MAIN+= $(FLAGS_KERN)
+	ifeq ($(KERNEL_INLINED),true)
+		FLAGS_MAIN+= -flto 
+	endif
 else
 	echo "Compiler unknown"
 	exit 1
@@ -89,8 +90,9 @@ endif
 
 .PHONY: all clean
 
-KERNEL_NAME?=$(BASENAME)_$(SUFFIX_ASM)_$(COMP)
+KERNEL_NAME?=$(BASENAME)_$(SUFFIX_ASM)_$(COMP)_$(COMP_FLAGS)
 TMP_SRC?=___tmp_$(KERNEL_NAME).c
+TMP_ASM?=___tmp_$(KERNEL_NAME).s
 TMP_BIN?=___tmp_$(KERNEL_NAME).o
 
 BASE_BIN_NAME?=$(BIN_DIR)$(KERNEL_NAME)
@@ -109,8 +111,12 @@ ifeq ($(COMPILE_KERNEL),true)
 	FLAGS_MAIN+= $(KERNEL_NAME).o
 endif
 
-ifeq ($(ASM_CODE),true)
+ifeq ($(ASM_CODE_KERNEL),true)
 	MAIN_RULES+= asm_code
+endif
+
+ifeq ($(ASM_CODE_MAIN),true)
+	MAIN_RULES+= asm_code_main
 endif
 
 
@@ -140,13 +146,20 @@ endif
 # Targets to compile
 all: $(TARGETS)
 
-macveth: 
+# EXPERIMENTAL - Compatibility with MACVETH
+macveth:
 #	$(V)$(MVPATH)macveth $(MACVETH_FLAGS) $(OLD_TARGET)$(MACVETH_SUFFIX).c -o
 #	kernels/$(OLD_TARGET)/$(TARGET).c -- $(MACVETH_DB)
 	$(V)$(MVPATH)macveth $(MACVETH_FLAGS) $(OLD_TARGET)$(MACVETH_SUFFIX).c -o $(TMP_SRC) -- $(MACVETH_DB) 2> ___$(SUFFIX_ASM).log
-	
-asm_code: 
+
+asm_code:
 	$(V)$(CC) -c $(FLAGS_ASM) $(TARGET).c -masm=$(ASM_SYNTAX) -S -o $(BASE_ASM_NAME).s
+
+asm_code_main:
+	cp $(MAIN_FILE) $(TMP_SRC)
+	$(V)$(CC) $(FLAGS_MAIN) $(POLY_TFLAGS) $(TMP_SRC) -S
+	mv $(TMP_ASM) $(BASE_ASM_NAME).s
+	rm $(TMP_SRC)
 
 kernel_macveth: macveth
 	$(V)$(CC) -c $(FLAGS_KERN) $(TMP_SRC)
@@ -156,25 +169,26 @@ kernel:
 	$(V)cp $(TARGET).c $(TMP_SRC)
 	$(V)$(CC) -c $(FLAGS_KERN) $(TMP_SRC)
 	$(V)mv $(TMP_BIN) $(KERNEL_NAME).o
-#	$(V)rm $(TMP_SRC)
+	$(V)rm $(TMP_SRC)
 
 custom_asm:
 	$(V)$(CC) -c $(FLAGS_KERN) $(ASM_NAME).s -o $(KERNEL_NAME).o
 
-# -DPOLYBENCH_TIME
+# -DPOLYBENCH_TIME (clock time)
 $(BINARY_NAME)_time: $(MAIN_RULES)
 	$(V)$(CC) $(FLAGS_MAIN) $(POLY_TFLAGS) $(MAIN_FILE) -o $(BASE_BIN_NAME)_time.o
 
-# -DPOLYBENCH_TIME -DPOLYBENCH_CYCLE_ACCURATE_TIMER
+# -DPOLYBENCH_CYCLE_ACCURATE_TIMER (TSC)
 $(BINARY_NAME)_tsc: $(MAIN_RULES)
 	$(V)$(CC) $(FLAGS_MAIN) $(POLY_RFLAGS) $(MAIN_FILE) -o $(BASE_BIN_NAME)_tsc.o
 
-# -DPOLYBENCH_PAPI
+# -DPOLYBENCH_PAPI (hardware counters)
 $(BINARY_NAME)_papi: $(MAIN_RULES)
 	$(V)$(CC) $(FLAGS_MAIN) $(POLY_PFLAGS) $(MAIN_FILE) -o $(BASE_BIN_NAME)_papi.o
-	
+
+# -DPOLYBENCH_DUMP_ARRAYS
 $(BINARY_NAME)_dump: $(MAIN_RULES)
-	$(V)$(CC) $(FLAGS_MAIN) -DPOLYBENCH_DUMP_ARRAYS $(MAIN_FILE) -o $(BASE_DUMP_NAME)_dump.o 
+	$(V)$(CC) $(FLAGS_MAIN) -DPOLYBENCH_DUMP_ARRAYS $(MAIN_FILE) -o $(BASE_DUMP_NAME)_dump.o
 
 clean:
 	find . -type f ! -name "*.c" ! -name "*.h" ! -name "*.c" ! -name "Makefile" -delete

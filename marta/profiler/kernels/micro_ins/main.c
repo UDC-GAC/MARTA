@@ -16,13 +16,12 @@ polybench_start_instruments;
 // for (int t = 0; t < TSTEPS; ++t) {
 BEGIN_LOOP(TSTEPS);
 #include FILE_KERNEL
-// asm volatile("shufps %xmm0, %xmm1, 0x01" :::);
 END_LOOP;
 //}
 polybench_stop_instruments;
 polybench_print_instruments;
 
 // Sum of all temporaries and use the value to avoid DCE
-#include FILE_DCE
+//#include FILE_DCE
 
 MARTA_BENCHMARK_END;

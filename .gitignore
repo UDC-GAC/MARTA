@@ -15,6 +15,7 @@ __pycache__/
 *.a
 *.optrpt
 tmp/
+log/
 
 # results
 old_files/
@@ -56,6 +57,8 @@ cyc_*
 *.synctex*
 *.out
 *.pdf
+
+marta/profiler/kernels/*
 
 # Build
 build/

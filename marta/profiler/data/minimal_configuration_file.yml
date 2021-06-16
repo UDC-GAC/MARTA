@@ -1,0 +1,13 @@
+- kernel:
+      name: "marta_bench"
+      type: "regular"
+      path: "marta_bench"
+      description: "Setup for inital experiment!"
+      configuration:
+          flops: "1"
+      execution:
+          enabled: True
+          time: True
+          nexec: 10
+          nsteps: 10000
+          cpu_affinity: 2
