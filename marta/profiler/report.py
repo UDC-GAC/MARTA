@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import cpuinfo as cpu
-import datetime
+import os
+from timing import Timing
 
 
 class Report:
@@ -61,9 +61,11 @@ class Report:
             content += f"\n# -- MACHINE INFO\n"
             content += Report.get_machine_info()
 
-        content += f"\n# -- TIME ELAPSED : { str(datetime.timedelta(seconds=kernel.total_time))}\n"
-        content += f"\t- Total Compilation time: {str(datetime.timedelta(seconds=kernel.compilation_time))}\n"
-        content += f"\t- Total Execution time: {str(datetime.timedelta(seconds=kernel.execution_time))}\n"
+        content += f"\n# -- TIME ELAPSED : {Timing.to_seconds(Timing.total_time)}\n"
+        content += f"\t- Total Compilation time: {Timing.to_seconds(Timing.compilation_time)}\n"
+        content += (
+            f"\t- Total Execution time: {Timing.to_seconds(Timing.execution_time)}\n"
+        )
         content += f"\n# -- EXPERIMENT PARAMETERS\n"
         content += f"- Kernel name: {kernel.kernel}\n"
         content += f"- Description: {kernel.descr}\n"

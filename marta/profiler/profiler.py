@@ -20,10 +20,11 @@ import multiprocessing as mp
 from .kernel import Kernel
 from .project import Project
 from .utils import custom_mp
+from .timing import Timing
 from datetime import datetime as dt
 from tqdm import tqdm
 from tqdm.auto import tqdm
-from itertools import repeat as repit
+from itertools import repeat
 
 
 class Profiler:
@@ -297,6 +298,11 @@ class Profiler:
             os.mkdir("tmp")
         if not os.path.exists("log"):
             os.mkdir("log")
+        else:
+            if os.path.exists("log/___tmp.stdout"):
+                os.remove("log/___tmp.stdout")
+            if os.path.exists("log/___tmp.stderr"):
+                os.remove("log/___tmp.stderr")
 
         exit_on_error = not self.args.no_quit_on_error
 
@@ -313,15 +319,15 @@ class Profiler:
                 # thread-safe, so user must be aware of this, not the
                 # profiler (passive-agressive comment :-P)
                 if kernel.compilation_enabled:
-                    t0 = kernel.start_timer()
+                    t0 = Timing.start_timer()
                     with mp.Pool(processes=kernel.processes) as pool:
                         iterable = zip(
-                            repit(kernel),
+                            repeat(kernel),
                             product,
-                            repit(compiler),
-                            repit(compiler_flags),
-                            repit(debug),
-                            repit(exit_on_error),
+                            repeat(compiler),
+                            repeat(compiler_flags),
+                            repeat(debug),
+                            repeat(exit_on_error),
                         )
                         if kernel.show_progress_bars:
                             pbar = tqdm(
@@ -343,7 +349,7 @@ class Profiler:
                                 print("[ERROR] Compilation failed")
                                 pool.terminate()
                                 sys.exit(1)
-                    kernel.accm_timer("compilation", t0)
+                    Timing.accm_timer("compilation", t0)
                 else:
                     print("[WARNING] Compilation process disabled!")
 
@@ -366,7 +372,7 @@ class Profiler:
                     else:
                         loop_iterator = product
                         print("Executing...")
-                    t0 = kernel.start_timer()
+                    t0 = Timing.start_timer()
                     for params_val in loop_iterator:
                         kern_exec = kernel.run(params_val, compiler, compiler_flags)
                         # There was an error, exit on error, save data first
@@ -381,10 +387,11 @@ class Profiler:
                                 df = df.append(exec, ignore_index=True)
                         else:
                             df = df.append(kern_exec, ignore_index=True)
-                    kernel.accm_timer("execution", t0)
+                    Timing.accm_timer("execution", t0)
                 else:
                     print("[WARNING] Execution process disabled!")
         # Storing results and generating report file
+        Timing.save_total_time()
         kernel.save_results(df, output_filename, output_format, generate_report)
 
         finalize_actions = cfg["kernel"].get("finalize")

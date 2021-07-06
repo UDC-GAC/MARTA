@@ -10,8 +10,8 @@
           enabled: True
           processes: 32
           language: "C"
-          compiler_flags: { "gcc": [" -O2 ", " -O3 "] }
-          common_flags: " -march=native -mtune=native -mavx2 "
+          compiler_flags: { "gcc": [" -O3 "] }
+          common_flags: " -march=native -mtune=native -mavx2 -g "
           kernel_compilation_type: "infile"
           asm_syntax: "att"
           asm_analysis: True
@@ -19,11 +19,16 @@
       configuration:
           kernel_cfg: [""]
           d_features:
-              MICRO_INS:
+              OPTION:
                   evaluate: True
                   type: "static"
-                  val_type: "string"
-                  value: '[f"kernels/kernel_{i}_{j}" for i,j in it.product(range(7), range(10))]'
+                  val_type: "numeric"
+                  value: "[1,2]"
+              #   MICRO_INS:
+              #       evaluate: True
+              #       type: "static"
+              #       val_type: "string"
+              #       value: '[f"kernels/kernel_{i}_{j}" for i,j in it.product(range(30), range(5))]'
           flops: "1"
       execution:
           enabled: True
@@ -31,7 +36,7 @@
           time: True
           tsc: True
           threshold_outliers: 3
-          mean_and_discard_outliers: False
+          mean_and_discard_outliers: True
           init_data: True
           intel_cache_flush: False
           check_dump: False

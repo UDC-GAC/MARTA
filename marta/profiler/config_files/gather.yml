@@ -1,6 +1,6 @@
 - kernel:
       name: "gather"
-      path: "kernels/gather"
+      path: "profiler/kernels/gather"
       description: "Setup for experiment gather"
       debug: False
       show_progress_bars: True
@@ -17,9 +17,12 @@
           language: "C"
           compiler_flags: 
             { 
-                "gcc": " -march=native ",
+                "gcc": [" -march=native -mtune=native -mavx2 -O2 ", "
+                -march=native -mtune=native -mavx512f -O3 ",
+                " -march=native -mtune=native -mavx2 -O3 ",
+                " -march=native -mtune=native -mavx512f -O2 ",
+                " -march=native -mtune=native -O3 "],
             }
-          common_flags: " -O3 "
           inlined_kernel: True
           asm_syntax: "att"
           asm_analysis: False
@@ -34,49 +37,49 @@
                     type: "static"
                     val_type: "numeric"
                     value: "[0]"
-                    #value: "[0,1,2,554]"
+                    #value: "[0,1,554]"
                 IDX1:
                     evaluate: True
                     type: "static"
                     val_type: "numeric"
                     value: "[1]"
-                    #value: "[1,16,17,234]"
+                    #value: "[1,16,234]"
                 IDX2:
                     evaluate: True
                     type: "static"
                     val_type: "numeric"
                     value: "[2]"
-                    #value: "[2,32,5,0]"
+                    #value: "[2,32,5]"
                 IDX3:
                     evaluate: True
                     type: "static"
                     val_type: "numeric"
                     value: "[3]"
-                    #value: "[3,48,19,23]"
+                    #value: "[3,48,19]"
                 IDX4:
                     evaluate: True
                     type: "static"
                     val_type: "numeric"
                     value: "[4]"
-                    #value: "[4,64,15,99]"
+                    #value: "[4,64,15]"
                 IDX5:
                     evaluate: True
                     type: "static"
                     val_type: "numeric"
                     value: "[5]"
-                    #value: "[5,80,19,121]"
+                    #value: "[5,80,19]"
                 IDX6:
                     evaluate: True
                     type: "static"
                     val_type: "numeric"
                     value: "[6]"
-                    #value: "[6,96,109,1]"
+                    #value: "[6,96,109]"
                 IDX7:
                     evaluate: True
                     type: "static"
                     val_type: "numeric"
                     value: "[7]"
-                    #value: "[7,112,234,0]"
+                    #value: "[7,112,234]"
           flops: "1"
       execution:
           enabled: True
@@ -87,7 +90,7 @@
           time: True
           tsc: True
           threshold_outliers: 3
-          mean_and_discard_outliers: True
+          mean_and_discard_outliers: False
           init_data: True
           intel_cache_flush: False
           check_dump: False

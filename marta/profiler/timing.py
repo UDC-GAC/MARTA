@@ -13,11 +13,43 @@
 # limitations under the License.
 
 from __future__ import annotations
+from datetime import datetime as dt
 import os
 import numpy as np
+import time
 
 
 class Timing:
+    total_time = time.time()
+    compilation_time = 0
+    execution_time = 0
+
+    @staticmethod
+    def start_timer(timer_type: str) -> None:
+        if timer_type == "compilation":
+            Timing.compilation_time = time.time()
+        elif timer_type == "execution":
+            Timing.execution_time = time.time()
+        else:
+            raise TypeError
+
+    @staticmethod
+    def accm_timer(timer_type: str) -> None:
+        if timer_type == "compilation":
+            Timing.compilation_time = time.time() - Timing.compilation_time
+        elif timer_type == "execution":
+            Timing.execution_time = time.time() - Timing.execution_time
+        else:
+            raise TypeError
+
+    @staticmethod
+    def save_total_time() -> None:
+        Timing.total_time = time.time() - Timing.total_time
+
+    @staticmethod
+    def to_seconds(t: float) -> float:
+        return dt.timedelta(seconds=t)
+
     @staticmethod
     def show_error(line: str, events: list) -> None:
         print(f"Execution did not return a numeric value: \n'{line}'")
@@ -82,7 +114,7 @@ class Timing:
             )
             nexec = 5
 
-        compiler_flags_suffix = compiler_flags.replace(" ", "_").replace("-","")
+        compiler_flags_suffix = compiler_flags.replace(" ", "_").replace("-", "")
 
         # Save execution values in an array
         suffix = f"{name}" if type(name) == str else "papi"

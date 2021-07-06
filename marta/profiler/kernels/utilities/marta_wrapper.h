@@ -108,13 +108,15 @@ void intel_clflush(volatile void *p, unsigned int allocation_size) {
 
 #define BEGIN_LOOP(TSTEPS)                                                     \
   asm volatile("mov %0, %%eax" : : "r"(TSTEPS) : "eax");                       \
-  asm volatile("begin_loop:");
+  asm volatile("begin_loop:");                                                 \
+  asm volatile("" :::);
 
 // According to Intel's optimization guide it is better to avoid dec in benefit
 // of sub/add/cmp when using loops
 // Intel® 64 and IA-32 Architectures Optimization Reference Manual
 // https://software.intel.com/content/dam/develop/external/us/en/documents-tps/64-ia-32-architectures-optimization-manual.pdf
 #define END_LOOP                                                               \
+  asm volatile("" :::);                                                        \
   asm volatile("sub $1, %%eax\n\t"                                             \
                "jne begin_loop"                                                \
                :                                                               \
@@ -167,7 +169,7 @@ void intel_clflush(volatile void *p, unsigned int allocation_size) {
 #define DO_NOT_TOUCH_IO(var) asm volatile("" : "+"(var)::);
 //#define DO_NOT_TOUCH(var) asm volatile("" : "+m,r"(var) : : "memory")
 //#define DO_NOT_TOUCH(var) asm volatile("" : : "rm"(var) : "memory")
-#define DO_NOT_TOUCH_WRITE(var) asm volatile("" : : "rm"(var) : "memory")
+#define DO_NOT_TOUCH_WRITE(var) asm volatile("" : : "rm"(var) : "memory") 
 #define DO_NOT_TOUCH_READ(var) asm volatile("" : "+r,m"(var))
 #endif
 
@@ -311,11 +313,11 @@ DATA_TYPE marta_avoid_dce_sum(const char *fmt, ...) {
     int n = N;                                                                 \
     int m = M;                                                                 \
     MARTA_CHECK_HEADERS(cond);                                                 \
-    cpu_set_t mask;                                                            \
-    CPU_ZERO(&mask);                                                           \
-    CPU_SET(MARTA_CPU_AFFINITY, &mask);                                        \
+    cpu_set_t MARTA_CPU_MASK;                                                  \
+    CPU_ZERO(&MARTA_CPU_MASK);                                                 \
+    CPU_SET(MARTA_CPU_AFFINITY, &MARTA_CPU_MASK);                              \
     int TSTEPS = NRUNS;                                                        \
-    int result = sched_setaffinity(0, sizeof(mask), &mask);
+    int result = sched_setaffinity(0, sizeof(MARTA_CPU_MASK), &MARTA_CPU_MASK);
 
 #define MARTA_BENCHMARK_END                                                    \
   return 0;                                                                    \

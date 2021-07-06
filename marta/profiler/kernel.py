@@ -18,7 +18,6 @@ from __future__ import annotations
 from typing import Union
 import os
 import sys
-import time
 import pickle
 import pandas as pd
 from .report import Report
@@ -28,19 +27,6 @@ from .timing import Timing
 
 class Kernel:
     debug = False
-    total_time = time.time()
-    compilation_time = 0
-    execution_time = 0
-
-    @staticmethod
-    def start_timer() -> float:
-        return time.time()
-
-    def accm_timer(self, timer_type: str, t0: float) -> None:
-        if timer_type == "compilation":
-            self.compilation_time += time.time() - t0
-        else:
-            self.execution_time += time.time() - t0
 
     def save_results(
         self,
@@ -75,7 +61,6 @@ class Kernel:
             df.to_csv(filename, index=False)
 
         if generate_report:
-            self.total_time = time.time() - self.total_time
             report_filename = filename.replace(".csv", ".log")
             with open(report_filename, "w") as f:
                 f.write(Report.generate_report(self))
@@ -340,7 +325,7 @@ class Kernel:
 
     def run(self, product_params, compiler: str, compiler_flags="") -> list:
         # FIXME: refactor this...
-        tmp_dict = {"compiler_flags": compiler_flags}
+        tmp_dict = dict()
         if self.papi_counters != None:
             avg_papi_counters = dict.fromkeys(self.papi_counters)
         tmp = pickle.loads(product_params)
@@ -439,7 +424,7 @@ class Kernel:
         if len(d.keys()) > 0:
             tmp_dict.update(d)
         tmp_dict.update(
-            {"CFG": kconfig, "Compiler": compiler,}
+            {"CFG": kconfig, "Compiler": compiler, "compiler_flags": compiler_flags}
         )
 
         if self.mean_and_discard_outliers:
