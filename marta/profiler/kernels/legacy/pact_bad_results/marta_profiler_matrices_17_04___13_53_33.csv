@@ -1,0 +1,3 @@
+MATRIX,CFG,Compiler,CPU_CLK_THREAD_UNHALTED:THREAD_P,INST_RETIRED:ANY_P,UOPS_EXECUTED:STALL_CYCLES,AUTOVEC,DiscardedPapiValues,jmp_GPR,MACVETH,Scop Skipped,Scop Vect.,call_GPR,movq_GPR_GPR,popq_GPR,pushq_GPR
+test-codes/bibd_15_3.spf.c, AUTOVEC=true ,icc,8981.947368421053,1996.0,1292.1,true,0.016666666666666666,1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0
+test-codes/bibd_15_3.spf.c, MACVETH ,icc,9427.7,2101.0,1195.4,-1,0.0,1.0,1.0,0.0,34.0,27.0,84.0,3.0,3.0

@@ -1,0 +1,361 @@
+TL;DR
+-----
+
+1.- Build a cost model: scalar operands
+2.- Inputs: codelets (stored in dense arrays)
+3.- Input size: full unrolled, less than 100 ops (+,*), only SSE-AVX2
+4/5.- Output code: if our cooking recipe outperforms auto-vectorization, then
+implement on the code *KEY IDEA*
+6.- Input format (programs):
+    - Operands information:
+    * OperandX: 
+        { 
+            OperandId, 
+            VirtualMemoryAddress, 
+            VirtualCacheLineId,
+            PositionInVirtualCacheLine
+        }
+
+    * OperandId: from 1 to nb-operands (unique key, max(operandId) == nb
+    distinct operands to the program)
+
+    * VirtualMemoryAddress: &(operandX) literally, above I simplified to the
+    equivalent &(y[0]) == 0, &(A[0]) == 15000 to compute the values in the
+    example.
+    
+    * VirtualCacheLineId: Virtual memory address / cachelinesize (it's
+    integer division here, clsize = 64B is good) 
+    
+    * PositionInVirtualCacheLine: (Virtual memory address % cachelinesize) /
+    sizeof(float) (note I use floats in the example above).
+
+    - Operations information:
+    
+    * OperationX: 
+        { 
+            OperationId, 
+            (TypeOperand1, IdOperand1),
+            (TypeOperand2, IdOperand2),
+            IdOperandX
+        }
+    * OperationId: same as OperandId: a unique key.
+
+    * TypeOperandX: 1 if a memory operand, 2 if the result of a prior
+    computation
+    
+    * IdOperandX: the corresponding id (in either the operands list or the
+    operators list) of the operand operation: + or *
+
+7.- Cost model flow: inputs as on 6), returns cycles, taking into account
+cooking recipes we have.
+
+8.- *KEY MOTIVATION*: evaluate cost of combining subprograms. Having P =
+{P1,P2}, compute cost({P1,P2}) < cost(P1) + cost(P2). This is:
+
+    cost(Pi..j) < sum(cost(Pi)) from i to j
+
+    Where Pi..j is the combination of all subprograms from i to j
+
+9.- Cases to cover by cost model:
+    * Consider different positions of the operand in a cache line
+    * Consider multiple operands beyond 4: tens of operands (at least a few for
+    each of the 3 arrays to be indexed in the computation)
+    * It does not consider operations nor stores, only packing
+
+    * Your cost model should for the moment limit to returning the number of
+    cycles expected if using the chosen/best known cooking recipe to pack the
+    operands. That is, do not bother about whether it would be faster or not to
+    use auto-vectorization, we'll address this orthogonally.
+
+10.- Implementation of cost model in MACVETH, but "we may even be able to
+submit w/o macveth fully implemented, by having instead manually written a few
+key cases (say, 3-5) that Gabriel and I would know correspond to typical
+codelets shape we use."
+
+11.- Profitability vs. auto-vectorization 
+
+12.- Paper writing and so
+----
+Full email
+
+1.- We are building a tool that takes as input a sequence of scalar operations
+(restricted, see below), and outputs the code which achieves the "maximal"
+performance possible to execute those operations.
+
+2) We restrict the input program/operations to be only our codelets: the
+operands/scalar values are stored in dense arrays, and the only operations are
++ and *, in a prototype dst += src1 * src2.
+
+* Question: dst must be dense? 
+
+3) We restrict the input program size: assume (a) full unrolling can be
+achieved; (b) the total number of + and * ops in the fully unrolled code is
+small (say, 100 or less). We assume we can use at least 2 vector sizes: SSE and
+AVX, but ideally AVX512 also. We can focus first on using AVX and SSE only.
+
+4) The tool should emit "optimal" code. Sometimes it means being smart,
+sometimes it means being simple. That is, sometimes the cooking recipe to
+generate the code is "let the compiler auto-vectorize" (or emit very simple
+intrinsics directly), simple case, and sometimes it's about cleverly packing
+the operands and operations to use e.g. a full vector.
+
+5) Focusing on the "complex" case. The rationale is as follows:
+  a) We have a cost model that tells us the expected execution time of a program region, when using the best cooking recipes you can came up with.
+  b) We apply this cost model on the input program, to determine whether we want to use a cooking recipe or let the compiler auto-vectorize. 
+  c) When the cost model says it is profitable to use a cooking recipe, we implement it on the code.
+
+6) The cost model should take as input a description of the program as follows.
+We need the list of addresses of each operand: ideally we want to know the
+number of operands, and for each, the cache line where it sits AND the position
+in the cache line. It also should take as input the operations to be performed.
+To give a concrete example:
+
+for (i = 42; i <= 44; ++i)
+   for (j = 69; j <= 73; ++j)
+      y[4*i + 1024] += A[32*i + 4096] * x[64*j + (i-j)*172 + 1234];
+for (i = 44; i <= 45; ++i)
+  for (j = 0; j <= 1; ++j)
+     y[16*i + 1024] += A[16*i + 4096] * x[16*j + 4567];
+
+=> full unroll:
+      y[4*42 + 1024] += A[32*42 + 4096] * x[64*69 + (42-69)*172 + 1234]; // i =
+      42, j = 69 y[4*42 + 1024] += A[32*42 + 4096] * x[64*70 + (42-70)*172 +
+      1234]; // i = 42, j = 70 ... etc. ... y[16*45 + 1024] += A[16*45 + 4096]
+      * x[16*1 + 4567]; // i = 45 j = 1, 2nd loop
+
+=> input representation (modify as you see fit to add info that is missing, but
+I claim all info here should be actual input to the cost model, at least):
+   operands:
+    op1:  y[4*42+1024] == y[1192]: { 1, 4768, 75, 2 }
+    op2: A[32*42 + 4096]: { 2, 17440, clineid, clinepos }
+    ...
+   operations: 
+     oper1: A[32*42 + 4096] * x[64*69 + (42-69)*172 + 1234]: { 1, (1,2), (1,3), *}
+     oper2: y[4*42 + 1024] += A[32*42 + 4096] : { 2, (2,1), (1,1), +}
+
+So, to give formulas for this notation: operandX: { operandId,
+virtualMemoryAddress, VirtualCacheLineId, PositionInVirtualCacheLine }
+
+OperandId: from 1 to nb-operands (unique key, max(operandId) == nb distinct
+operands to the program)
+
+Virtual memory address: &(operandX) literally, above I simplified to the
+equivalent &(y[0]) == 0, &(A[0]) == 15000 to compute the values in the example.
+
+Virtual cache line id: Virtual memory address / cachelinesize (it's integer
+division here, clsize = 64B is good)
+
+Position in cache line: (Virtual memory address % cachelinesize) /
+sizeof(float) (note I use floats in the example above).
+
+Point being, this description lists all the operands (from memory) of the
+computation, for each listing the cache line id it belongs to, and the
+position. That means, to know how many distinct cache lines are touched by the
+program, we simply count the number of different virtual cache line ids in the
+operands description. Hopefully, adding also the position in the cache line
+will be sufficient input info to compute the cost of masking/packing/unpacking.
+
+OperationX: { operationId, (typeOperand1, idOperand1), (typeOperand2,
+idOperand2), operation}
+
+operationId: same as OperandId: a unique key.
+
+typeOperandX: 1 if a memory operand, 2 if the result of a prior computation
+
+idOperandX: the corresponding id (in either the operands list or the operators
+list) of the operand operation: + or *
+
+So,  { 2, (2,1), (1,1), +} says it's operation #2, that it uses as first
+operand a result of a computation, the one with id 1, and uses as a second
+operand a regular memory operand, also with id 1, doing a + of them.
+
+I claim the above information is all we need. I may be wrong, of course.
+However be mindful that I do not care reducing the number of inputs, even if
+that was possible for the cost model to work well with less inputs (e.g., maybe
+the position in the cache line is useless in that whichever the position, it
+does not influence the time nor cooking recipe chosen. If that's the case, so
+be it, we say so in the paper, but conceptually it's not a property of the
+input representation that we can eliminate this position info, but a property
+of the particular model we have learned/built here. So in the paper, we'll
+present the complete input as above, with possibly more info if you see I
+missed some you need. But not less info.
+
+
+7) The cost model works as follows: it takes as input the list of info as
+described above, and returns the number of cycles the computation will take,
+"optimally" using any combination of cooking recipes we have.
+
+8) Now, the key motivation for doing all of this. Given a program P : { P1, P2}
+(a sequence of 2 sub-programs, such as my example). We look for cases where
+cost({P1,P2}) < cost(P1) + cost(P2), that is we overall execute faster by
+combining somehow the 2 sub-programs than by executing them independently. Such
+example will also be a motivating example for the paper.
+
+9) Right now, I believe your cost model is still incomplete as follows (please
+correct me if I'm wrong, of course):
+   - you do not have all the cases for all possible positions of the operand in
+   a cache line, and I'm not sure you are already considering multiple operands
+   beyond 4, we need to extend to tens of operands (at least a few for each of
+   the 3 arrays to be indexed in the computation)
+   - you do not have support for the operations, only the packing of operands. 
+   - you do not have support for the stores
+
+So, we need all to be done, in order to end up being able to model my example
+above, which is a combination of 2 codelets. Your cost model should for the
+moment limit to returning the number of cycles expected if using the
+chosen/best known cooking recipe to pack the operands. That is, do not bother
+about whether it would be faster or not to use auto-vectorization, we'll
+address this orthogonally.
+
+10) Once the complete cost model is sorted out, then comes the implementation
+in macveth of it: ideally, you are able to emit the code that achieves exactly
+the number of cycles the cost model predicts. My 2 cents is that internally the
+cost model should not only output a number of cycles, but also the cooking
+recipe used to get this number of cycles, to help you implement it. E.g.,
+"operand 1-2-3 => cooking recipe 1, operand 4-5 => cr 2, operand 7,9 => cr 1,
+operations 1,2 => cr ops 1, etc." but having the cost model directly produce
+this could make it quite complicated to implement. You may want to first
+carefully think about which info you need to emit simd code and then make the
+"cost function" internally produce this info for your use within macveth, I
+have not sorted out myself the info/representation needed here. To state the
+obvious, what matters is the cost model: we can live for the moment with codes
+you would have manually implemented (outside of macveth), e.g. for the
+motivation example. And I don't expect it will be profitable that often to do
+this complex fusion + partial vectorization, we may even be able to submit w/o
+macveth fully implemented, by having instead manually written a few key cases
+(say, 3-5) that Gabriel and I would know correspond to typical codelets shape
+we use.
+
+11) Finally back on profitability vs. auto-vectorization by the compiler. In
+the paper, we will report when it was not profitable to use our approach vs.
+simple autovect. We are going to make our life simple: simply experiment with
+our approach, AND also autovect, and each time autovect was measured faster,
+we'll say autovect is the way to go. To actually automate this process is
+simple in theory: when you build your cost model, each case corresponds to an
+actual program: we would synthesize the case, compile with autovect + execute
+and measure the number of cycles, and if the #cycles is < than with our
+approach, we create a leave with a new cooking recipe "AV" meaning we let the
+compiler do autovect, instead of a cooking recipe. But again, let's not worry
+about this in terms of software implementation: we achieve the exact same
+outcome by simply measuring the original program systematically with autovect
+and systematically w/ our approach.
+
+12) Paper writing and experiments. Our absolute top priority has not changed:
+generate efficient code for codelets. You have made good progresses in
+understanding how to pack operands and the associated costs. Now it needs to be
+extended/generalized to handle the "full" program: multiple operands from
+multiple arrays, at any possible position; operations meaning possibly masking,
+etc. needs to be inserted and accounted for; and outputs (ditto for masking).
+Then, we will be ready to find a few compelling examples where cost({P1,P2}) <
+cost(P1)+cost(P2), justifying our approach/paper. We need to have found such
+examples yesterday, meaning we need to have that by Friday at the latest, or
+Sunday by fine-tuning an imperfect but promising result found Friday. Regarding
+experiments, at that stage (Fri or in my dreams even earlier) Gabriel and I
+will chime in to give you actual codelet shapes that (a) fit the prototype we'd
+have found as profitable for cost({P1,P2}) < cost(P1)+cost(P2); and of course
+(b) is representing an important part of the execution time in some
+SPMV-reconstructed computation. Your job will be to produce intrinsics-based
+implementation for those (probably just a few cases, say less than 5), and
+experiment on our 200+ or whatever set of spmv-reconstructed matrices. All
+other codelet shapes in the code for which we do not use your intrinsics
+version will likely simply be let for the compiler to autovectorize, nothing to
+do here. There will be a bit of work to set up these experiments, a day or less
+of work, to plug things correctly in a complete program, etc. Gabriel (and I a
+bit maybe) will help for this. We will evaluate GCC and ICC, using flags for
+code size compression and performance, with and without your codelets. That
+will form the bulk of the experiments, hoping that we outperform PLDI'19 data
+in at least a few cases, the final motivation of our paper. Regarding paper
+writing, it's too early for me to worry beyond the motivation section, we'll
+see that next week but I'm not concerned, we're fast writers. 
+
+
+Finally, allow me to conclude with one of my classical remark / advice: all the
+above representations I propose as so that we can communicate what we do with
+the rest of the world. Internally you can choose any implementation and
+representation (and even algorithm) you see fit to get to this input/output
+setting described above. For example, it may be simpler to implement the cost
+model taking as input the CDAG of the computation, I'd be very fine with that,
+all that matters to me is that not only can we quickly determine cost({P1,P2})
+vs. cost(P1) and cost(P2) but that you can explicitly list the cases of your
+cost model. The motivation figures (fig1 in particular) is a good example of
+listing different cache lines for 1 array operand, we will need to plot similar
+figures for different positions of the operand in the cache line, cases of 3
+array operands, and cases of "full programs" (ie, containing the operations,
+and the stores).
+
+-- Second email
+
+I realize I should have made more clear how I see the work described in my last
+email: taking the space of all possible programs that can be fed into the
+(restricted) input formalism I described below, I do not expect the cost model
+to work/return a value for every such programs by Friday, in any way: instead,
+only that it is working/returning a value, possibly Marcos-computed, for
+///some/// input programs, such that we have found a meaningful case of
+cost({P1,P2}) < cost(P1)+cost(P2). But I insist on now doing programs, that is
+the 3 array operands, the operations, and the store, vs. doing only the packing
+of 1 array operand. 
+
+I see two quick ways to build an initial model in my head, by refinement and by
+composition. Roughly, by refinement:
+
+
+   -  for every program, cost = #nb_operations. That's our setting "cost(P) =
+   \infty".
+^^^ for every program, cost(P) = #nb_operations * K, such that K is a
+worst-case bound, e.g., K = 10000. Really, we initialize with cost(P) = \infty
+intellectually.
+
+
+Then, do better for the sets of programs where we know how to generate code
+(e.g., "program cooking recipe 1"):
+   - for all programs with exactly 4+ and 4* operations (maybe restricted to be
+   set in a certain way), 1 cache line per array operand, etc. (whichever
+   restrictions you want), set cost = whatever you know/have measured for your
+   recipe.
+
+Repeat for every case where you (you-you Marcos) know how to manually write the
+code that achieves that number of cycle. For example, you may start by assuming
+the cost to create the 3 array operands is the sum of the cost to create 1
+array operand as per your current model, for each 3 operands. You may limit to
+exactly 8 operations, or whatever limitation you want so that you have only a
+handful of different intrinsics code to write/benchmark. 
+
+You can/should build on your cooking recipes for packing operands, and find a
+quick way to get the performance of the class of programs which corresponds to
+combining them: suppose you have X cooking recipes to pack 4 scalars into a
+vector of size 4. You therefore have X^3 combinations of those to form 3
+operands, 1 for each array, where the operand is exactly a vector of 4. Then,
+say, limit to doing exactly 8 operations (4 + and 4 *) that are in a FMA-style
+way, that's 1 cycle cost to do this FMA. Then, suppose the store is 1 cycle.
+So, for all programs modelable this way/under these restrictions, set their
+cost as cost(X1)+cost(X2)+cost(X3)+1+1. Iterate and refine the cost, sometimes
+by experimenting (actually writing the intrinsics code and benchmarking it) and
+sometimes by creating a cooking recipe, e.g. for different styles of +*, FMA
+and reduction maybe.
+
+For the sake of the argument, let's call those small programs on which you have
+set their costs "P1"-style programs: a single codelet. 
+
+Then, look to build the performance of every pair of supported codelets: take
+only the set of programs P for which you have set cost(P) != \infty above, and
+for each pair of these, say P1,P2, set the cost of the program P12 = {P1,P2} =
+cost(P1) + cost(P2). You can also set the cost of P21 = cost(P12). You now have
+created support for program pairs, of size exactly 16 operations in my example
+above. You can then refine the performance to see, out of all those pairs, if
+any has a chance to get to a cost < cost(P1)+cost(P2) by writing it cleverly,
+ie create a cooking recipe for this case by experimentation etc. same approach
+as you did before for the cases of operand packing, and then, if successful,
+for all programs with similar features/where the code can be generated the same
+way, update the cost produced by the model correspondingly to the perf. you've
+measured. Iterate/Repeat as needed.
+
+Hopefully you can smell how to use this rationale cleverly to get "quickly" to
+finding a case where  cost(P12) < cost(P1)+cost(P2), for example by handling a
+few well-chosen cases of P12 where P1 executes on the first half and P2 on the
+second of a full vector, creating a cooking recipe for this specific case (or
+family of), likely starting with all 3 array operands nicely cacheline-aligned.
+Hence my example above with 8 operations ;-). But I believe the key building
+blocks were the operand packing issue, so now that it's more or less sorted out
+for quite a few cases, I feel you're ready to write cooking recipes using
+masking as needed for implementing partial vectorization, building on the
+knowledge from operand packing techniques.

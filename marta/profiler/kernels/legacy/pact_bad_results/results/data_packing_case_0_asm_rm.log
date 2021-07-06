@@ -1,0 +1,317 @@
+################################################################################
+#			MARTA file report: data_packing_case_0
+################################################################################
+
+# -- MACHINE INFO
+CPU:			Intel(R) Xeon(R) Silver 4216 CPU @ 2.10GHz
+Architecture:	x86_64
+Avail. Cores:	64
+Host OS:		kernel 3.10.0-1160.15.2.el7.x86_64
+
+# -- TIME ELAPSED : 0:00:07.274875
+	- Total Compilation time: 0:00:04.640737
+	- Total Execution time: 0:00:02.534085
+
+# -- EXPERIMENT PARAMETERS
+- Kernel name: data_packing_case_0
+- Description: Setup for experiment data packing case 0
+- Compilers used:
+	gcc ->  -mtune=cascadelake 
+	icc ->  -mtune=cascadelake 
+- Kernel configurations: [' -mfma -mavx2 AUTOVEC=true ', ' AUTOVEC=false -mfma -mavx2 -DSIMD_CODE -DVERSION_HALF_VECTOR -DLOAD_IN_HALVES ']
+- FLOPS: 0
+- Loop iterations: 1000000
+- Number of repetitions: 5
+- CPU affinity (if any): 11
+- PAPI counters used (if any):
+	CPU_CLK_THREAD_UNHALTED:THREAD_P
+	UOPS_EXECUTED:STALL_CYCLES
+	INST_RETIRED:ANY_P
+	UOPS_ISSUED:ALL
+	UOPS_RETIRED:ALL
+
+# -- COMPILATION (stdout)
+make: Entering directory `/home/marcos.horro/workspace/MARTA_develop/marta/profiler/kernels/data_packing_case_0'
+gcc -c -DORIG_y=0 -DORIG_A=0 -DORIG_x=0 -mtune=cascadelake  -DNRUNS=1000000  -DMARTA_CPU_AFFINITY=11  -mfma -mavx2   -O3 -fsimd-cost-model=unlimited -fvect-cost-model=unlimited data_packing_case_0.c -masm=intel -S -o ../../asm_codes/data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_mfma_mavx2_AUTOVEC=true_gcc.s
+cp data_packing_case_0.c ___tmp_data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_mfma_mavx2_AUTOVEC=true_gcc.c
+gcc -c -DORIG_y=0 -DORIG_A=0 -DORIG_x=0 -mtune=cascadelake  -DNRUNS=1000000  -DMARTA_CPU_AFFINITY=11  -mfma -mavx2   -ftree-vectorize -O3 -flto -fsimd-cost-model=unlimited -fvect-cost-model=unlimited ___tmp_data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_mfma_mavx2_AUTOVEC=true_gcc.c
+mv ___tmp_data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_mfma_mavx2_AUTOVEC=true_gcc.o data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_mfma_mavx2_AUTOVEC=true_gcc.o
+rm ___tmp_data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_mfma_mavx2_AUTOVEC=true_gcc.c
+gcc -DORIG_y=0 -DORIG_A=0 -DORIG_x=0 -mtune=cascadelake  -DNRUNS=1000000  -DMARTA_CPU_AFFINITY=11  -mfma -mavx2   -O3 -flto -fno-aggressive-loop-optimizations -fno-tree-dominator-opts -finline-functions -fno-move-loop-invariants -fno-loop-interchange  -DPOLYBENCH_TIME -DPOLYBENCH_CYCLE_ACCURATE_TIME -I ../utilities ../utilities/polybench.c main.c data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_mfma_mavx2_AUTOVEC=true_gcc.o -o ../../bin/data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_mfma_mavx2_AUTOVEC=true_gcc_time.o
+gcc -DORIG_y=0 -DORIG_A=0 -DORIG_x=0 -mtune=cascadelake  -DNRUNS=1000000  -DMARTA_CPU_AFFINITY=11  -mfma -mavx2   -O3 -flto -fno-aggressive-loop-optimizations -fno-tree-dominator-opts -finline-functions -fno-move-loop-invariants -fno-loop-interchange  -DPOLYBENCH_PAPI -I ../utilities ../utilities/polybench.c -I/home/marcos.horro/include -L/home/marcos.horro/lib -lpapi main.c data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_mfma_mavx2_AUTOVEC=true_gcc.o -o ../../bin/data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_mfma_mavx2_AUTOVEC=true_gcc_papi.o
+rm data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_mfma_mavx2_AUTOVEC=true_gcc.o
+make: Leaving directory `/home/marcos.horro/workspace/MARTA_develop/marta/profiler/kernels/data_packing_case_0'
+make: Entering directory `/home/marcos.horro/workspace/MARTA_develop/marta/profiler/kernels/data_packing_case_0'
+gcc -c -DORIG_y=0 -DORIG_A=0 -DORIG_x=0 -mtune=cascadelake  -DNRUNS=1000000  -DMARTA_CPU_AFFINITY=11  -mfma -mavx2 -DSIMD_CODE -DVERSION_HALF_VECTOR -DLOAD_IN_HALVES  -O3 -fsimd-cost-model=unlimited -fvect-cost-model=unlimited data_packing_case_0.c -masm=intel -S -o ../../asm_codes/data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_AUTOVEC=false_mfma_mavx2_DSIMD_CODE_DVERSION_HALF_VECTOR_DLOAD_IN_HALVES_gcc.s
+cp data_packing_case_0.c ___tmp_data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_AUTOVEC=false_mfma_mavx2_DSIMD_CODE_DVERSION_HALF_VECTOR_DLOAD_IN_HALVES_gcc.c
+gcc -c -DORIG_y=0 -DORIG_A=0 -DORIG_x=0 -mtune=cascadelake  -DNRUNS=1000000  -DMARTA_CPU_AFFINITY=11  -mfma -mavx2 -DSIMD_CODE -DVERSION_HALF_VECTOR -DLOAD_IN_HALVES  -O3 -flto -fsimd-cost-model=unlimited -fvect-cost-model=unlimited ___tmp_data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_AUTOVEC=false_mfma_mavx2_DSIMD_CODE_DVERSION_HALF_VECTOR_DLOAD_IN_HALVES_gcc.c
+mv ___tmp_data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_AUTOVEC=false_mfma_mavx2_DSIMD_CODE_DVERSION_HALF_VECTOR_DLOAD_IN_HALVES_gcc.o data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_AUTOVEC=false_mfma_mavx2_DSIMD_CODE_DVERSION_HALF_VECTOR_DLOAD_IN_HALVES_gcc.o
+rm ___tmp_data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_AUTOVEC=false_mfma_mavx2_DSIMD_CODE_DVERSION_HALF_VECTOR_DLOAD_IN_HALVES_gcc.c
+gcc -DORIG_y=0 -DORIG_A=0 -DORIG_x=0 -mtune=cascadelake  -DNRUNS=1000000  -DMARTA_CPU_AFFINITY=11  -mfma -mavx2 -DSIMD_CODE -DVERSION_HALF_VECTOR -DLOAD_IN_HALVES  -O3 -flto -fno-aggressive-loop-optimizations -fno-tree-dominator-opts -finline-functions -fno-move-loop-invariants -fno-loop-interchange  -DPOLYBENCH_TIME -DPOLYBENCH_CYCLE_ACCURATE_TIME -I ../utilities ../utilities/polybench.c main.c data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_AUTOVEC=false_mfma_mavx2_DSIMD_CODE_DVERSION_HALF_VECTOR_DLOAD_IN_HALVES_gcc.o -o ../../bin/data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_AUTOVEC=false_mfma_mavx2_DSIMD_CODE_DVERSION_HALF_VECTOR_DLOAD_IN_HALVES_gcc_time.o
+gcc -DORIG_y=0 -DORIG_A=0 -DORIG_x=0 -mtune=cascadelake  -DNRUNS=1000000  -DMARTA_CPU_AFFINITY=11  -mfma -mavx2 -DSIMD_CODE -DVERSION_HALF_VECTOR -DLOAD_IN_HALVES  -O3 -flto -fno-aggressive-loop-optimizations -fno-tree-dominator-opts -finline-functions -fno-move-loop-invariants -fno-loop-interchange  -DPOLYBENCH_PAPI -I ../utilities ../utilities/polybench.c -I/home/marcos.horro/include -L/home/marcos.horro/lib -lpapi main.c data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_AUTOVEC=false_mfma_mavx2_DSIMD_CODE_DVERSION_HALF_VECTOR_DLOAD_IN_HALVES_gcc.o -o ../../bin/data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_AUTOVEC=false_mfma_mavx2_DSIMD_CODE_DVERSION_HALF_VECTOR_DLOAD_IN_HALVES_gcc_papi.o
+rm data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_AUTOVEC=false_mfma_mavx2_DSIMD_CODE_DVERSION_HALF_VECTOR_DLOAD_IN_HALVES_gcc.o
+make: Leaving directory `/home/marcos.horro/workspace/MARTA_develop/marta/profiler/kernels/data_packing_case_0'
+make: Entering directory `/home/marcos.horro/workspace/MARTA_develop/marta/profiler/kernels/data_packing_case_0'
+icc -c -DORIG_y=0 -DORIG_A=0 -DORIG_x=0 -mtune=cascadelake  -DNRUNS=1000000  -DMARTA_CPU_AFFINITY=11  -mfma -mavx2   -O3 data_packing_case_0.c -masm=intel -S -o ../../asm_codes/data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_mfma_mavx2_AUTOVEC=true_icc.s
+cp data_packing_case_0.c ___tmp_data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_mfma_mavx2_AUTOVEC=true_icc.c
+icc -c -DORIG_y=0 -DORIG_A=0 -DORIG_x=0 -mtune=cascadelake  -DNRUNS=1000000  -DMARTA_CPU_AFFINITY=11  -mfma -mavx2   -vec-threshold0 -O3 -ipo  ___tmp_data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_mfma_mavx2_AUTOVEC=true_icc.c
+mv ___tmp_data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_mfma_mavx2_AUTOVEC=true_icc.o data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_mfma_mavx2_AUTOVEC=true_icc.o
+rm ___tmp_data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_mfma_mavx2_AUTOVEC=true_icc.c
+icc -DORIG_y=0 -DORIG_A=0 -DORIG_x=0 -mtune=cascadelake  -DNRUNS=1000000  -DMARTA_CPU_AFFINITY=11  -mfma -mavx2   -O3 -ipo -DPOLYBENCH_TIME -DPOLYBENCH_CYCLE_ACCURATE_TIME -I ../utilities ../utilities/polybench.c main.c data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_mfma_mavx2_AUTOVEC=true_icc.o -o ../../bin/data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_mfma_mavx2_AUTOVEC=true_icc_time.o
+icc -DORIG_y=0 -DORIG_A=0 -DORIG_x=0 -mtune=cascadelake  -DNRUNS=1000000  -DMARTA_CPU_AFFINITY=11  -mfma -mavx2   -O3 -ipo -DPOLYBENCH_PAPI -I ../utilities ../utilities/polybench.c -I/home/marcos.horro/include -L/home/marcos.horro/lib -lpapi main.c data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_mfma_mavx2_AUTOVEC=true_icc.o -o ../../bin/data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_mfma_mavx2_AUTOVEC=true_icc_papi.o
+rm data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_mfma_mavx2_AUTOVEC=true_icc.o
+make: Leaving directory `/home/marcos.horro/workspace/MARTA_develop/marta/profiler/kernels/data_packing_case_0'
+make: Entering directory `/home/marcos.horro/workspace/MARTA_develop/marta/profiler/kernels/data_packing_case_0'
+icc -c -DORIG_y=0 -DORIG_A=0 -DORIG_x=0 -mtune=cascadelake  -DNRUNS=1000000  -DMARTA_CPU_AFFINITY=11  -mfma -mavx2 -DSIMD_CODE -DVERSION_HALF_VECTOR -DLOAD_IN_HALVES  -O3 data_packing_case_0.c -masm=intel -S -o ../../asm_codes/data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_AUTOVEC=false_mfma_mavx2_DSIMD_CODE_DVERSION_HALF_VECTOR_DLOAD_IN_HALVES_icc.s
+cp data_packing_case_0.c ___tmp_data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_AUTOVEC=false_mfma_mavx2_DSIMD_CODE_DVERSION_HALF_VECTOR_DLOAD_IN_HALVES_icc.c
+icc -c -DORIG_y=0 -DORIG_A=0 -DORIG_x=0 -mtune=cascadelake  -DNRUNS=1000000  -DMARTA_CPU_AFFINITY=11  -mfma -mavx2 -DSIMD_CODE -DVERSION_HALF_VECTOR -DLOAD_IN_HALVES  -O3 -ipo  ___tmp_data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_AUTOVEC=false_mfma_mavx2_DSIMD_CODE_DVERSION_HALF_VECTOR_DLOAD_IN_HALVES_icc.c
+mv ___tmp_data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_AUTOVEC=false_mfma_mavx2_DSIMD_CODE_DVERSION_HALF_VECTOR_DLOAD_IN_HALVES_icc.o data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_AUTOVEC=false_mfma_mavx2_DSIMD_CODE_DVERSION_HALF_VECTOR_DLOAD_IN_HALVES_icc.o
+rm ___tmp_data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_AUTOVEC=false_mfma_mavx2_DSIMD_CODE_DVERSION_HALF_VECTOR_DLOAD_IN_HALVES_icc.c
+icc -DORIG_y=0 -DORIG_A=0 -DORIG_x=0 -mtune=cascadelake  -DNRUNS=1000000  -DMARTA_CPU_AFFINITY=11  -mfma -mavx2 -DSIMD_CODE -DVERSION_HALF_VECTOR -DLOAD_IN_HALVES  -O3 -ipo -DPOLYBENCH_TIME -DPOLYBENCH_CYCLE_ACCURATE_TIME -I ../utilities ../utilities/polybench.c main.c data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_AUTOVEC=false_mfma_mavx2_DSIMD_CODE_DVERSION_HALF_VECTOR_DLOAD_IN_HALVES_icc.o -o ../../bin/data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_AUTOVEC=false_mfma_mavx2_DSIMD_CODE_DVERSION_HALF_VECTOR_DLOAD_IN_HALVES_icc_time.o
+icc -DORIG_y=0 -DORIG_A=0 -DORIG_x=0 -mtune=cascadelake  -DNRUNS=1000000  -DMARTA_CPU_AFFINITY=11  -mfma -mavx2 -DSIMD_CODE -DVERSION_HALF_VECTOR -DLOAD_IN_HALVES  -O3 -ipo -DPOLYBENCH_PAPI -I ../utilities ../utilities/polybench.c -I/home/marcos.horro/include -L/home/marcos.horro/lib -lpapi main.c data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_AUTOVEC=false_mfma_mavx2_DSIMD_CODE_DVERSION_HALF_VECTOR_DLOAD_IN_HALVES_icc.o -o ../../bin/data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_AUTOVEC=false_mfma_mavx2_DSIMD_CODE_DVERSION_HALF_VECTOR_DLOAD_IN_HALVES_icc_papi.o
+rm data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_AUTOVEC=false_mfma_mavx2_DSIMD_CODE_DVERSION_HALF_VECTOR_DLOAD_IN_HALVES_icc.o
+make: Leaving directory `/home/marcos.horro/workspace/MARTA_develop/marta/profiler/kernels/data_packing_case_0'
+
+# -- WARNINGS/ERRORS (stderr)
+data_packing_case_0.c:30: warning: "__OPTIMIZE__" redefined
+   30 | #define __OPTIMIZE__
+      | 
+<built-in>: note: this is the location of the previous definition
+data_packing_case_0.c: In function 'data_packing_case_0':
+data_packing_case_0.c:133:31: warning: passing argument 2 of '_mm_loadl_pi' from incompatible pointer type [-Wincompatible-pointer-types]
+  133 |     tmp1 = _mm_loadl_pi(tmp1, &A[0]);
+      |                               ^~~~~
+      |                               |
+      |                               float * restrict
+In file included from /share/store/easybuild/software/GCCcore/9.3.0/lib/gcc/x86_64-pc-linux-gnu/9.3.0/include/immintrin.h:29,
+                 from data_packing_case_0.c:2:
+/share/store/easybuild/software/GCCcore/9.3.0/lib/gcc/x86_64-pc-linux-gnu/9.3.0/include/xmmintrin.h:800:40: note: expected 'const __vector(2) int *' but argument is of type 'float * restrict'
+  800 | _mm_loadl_pi (__m128 __A, __m64 const *__P)
+      |                           ~~~~~~~~~~~~~^~~
+data_packing_case_0.c:134:32: warning: passing argument 2 of '_mm_loadh_pi' from incompatible pointer type [-Wincompatible-pointer-types]
+  134 |     accm0 = _mm_loadh_pi(tmp1, &A[42]);
+      |                                ^~~~~~
+      |                                |
+      |                                float * restrict
+In file included from /share/store/easybuild/software/GCCcore/9.3.0/lib/gcc/x86_64-pc-linux-gnu/9.3.0/include/immintrin.h:29,
+                 from data_packing_case_0.c:2:
+/share/store/easybuild/software/GCCcore/9.3.0/lib/gcc/x86_64-pc-linux-gnu/9.3.0/include/xmmintrin.h:771:40: note: expected 'const __vector(2) int *' but argument is of type 'float * restrict'
+  771 | _mm_loadh_pi (__m128 __A, __m64 const *__P)
+      |                           ~~~~~~~~~~~~~^~~
+data_packing_case_0.c:136:31: warning: passing argument 2 of '_mm_loadl_pi' from incompatible pointer type [-Wincompatible-pointer-types]
+  136 |     tmp3 = _mm_loadl_pi(tmp3, &x[0]);
+      |                               ^~~~~
+      |                               |
+      |                               float * restrict
+In file included from /share/store/easybuild/software/GCCcore/9.3.0/lib/gcc/x86_64-pc-linux-gnu/9.3.0/include/immintrin.h:29,
+                 from data_packing_case_0.c:2:
+/share/store/easybuild/software/GCCcore/9.3.0/lib/gcc/x86_64-pc-linux-gnu/9.3.0/include/xmmintrin.h:800:40: note: expected 'const __vector(2) int *' but argument is of type 'float * restrict'
+  800 | _mm_loadl_pi (__m128 __A, __m64 const *__P)
+      |                           ~~~~~~~~~~~~~^~~
+data_packing_case_0.c:137:32: warning: passing argument 2 of '_mm_loadh_pi' from incompatible pointer type [-Wincompatible-pointer-types]
+  137 |     accm1 = _mm_loadh_pi(tmp3, &x[42]);
+      |                                ^~~~~~
+      |                                |
+      |                                float * restrict
+In file included from /share/store/easybuild/software/GCCcore/9.3.0/lib/gcc/x86_64-pc-linux-gnu/9.3.0/include/immintrin.h:29,
+                 from data_packing_case_0.c:2:
+/share/store/easybuild/software/GCCcore/9.3.0/lib/gcc/x86_64-pc-linux-gnu/9.3.0/include/xmmintrin.h:771:40: note: expected 'const __vector(2) int *' but argument is of type 'float * restrict'
+  771 | _mm_loadh_pi (__m128 __A, __m64 const *__P)
+      |                           ~~~~~~~~~~~~~^~~
+data_packing_case_0.c:139:31: warning: passing argument 2 of '_mm_loadl_pi' from incompatible pointer type [-Wincompatible-pointer-types]
+  139 |     tmp5 = _mm_loadl_pi(tmp5, &y[0]);
+      |                               ^~~~~
+      |                               |
+      |                               float * restrict
+In file included from /share/store/easybuild/software/GCCcore/9.3.0/lib/gcc/x86_64-pc-linux-gnu/9.3.0/include/immintrin.h:29,
+                 from data_packing_case_0.c:2:
+/share/store/easybuild/software/GCCcore/9.3.0/lib/gcc/x86_64-pc-linux-gnu/9.3.0/include/xmmintrin.h:800:40: note: expected 'const __vector(2) int *' but argument is of type 'float * restrict'
+  800 | _mm_loadl_pi (__m128 __A, __m64 const *__P)
+      |                           ~~~~~~~~~~~~~^~~
+data_packing_case_0.c:140:32: warning: passing argument 2 of '_mm_loadh_pi' from incompatible pointer type [-Wincompatible-pointer-types]
+  140 |     accm2 = _mm_loadh_pi(tmp5, &y[42]);
+      |                                ^~~~~~
+      |                                |
+      |                                float * restrict
+In file included from /share/store/easybuild/software/GCCcore/9.3.0/lib/gcc/x86_64-pc-linux-gnu/9.3.0/include/immintrin.h:29,
+                 from data_packing_case_0.c:2:
+/share/store/easybuild/software/GCCcore/9.3.0/lib/gcc/x86_64-pc-linux-gnu/9.3.0/include/xmmintrin.h:771:40: note: expected 'const __vector(2) int *' but argument is of type 'float * restrict'
+  771 | _mm_loadh_pi (__m128 __A, __m64 const *__P)
+      |                           ~~~~~~~~~~~~~^~~
+data_packing_case_0.c:163:19: warning: passing argument 1 of '_mm_storel_pi' from incompatible pointer type [-Wincompatible-pointer-types]
+  163 |     _mm_storel_pi(&y[0],add);
+      |                   ^~~~~
+      |                   |
+      |                   float * restrict
+In file included from /share/store/easybuild/software/GCCcore/9.3.0/lib/gcc/x86_64-pc-linux-gnu/9.3.0/include/immintrin.h:29,
+                 from data_packing_case_0.c:2:
+/share/store/easybuild/software/GCCcore/9.3.0/lib/gcc/x86_64-pc-linux-gnu/9.3.0/include/xmmintrin.h:807:23: note: expected '__vector(2) int *' but argument is of type 'float * restrict'
+  807 | _mm_storel_pi (__m64 *__P, __m128 __A)
+      |                ~~~~~~~^~~
+data_packing_case_0.c:164:19: warning: passing argument 1 of '_mm_storeh_pi' from incompatible pointer type [-Wincompatible-pointer-types]
+  164 |     _mm_storeh_pi(&y[42],add);
+      |                   ^~~~~~
+      |                   |
+      |                   float * restrict
+In file included from /share/store/easybuild/software/GCCcore/9.3.0/lib/gcc/x86_64-pc-linux-gnu/9.3.0/include/immintrin.h:29,
+                 from data_packing_case_0.c:2:
+/share/store/easybuild/software/GCCcore/9.3.0/lib/gcc/x86_64-pc-linux-gnu/9.3.0/include/xmmintrin.h:778:23: note: expected '__vector(2) int *' but argument is of type 'float * restrict'
+  778 | _mm_storeh_pi (__m64 *__P, __m128 __A)
+      |                ~~~~~~~^~~
+___tmp_data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_AUTOVEC=false_mfma_mavx2_DSIMD_CODE_DVERSION_HALF_VECTOR_DLOAD_IN_HALVES_gcc.c:30: warning: "__OPTIMIZE__" redefined
+   30 | #define __OPTIMIZE__
+      | 
+<built-in>: note: this is the location of the previous definition
+___tmp_data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_AUTOVEC=false_mfma_mavx2_DSIMD_CODE_DVERSION_HALF_VECTOR_DLOAD_IN_HALVES_gcc.c: In function 'data_packing_case_0':
+___tmp_data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_AUTOVEC=false_mfma_mavx2_DSIMD_CODE_DVERSION_HALF_VECTOR_DLOAD_IN_HALVES_gcc.c:133:31: warning: passing argument 2 of '_mm_loadl_pi' from incompatible pointer type [-Wincompatible-pointer-types]
+  133 |     tmp1 = _mm_loadl_pi(tmp1, &A[0]);
+      |                               ^~~~~
+      |                               |
+      |                               float * restrict
+In file included from /share/store/easybuild/software/GCCcore/9.3.0/lib/gcc/x86_64-pc-linux-gnu/9.3.0/include/immintrin.h:29,
+                 from ___tmp_data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_AUTOVEC=false_mfma_mavx2_DSIMD_CODE_DVERSION_HALF_VECTOR_DLOAD_IN_HALVES_gcc.c:2:
+/share/store/easybuild/software/GCCcore/9.3.0/lib/gcc/x86_64-pc-linux-gnu/9.3.0/include/xmmintrin.h:800:40: note: expected 'const __vector(2) int *' but argument is of type 'float * restrict'
+  800 | _mm_loadl_pi (__m128 __A, __m64 const *__P)
+      |                           ~~~~~~~~~~~~~^~~
+___tmp_data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_AUTOVEC=false_mfma_mavx2_DSIMD_CODE_DVERSION_HALF_VECTOR_DLOAD_IN_HALVES_gcc.c:134:32: warning: passing argument 2 of '_mm_loadh_pi' from incompatible pointer type [-Wincompatible-pointer-types]
+  134 |     accm0 = _mm_loadh_pi(tmp1, &A[42]);
+      |                                ^~~~~~
+      |                                |
+      |                                float * restrict
+In file included from /share/store/easybuild/software/GCCcore/9.3.0/lib/gcc/x86_64-pc-linux-gnu/9.3.0/include/immintrin.h:29,
+                 from ___tmp_data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_AUTOVEC=false_mfma_mavx2_DSIMD_CODE_DVERSION_HALF_VECTOR_DLOAD_IN_HALVES_gcc.c:2:
+/share/store/easybuild/software/GCCcore/9.3.0/lib/gcc/x86_64-pc-linux-gnu/9.3.0/include/xmmintrin.h:771:40: note: expected 'const __vector(2) int *' but argument is of type 'float * restrict'
+  771 | _mm_loadh_pi (__m128 __A, __m64 const *__P)
+      |                           ~~~~~~~~~~~~~^~~
+___tmp_data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_AUTOVEC=false_mfma_mavx2_DSIMD_CODE_DVERSION_HALF_VECTOR_DLOAD_IN_HALVES_gcc.c:136:31: warning: passing argument 2 of '_mm_loadl_pi' from incompatible pointer type [-Wincompatible-pointer-types]
+  136 |     tmp3 = _mm_loadl_pi(tmp3, &x[0]);
+      |                               ^~~~~
+      |                               |
+      |                               float * restrict
+In file included from /share/store/easybuild/software/GCCcore/9.3.0/lib/gcc/x86_64-pc-linux-gnu/9.3.0/include/immintrin.h:29,
+                 from ___tmp_data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_AUTOVEC=false_mfma_mavx2_DSIMD_CODE_DVERSION_HALF_VECTOR_DLOAD_IN_HALVES_gcc.c:2:
+/share/store/easybuild/software/GCCcore/9.3.0/lib/gcc/x86_64-pc-linux-gnu/9.3.0/include/xmmintrin.h:800:40: note: expected 'const __vector(2) int *' but argument is of type 'float * restrict'
+  800 | _mm_loadl_pi (__m128 __A, __m64 const *__P)
+      |                           ~~~~~~~~~~~~~^~~
+___tmp_data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_AUTOVEC=false_mfma_mavx2_DSIMD_CODE_DVERSION_HALF_VECTOR_DLOAD_IN_HALVES_gcc.c:137:32: warning: passing argument 2 of '_mm_loadh_pi' from incompatible pointer type [-Wincompatible-pointer-types]
+  137 |     accm1 = _mm_loadh_pi(tmp3, &x[42]);
+      |                                ^~~~~~
+      |                                |
+      |                                float * restrict
+In file included from /share/store/easybuild/software/GCCcore/9.3.0/lib/gcc/x86_64-pc-linux-gnu/9.3.0/include/immintrin.h:29,
+                 from ___tmp_data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_AUTOVEC=false_mfma_mavx2_DSIMD_CODE_DVERSION_HALF_VECTOR_DLOAD_IN_HALVES_gcc.c:2:
+/share/store/easybuild/software/GCCcore/9.3.0/lib/gcc/x86_64-pc-linux-gnu/9.3.0/include/xmmintrin.h:771:40: note: expected 'const __vector(2) int *' but argument is of type 'float * restrict'
+  771 | _mm_loadh_pi (__m128 __A, __m64 const *__P)
+      |                           ~~~~~~~~~~~~~^~~
+___tmp_data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_AUTOVEC=false_mfma_mavx2_DSIMD_CODE_DVERSION_HALF_VECTOR_DLOAD_IN_HALVES_gcc.c:139:31: warning: passing argument 2 of '_mm_loadl_pi' from incompatible pointer type [-Wincompatible-pointer-types]
+  139 |     tmp5 = _mm_loadl_pi(tmp5, &y[0]);
+      |                               ^~~~~
+      |                               |
+      |                               float * restrict
+In file included from /share/store/easybuild/software/GCCcore/9.3.0/lib/gcc/x86_64-pc-linux-gnu/9.3.0/include/immintrin.h:29,
+                 from ___tmp_data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_AUTOVEC=false_mfma_mavx2_DSIMD_CODE_DVERSION_HALF_VECTOR_DLOAD_IN_HALVES_gcc.c:2:
+/share/store/easybuild/software/GCCcore/9.3.0/lib/gcc/x86_64-pc-linux-gnu/9.3.0/include/xmmintrin.h:800:40: note: expected 'const __vector(2) int *' but argument is of type 'float * restrict'
+  800 | _mm_loadl_pi (__m128 __A, __m64 const *__P)
+      |                           ~~~~~~~~~~~~~^~~
+___tmp_data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_AUTOVEC=false_mfma_mavx2_DSIMD_CODE_DVERSION_HALF_VECTOR_DLOAD_IN_HALVES_gcc.c:140:32: warning: passing argument 2 of '_mm_loadh_pi' from incompatible pointer type [-Wincompatible-pointer-types]
+  140 |     accm2 = _mm_loadh_pi(tmp5, &y[42]);
+      |                                ^~~~~~
+      |                                |
+      |                                float * restrict
+In file included from /share/store/easybuild/software/GCCcore/9.3.0/lib/gcc/x86_64-pc-linux-gnu/9.3.0/include/immintrin.h:29,
+                 from ___tmp_data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_AUTOVEC=false_mfma_mavx2_DSIMD_CODE_DVERSION_HALF_VECTOR_DLOAD_IN_HALVES_gcc.c:2:
+/share/store/easybuild/software/GCCcore/9.3.0/lib/gcc/x86_64-pc-linux-gnu/9.3.0/include/xmmintrin.h:771:40: note: expected 'const __vector(2) int *' but argument is of type 'float * restrict'
+  771 | _mm_loadh_pi (__m128 __A, __m64 const *__P)
+      |                           ~~~~~~~~~~~~~^~~
+___tmp_data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_AUTOVEC=false_mfma_mavx2_DSIMD_CODE_DVERSION_HALF_VECTOR_DLOAD_IN_HALVES_gcc.c:163:19: warning: passing argument 1 of '_mm_storel_pi' from incompatible pointer type [-Wincompatible-pointer-types]
+  163 |     _mm_storel_pi(&y[0],add);
+      |                   ^~~~~
+      |                   |
+      |                   float * restrict
+In file included from /share/store/easybuild/software/GCCcore/9.3.0/lib/gcc/x86_64-pc-linux-gnu/9.3.0/include/immintrin.h:29,
+                 from ___tmp_data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_AUTOVEC=false_mfma_mavx2_DSIMD_CODE_DVERSION_HALF_VECTOR_DLOAD_IN_HALVES_gcc.c:2:
+/share/store/easybuild/software/GCCcore/9.3.0/lib/gcc/x86_64-pc-linux-gnu/9.3.0/include/xmmintrin.h:807:23: note: expected '__vector(2) int *' but argument is of type 'float * restrict'
+  807 | _mm_storel_pi (__m64 *__P, __m128 __A)
+      |                ~~~~~~~^~~
+___tmp_data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_AUTOVEC=false_mfma_mavx2_DSIMD_CODE_DVERSION_HALF_VECTOR_DLOAD_IN_HALVES_gcc.c:164:19: warning: passing argument 1 of '_mm_storeh_pi' from incompatible pointer type [-Wincompatible-pointer-types]
+  164 |     _mm_storeh_pi(&y[42],add);
+      |                   ^~~~~~
+      |                   |
+      |                   float * restrict
+In file included from /share/store/easybuild/software/GCCcore/9.3.0/lib/gcc/x86_64-pc-linux-gnu/9.3.0/include/immintrin.h:29,
+                 from ___tmp_data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_AUTOVEC=false_mfma_mavx2_DSIMD_CODE_DVERSION_HALF_VECTOR_DLOAD_IN_HALVES_gcc.c:2:
+/share/store/easybuild/software/GCCcore/9.3.0/lib/gcc/x86_64-pc-linux-gnu/9.3.0/include/xmmintrin.h:778:23: note: expected '__vector(2) int *' but argument is of type 'float * restrict'
+  778 | _mm_storeh_pi (__m64 *__P, __m128 __A)
+      |                ~~~~~~~^~~
+data_packing_case_0.c(30): warning #47: incompatible redefinition of macro "__OPTIMIZE__"
+  #define __OPTIMIZE__
+          ^
+
+data_packing_case_0.c(133): warning #167: argument of type "float *" is incompatible with parameter of type "const union __m64 *"
+      tmp1 = _mm_loadl_pi(tmp1, &A[0]);
+                                ^
+
+data_packing_case_0.c(134): warning #167: argument of type "float *" is incompatible with parameter of type "const union __m64 *"
+      accm0 = _mm_loadh_pi(tmp1, &A[42]);
+                                 ^
+
+data_packing_case_0.c(136): warning #167: argument of type "float *" is incompatible with parameter of type "const union __m64 *"
+      tmp3 = _mm_loadl_pi(tmp3, &x[0]);
+                                ^
+
+data_packing_case_0.c(137): warning #167: argument of type "float *" is incompatible with parameter of type "const union __m64 *"
+      accm1 = _mm_loadh_pi(tmp3, &x[42]);
+                                 ^
+
+data_packing_case_0.c(139): warning #167: argument of type "float *" is incompatible with parameter of type "const union __m64 *"
+      tmp5 = _mm_loadl_pi(tmp5, &y[0]);
+                                ^
+
+data_packing_case_0.c(140): warning #167: argument of type "float *" is incompatible with parameter of type "const union __m64 *"
+      accm2 = _mm_loadh_pi(tmp5, &y[42]);
+                                 ^
+
+data_packing_case_0.c(163): warning #167: argument of type "float *" is incompatible with parameter of type "union __m64 *"
+      _mm_storel_pi(&y[0],add);
+                    ^
+
+data_packing_case_0.c(164): warning #167: argument of type "float *" is incompatible with parameter of type "union __m64 *"
+      _mm_storeh_pi(&y[42],add);
+                    ^
+
+___tmp_data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_AUTOVEC=false_mfma_mavx2_DSIMD_CODE_DVERSION_HALF_VECTOR_DLOAD_IN_HALVES_icc.c(30): warning #47: incompatible redefinition of macro "__OPTIMIZE__"
+  #define __OPTIMIZE__
+          ^
+
+___tmp_data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_AUTOVEC=false_mfma_mavx2_DSIMD_CODE_DVERSION_HALF_VECTOR_DLOAD_IN_HALVES_icc.c(133): warning #167: argument of type "float *" is incompatible with parameter of type "const union __m64 *"
+      tmp1 = _mm_loadl_pi(tmp1, &A[0]);
+                                ^
+
+___tmp_data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_AUTOVEC=false_mfma_mavx2_DSIMD_CODE_DVERSION_HALF_VECTOR_DLOAD_IN_HALVES_icc.c(134): warning #167: argument of type "float *" is incompatible with parameter of type "const union __m64 *"
+      accm0 = _mm_loadh_pi(tmp1, &A[42]);
+                                 ^
+
+___tmp_data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_AUTOVEC=false_mfma_mavx2_DSIMD_CODE_DVERSION_HALF_VECTOR_DLOAD_IN_HALVES_icc.c(136): warning #167: argument of type "float *" is incompatible with parameter of type "const union __m64 *"
+      tmp3 = _mm_loadl_pi(tmp3, &x[0]);
+                                ^
+
+___tmp_data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_AUTOVEC=false_mfma_mavx2_DSIMD_CODE_DVERSION_HALF_VECTOR_DLOAD_IN_HALVES_icc.c(137): warning #167: argument of type "float *" is incompatible with parameter of type "const union __m64 *"
+      accm1 = _mm_loadh_pi(tmp3, &x[42]);
+                                 ^
+
+___tmp_data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_AUTOVEC=false_mfma_mavx2_DSIMD_CODE_DVERSION_HALF_VECTOR_DLOAD_IN_HALVES_icc.c(139): warning #167: argument of type "float *" is incompatible with parameter of type "const union __m64 *"
+      tmp5 = _mm_loadl_pi(tmp5, &y[0]);
+                                ^
+
+___tmp_data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_AUTOVEC=false_mfma_mavx2_DSIMD_CODE_DVERSION_HALF_VECTOR_DLOAD_IN_HALVES_icc.c(140): warning #167: argument of type "float *" is incompatible with parameter of type "const union __m64 *"
+      accm2 = _mm_loadh_pi(tmp5, &y[42]);
+                                 ^
+
+___tmp_data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_AUTOVEC=false_mfma_mavx2_DSIMD_CODE_DVERSION_HALF_VECTOR_DLOAD_IN_HALVES_icc.c(163): warning #167: argument of type "float *" is incompatible with parameter of type "union __m64 *"
+      _mm_storel_pi(&y[0],add);
+                    ^
+
+___tmp_data_packing_case_0__ORIG_y0_ORIG_A0_ORIG_x0_AUTOVEC=false_mfma_mavx2_DSIMD_CODE_DVERSION_HALF_VECTOR_DLOAD_IN_HALVES_icc.c(164): warning #167: argument of type "float *" is incompatible with parameter of type "union __m64 *"
+      _mm_storeh_pi(&y[42],add);
+                    ^
+
