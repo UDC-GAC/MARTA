@@ -150,7 +150,7 @@ class Profiler:
         params_dict = {}
         for f in feature.keys():
             type_feature = feature[f]["type"]
-            evaluate = feature[f]["evaluate"]
+            evaluate = feature[f].get("evaluate", True)
             params_values = []
             if type(feature[f]["value"]) is str:
                 try:
@@ -161,21 +161,26 @@ class Profiler:
                 except NameError:
                     print(f"Evaluation of expression for {f} went wrong!")
                     sys.exit(1)
-                # This is useful for iterators, such as permutations, combinations...
-                if type_feature == "dynamic":
-                    try:
-                        size = len(params_values)
-                    except TypeError:
-                        tmp_eval_copy = copy.deepcopy(params_values)
-                        for t in tmp_eval_copy:
-                            size = len(t)
-                            break
-                    for i in range(size):
-                        params_dict[f"{f}{str(i)}"] = [params_values]
             else:
                 params_values = [feature[f]]
-            if type_feature == "static":
-                params_dict[f] = params_values
+            # This is useful for iterators, such as permutations, combinations...
+            if type_feature == "dynamic":
+                try:
+                    size = len(params_values)
+                except TypeError:
+                    tmp_eval_copy = copy.deepcopy(params_values)
+                    for t in tmp_eval_copy:
+                        size = len(t)
+                        break
+                for i in range(size):
+                    params_dict[f"{f}{str(i)}"] = [params_values]
+            elif type_feature == "static":
+                try:
+                    params_dict[f] = list(params_values)
+                except TypeError:
+                    params_dict[f] = params_values
+            else:
+                raise TypeError
         return params_dict
 
     @staticmethod
@@ -319,7 +324,7 @@ class Profiler:
                 # thread-safe, so user must be aware of this, not the
                 # profiler (passive-agressive comment :-P)
                 if kernel.compilation_enabled:
-                    t0 = Timing.start_timer()
+                    t0 = Timing.start_timer("compilation")
                     with mp.Pool(processes=kernel.processes) as pool:
                         iterable = zip(
                             repeat(kernel),
@@ -349,7 +354,7 @@ class Profiler:
                                 print("[ERROR] Compilation failed")
                                 pool.terminate()
                                 sys.exit(1)
-                    Timing.accm_timer("compilation", t0)
+                    Timing.accm_timer("compilation")
                 else:
                     print("[WARNING] Compilation process disabled!")
 
@@ -372,7 +377,7 @@ class Profiler:
                     else:
                         loop_iterator = product
                         print("Executing...")
-                    t0 = Timing.start_timer()
+                    t0 = Timing.start_timer("execution")
                     for params_val in loop_iterator:
                         kern_exec = kernel.run(params_val, compiler, compiler_flags)
                         # There was an error, exit on error, save data first
@@ -387,7 +392,7 @@ class Profiler:
                                 df = df.append(exec, ignore_index=True)
                         else:
                             df = df.append(kern_exec, ignore_index=True)
-                    Timing.accm_timer("execution", t0)
+                    Timing.accm_timer("execution")
                 else:
                     print("[WARNING] Execution process disabled!")
         # Storing results and generating report file

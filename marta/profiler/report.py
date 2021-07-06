@@ -14,7 +14,7 @@
 
 import cpuinfo as cpu
 import os
-from timing import Timing
+from .timing import Timing
 
 
 class Report:

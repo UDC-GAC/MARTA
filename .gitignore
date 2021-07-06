@@ -58,6 +58,7 @@ cyc_*
 *.out
 *.pdf
 
+# Just commit those kernels which are significant
 marta/profiler/kernels/*
 
 # Build

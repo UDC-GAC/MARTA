@@ -487,7 +487,9 @@ class Kernel:
             if self.processes < 1:
                 raise ValueError
             if self.processes > 16:
-                print("[WARNING] Careful with high degree of processes for compilation")
+                print(
+                    f"[WARNING] Careful with high degree of processes for compilation ({self.processes} processes set)"
+                )
         except ValueError:
             print("[ERROR] processes must be an integer greater or equal to one")
             sys.exit(1)
