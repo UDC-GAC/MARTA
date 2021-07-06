@@ -197,6 +197,8 @@ class Kernel:
                     # NOTE: for includes or other paths, \"string\" notation is
                     # needed, but this is not MARTA's responsibility.
                     param_val_parsed = '"' + params[pname] + '"'
+                except TypeError:
+                    print(params[pname])
                 if pname != "ASM_NAME":
                     custom_flags += f" -D{pname}={param_val_parsed}"
                 if pname == "BIN_NAME":

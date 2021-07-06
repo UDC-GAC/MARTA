@@ -425,9 +425,9 @@ class Profiler:
         :type list_args: list(str)
         """
         if (sys.version_info[0] < 3) or (
-            sys.version_info[0] == 3 and sys.version_info[1] < 6
+            sys.version_info[0] == 3 and sys.version_info[1] < 7
         ):
-            print("MARTA must run with Python >=3.6")
+            print("MARTA must run with Python >=3.7")
             sys.exit(1)
         self.args = Profiler.parse_arguments(list_args)
 
