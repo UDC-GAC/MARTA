@@ -56,23 +56,28 @@ class StaticCodeAnalyzer:
         return json_file_fixed
 
     def compute_performance(self, name_bench, iterations=1) -> dict:
-        json_file = f"{name_bench}_perf.json"
+        json_file = f"{name_bench.replace('.s','')}_perf.json"
         os.system(
-            f"{self.binary} -march={self.arch} -mcpu={self.cpu} -iterations={iterations} {name_bench}.s -json -o {json_file}"
+            f"{self.binary} -march={self.arch} -mcpu={self.cpu} -iterations={iterations} {name_bench} -json -o {json_file}"
         )
         with open(f"{json_file}") as f:
             try:
                 dom = json.loads(f.read())
             except Exception:
-                json_file = StaticCodeAnalyzer.fix_json()
+                json_file = StaticCodeAnalyzer.fix_json(json_file)
                 with open(f"{json_file}") as f:
                     dom = json.loads(f.read())
 
-        summary = dom[1]["SummaryView"]
+        summary = dom[0]["SummaryView"]
         d = {}
-        d.update({"IPC": summary["IPC"]})
-        d.update({"CyclesPerIteration": summary["TotalCycles"] / summary["Iterations"]})
-        d.update({"uOpsPerCycle": summary["uOpsPerCycle"]})
+        d.update({"llvm-mca_IPC": summary["IPC"]})
+        d.update(
+            {
+                "llvm-mca_CyclesPerIteration": summary["TotalCycles"]
+                / summary["Iterations"]
+            }
+        )
+        d.update({"llvm-mca_uOpsPerCycle": summary["uOpsPerCycle"]})
 
         # Be clean
         os.remove(f"{json_file}")

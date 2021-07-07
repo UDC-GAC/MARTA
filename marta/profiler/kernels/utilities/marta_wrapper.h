@@ -129,14 +129,14 @@ void intel_clflush(volatile void *p, unsigned int allocation_size)
 // of sub/add/cmp when using loops
 // Intel® 64 and IA-32 Architectures Optimization Reference Manual
 // https://software.intel.com/content/dam/develop/external/us/en/documents-tps/64-ia-32-architectures-optimization-manual.pdf
-#define END_LOOP                     \
-  __asm volatile("# LLVM-MCA-END");  \
-  __asm volatile("" ::               \
-                     :);             \
-  __asm volatile("sub $1, %%eax\n\t" \
-                 "jne begin_loop"    \
-                 :                   \
-                 :                   \
+#define END_LOOP                           \
+  __asm volatile("# LLVM-MCA-END kernel"); \
+  __asm volatile("" ::                     \
+                     :);                   \
+  __asm volatile("sub $1, %%eax\n\t"       \
+                 "jne begin_loop"          \
+                 :                         \
+                 :                         \
                  :);
 
 #if defined(DEC_END_LOOP)

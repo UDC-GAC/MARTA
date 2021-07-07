@@ -347,7 +347,8 @@ class Kernel:
             )
             data.update(asm_dict)
         if self.static_analysis != "":
-            S = StaticCodeAnalyzer(self.static_analysis, "cascadelake")
+            # FIXME: host architecture for LLVM-MCA
+            S = StaticCodeAnalyzer("cascadelake", self.static_analysis)
             data.update(S.compute_performance(f"asm_codes/{asm_file}"))
 
         # FIXME: to remove at some point, this was something temporal
@@ -447,7 +448,8 @@ class Kernel:
             import subprocess
 
             input_arg = (
-                data[self.meta_info_script_input] + self.meta_info_script_input_suffix
+                data.get(self.meta_info_script_input, self.meta_info_script_input)
+                + self.meta_info_script_input_suffix
             )
             proc = subprocess.Popen(
                 ["python3", self.meta_info_script, input_arg],
