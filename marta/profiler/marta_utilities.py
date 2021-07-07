@@ -12,3 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sys
+
+def colored(r, g, b, text):
+    return "\033[38;2;{};{};{}m{} \033[38;2;255;255;255m".format(r, g, b, text)
+
+def perror(msg: str, CODE=1) -> None:
+    print(f"[ERROR] {msg}")
+    sys.exit(CODE)
