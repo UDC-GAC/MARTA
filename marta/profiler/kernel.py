@@ -15,11 +15,12 @@
 
 # -*- coding: utf-8 -*-
 from __future__ import annotations
-from typing import Union, Any
 import os
-import sys
 import pickle
 import pandas as pd
+import subprocess
+import sys
+from typing import Union, Any
 from .report import Report
 from .asm_analyzer import ASMParserFactory
 from .timing import Timing
@@ -445,8 +446,6 @@ class Kernel:
         # Getting meta-info if specified when updating the row
         if self.meta_info_script != "":
             # The script should return a dictionary
-            import subprocess
-
             input_arg = (
                 data.get(self.meta_info_script_input, self.meta_info_script_input)
                 + self.meta_info_script_input_suffix
