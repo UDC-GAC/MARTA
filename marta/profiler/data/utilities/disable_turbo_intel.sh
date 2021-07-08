@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Based on: uarch-bench (https://github.com/travisdowns/uarch-bench/)
+
 #!/bin/bash
 #set -e
-
-# Based on: https://github.com/travisdowns/uarch-bench/
 
 export VENDOR_ID=$(lscpu | grep 'Vendor ID' | egrep -o '[^ ]*$')
 export MODEL_NAME=$(lscpu | grep 'Model name' | sed -n 's/Model name:\s*\(.*\)$/\1/p')

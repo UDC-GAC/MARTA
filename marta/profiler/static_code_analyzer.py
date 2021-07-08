@@ -55,7 +55,7 @@ class StaticCodeAnalyzer:
         os.remove(f"{json_file}")
         return json_file_fixed
 
-    def compute_performance(self, name_bench, iterations=1) -> dict:
+    def compute_performance(self, name_bench, iterations=1, region="kernel") -> dict:
         json_file = f"{name_bench.replace('.s','')}_perf.json"
         os.system(
             f"{self.binary} -march={self.arch} -mcpu={self.cpu} -iterations={iterations} {name_bench} -json -o {json_file}"
@@ -68,7 +68,14 @@ class StaticCodeAnalyzer:
                 with open(f"{json_file}") as f:
                     dom = json.loads(f.read())
 
-        summary = dom[0]["SummaryView"]
+        try:
+            summary = dom[region]["SummaryView"]
+        except KeyError:
+            print("[WARNING] llvm-mca data could not be parsed")
+            return d
+        finally:
+            os.remove(f"{json_file}")
+
         d = {}
         d.update({"llvm-mca_IPC": summary["IPC"]})
         d.update(
@@ -78,7 +85,4 @@ class StaticCodeAnalyzer:
             }
         )
         d.update({"llvm-mca_uOpsPerCycle": summary["uOpsPerCycle"]})
-
-        # Be clean
-        os.remove(f"{json_file}")
         return d

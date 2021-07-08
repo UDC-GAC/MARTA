@@ -53,8 +53,15 @@ class Kernel:
         :param filename: Name of the output file
         :type filename: str
         """
-        # storing results with metadata
-        df = df.fillna(-1)
+        # storing results with metadata, but cleaning first, just in case
+        df.drop([""],axis=1,inplace=True)
+        df = df.fillna(0)
+        cols = list(df.columns)
+        # Set column order
+        cols.remove("compiler")
+        cols.remove("compiler_flags")
+        cols = ["compiler","compiler_flags"] + cols
+        df = df[cols]
         if output_format == "html":
             df.to_html(filename, index=False)
         elif output_format == "json":
@@ -350,7 +357,7 @@ class Kernel:
         if self.static_analysis != "":
             # FIXME: host architecture for LLVM-MCA
             S = StaticCodeAnalyzer("cascadelake", self.static_analysis)
-            data.update(S.compute_performance(f"asm_codes/{asm_file}"))
+            data.update(S.compute_performance(f"asm_codes/{asm_file}", self.nsteps))
 
         # FIXME: to remove at some point, this was something temporal
         if "MACVETH" in kconfig:
@@ -439,8 +446,11 @@ class Kernel:
         d = Kernel.get_dict_from_d_flags(kconfig)
         if len(d.keys()) > 0:
             data.update(d)
+        if kconfig != [""] and kconfig != "" and kconfig != " ":
+            print("holi")
+            data.update({"CFG": kconfig})
         data.update(
-            {"CFG": kconfig, "Compiler": compiler, "compiler_flags": compiler_flags}
+            {"compiler": compiler, "compiler_flags": compiler_flags}
         )
 
         # Getting meta-info if specified when updating the row
@@ -486,10 +496,10 @@ class Kernel:
                     {"FLOPSs": Kernel.compute_flops(self.flops, avg_time[execution])}
                 )
             new_dict.update({"nexec": execution})
-            if avg_time != None:
+            if type(avg_time) != type(None):
                 if self.measure_time:
                     new_dict.update({"time": avg_time[execution]})
-            if avg_tsc != None:
+            if type(avg_tsc) != type(None):
                 if self.measure_tsc:
                     new_dict.update({"tsc": avg_tsc[execution]})
             if self.papi_counters != None:

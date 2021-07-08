@@ -259,7 +259,7 @@ class Profiler:
             print("output_cols parameter must be a list or 'all'")
             sys.exit(1)
 
-        output_cols += ["CFG", "Compiler"]
+        output_cols += ["compiler"]
         if kernel.papi_counters != None:
             output_cols += kernel.papi_counters
 
@@ -310,6 +310,9 @@ class Profiler:
                 os.remove("log/___tmp.stderr")
 
         exit_on_error = not self.args.no_quit_on_error
+
+        if kernel.nsteps > 1:
+            print(f"TODO: Determining loop overhead...")
 
         print(f"Compiling with {kernel.processes} processes")
         for compiler in kernel.compiler_flags:

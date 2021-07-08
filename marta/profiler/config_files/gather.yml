@@ -18,11 +18,7 @@
           language: "C"
           compiler_flags: 
             { 
-                "gcc": [" -march=native -mtune=native -mavx2 -O2 ", "
-                -march=native -mtune=native -mavx512f -O3 ",
-                " -march=native -mtune=native -mavx2 -O3 ",
-                " -march=native -mtune=native -mavx512f -O2 ",
-                " -march=native -mtune=native -O3 "],
+                "gcc": [" -march=native -mtune=native -mavx2 -O3 "],
             }
           inlined_kernel: True
           asm_syntax: "att"

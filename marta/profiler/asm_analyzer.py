@@ -106,15 +106,16 @@ class ASMParserATT(ASMParser):
             with open(asm_file, "r") as f:
                 # Get the previous contents
                 lines = f.readlines()
-                for l in lines:
-                    if l[0] == "#" or l == "\n":
+                for line in lines:
+                    if ".string" in line or ".ascii" in line or line == "\n":
                         continue
-                    tok = l.strip().split("#")
+                    tok = line.strip().split("#")
                     tok = tok[0].strip().split("\t")
-                    if tok[0] == ".cfi_endproc":
+                    if "LLVM-MCA-END kernel" in line:
                         return raw_inst
-                    if tok[0] == ".cfi_startproc":
+                    if "LLVM-MCA-BEGIN kernel" in line:
                         count = True
+                        raw_inst = {}
                         continue
                     if not count or ASMParser.skip_asm_instruction(tok):
                         continue
