@@ -13,10 +13,24 @@
 # limitations under the License.
 
 import sys
+from colorama import Fore, Style
 
-def colored(r, g, b, text):
-    return "\033[38;2;{};{};{}m{} \033[38;2;255;255;255m".format(r, g, b, text)
+
+def colored(msg, color=Fore.RED, style=Style.NORMAL):
+    return f"{color}{style}{msg}{Fore.RESET}{Style.RESET_ALL}"
+
 
 def perror(msg: str, CODE=1) -> None:
-    print(f"[ERROR] {msg}")
+    colored_msg = colored(f"[ERROR] {msg}", Fore.RED, Style.BRIGHT)
+    print(f"{colored_msg}")
     sys.exit(CODE)
+
+
+def pwarning(msg: str) -> None:
+    colored_msg = colored(f"[WARNING] {msg}", Fore.YELLOW, Style.BRIGHT)
+    print(f"{colored_msg}")
+
+
+def pinfo(msg: str) -> None:
+    colored_msg = colored(f"[INFO] {msg}", Fore.CYAN, Style.NORMAL)
+    print(f"{colored_msg}")

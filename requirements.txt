@@ -9,3 +9,4 @@ py-cpuinfo
 pytest
 graphviz
 sklearn
+colorama

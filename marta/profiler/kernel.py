@@ -25,6 +25,7 @@ from .report import Report
 from .asm_analyzer import ASMParserFactory
 from .timing import Timing
 from .static_code_analyzer import StaticCodeAnalyzer
+from .marta_utilities import perror, pwarning
 
 
 class Kernel:
@@ -54,13 +55,13 @@ class Kernel:
         :type filename: str
         """
         # storing results with metadata, but cleaning first, just in case
-        df.drop([""],axis=1,inplace=True)
+        df.drop([""], axis=1, inplace=True)
         df = df.fillna(0)
         cols = list(df.columns)
         # Set column order
         cols.remove("compiler")
         cols.remove("compiler_flags")
-        cols = ["compiler","compiler_flags"] + cols
+        cols = ["compiler", "compiler_flags"] + cols
         df = df[cols]
         if output_format == "html":
             df.to_html(filename, index=False)
@@ -448,9 +449,7 @@ class Kernel:
         if kconfig != [""] and kconfig != "" and kconfig != " ":
             print("holi")
             data.update({"CFG": kconfig})
-        data.update(
-            {"compiler": compiler, "compiler_flags": compiler_flags}
-        )
+        data.update({"compiler": compiler, "compiler_flags": compiler_flags})
 
         # Getting meta-info if specified when updating the row
         if self.meta_info_script != "":
@@ -471,9 +470,7 @@ class Kernel:
                         break
                     data.update(eval(line.strip()))
                 except Exception:
-                    print(
-                        f"[ERROR] meta_info script does not return a dictionary: {line}!"
-                    )
+                    perror(f"meta_info script does not return a dictionary: {line}!")
                     sys.exit(1)
                 if not line:
                     break
@@ -544,11 +541,11 @@ class Kernel:
             if self.processes < 1:
                 raise ValueError
             if self.processes > 16:
-                print(
-                    f"[WARNING] Careful with high degree of processes for compilation ({self.processes} processes set)"
+                pwarning(
+                    f"Be careful with high degree of processes for compilation ({self.processes} processes set)"
                 )
         except ValueError:
-            print("[ERROR] processes must be an integer greater or equal to one")
+            perror("processes must be an integer greater or equal to one")
             sys.exit(1)
         except KeyError:
             self.processes = 1

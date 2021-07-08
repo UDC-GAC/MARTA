@@ -1,6 +1,7 @@
 import sys
 import re
 from abc import ABC, abstractmethod
+from .marta_utilities import perror
 
 
 class ASMParserFactory:
@@ -129,9 +130,7 @@ class ASMParserATT(ASMParser):
                     else:
                         raw_inst[raw_asm] = 1
         except FileNotFoundError:
-            print(f"[ERROR] ASM file {asm_file} not found.")
-            print(f"[ERROR] Quitting...")
-            sys.exit(1)
+            perror(f"ASM file {asm_file} not found.")
         return raw_inst
 
 
@@ -215,7 +214,5 @@ class ASMParserIntel(ASMParser):
                     else:
                         raw_inst[raw_asm] = 1
         except FileNotFoundError:
-            print(f"[ERROR] ASM file {asm_file} not found.")
-            print(f"[ERROR] Quitting...")
-            sys.exit(1)
+            perror(f"ASM file {asm_file} not found.")
         return raw_inst

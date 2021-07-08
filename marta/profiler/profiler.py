@@ -18,6 +18,7 @@ import pickle
 import itertools as it
 import multiprocessing as mp
 
+from .marta_utilities import perror, pwarning
 from .benchmark import Benchmark
 from .kernel import Kernel
 from .project import Project
@@ -293,7 +294,7 @@ class Profiler:
             try:
                 os.system(f'{preamble.get("command")}')
             except Exception:
-                print("[ERROR] Preamble command went wrong...")
+                perror("Preamble command went wrong...")
                 sys.exit(1)
 
         # Create folders if needed
@@ -354,13 +355,13 @@ class Profiler:
                                     pool.terminate()
                                     pbar.clear()
                                     pbar.close()
-                                    print("[ERROR] Compilation failed")
+                                    perror("Compilation failed")
                                     return None
                         else:
                             print("Compiling...")
                             output = pool.starmap(Kernel.compile, iterable)
                             if not output:
-                                print("[ERROR] Compilation failed")
+                                perror("Compilation failed")
                                 pool.terminate()
                                 sys.exit(1)
                     Timing.accm_timer("compilation")
@@ -394,7 +395,7 @@ class Profiler:
                             kernel.save_results(
                                 df, output_filename, output_format, generate_report
                             )
-                            print("[ERROR] Execution failed, partial results saved")
+                            perror("Execution failed, partial results saved")
                             return None
                         if type(kern_exec) == list:
                             for exec in kern_exec:
@@ -403,7 +404,7 @@ class Profiler:
                             df = df.append(kern_exec, ignore_index=True)
                     Timing.accm_timer("execution")
                 else:
-                    print("[WARNING] Execution process disabled!")
+                    pwarning("Execution process disabled!")
         # Storing results and generating report file
         Timing.save_total_time()
         if kernel.nsteps > 1:
@@ -424,7 +425,7 @@ class Profiler:
                 try:
                     os.system(f'{finalize_actions.get("command")}')
                 except Exception:
-                    print(f"[ERROR] Finalize command went wrong for {kernel.basename}")
+                    perror(f"Finalize command went wrong for {kernel.basename}")
         return 0
 
     def __init__(self, list_args):
