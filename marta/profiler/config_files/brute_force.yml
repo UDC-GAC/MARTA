@@ -11,7 +11,7 @@
           clean_bin_files: False
       compilation:
           enabled: True
-          processes: 1
+          processes: 32
           compiler_flags: { "gcc": [" -march=native -mtune=native -mavx2 -O3 "]}
           inlined_kernel: True
           asm_analysis:
@@ -24,7 +24,7 @@
                     evaluate: True
                     type: "static"
                     val_type: "string"
-                    value: "[f\"kernels/kernel_{i}\" for i in range(1)]"
+                    value: "[f\"kernels/kernel_{i}\" for i in range(4096)]"
           flops: "1"
           meta_info:
                 path: "./profiler/kernels/brute_force/"
@@ -33,9 +33,9 @@
                 suffix: ".c"
       execution:
           enabled: True
-        #   papi_counters: [
-        #     "INSTRUCTIONS_RETIRED",
-        #     ]
+          papi_counters: [
+            "INSTRUCTIONS_RETIRED",
+            ]
           time: False
           tsc: True
           threshold_outliers: 3

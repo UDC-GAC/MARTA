@@ -143,13 +143,12 @@ class Kernel:
             path = f"{path}/utilities/{self.papi_counters_path}"
         papi_counter_file = f"{path}/papi_counters.list"
         try:
-            f = open(papi_counter_file, "w")
+            with open(papi_counter_file, "w") as f:
+                for ctr in self.papi_counters:
+                    f.write('"' + str(ctr) + '",\n')
         except Exception:
             print("[FATAL ERROR] PAPI counters file could not have been set.")
             sys.exit(1)
-        with f:
-            for ctr in self.papi_counters:
-                f.write('"' + str(ctr) + '",\n')
 
     @staticmethod
     def compute_flops(flops: float, avg_time: Union[float, int, str]) -> float:

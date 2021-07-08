@@ -17,6 +17,8 @@ import pkg_resources
 import pickle
 import itertools as it
 import multiprocessing as mp
+
+from .benchmark import Benchmark
 from .kernel import Kernel
 from .project import Project
 from .utils import custom_mp
@@ -312,7 +314,11 @@ class Profiler:
         exit_on_error = not self.args.no_quit_on_error
 
         if kernel.nsteps > 1:
-            print(f"TODO: Determining loop overhead...")
+            print(f"Determining loop overhead...")
+            loop_benchmark = Benchmark("profiler/src/loop_overhead.c")
+            overhead_loop = loop_benchmark.compile_run_benchmark(
+                flags="-O3 -DMARTA_RDTSC"
+            )
 
         print(f"Compiling with {kernel.processes} processes")
         for compiler in kernel.compiler_flags:
@@ -327,7 +333,7 @@ class Profiler:
                 # thread-safe, so user must be aware of this, not the
                 # profiler (passive-agressive comment :-P)
                 if kernel.compilation_enabled:
-                    t0 = Timing.start_timer("compilation")
+                    Timing.start_timer("compilation")
                     with mp.Pool(processes=kernel.processes) as pool:
                         iterable = zip(
                             repeat(kernel),
@@ -380,7 +386,7 @@ class Profiler:
                     else:
                         loop_iterator = product
                         print("Executing...")
-                    t0 = Timing.start_timer("execution")
+                    Timing.start_timer("execution")
                     for params_val in loop_iterator:
                         kern_exec = kernel.run(params_val, compiler, compiler_flags)
                         # There was an error, exit on error, save data first
@@ -400,6 +406,8 @@ class Profiler:
                     print("[WARNING] Execution process disabled!")
         # Storing results and generating report file
         Timing.save_total_time()
+        if kernel.nsteps > 1:
+            df["overhead_loop"] = overhead_loop
         kernel.save_results(df, output_filename, output_format, generate_report)
 
         finalize_actions = cfg["kernel"].get("finalize")

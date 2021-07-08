@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from __future__ import annotations
+from typing import Union
 import datetime as dt
 import os
 import numpy as np
@@ -80,14 +81,16 @@ class Timing:
     def measure_benchmark(
         code,
         name,
-        exec_opts,
-        compiler,
-        compiler_flags: str,
+        exec_opts="",
+        compiler="gcc",
+        compiler_flags="-O3",
         nexec=10,
-        nsteps=1000,
+        nsteps=10000,
         threshold_outliers=3,
         mean_and_discard_outliers=True,
-    ) -> tuple[Union[None, float], int]:
+        bin_file="",
+        tmp_file="",
+    ) -> tuple[Union[None, dict], int]:
         """
         Execute and time given benchmark nexec times
 
@@ -118,8 +121,12 @@ class Timing:
 
         # Save execution values in an array
         suffix = f"{name}" if type(name) == str else "papi"
-        bin_file = f"{exec_opts} ./bin/{code}_{compiler}_{compiler_flags_suffix}_{suffix}.o {nsteps}"
-        tmp_file = f"tmp/____tmp_{code}_{compiler}_{suffix}"
+        if bin_file != "" and not bin_file.startswith("./"):
+            bin_file = f"./{bin_file}"
+        if bin_file == "":
+            bin_file = f"{exec_opts} ./bin/{code}_{compiler}_{compiler_flags_suffix}_{suffix}.o {nsteps}"
+        if tmp_file == "":
+            tmp_file = f"tmp/____tmp_{code}_{compiler}_{suffix}"
         os.system(f"{bin_file}  > {tmp_file}")
         for _ in range(1, nexec):
             os.system(f"{bin_file}  >> {tmp_file}")

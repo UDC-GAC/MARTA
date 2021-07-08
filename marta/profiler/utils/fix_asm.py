@@ -7,7 +7,7 @@ def get_asm_file(y, A, x, isa, comp):
 
 
 max_orig = 4
-cols = ["ORIG_y", "ORIG_A", "ORIG_x", "CFG", "Compiler"]
+cols = ["ORIG_y", "ORIG_A", "ORIG_x", "CFG", "compiler"]
 df = pd.DataFrame(columns=cols)
 for y in range(max_orig):
     for A in range(max_orig):

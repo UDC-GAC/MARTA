@@ -14,6 +14,7 @@
 
 import cpuinfo as cpu
 import os
+import json
 from .timing import Timing
 
 
@@ -88,7 +89,7 @@ class Report:
             with open("log/___tmp.stdout") as f:
                 for l in f.readlines():
                     content += l
-            os.system("rm log/___tmp.stdout")
+            os.remove("log/___tmp.stdout")
         except FileNotFoundError:
             content += "stdout was redirected manually.\n"
 
@@ -98,7 +99,7 @@ class Report:
             with open("log/___tmp.stderr") as f:
                 for l in f.readlines():
                     content += l
-            os.system("rm log/___tmp.stderr")
+            os.remove("log/___tmp.stderr")
         except FileNotFoundError:
             content += "stderr was redirected manually.\n"
 
