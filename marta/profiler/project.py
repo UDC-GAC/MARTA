@@ -14,12 +14,14 @@
 
 import os
 import sys
+from typing import List
 from shutil import copytree
+from .marta_utilities import perror
 
 
 class Project:
     @staticmethod
-    def dump_config_file():
+    def dump_config_file() -> List[str]:
         """
         Read config template line by line
 
@@ -31,19 +33,16 @@ class Project:
             with open(config_file) as f:
                 return f.readlines()
         except Exception:
-            print("Something went wrong when dumping file")
-            sys.exit(1)
+            perror("Something went wrong when dumping file")
 
     @staticmethod
-    def generate_new_project(name="marta_bench"):
+    def generate_new_project(name="marta_bench") -> int:
         src = f"{os.path.dirname(__file__)}/data"
         dst = f"{os.getcwd()}/{name}"
         try:
             copytree(src, dst)
         except FileExistsError:
-            print(f"'{name}' directory already exists!")
-            sys.exit(1)
+            perror(f"'{name}' directory already exists!")
         except Exception:
-            print(f"Something went wrong when creating new project '{name}'")
-            sys.exit(1)
+            perror(f"Something went wrong when creating new project '{name}'")
         return 0

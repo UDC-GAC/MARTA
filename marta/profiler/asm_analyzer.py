@@ -1,19 +1,34 @@
-import sys
+# Copyright 2021 Marcos Horro
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import re
 from abc import ABC, abstractmethod
-from .marta_utilities import perror
+from .marta_utilities import perror, pwarning
 
 
 class ASMParserFactory:
     @staticmethod
-    def parse_asm(t, f):
-        if t == "att":
-            return ASMParserATT.parse_asm(f)
-        elif t == "intel":
-            return ASMParserIntel.parse_asm(f)
+    def parse_asm(asm_type: str, asm_file: str):
+        if asm_type != "att" and asm_type != "intel":
+            asm_type = "att"
+            pwarning(
+                "Check the asm_syntax value, does not match 'att' nor 'intel'. Using 'att' by default."
+            )
+        if asm_type == "att":
+            return ASMParserATT.parse_asm(asm_file)
         else:
-            print("Wrong mnemonics, quitting")
-            sys.exit(1)
+            return ASMParserIntel.parse_asm(asm_file)
 
 
 class ASMParser(ABC):
@@ -23,7 +38,7 @@ class ASMParser(ABC):
         pass
 
     @staticmethod
-    def skip_asm_instruction(ins):
+    def skip_asm_instruction(ins: str) -> bool:
         """
         Auxiliary function for skipping certain ASM operations
 
@@ -43,7 +58,7 @@ class ASMParser(ABC):
 
 class ASMParserATT(ASMParser):
     @staticmethod
-    def operand_to_suffix(op):
+    def operand_to_suffix(op: str) -> str:
         op = op.strip().replace(" ", "")
         if (
             (op.startswith("%zmm"))
@@ -63,7 +78,7 @@ class ASMParserATT(ASMParser):
             return "GPR"
 
     @staticmethod
-    def get_raw_asm_type(ins):
+    def get_raw_asm_type(ins: str) -> str:
         """
         Get ASM variant, i.e. mnemonic[_operand_type], where operand_type can be a
         register, memory or a immediate value
@@ -92,7 +107,7 @@ class ASMParserATT(ASMParser):
         return op_name
 
     @staticmethod
-    def parse_asm(asm_file):
+    def parse_asm(asm_file: str) -> dict:
         """
         Parse the assembly file and get instructions within ROI
 
@@ -136,7 +151,7 @@ class ASMParserATT(ASMParser):
 
 class ASMParserIntel(ASMParser):
     @staticmethod
-    def operand_to_suffix(op):
+    def operand_to_suffix(op: str) -> str:
         op = op.strip().replace(" ", "")
         if (op.startswith("zmm")) or (op.startswith("ymm")) or (op.startswith("xmm")):
             return op[1:4].upper()
@@ -150,7 +165,7 @@ class ASMParserIntel(ASMParser):
             return "GP"
 
     @staticmethod
-    def get_raw_asm_type(ins):
+    def get_raw_asm_type(ins: str) -> str:
         """
         Get ASM variant, i.e. mnemonic[_operand_type], where operand_type can be a
         register, memory or a immediate value
@@ -177,7 +192,7 @@ class ASMParserIntel(ASMParser):
         return op_name
 
     @staticmethod
-    def parse_asm(asm_file):
+    def parse_asm(asm_file: str) -> dict:
         """
         Parse the assembly file and get instructions within ROI
 

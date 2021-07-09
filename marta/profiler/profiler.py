@@ -9,6 +9,7 @@
 import os
 import copy
 import sys
+from typing import Iterable, Union
 import yaml
 import argparse
 import pandas as pd
@@ -18,7 +19,7 @@ import pickle
 import itertools as it
 import multiprocessing as mp
 
-from .marta_utilities import perror, pwarning
+from .marta_utilities import perror, pwarning, pinfo
 from .benchmark import Benchmark
 from .kernel import Kernel
 from .project import Project
@@ -135,7 +136,7 @@ class Profiler:
         return parser.parse_args(list_args)
 
     @staticmethod
-    def eval_features(feature):
+    def eval_features(feature: dict) -> dict:
         """
         Evaluate features from configuration file
 
@@ -187,7 +188,7 @@ class Profiler:
         return params_dict
 
     @staticmethod
-    def comp_nvals(params_values):
+    def comp_nvals(params_values: Union[list, Iterable]) -> int:
         # Compute number of iterations
         if type(params_values) is list:
             return len(params_values)
@@ -198,7 +199,7 @@ class Profiler:
             return len(list(it.product(*params_values_copy)))
 
     @staticmethod
-    def print_version():
+    def print_version() -> None:
         """
         Print version and copyright message (if not quiet execution)
         """
@@ -210,7 +211,7 @@ class Profiler:
         )
 
     @staticmethod
-    def dict_product(dicts: dict, kernel_cfg: list):
+    def dict_product(dicts: dict, kernel_cfg: list) -> bytes:
         """
         Generate the product of different dictionaries in a serializable
         fashion, since `dict_keys` is not serializable.
@@ -224,7 +225,40 @@ class Profiler:
         dicts.update({"KERNEL_CFG": kernel_cfg})
         return (pickle.dumps(dict(zip(dicts, x))) for x in it.product(*dicts.values()))
 
-    def profiling_kernels(self, cfg):
+    def create_directories(
+        self, asm_dir="asm_codes", bin_dir="bin", tmp_dir="tmp", log_dir="log"
+    ) -> None:
+        if not os.path.exists(asm_dir):
+            os.mkdir(asm_dir)
+        if not os.path.exists(bin_dir):
+            os.mkdir(bin_dir)
+        if not os.path.exists(tmp_dir):
+            os.mkdir(tmp_dir)
+        if not os.path.exists(log_dir):
+            os.mkdir(log_dir)
+        else:
+            if os.path.exists(f"{log_dir}/___tmp.stdout"):
+                os.remove(f"{log_dir}/___tmp.stdout")
+            if os.path.exists(f"{log_dir}/___tmp.stderr"):
+                os.remove(f"{log_dir}/___tmp.stderr")
+
+    def clean_files(self, finalize_actions: dict) -> None:
+        if finalize_actions != None:
+            # Cleaning directories
+            if finalize_actions.get("clean_tmp_files", False):
+                os.system(f"rm -Rf tmp/")
+                os.system(f"rm -Rf log/")
+            if finalize_actions.get("clean_bin_files", False):
+                os.system(f"rm -Rf bin/")
+            if finalize_actions.get("clean_asm_files", False):
+                os.system(f"rm -Rf asm_codes/")
+            if finalize_actions.get("command") != None:
+                try:
+                    os.system(f'{finalize_actions.get("command")}')
+                except Exception:
+                    perror(f"Finalize command went wrong for the kernel")
+
+    def profiling_kernels(self, cfg: dict) -> int:
         """
         Configuration file must have at least one kernel for performing profling
 
@@ -259,8 +293,7 @@ class Profiler:
                 output_cols = []
 
         if type(output_cols) != list:
-            print("output_cols parameter must be a list or 'all'")
-            sys.exit(1)
+            perror("'output_cols' parameter must be a list or 'all'")
 
         output_cols += ["compiler"]
         if kernel.papi_counters != None:
@@ -297,34 +330,21 @@ class Profiler:
                 perror("Preamble command went wrong...")
                 sys.exit(1)
 
-        # Create folders if needed
-        if not os.path.exists("asm_codes"):
-            os.mkdir("asm_codes")
-        if not os.path.exists("bin"):
-            os.mkdir("bin")
-        if not os.path.exists("tmp"):
-            os.mkdir("tmp")
-        if not os.path.exists("log"):
-            os.mkdir("log")
-        else:
-            if os.path.exists("log/___tmp.stdout"):
-                os.remove("log/___tmp.stdout")
-            if os.path.exists("log/___tmp.stderr"):
-                os.remove("log/___tmp.stderr")
+        self.create_directories()
 
         exit_on_error = not self.args.no_quit_on_error
 
         if kernel.nsteps > 1:
-            print(f"Determining loop overhead...")
+            pinfo(f"Determining loop overhead...")
             loop_benchmark = Benchmark("profiler/src/loop_overhead.c")
             overhead_loop = loop_benchmark.compile_run_benchmark(
                 flags="-O3 -DMARTA_RDTSC"
             )
 
-        print(f"Compiling with {kernel.processes} processes")
+        pinfo(f"Compiling with {kernel.processes} processes")
         for compiler in kernel.compiler_flags:
             for compiler_flags in list(kernel.compiler_flags[compiler]):
-                print(f"Compiler and flags: {compiler} {compiler_flags}")
+                pinfo(f"Compiler and flags: {compiler} {compiler_flags}")
                 if type(params_kernel) is dict:
                     product = Profiler.dict_product(params_kernel, kernel.kernel_cfg)
                 else:
@@ -358,7 +378,7 @@ class Profiler:
                                     perror("Compilation failed")
                                     return None
                         else:
-                            print("Compiling...")
+                            pinfo("Compiling...")
                             output = pool.starmap(Kernel.compile, iterable)
                             if not output:
                                 perror("Compilation failed")
@@ -366,7 +386,7 @@ class Profiler:
                                 sys.exit(1)
                     Timing.accm_timer("compilation")
                 else:
-                    print("[WARNING] Compilation process disabled!")
+                    pwarning("Compilation process disabled!")
 
                 # IMPORTANT NOTE:
                 # This section could be parallel as well, if kernels
@@ -386,7 +406,7 @@ class Profiler:
                         )
                     else:
                         loop_iterator = product
-                        print("Executing...")
+                        pinfo("Executing...")
                     Timing.start_timer("execution")
                     for params_val in loop_iterator:
                         kern_exec = kernel.run(params_val, compiler, compiler_flags)
@@ -411,21 +431,7 @@ class Profiler:
             df["overhead_loop"] = overhead_loop
         kernel.save_results(df, output_filename, output_format, generate_report)
 
-        finalize_actions = cfg["kernel"].get("finalize")
-        if finalize_actions != None:
-            # Cleaning directories
-            if finalize_actions.get("clean_tmp_files", False):
-                os.system(f"rm -Rf tmp/")
-                os.system(f"rm -Rf log/")
-            if finalize_actions.get("clean_bin_files", False):
-                os.system(f"rm -Rf bin/")
-            if finalize_actions.get("clean_asm_files", False):
-                os.system(f"rm -Rf asm_codes/")
-            if finalize_actions.get("command") != None:
-                try:
-                    os.system(f'{finalize_actions.get("command")}')
-                except Exception:
-                    perror(f"Finalize command went wrong for {kernel.basename}")
+        self.clean_files(cfg["kernel"].get("finalize"))
         return 0
 
     def __init__(self, list_args):
@@ -439,8 +445,7 @@ class Profiler:
         if (sys.version_info[0] < 3) or (
             sys.version_info[0] == 3 and sys.version_info[1] < 7
         ):
-            print("MARTA must run with Python >=3.7")
-            sys.exit(1)
+            perror("MARTA must run with Python >=3.7")
         self.args = Profiler.parse_arguments(list_args)
 
         if self.args.dump_config_file:
@@ -453,9 +458,8 @@ class Profiler:
             name = self.args.name
             code = Project.generate_new_project(name)
             if code != 0:
-                print("Something went wrong...")
-                sys.exit(code)
-            print(f"Project generated in folder '{name}'!")
+                perror("Something went wrong...", code)
+            pinfo(f"Project generated in folder '{name}'!")
             sys.exit(0)
 
         if self.args.version:
@@ -472,16 +476,13 @@ class Profiler:
             with open(yml_config, "r") as ymlfile:
                 kernel_setup = yaml.load(ymlfile, Loader=Loader)
         except FileNotFoundError:
-            print("Configuration file not found")
-            sys.exit(1)
+            perror("Configuration file not found")
         except Exception:
-            print("Unknown error when opening configuration file.")
-            print("Quitting...")
-            sys.exit(1)
+            perror("Unknown error when opening configuration file.")
 
         # For each kernel configuration
         for cfg in kernel_setup:
             if self.profiling_kernels(cfg) == None:
-                print("Kernel failed...")
+                perror("Kernel failed...", exit_on_error=False)
 
         sys.exit(0)

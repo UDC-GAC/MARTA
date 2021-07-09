@@ -16,14 +16,15 @@ import sys
 from colorama import Fore, Style
 
 
-def colored(msg, color=Fore.RED, style=Style.NORMAL):
+def colored(msg: str, color=Fore.RED, style=Style.NORMAL) -> str:
     return f"{color}{style}{msg}{Fore.RESET}{Style.RESET_ALL}"
 
 
-def perror(msg: str, CODE=1) -> None:
+def perror(msg: str, CODE=1, exit_on_error=True) -> None:
     colored_msg = colored(f"[ERROR] {msg}", Fore.RED, Style.BRIGHT)
     print(f"{colored_msg}")
-    sys.exit(CODE)
+    if exit_on_error:
+        sys.exit(CODE)
 
 
 def pwarning(msg: str) -> None:

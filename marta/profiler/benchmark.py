@@ -17,6 +17,9 @@ from .timing import Timing
 
 
 class Benchmark:
+    """Benchmark class if meant for generating small benchmarks dynamically
+    """
+
     def compile(self, output="", compiler="gcc", flags="-O3") -> None:
         if output != "":
             output = f"-o {output}"

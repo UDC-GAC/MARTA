@@ -19,13 +19,12 @@ import os
 import pickle
 import pandas as pd
 import subprocess
-import sys
 from typing import Union, Any
 from .report import Report
 from .asm_analyzer import ASMParserFactory
 from .timing import Timing
 from .static_code_analyzer import StaticCodeAnalyzer
-from .marta_utilities import perror, pwarning
+from .marta_utilities import perror, pwarning, pinfo
 
 
 class Kernel:
@@ -77,11 +76,11 @@ class Kernel:
 
     @staticmethod
     def compile_parse_asm(
-        kpath,
-        comp,
-        compiler_flags,
-        common_flags,
-        kconfig,
+        kpath: str,
+        comp: str,
+        compiler_flags: str,
+        common_flags: str,
+        kconfig: str,
         other_flags="",
         suffix_file="",
         debug="",
@@ -129,7 +128,7 @@ class Kernel:
             # the code
             exit_code = (int(ret) >> 8) & 0xFF
             exit_signal = int(ret) & 0xFF
-            print(
+            pinfo(
                 f"'make' exited with code '{str(exit_code)}' (signal '{exit_signal}') while compiling in {kpath}."
             )
             return False
@@ -148,8 +147,7 @@ class Kernel:
                 for ctr in self.papi_counters:
                     f.write('"' + str(ctr) + '",\n')
         except Exception:
-            print("[FATAL ERROR] PAPI counters file could not have been set.")
-            sys.exit(1)
+            perror("PAPI counters file could not have been set.")
 
     @staticmethod
     def compute_flops(flops: float, avg_time: Union[float, int, str]) -> float:
@@ -171,8 +169,7 @@ class Kernel:
         except TypeError:
             flops_eval = flops
         except NameError:
-            print("FLOPS formula is not valid; please review it!")
-            sys.exit(1)
+            perror("FLOPS formula is not valid; please review it!")
 
         if avg_time > 0:
             return (flops_eval) / avg_time
@@ -180,7 +177,7 @@ class Kernel:
             return 0.0
 
     @staticmethod
-    def get_dict_from_d_flags(params) -> dict:
+    def get_dict_from_d_flags(params: str) -> dict:
         d = {}
         for tok in params.strip().split(" "):
             tmp = tok.split("=")
@@ -193,7 +190,7 @@ class Kernel:
         return d
 
     @staticmethod
-    def get_suffix_and_flags(kconfig, params) -> tuple[str, str]:
+    def get_suffix_and_flags(kconfig: str, params: Union[dict, str]) -> tuple[str, str]:
         custom_flags = ""
         suffix_file = ""
         custom_bin_name = None
@@ -218,19 +215,19 @@ class Kernel:
             custom_flags = params
             for p in params.strip().replace("-", "").replace("D", "").split(" "):
                 suffix_file += f"_{p}"
+
         # Parsing kconfig
         for kparam in kconfig.strip().replace("-", "").split(" "):
             if "BIN_NAME" in kparam:
                 custom_bin_name = kparam.split("=")[1]
-            suffix_file += f"_{kparam}"
+
         # Avoid very long names
         if custom_bin_name != None:
             suffix_file = custom_bin_name
         if len(suffix_file) > 256:
-            print(
+            perror(
                 "Error: too long binary name. Try '-DBIN_NAME=<suffix>' for each compilation case instead"
             )
-            sys.exit(1)
         return suffix_file, custom_flags
 
     @staticmethod
@@ -251,7 +248,12 @@ class Kernel:
         return ""
 
     def compile(
-        self, product_params, compiler, compiler_flags, debug: bool, quit_on_error=False
+        self,
+        product_params: bytes,
+        compiler: str,
+        compiler_flags: str,
+        debug: bool,
+        quit_on_error=False,
     ) -> bool:
         # FIXME: refactor this garbage, please
         tmp_pickle = pickle.loads(product_params)
@@ -292,8 +294,7 @@ class Kernel:
                     )
                     other_flags += f" MACVETH_TARGET={macveth_target} "
                 except KeyError:
-                    print("Error: bad key for MACVETH target")
-                    sys.exit(1)
+                    perror("Error: bad key for MACVETH target")
 
         # MACVETH syntax flags
         other_flags += f" ASM_SYNTAX={self.asm_syntax} "
@@ -447,7 +448,6 @@ class Kernel:
         if len(d.keys()) > 0:
             data.update(d)
         if kconfig != [""] and kconfig != "" and kconfig != " ":
-            print("holi")
             data.update({"CFG": kconfig})
         data.update({"compiler": compiler, "compiler_flags": compiler_flags})
 
@@ -471,7 +471,6 @@ class Kernel:
                     data.update(eval(line.strip()))
                 except Exception:
                     perror(f"meta_info script does not return a dictionary: {line}!")
-                    sys.exit(1)
                 if not line:
                     break
 
@@ -509,12 +508,10 @@ class Kernel:
         try:
             self.kernel = cfg["kernel"]["name"]
         except KeyError:
-            print("'name' key is missing!")
-            sys.exit(1)
+            perror("'name' key is missing!")
         self.type = cfg["kernel"]["type"] if "type" in cfg["kernel"] else "regular"
         if self.type not in ["regular", "micro"]:
-            print("Error: type of benchmarking must be 'regular' or 'micro'")
-            sys.exit(1)
+            perror("type of benchmarking must be 'regular' or 'micro'")
         self.descr = cfg["kernel"].get("description", "")
         self.path_kernel = cfg["kernel"].get("path", "./")
         self.show_progress_bars = cfg["kernel"].get("show_progress_bars", True)
@@ -524,16 +521,15 @@ class Kernel:
             config_cfg = cfg["kernel"]["configuration"]
             config_exec = cfg["kernel"]["execution"]
         except KeyError:
-            print(
+            perror(
                 "Check your configuration file: 'configuration' and 'execution' keys could be missing..."
             )
-            sys.exit(1)
 
         try:
             config_comp = cfg["kernel"]["compilation"]
         except KeyError:
             config_comp = {}
-            print("[WARNING] No compilation options selected: using gcc with no flags")
+            pwarning("No compilation options selected: using gcc with no flags")
 
         self.compilation_enabled = config_comp.get("enabled", True)
         try:
@@ -546,7 +542,6 @@ class Kernel:
                 )
         except ValueError:
             perror("processes must be an integer greater or equal to one")
-            sys.exit(1)
         except KeyError:
             self.processes = 1
         self.compiler_flags = config_comp.get("compiler_flags", {"gcc": [""]})
@@ -593,7 +588,6 @@ class Kernel:
         self.papi_counters = config_exec.get("papi_counters")
         if self.papi_counters != None:
             if type(self.papi_counters) != list:
-                print("'papi_counters' must be a list of hardware events!")
-                sys.exit(1)
+                perror("'papi_counters' must be a list of hardware events!")
             self.define_papi_counters()
         self.exec_args = config_exec.get("prefix", "")

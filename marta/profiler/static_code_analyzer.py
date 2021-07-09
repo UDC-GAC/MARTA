@@ -14,14 +14,10 @@
 
 import os
 import json
+from .marta_utilities import pwarning
 
 
 class StaticCodeAnalyzer:
-    def __init__(self, cpu, binary="llvm-mca", arch="x86-64"):
-        self.binary = binary
-        self.cpu = cpu
-        self.arch = arch
-
     @staticmethod
     def fix_json(json_file="perf.json") -> str:
         """This method is needed if LLVM-MCA version is previous to 12.0.0
@@ -55,7 +51,20 @@ class StaticCodeAnalyzer:
         os.remove(f"{json_file}")
         return json_file_fixed
 
-    def compute_performance(self, name_bench, iterations=1, region="kernel") -> dict:
+    def compute_performance(
+        self, name_bench: str, iterations=1, region="kernel"
+    ) -> dict:
+        """Get the performance metrics reported by the tool. Currently only LLVM-MCA.
+
+        :param name_bench: Name of the asm file.
+        :type name_bench: str
+        :param iterations: Number of iterations to run the tool., defaults to 1
+        :type iterations: int, optional
+        :param region: Name of the region of interest., defaults to "kernel"
+        :type region: str, optional
+        :return: Returns the IPC, Cycles and uOPS reported by the tool.
+        :rtype: dict
+        """
         json_file = f"{name_bench.replace('.s','')}_perf.json"
         os.system(
             f"{self.binary} -march={self.arch} -mcpu={self.cpu} -iterations={iterations} {name_bench} -json -o {json_file}"
@@ -71,8 +80,8 @@ class StaticCodeAnalyzer:
         try:
             summary = dom[region]["SummaryView"]
         except KeyError:
-            print("[WARNING] llvm-mca data could not be parsed")
-            return d
+            pwarning("llvm-mca data could not be parsed")
+            return {}
         finally:
             os.remove(f"{json_file}")
 
@@ -86,3 +95,8 @@ class StaticCodeAnalyzer:
         )
         d.update({"llvm-mca_uOpsPerCycle": summary["uOpsPerCycle"]})
         return d
+
+    def __init__(self, cpu: str, binary="llvm-mca", arch="x86-64") -> None:
+        self.binary = binary
+        self.cpu = cpu
+        self.arch = arch
