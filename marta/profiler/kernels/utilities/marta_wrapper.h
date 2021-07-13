@@ -120,8 +120,8 @@ void intel_clflush(volatile void *p, unsigned int allocation_size) {
   __asm volatile("rdtsc" : "=a"(__cycles_lo), "=d"(__cycles_hi));              \
   t = (marta_cycles_t)__cycles_hi << 32 | __cycles_lo;
 
-#define PRE_LOOP(TSTEPS)                                                       \
-  __asm volatile("mov %0, %%eax" : : "r"(TSTEPS) : "eax");
+#define PRE_LOOP                                                               \
+  __asm volatile("mov $" TO_STRING(TSTEPS) ", %%ecx" : : : "ecx");
 
 #define BEGIN_LOOP                                                             \
   __asm volatile("begin_loop:");                                               \
@@ -129,13 +129,14 @@ void intel_clflush(volatile void *p, unsigned int allocation_size) {
   __asm volatile("" :::);
 
 #define INIT_BEGIN_LOOP(TSTEPS)                                                \
-  PRE_LOOP(TSTEPS)                                                             \
+  PRE_LOOP;                                                                    \
   BEGIN_LOOP;
 
 #define INIT_BEGIN_CYCLES_LOOP(TSTEPS)                                         \
+  polybench_prepare_instruments();                                             \
   marta_cycles_t t0;                                                           \
   RDTSC(t0);                                                                   \
-  PRE_LOOP(TSTEPS)                                                             \
+  PRE_LOOP;                                                                    \
   BEGIN_LOOP;
 
 // According to Intel's optimization guide it is better to avoid dec in benefit
@@ -145,7 +146,7 @@ void intel_clflush(volatile void *p, unsigned int allocation_size) {
 #define END_LOOP                                                               \
   __asm volatile("# LLVM-MCA-END kernel");                                     \
   __asm volatile("" :::);                                                      \
-  __asm volatile("sub $1, %%eax\n\t"                                           \
+  __asm volatile("sub $1, %%ecx\n\t"                                           \
                  "jne begin_loop"                                              \
                  :                                                             \
                  :                                                             \

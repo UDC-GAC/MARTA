@@ -209,8 +209,14 @@ class Kernel:
                     custom_flags += f" -D{pname}={param_val_parsed}"
                 if pname == "BIN_NAME":
                     custom_bin_name = params[pname]
-                suffix_file += f"_{pname}{params[pname]}"
-            suffix_file = suffix_file.split("/")[-1].replace(".c", "")
+                key = pname.replace("/", "_")
+                val = (
+                    params[pname].replace("/", "_")
+                    if type(params[pname]) == str
+                    else params[pname]
+                )
+                suffix_file += f"_{key}{val}"
+            suffix_file = suffix_file.replace("/", "").replace(".c", "")
         else:
             custom_flags = params
             for p in params.strip().replace("-", "").replace("D", "").split(" "):
@@ -349,6 +355,13 @@ class Kernel:
         name_bin, _ = Kernel.get_suffix_and_flags(kconfig, params_dict)
         name_bin = f"{self.kernel}_{name_bin}"
         compiler_flags_suffix = compiler_flags.replace(" ", "_").replace("-", "")
+        # if self.measure_time:
+        #     compiler_flags_suffix += "_time"
+        # elif self.measure_tsc:
+        #     compiler_flags_suffix += "_tsc"
+        # elif self.papi_counters != None:
+        #     compiler_flags_suffix += "_papi"
+
         asm_file = f"{name_bin}_{compiler}_{compiler_flags_suffix}.s"
         if self.asm_count:
             asm_dict = ASMParserFactory.parse_asm(

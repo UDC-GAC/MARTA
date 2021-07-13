@@ -334,12 +334,13 @@ class Profiler:
 
         exit_on_error = not self.args.no_quit_on_error
 
+        overhead_loop = 0
         if kernel.nsteps > 1:
-            pinfo(f"Determining loop overhead...")
             loop_benchmark = Benchmark("profiler/src/loop_overhead.c")
             overhead_loop = loop_benchmark.compile_run_benchmark(
-                flags="-O3 -DMARTA_RDTSC"
+                flags="-O3 -DMARTA_RDTSC profiler/kernels/utilities/polybench.c"
             )
+            pinfo(f"Loop overhead (1 nop): {overhead_loop} cycles")
 
         pinfo(f"Compiling with {kernel.processes} processes")
         for compiler in kernel.compiler_flags:
@@ -428,6 +429,7 @@ class Profiler:
         # Storing results and generating report file
         Timing.save_total_time()
         if kernel.nsteps > 1:
+            df["overhead_instructions"] = 2
             df["overhead_loop"] = overhead_loop
         kernel.save_results(df, output_filename, output_format, generate_report)
 

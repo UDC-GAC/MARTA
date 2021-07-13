@@ -33,8 +33,8 @@ class Benchmark:
         d, _ = Timing.measure_benchmark(
             self.name, self.btype, bin_file=bin_file, tmp_file=tmp_file
         )
-        os.remove(f"{bin_file}")
-        os.remove(f"{tmp_file}")
+        # os.remove(f"{bin_file}")
+        # os.remove(f"{tmp_file}")
         return d[self.btype]
 
     def __init__(self, name: str, path=".", btype="tsc"):
