@@ -1,20 +1,27 @@
 # temp files
 __*
+!__init__.py
+!__main__.py
+!__version__
+*.list
 macveth_output.c*
-
+codelet*.c
+codelet*.h
 # bytecode
 __pycache__/
 *cpython*
 *.pyc
 *.o
 *.a
+*.optrpt
+tmp/
+log/
 
 # results
 old_files/
 results/
 output/
 results_*/
-data/
 bin/
 *.arff
 *.csv
@@ -25,6 +32,11 @@ bin/
 
 # vscode
 .vscode
+
+# docs
+_build/
+_static/
+_templates/
 
 # temp files
 *.swp
@@ -45,3 +57,12 @@ cyc_*
 *.synctex*
 *.out
 *.pdf
+
+# Just commit those kernels which are significant
+marta/profiler/kernels/*
+
+# Build
+build/
+dist/
+test-codes/
+*egg-info*

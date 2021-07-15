@@ -1,0 +1,63 @@
+- kernel:
+      name: "brute_force"
+      path: "profiler/kernels/brute_force"
+      description: "Setup for experiment gather"
+      preamble:
+          command: "rm -Rf bin asm_codes && sudo cpupower frequency-set -u
+          2.1GHz  > /dev/null && sudo cpupower frequency-set -d 2.1GHz > /dev/null"
+      finalize:
+          clean_tmp_files: False
+          clean_asm_files: False
+          clean_bin_files: False
+      compilation:
+          enabled: True
+          processes: 64
+          compiler_flags: { "gcc": [" -march=native -mtune=native -mavx2 -O3 "]}
+          inlined_kernel: True
+          asm_analysis:
+                syntax: "att"
+                count_ins: True
+                static_analysis: ""
+      configuration:
+          d_features:
+                N_CACHE_LINES:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[1,2]"
+                N_LOADS:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[2]"
+                KERNEL:
+                    evaluate: True
+                    type: "static"
+                    val_type: "string"
+                    value: "[f\"kernels/kernel_avx_permutevar_{i}\" for i in range(4096)]"
+          flops: "1"
+          meta_info:
+                path: "./profiler/kernels/brute_force/"
+                script: "count_intrinsics.py"
+                input: "KERNEL"
+                suffix: ".c"
+      execution:
+          enabled: True
+          papi_counters: [
+            "INSTRUCTIONS_RETIRED",
+            ]
+          time: False
+          tsc: True
+          threshold_outliers: 3
+          mean_and_discard_outliers: True
+          init_data: True
+          intel_cache_flush: False
+          check_dump: False
+          nexec: 7
+          nsteps: 10000
+          cpu_affinity: 11
+      output:
+          name: "default"
+          columns: "all"
+          report: True
+          verbose: True

@@ -1,0 +1,28 @@
+- kernel:
+      input: test/marta.csv
+      output: marta.arff
+      overwrite: True
+      clean: True
+      debug: False
+- prepare_data:
+      cols: I J It Jt Is Js Jters Iters NELEMS
+      rows: ""
+      pred: FLOPSs
+      norm:
+          enabled: False
+          type: None
+      cats:
+          num: 10
+          type: "linear"
+          scale_factor: 1e9
+      dt_settings:
+          name: J48
+          params: "M=20"
+          opts: '"B R"'
+      min_acc: 0.8
+- recommender:
+      pred: FLOPSs
+      interest_dim:
+          value: 6.5
+          type: numeric
+      dim: I J It Jt Is Js Jters Iters NELEMS

@@ -1,0 +1,666 @@
+
+kernel.o:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+0000000000000000 <kernel>:
+   0:	c5 fa 10 46 08       	vmovss 0x8(%rsi),%xmm0
+   5:	c5 fa 10 4a 10       	vmovss 0x10(%rdx),%xmm1
+   a:	c5 f8 28 d0          	vmovaps %xmm0,%xmm2
+   e:	c4 e2 71 a9 17       	vfmadd213ss (%rdi),%xmm1,%xmm2
+  13:	c5 fa 11 17          	vmovss %xmm2,(%rdi)
+  17:	c5 f8 28 d0          	vmovaps %xmm0,%xmm2
+  1b:	c4 e2 71 a9 57 08    	vfmadd213ss 0x8(%rdi),%xmm1,%xmm2
+  21:	c5 fa 11 57 08       	vmovss %xmm2,0x8(%rdi)
+  26:	c5 f8 28 d0          	vmovaps %xmm0,%xmm2
+  2a:	c4 e2 71 a9 47 0c    	vfmadd213ss 0xc(%rdi),%xmm1,%xmm0
+  30:	c4 e2 71 a9 57 10    	vfmadd213ss 0x10(%rdi),%xmm1,%xmm2
+  36:	c5 fa 11 47 0c       	vmovss %xmm0,0xc(%rdi)
+  3b:	c5 fa 11 57 10       	vmovss %xmm2,0x10(%rdi)
+  40:	c3                   	retq   
+
+Disassembly of section .gnu.lto_.profile.4fb0c2b540bcb141:
+
+0000000000000000 <.gnu.lto_.profile.4fb0c2b540bcb141>:
+   0:	78 9c                	js     ffffffffffffff9e <kernel+0xffffffffffffff9e>
+   2:	e3 60                	jrcxz  64 <kernel+0x64>
+   4:	60                   	(bad)  
+   5:	04 42                	add    $0x42,%al
+   7:	20 00                	and    %al,(%rax)
+   9:	00 00                	add    %al,(%rax)
+   b:	5d                   	pop    %rbp
+   c:	00 0b                	add    %cl,(%rbx)
+
+Disassembly of section .gnu.lto_.icf.4fb0c2b540bcb141:
+
+0000000000000000 <.gnu.lto_.icf.4fb0c2b540bcb141>:
+   0:	78 9c                	js     ffffffffffffff9e <kernel+0xffffffffffffff9e>
+   2:	e3 60                	jrcxz  64 <kernel+0x64>
+   4:	60                   	(bad)  
+   5:	64 e0 60             	fs loopne 68 <kernel+0x68>
+   8:	40 00 46 86          	add    %al,-0x7a(%rsi)
+   c:	fd                   	std    
+   d:	73 4f                	jae    5e <kernel+0x5e>
+   f:	2d e7 62 00 00       	sub    $0x62e7,%eax
+  14:	0e                   	(bad)  
+  15:	52                   	push   %rdx
+  16:	02 ea                	add    %dl,%ch
+
+Disassembly of section .gnu.lto_.jmpfuncs.4fb0c2b540bcb141:
+
+0000000000000000 <.gnu.lto_.jmpfuncs.4fb0c2b540bcb141>:
+   0:	78 9c                	js     ffffffffffffff9e <kernel+0xffffffffffffff9e>
+   2:	e3 60                	jrcxz  64 <kernel+0x64>
+   4:	60                   	(bad)  
+   5:	64 10 61 40          	adc    %ah,%fs:0x40(%rcx)
+   9:	00 46 06             	add    %al,0x6(%rsi)
+   c:	66 46                	data16 rex.RX
+   e:	46                   	rex.RX
+   f:	46 f6 fa             	rex.RX idiv %dl
+  12:	f9                   	stc    
+  13:	cc                   	int3   
+  14:	0c 30                	or     $0x30,%al
+  16:	cc                   	int3   
+  17:	00 00                	add    %al,(%rax)
+  19:	21 4e 03             	and    %ecx,0x3(%rsi)
+  1c:	8f                   	.byte 0x8f
+
+Disassembly of section .gnu.lto_.inline.4fb0c2b540bcb141:
+
+0000000000000000 <.gnu.lto_.inline.4fb0c2b540bcb141>:
+   0:	78 9c                	js     ffffffffffffff9e <kernel+0xffffffffffffff9e>
+   2:	e3 60                	jrcxz  64 <kernel+0x64>
+   4:	60                   	(bad)  
+   5:	64 70 64             	fs jo  6c <kernel+0x6c>
+   8:	40 00 46 06          	add    %al,0x6(%rsi)
+   c:	06                   	(bad)  
+   d:	a1 86 86 86 09 4c e9 	movabs 0x8cace94c09868686,%eax
+  14:	ac 8c 
+  16:	0c 0a                	or     $0xa,%al
+  18:	8c 0c cc             	mov    %cs,(%rsp,%rcx,8)
+  1b:	0c 2c                	or     $0x2c,%al
+  1d:	c2 40 fe             	retq   $0xfe40
+  20:	06                   	(bad)  
+  21:	a6                   	cmpsb  %es:(%rdi),%ds:(%rsi)
+  22:	34 06                	xor    $0x6,%al
+  24:	06                   	(bad)  
+  25:	7e 20                	jle    47 <kernel+0x47>
+  27:	63 01                	movslq (%rcx),%eax
+  29:	73 2a                	jae    55 <kernel+0x55>
+  2b:	13 03                	adc    (%rbx),%eax
+  2d:	13 03                	adc    (%rbx),%eax
+  2f:	23 90 d9 c0 94 c4    	and    -0x3b6b3f27(%rax),%edx
+  35:	c4                   	(bad)  
+  36:	c0 02 67             	rolb   $0x67,(%rdx)
+  39:	33 b0 80 0d 00 00    	xor    0xd80(%rax),%esi
+  3f:	d2 ea                	shr    %cl,%dl
+  41:	0d                   	.byte 0xd
+  42:	21                   	.byte 0x21
+
+Disassembly of section .gnu.lto_.pureconst.4fb0c2b540bcb141:
+
+0000000000000000 <.gnu.lto_.pureconst.4fb0c2b540bcb141>:
+   0:	78 9c                	js     ffffffffffffff9e <kernel+0xffffffffffffff9e>
+   2:	e3 60                	jrcxz  64 <kernel+0x64>
+   4:	60                   	(bad)  
+   5:	64 60                	fs (bad) 
+   7:	61                   	(bad)  
+   8:	60                   	(bad)  
+   9:	00 92 b3 58 00 01    	add    %dl,0x10058b3(%rdx)
+   f:	d2 00                	rolb   %cl,(%rax)
+  11:	ad                   	lods   %ds:(%rsi),%eax
+
+Disassembly of section .gnu.lto_kernel.4fb0c2b540bcb141:
+
+0000000000000000 <.gnu.lto_kernel.4fb0c2b540bcb141>:
+   0:	78 9c                	js     ffffffffffffff9e <kernel+0xffffffffffffff9e>
+   2:	85 93 4f 4f 13 51    	test   %edx,0x51134f4f(%rbx)
+   8:	14 c5                	adc    $0xc5,%al
+   a:	ef                   	out    %eax,(%dx)
+   b:	99                   	cltd   
+   c:	37                   	(bad)  
+   d:	6d                   	insl   (%dx),%es:(%rdi)
+   e:	a7                   	cmpsl  %es:(%rdi),%ds:(%rsi)
+   f:	7f c1                	jg     ffffffffffffffd2 <kernel+0xffffffffffffffd2>
+  11:	c4                   	(bad)  
+  12:	1d 71 dd b0 71       	sbb    $0x71b0dd71,%eax
+  17:	e5 07                	in     $0x7,%eax
+  19:	e0 4b                	loopne 66 <.gnu.lto_kernel.4fb0c2b540bcb141+0x66>
+  1b:	f8                   	clc    
+  1c:	01 94 74 a5 71 61 e2 	add    %edx,-0x1d9e8e5b(%rsp,%rsi,2)
+  23:	9a                   	(bad)  
+  24:	69 9b d4 48 b1 dd 50 	imul   $0x9498850,-0x224eb72c(%rbx),%ebx
+  2b:	88 49 09 
+  2e:	8d b6 20 24 c6 b2    	lea    -0x4d39dbe0(%rsi),%esi
+  34:	21 71 63             	and    %esi,0x63(%rcx)
+  37:	a7                   	cmpsl  %es:(%rdi),%ds:(%rsi)
+  38:	88 88 0a 88 20 46    	mov    %cl,0x4620880a(%rax)
+  3e:	17                   	(bad)  
+  3f:	34 44                	xor    $0x44,%al
+  41:	b1 89                	mov    $0x89,%cl
+  43:	2c 70                	sub    $0x70,%al
+  45:	67 42 24 e0          	addr32 rex.X and $0xe0,%al
+  49:	bd ef b5 35 05       	mov    $0x535b5ef,%ebp
+  4e:	52                   	push   %rdx
+  4f:	27                   	(bad)  
+  50:	99                   	cltd   
+  51:	9b                   	fwait
+  52:	b9 ef f5 fc ce       	mov    $0xcefcf5ef,%ecx
+  57:	b9 6f a6 0e 81       	mov    $0x810ea66f,%ecx
+  5c:	86 6c a2 4b          	xchg   %ch,0x4b(%rdx,%riz,4)
+  60:	44 74 85             	rex.R je ffffffffffffffe8 <kernel+0xffffffffffffffe8>
+  63:	6f                   	outsl  %ds:(%rsi),(%dx)
+  64:	28 82 e5 ba ee 50    	sub    %al,0x50eebae5(%rdx)
+  6a:	20 e9                	and    %ch,%cl
+  6c:	58                   	pop    %rax
+  6d:	80 7e 72 1d          	cmpb   $0x1d,0x72(%rsi)
+  71:	d0 88 85 11 e4 d5    	rorb   -0x2a1bee7b(%rax)
+  77:	a4                   	movsb  %ds:(%rsi),%es:(%rdi)
+  78:	c2 d2 fd             	retq   $0xfdd2
+  7b:	e6 0b                	out    %al,$0xb
+  7d:	6b 70 96 77          	imul   $0x77,-0x6a(%rax),%esi
+  81:	5c                   	pop    %rsp
+  82:	6f                   	outsl  %ds:(%rsi),(%dx)
+  83:	72 05                	jb     8a <.gnu.lto_kernel.4fb0c2b540bcb141+0x8a>
+  85:	ee                   	out    %al,(%dx)
+  86:	53                   	push   %rbx
+  87:	0f d3 8a e8 11 df e6 	psrlq  -0x1920ee18(%rdx),%mm1
+  8e:	c2 4b 0c             	retq   $0xc4b
+  91:	f2 ef                	repnz out %eax,(%dx)
+  93:	6a a7                	pushq  $0xffffffffffffffa7
+  95:	13 35 3b a7 a6 15    	adc    0x15a6a73b(%rip),%esi        # 15a6a7d6 <kernel+0x15a6a7d6>
+  9b:	e0 70                	loopne 10d <.gnu.lto_kernel.4fb0c2b540bcb141+0x10d>
+  9d:	5b                   	pop    %rbx
+  9e:	98                   	cwtl   
+  9f:	af                   	scas   %es:(%rdi),%eax
+  a0:	1f                   	(bad)  
+  a1:	47 a4                	rex.RXB movsb %ds:(%rsi),%es:(%rdi)
+  a3:	b5 e0                	mov    $0xe0,%ch
+  a5:	11 f7                	adc    %esi,%edi
+  a7:	7b 63                	jnp    10c <.gnu.lto_kernel.4fb0c2b540bcb141+0x10c>
+  a9:	8b cf                	mov    %edi,%ecx
+  ab:	a2 2a 02 79 fe d3 dc 	movabs %al,0xa3ddcd3fe79022a
+  b2:	3d 0a 
+  b4:	c5 2b ae             	(bad)
+  b7:	9b                   	fwait
+  b8:	72 bd                	jb     77 <.gnu.lto_kernel.4fb0c2b540bcb141+0x77>
+  ba:	e3 c7                	jrcxz  83 <.gnu.lto_kernel.4fb0c2b540bcb141+0x83>
+  bc:	96                   	xchg   %eax,%esi
+  bd:	bb cc 44 85 3a       	mov    $0x3a8544cc,%ebx
+  c2:	14 43                	adc    $0x43,%al
+  c4:	e1 61                	loope  127 <.gnu.lto_kernel.4fb0c2b540bcb141+0x127>
+  c6:	00 35 0c 10 f1 1a    	add    %dh,0x1af1100c(%rip)        # 1af110d8 <kernel+0x1af110d8>
+  cc:	c3                   	retq   
+  cd:	97                   	xchg   %eax,%edi
+  ce:	10 67 45             	adc    %ah,0x45(%rdi)
+  d1:	31 33                	xor    %esi,(%rbx)
+  d3:	ff 43 a9             	incl   -0x57(%rbx)
+  d6:	98                   	cwtl   
+  d7:	56                   	push   %rsi
+  d8:	3f                   	(bad)  
+  d9:	c8 ad a6 54          	enterq $0xa6ad,$0x54
+  dd:	4b bd 5f 6e ab 5f 5d 	rex.WXB movabs $0xd65ea85d5fab6e5f,%r13
+  e4:	a8 5e d6 
+  e7:	ea                   	(bad)  
+  e8:	8d                   	(bad)  
+  e9:	d9 ca                	fxch   %st(2)
+  eb:	78 48                	js     135 <.gnu.lto_kernel.4fb0c2b540bcb141+0x135>
+  ed:	f5                   	cmc    
+  ee:	6b f5 68             	imul   $0x68,%ebp,%esi
+  f1:	63 af dc f6 5e 9b    	movslq -0x64a10924(%rdi),%ebp
+  f7:	69 ab 5f 5f a8 5e 41 	imul   $0xf3449c41,0x5ea85f5f(%rbx),%ebp
+  fe:	9c 44 f3 
+ 101:	6d                   	insl   (%dx),%es:(%rdi)
+ 102:	e1 a4                	loope  a8 <.gnu.lto_kernel.4fb0c2b540bcb141+0xa8>
+ 104:	10 f5                	adc    %dh,%ch
+ 106:	db ad 99 f1 06 7e    	fldt   0x7e06f199(%rbp)
+ 10c:	3e 45 a2 e7 5b 3e cf 	rex.RB movabs %al,%ds:0x73cd393dcf3e5be7
+ 113:	3d 39 cd 73 
+ 117:	8c 19                	mov    %ds,(%rcx)
+ 119:	2c d8                	sub    $0xd8,%al
+ 11b:	97                   	xchg   %eax,%edi
+ 11c:	c1 32 db             	shll   $0xdb,(%rdx)
+ 11f:	92                   	xchg   %eax,%edx
+ 120:	a2 a4 d8 52 7c 52 fc 	movabs %al,0x252fc527c52d8a4
+ 127:	52 02 
+ 129:	52                   	push   %rdx
+ 12a:	1c 29                	sbb    $0x29,%al
+ 12c:	41 29 21             	sub    %esp,(%r9)
+ 12f:	29 61 29             	sub    %esp,0x29(%rcx)
+ 132:	51                   	push   %rcx
+ 133:	c8 90 31 48          	enterq $0x3190,$0x48
+ 137:	d8 3e                	fdivrs (%rsi)
+ 139:	18 d3                	sbb    %dl,%bl
+ 13b:	ac                   	lods   %ds:(%rsi),%al
+ 13c:	22 39                	and    (%rcx),%bh
+ 13e:	70 1b                	jo     15b <.gnu.lto_kernel.4fb0c2b540bcb141+0x15b>
+ 140:	ae                   	scas   %es:(%rdi),%al
+ 141:	47 34 a6             	rex.RXB xor $0xa6,%al
+ 144:	2c d3                	sub    $0xd3,%al
+ 146:	24 b9                	and    $0xb9,%al
+ 148:	39 40 6a             	cmp    %eax,0x6a(%rax)
+ 14b:	22 bb 7e 4d 42 4c    	and    0x4c424d7e(%rbx),%bh
+ 151:	29 70 b8             	sub    %esi,-0x48(%rax)
+ 154:	5c                   	pop    %rsp
+ 155:	fa                   	cli    
+ 156:	57                   	push   %rdi
+ 157:	c3                   	retq   
+ 158:	91                   	xchg   %eax,%ecx
+ 159:	83 56 7a be          	adcl   $0xffffffbe,0x7a(%rsi)
+ 15d:	f2 6e                	repnz outsb %ds:(%rsi),(%dx)
+ 15f:	ba 1a ac e0 49       	mov    $0x49e0ac1a,%edx
+ 164:	92                   	xchg   %eax,%edx
+ 165:	15 25 9b 87 b3       	adc    $0xb3879b25,%eax
+ 16a:	a7                   	cmpsl  %es:(%rdi),%ds:(%rsi)
+ 16b:	54                   	push   %rsp
+ 16c:	14 ab                	adc    $0xab,%al
+ 16e:	32 14 de             	xor    (%rsi,%rbx,8),%dl
+ 171:	a2 02 03 f8 a9 0c c0 	movabs %al,0xc562c00ca9f80302
+ 178:	62 c5 
+ 17a:	d1 61 e5             	shll   -0x1b(%rcx)
+ 17d:	8b 32                	mov    (%rdx),%esi
+ 17f:	00 79 71             	add    %bh,0x71(%rcx)
+ 182:	9f                   	lahf   
+ 183:	1f                   	(bad)  
+ 184:	56                   	push   %rsi
+ 185:	53                   	push   %rbx
+ 186:	91                   	xchg   %eax,%ecx
+ 187:	0e                   	(bad)  
+ 188:	c0 d2 80             	rcl    $0x80,%dl
+ 18b:	18 de                	sbb    %bl,%dh
+ 18d:	69 c0 fb 0e e0 ab    	imul   $0xabe00efb,%eax,%eax
+ 193:	cf                   	iret   
+ 194:	00 e4                	add    %ah,%ah
+ 196:	0b d9                	or     %ecx,%ebx
+ 198:	29 ed                	sub    %ebp,%ebp
+ 19a:	17                   	(bad)  
+ 19b:	02 06                	add    (%rsi),%al
+ 19d:	d0 cf                	ror    %bh
+ 19f:	ed                   	in     (%dx),%eax
+ 1a0:	e2 c1                	loop   163 <.gnu.lto_kernel.4fb0c2b540bcb141+0x163>
+ 1a2:	f6 b8 dd 01 28 0d    	idivb  0xd2801dd(%rax)
+ 1a8:	e8 c3 9a 06 ac       	callq  ffffffffac069c70 <kernel+0xffffffffac069c70>
+ 1ad:	1b 40 ba             	sbb    -0x46(%rax),%eax
+ 1b0:	9a                   	(bad)  
+ 1b1:	99                   	cltd   
+ 1b2:	6b 01 78             	imul   $0x78,(%rcx),%eax
+ 1b5:	d3 62 8c             	shll   %cl,-0x74(%rdx)
+ 1b8:	2c 16                	sub    $0x16,%al
+ 1ba:	33 73 ad             	xor    -0x53(%rbx),%esi
+ 1bd:	58                   	pop    %rax
+ 1be:	3e 1e                	ds (bad) 
+ 1c0:	8d b7 c4 aa 31 0a    	lea    0xa31aac4(%rdi),%esi
+ 1c6:	59                   	pop    %rcx
+ 1c7:	fb                   	sti    
+ 1c8:	cf                   	iret   
+ 1c9:	64 1b cc             	fs sbb %esp,%ecx
+ 1cc:	65 99                	gs cltd 
+ 1ce:	c9                   	leaveq 
+ 1cf:	76 dd                	jbe    1ae <.gnu.lto_kernel.4fb0c2b540bcb141+0x1ae>
+ 1d1:	40 fc                	rex cld 
+ 1d3:	e7 86                	out    %eax,$0x86
+ 1d5:	69 6b cc 30 1f 5a 59 	imul   $0x595a1f30,-0x34(%rbx),%ebp
+ 1dc:	8a 19                	mov    (%rcx),%bl
+ 1de:	18 41 40             	sbb    %al,0x40(%rcx)
+ 1e1:	a7                   	cmpsl  %es:(%rdi),%ds:(%rsi)
+ 1e2:	f1                   	icebp  
+ 1e3:	77 bb                	ja     1a0 <.gnu.lto_kernel.4fb0c2b540bcb141+0x1a0>
+ 1e5:	f6 22                	mulb   (%rdx)
+ 1e7:	6c                   	insb   (%dx),%es:(%rdi)
+ 1e8:	6a d7                	pushq  $0xffffffffffffffd7
+ 1ea:	80 71 4d 18          	xorb   $0x18,0x4d(%rcx)
+ 1ee:	88 73 ee             	mov    %dh,-0x12(%rbx)
+ 1f1:	04 da                	add    $0xda,%al
+ 1f3:	1a 73 02             	sbb    0x2(%rbx),%dh
+ 1f6:	1f                   	(bad)  
+ 1f7:	cf                   	iret   
+ 1f8:	ba 06 b5 ab d3       	mov    $0xd3abb506,%edx
+ 1fd:	ed                   	in     (%dx),%eax
+ 1fe:	da 8b b0 a5 5d 83    	fimull -0x7ca25a50(%rbx)
+ 204:	c6                   	(bad)  
+ 205:	f5                   	cmc    
+ 206:	9e                   	sahf   
+ 207:	81 84 58 f3 bb ba 99 	addl   $0x10d79b0e,-0x6645440d(%rax,%rbx,2)
+ 20e:	0e 9b d7 10 
+ 212:	e1 b6                	loope  1ca <.gnu.lto_kernel.4fb0c2b540bcb141+0x1ca>
+ 214:	99                   	cltd   
+ 215:	af                   	scas   %es:(%rdi),%eax
+ 216:	d6                   	(bad)  
+ 217:	d5                   	(bad)  
+ 218:	39 c4                	cmp    %eax,%esp
+ 21a:	b6 46                	mov    $0x46,%dh
+ 21c:	7c 3a                	jl     258 <kernel+0x258>
+ 21e:	1b 22                	sbb    (%rdx),%esp
+ 220:	ac                   	lods   %ds:(%rsi),%al
+ 221:	43 84 ba 43 f4 22 ec 	rex.XB test %dil,-0x13dd0bbd(%r10)
+ 228:	e8 10 61 3a 44       	callq  443a633d <kernel+0x443a633d>
+ 22d:	aa                   	stos   %al,%es:(%rdi)
+ 22e:	f4                   	hlt    
+ 22f:	dd d1                	fst    %st(1)
+ 231:	7f 09                	jg     23c <.gnu.lto_kernel.4fb0c2b540bcb141+0x23c>
+ 233:	b9 b2 0a ff be       	mov    $0xbeff0ab2,%ecx
+ 238:	5b                   	pop    %rbx
+ 239:	a2 e0 ad c4 dd 3b 89 	movabs %al,0x57db893bddc4ade0
+ 240:	db 57 
+ 242:	87 09                	xchg   %ecx,(%rcx)
+ 244:	37                   	(bad)  
+ 245:	70 13                	jo     25a <kernel+0x25a>
+ 247:	c3                   	retq   
+ 248:	7f 01                	jg     24b <.gnu.lto_kernel.4fb0c2b540bcb141+0x24b>
+ 24a:	ac                   	lods   %ds:(%rsi),%al
+ 24b:	c7                   	(bad)  
+ 24c:	4d                   	rex.WRB
+ 24d:	d8                   	.byte 0xd8
+
+Disassembly of section .gnu.lto_.symbol_nodes.4fb0c2b540bcb141:
+
+0000000000000000 <.gnu.lto_.symbol_nodes.4fb0c2b540bcb141>:
+   0:	78 9c                	js     ffffffffffffff9e <kernel+0xffffffffffffff9e>
+   2:	e3 60                	jrcxz  64 <kernel+0x64>
+   4:	60                   	(bad)  
+   5:	64 90                	fs nop
+   7:	61                   	(bad)  
+   8:	00 02                	add    %al,(%rdx)
+   a:	26 86 7a 86          	xchg   %bh,%es:-0x7a(%rdx)
+   e:	06                   	(bad)  
+   f:	20 60 61             	and    %ah,0x61(%rax)
+  12:	9c                   	pushfq 
+  13:	70 8e                	jo     ffffffffffffffa3 <kernel+0xffffffffffffffa3>
+  15:	01 c8                	add    %ecx,%eax
+  17:	66 d8 d5             	data16 fcom %st(5)
+  1a:	e0 08                	loopne 24 <kernel+0x24>
+  1c:	94                   	xchg   %eax,%esp
+  1d:	03 01                	add    (%rcx),%eax
+  1f:	00 67 96             	add    %ah,-0x6a(%rdi)
+  22:	06                   	(bad)  
+  23:	05                   	.byte 0x5
+
+Disassembly of section .gnu.lto_.refs.4fb0c2b540bcb141:
+
+0000000000000000 <.gnu.lto_.refs.4fb0c2b540bcb141>:
+   0:	78 9c                	js     ffffffffffffff9e <kernel+0xffffffffffffff9e>
+   2:	e3 60                	jrcxz  64 <kernel+0x64>
+   4:	60                   	(bad)  
+   5:	04 42                	add    $0x42,%al
+   7:	20 00                	and    %al,(%rax)
+   9:	00 00                	add    %al,(%rax)
+   b:	5d                   	pop    %rbp
+   c:	00 0b                	add    %cl,(%rbx)
+
+Disassembly of section .gnu.lto_.decls.4fb0c2b540bcb141:
+
+0000000000000000 <.gnu.lto_.decls.4fb0c2b540bcb141>:
+   0:	78 9c                	js     ffffffffffffff9e <kernel+0xffffffffffffff9e>
+   2:	85 52 41             	test   %edx,0x41(%rdx)
+   5:	6b 13 41             	imul   $0x41,(%rbx),%edx
+   8:	14 7e                	adc    $0x7e,%al
+   a:	df cc                	(bad)  
+   c:	66 dd c4             	data16 ffree %st(4)
+   f:	55                   	push   %rbp
+  10:	6a 29                	pushq  $0x29
+  12:	f6 10                	notb   (%rax)
+  14:	c4                   	(bad)  
+  15:	d2 8b 5e 6c b3 54    	rorb   %cl,0x54b36c5e(%rbx)
+  1b:	62                   	(bad)  
+  1c:	c9                   	leaveq 
+  1d:	c1 8b 07 11 ac 37 7f 	rorl   $0x7f,0x37ac1107(%rbx)
+  24:	41 0d 22 86 0a 3d    	rex.B or $0x3d0a8622,%eax
+  2a:	e9 6d 36 b6 a0       	jmpq   ffffffffa0b6369c <kernel+0xffffffffa0b6369c>
+  2f:	a5                   	movsl  %ds:(%rsi),%es:(%rdi)
+  30:	08 56 57             	or     %dl,0x57(%rsi)
+  33:	53                   	push   %rbx
+  34:	90                   	nop
+  35:	d8 5b 41             	fcomps 0x41(%rbx)
+  38:	f0 da de             	lock fcmovu %st(6),%st
+  3b:	4c d2 56 ab          	rex.WR rclb %cl,-0x55(%rsi)
+  3f:	01 05 0f 52 3c 98    	add    %eax,-0x67c3adf1(%rip)        # ffffffff983c5254 <kernel+0xffffffff983c5254>
+  45:	6e                   	outsb  %ds:(%rsi),(%dx)
+  46:	3c 78                	cmp    $0x78,%al
+  48:	2a e8                	sub    %al,%ch
+  4a:	49 2f                	rex.WB (bad) 
+  4c:	42 7c 33             	rex.X jl 82 <.gnu.lto_.decls.4fb0c2b540bcb141+0x82>
+  4f:	93                   	xchg   %eax,%ebx
+  50:	4d 5a                	rex.WRB pop %r10
+  52:	3d f8 98 b7 ef       	cmp    $0xefb798f8,%eax
+  57:	cd f7                	int    $0xf7
+  59:	de fb                	fdivrp %st,%st(3)
+  5b:	e6 cd                	out    %al,$0xcd
+  5d:	9b                   	fwait
+  5e:	f5                   	cmc    
+  5f:	08 f4                	or     %dh,%ah
+  61:	50                   	push   %rax
+  62:	10 5d 22             	adc    %bl,0x22(%rbp)
+  65:	a2 6b ac 1d 16 de d2 	movabs %al,0x5667d2de161dac6b
+  6c:	67 56 
+  6e:	b0 d6                	mov    $0xd6,%al
+  70:	c9                   	leaveq 
+  71:	8a f6                	mov    %dh,%dh
+  73:	9b                   	fwait
+  74:	f4                   	hlt    
+  75:	af                   	scas   %es:(%rdi),%eax
+  76:	44 1c 48             	rex.R sbb $0x48,%al
+  79:	b1 2d                	mov    $0x2d,%cl
+  7b:	b1 0e                	mov    $0xe,%cl
+  7d:	b2 0e                	mov    $0xe,%dl
+  7f:	75 6b                	jne    ec <.gnu.lto_.decls.4fb0c2b540bcb141+0xec>
+  81:	a6                   	cmpsb  %es:(%rdi),%ds:(%rsi)
+  82:	fe                   	(bad)  
+  83:	53                   	push   %rbx
+  84:	f7 54 a2 d6          	notl   -0x2a(%rdx,%riz,4)
+  88:	79 52                	jns    dc <.gnu.lto_.decls.4fb0c2b540bcb141+0xdc>
+  8a:	73 1e                	jae    aa <.gnu.lto_.decls.4fb0c2b540bcb141+0xaa>
+  8c:	48 0c 66             	rex.W or $0x66,%al
+  8f:	e0 f1                	loopne 82 <.gnu.lto_.decls.4fb0c2b540bcb141+0x82>
+  91:	36 7a d1             	ss jp  65 <.gnu.lto_.decls.4fb0c2b540bcb141+0x65>
+  94:	f8                   	clc    
+  95:	ed                   	in     (%dx),%eax
+  96:	f3 76 28             	repz jbe c1 <.gnu.lto_.decls.4fb0c2b540bcb141+0xc1>
+  99:	83 ba 0e 3f 5e ae ee 	cmpl   $0xffffffee,-0x51a1c0f2(%rdx)
+  a0:	ba fe 82 52 65       	mov    $0x655282fe,%edx
+  a5:	b5 52                	mov    $0x52,%ch
+  a7:	0e                   	(bad)  
+  a8:	8f 85 01 a6 0e a3    	popq   -0x5cf159ff(%rbp)
+  ae:	86 2c 5e             	xchg   %ch,(%rsi,%rbx,2)
+  b1:	21 cb                	and    %ecx,%ebx
+  b3:	bc 97 7d cd 5e       	mov    $0x5ecd7d97,%esp
+  b8:	87 cf                	xchg   %ecx,%edi
+  ba:	a9 cb bf e6 ee       	test   $0xeee6bfcb,%eax
+  bf:	a7                   	cmpsl  %es:(%rdi),%ds:(%rsi)
+  c0:	db d8                	fcmovnu %st(0),%st
+  c2:	85 d4                	test   %edx,%esp
+  c4:	18 04 5c             	sbb    %al,(%rsp,%rbx,2)
+  c7:	9c                   	pushfq 
+  c8:	84 cb                	test   %cl,%bl
+  ca:	1e                   	(bad)  
+  cb:	60                   	(bad)  
+  cc:	7a d0                	jp     9e <.gnu.lto_.decls.4fb0c2b540bcb141+0x9e>
+  ce:	d6                   	(bad)  
+  cf:	f8                   	clc    
+  d0:	5a                   	pop    %rdx
+  d1:	3b 89 c0 e2 8c 0a    	cmp    0xa8ce2c0(%rcx),%ecx
+  d7:	1d 36 ad 22 c9       	sbb    $0xc922ad36,%eax
+  dc:	4d 84 7a 96          	rex.WRB test %r15b,-0x6a(%r10)
+  e0:	44 97                	rex.R xchg %eax,%edi
+  e2:	45 d8 6b 59          	rex.RB fsubrs 0x59(%r11)
+  e6:	42 bd d0 5d d8 47    	rex.X mov $0x47d85dd0,%ebp
+  ec:	dd e3                	fucom  %st(3)
+  ee:	22 f4                	and    %ah,%dh
+  f0:	49                   	rex.WB
+  f1:	4d a1 30 07 d9 e1 a0 	rex.WRB movabs 0x62644ba0e1d90730,%rax
+  f8:	4b 64 62 
+  fb:	42 7f f7             	rex.X jg f5 <.gnu.lto_.decls.4fb0c2b540bcb141+0xf5>
+  fe:	77 47                	ja     147 <.gnu.lto_.decls.4fb0c2b540bcb141+0x147>
+ 100:	07                   	(bad)  
+ 101:	3a 39                	cmp    (%rcx),%bh
+ 103:	c8 ff 57 9b          	enterq $0x57ff,$0x9b
+ 107:	fd                   	std    
+ 108:	ab                   	stos   %eax,%es:(%rdi)
+ 109:	1a 62 81             	sbb    -0x7f(%rdx),%ah
+ 10c:	64 c8 8d 6a a5       	fs enterq $0x6a8d,$0xa5
+ 111:	8a af 88 43 a5 54    	mov    0x54a54388(%rdi),%ch
+ 117:	9c                   	pushfq 
+ 118:	3a 4f 3c             	cmp    0x3c(%rdi),%cl
+ 11b:	4d 55                	rex.WRB push %r13
+ 11d:	be a7 5a 03 a6       	mov    $0xa6035aa7,%esi
+ 122:	31 9d 24 4d aa ab    	xor    %ebx,-0x5455b2dc(%rbp)
+ 128:	94                   	xchg   %eax,%esp
+ 129:	c3                   	retq   
+ 12a:	e6 04                	out    %al,$0x4
+ 12c:	24 8e                	and    $0x8e,%al
+ 12e:	10 9d 86 bf f9 51    	adc    %bl,0x51f9bf86(%rbp)
+ 134:	c5 62 89             	(bad)
+ 137:	b3 97                	mov    $0x97,%bl
+ 139:	9a                   	(bad)  
+ 13a:	3a 5b 18             	cmp    0x18(%rbx),%bl
+ 13d:	b6 2f                	mov    $0x2f,%dh
+ 13f:	df be af 4b 79 0a    	fistpll 0xa794baf(%rsi)
+ 145:	da ff                	(bad)  
+ 147:	b0 da                	mov    $0xda,%al
+ 149:	9a                   	(bad)  
+ 14a:	cb                   	lret   
+ 14b:	c8 31 e3 df          	enterq $0xe331,$0xdf
+ 14f:	dd 7a d6             	fnstsw -0x2a(%rdx)
+ 152:	4e 8f                	rex.WRX (bad) 
+ 154:	bf 54 56 bc 5b       	mov    $0x5bbc5654,%edi
+ 159:	84 2d c8 fe 4b 2f    	test   %ch,0x2f4bfec8(%rip)        # 2f4c0027 <kernel+0x2f4c0027>
+ 15f:	ac                   	lods   %ds:(%rsi),%al
+ 160:	6e                   	outsb  %ds:(%rsi),(%dx)
+ 161:	ac                   	lods   %ds:(%rsi),%al
+ 162:	1f                   	(bad)  
+ 163:	75 84                	jne    e9 <.gnu.lto_.decls.4fb0c2b540bcb141+0xe9>
+ 165:	7d 2f                	jge    196 <.gnu.lto_.decls.4fb0c2b540bcb141+0x196>
+ 167:	dc 71 34             	fdivl  0x34(%rcx)
+ 16a:	b6 b3                	mov    $0xb3,%dh
+ 16c:	a8 d6                	test   $0xd6,%al
+ 16e:	64 0f 7b             	fs (bad) 
+ 171:	03 03                	add    (%rbx),%eax
+ 173:	b6 f6                	mov    $0xf6,%dh
+ 175:	f6 d6                	not    %dh
+ 177:	fc                   	cld    
+ 178:	1e                   	(bad)  
+ 179:	b8 6d c1 e7 8f       	mov    $0x8fe7c16d,%eax
+ 17e:	a2 f9 f4 70 a4 99 7f 	movabs %al,0x6a847f99a470f4f9
+ 185:	84 6a 
+ 187:	00 28                	add    %ch,(%rax)
+ 189:	1d c7 44 16 39       	sbb    $0x391644c7,%eax
+ 18e:	fd                   	std    
+ 18f:	17                   	(bad)  
+ 190:	bc c3 30 e1 2d       	mov    $0x2de130c3,%esp
+ 195:	1c 7b                	sbb    $0x7b,%al
+ 197:	4e f4                	rex.WRX hlt 
+ 199:	e9 fd 4e 6a 74       	jmpq   746a509b <kernel+0x746a509b>
+ 19e:	45 c5 b1 aa          	(bad)
+ 1a2:	6f                   	outsl  %ds:(%rsi),(%dx)
+ 1a3:	57                   	push   %rdi
+ 1a4:	fc                   	cld    
+ 1a5:	9f                   	lahf   
+ 1a6:	a1 aa 70 d1 88 ce c2 	movabs 0xdf26c2ce88d170aa,%eax
+ 1ad:	26 df 
+ 1af:	ec                   	in     (%dx),%al
+ 1b0:	35 c6 cd 90 d8       	xor    $0xd890cdc6,%eax
+ 1b5:	27                   	(bad)  
+ 1b6:	6c                   	insb   (%dx),%es:(%rdi)
+ 1b7:	f0 58                	lock pop %rax
+ 1b9:	d0 40 5b             	rolb   0x5b(%rax)
+ 1bc:	bf 40 13 a3 24       	mov    $0x24a31340,%edi
+ 1c1:	83 3c 79 41          	cmpl   $0x41,(%rcx,%rdi,2)
+ 1c5:	be 10 04 85 49       	mov    $0x49850410,%esi
+ 1ca:	72 73                	jb     23f <kernel+0x23f>
+ 1cc:	85 1c 9b             	test   %ebx,(%rbx,%rbx,4)
+ 1cf:	43 b7 27             	rex.XB mov $0x27,%r15b
+ 1d2:	f3 67 f2 67 c9       	repz addr32 repnz addr32 leaveq 
+ 1d7:	bb 5e 9c 29 ce       	mov    $0xce299c5e,%ebx
+ 1dc:	de 98 26 f7 66 71    	ficomps 0x7166f726(%rax)
+ 1e2:	76 a6                	jbe    18a <.gnu.lto_.decls.4fb0c2b540bcb141+0x18a>
+ 1e4:	58                   	pop    %rax
+ 1e5:	f2 ac                	repnz lods %ds:(%rsi),%al
+ 1e7:	19 9b f6 2e 5e b9    	sbb    %ebx,-0x46a1d10a(%rbx)
+ 1ed:	3a 72 21             	cmp    0x21(%rdx),%dh
+ 1f0:	38 47 e9             	cmp    %al,-0x17(%rdi)
+ 1f3:	04 a1                	add    $0xa1,%al
+ 1f5:	3f                   	(bad)  
+ 1f6:	7d cb                	jge    1c3 <.gnu.lto_.decls.4fb0c2b540bcb141+0x1c3>
+ 1f8:	b0 ba                	mov    $0xba,%al
+
+Disassembly of section .gnu.lto_.symtab.4fb0c2b540bcb141:
+
+0000000000000000 <.gnu.lto_.symtab.4fb0c2b540bcb141>:
+   0:	6b 65 72 6e          	imul   $0x6e,0x72(%rbp),%esp
+   4:	65 6c                	gs insb (%dx),%es:(%rdi)
+	...
+  12:	ca 00 00             	lret   $0x0
+	...
+
+Disassembly of section .gnu.lto_.opts:
+
+0000000000000000 <.gnu.lto_.opts>:
+   0:	27                   	(bad)  
+   1:	2d 66 6e 6f 2d       	sub    $0x2d6f6e66,%eax
+   6:	6f                   	outsl  %ds:(%rsi),(%dx)
+   7:	70 65                	jo     6e <kernel+0x6e>
+   9:	6e                   	outsb  %ds:(%rsi),(%dx)
+   a:	6d                   	insl   (%dx),%es:(%rdi)
+   b:	70 27                	jo     34 <.gnu.lto_.opts+0x34>
+   d:	20 27                	and    %ah,(%rdi)
+   f:	2d 66 6e 6f 2d       	sub    $0x2d6f6e66,%eax
+  14:	6f                   	outsl  %ds:(%rsi),(%dx)
+  15:	70 65                	jo     7c <kernel+0x7c>
+  17:	6e                   	outsb  %ds:(%rsi),(%dx)
+  18:	61                   	(bad)  
+  19:	63 63 27             	movslq 0x27(%rbx),%esp
+  1c:	20 27                	and    %ah,(%rdi)
+  1e:	2d 66 6e 6f 2d       	sub    $0x2d6f6e66,%eax
+  23:	70 69                	jo     8e <kernel+0x8e>
+  25:	65 27                	gs (bad) 
+  27:	20 27                	and    %ah,(%rdi)
+  29:	2d 6d 66 6d 61       	sub    $0x616d666d,%eax
+  2e:	27                   	(bad)  
+  2f:	20 27                	and    %ah,(%rdi)
+  31:	2d 6d 74 75 6e       	sub    $0x6e75746d,%eax
+  36:	65 3d 67 65 6e 65    	gs cmp $0x656e6567,%eax
+  3c:	72 69                	jb     a7 <kernel+0xa7>
+  3e:	63 27                	movslq (%rdi),%esp
+  40:	20 27                	and    %ah,(%rdi)
+  42:	2d 6d 61 72 63       	sub    $0x6372616d,%eax
+  47:	68 3d 78 38 36       	pushq  $0x3638783d
+  4c:	2d 36 34 27 20       	sub    $0x20273436,%eax
+  51:	27                   	(bad)  
+  52:	2d 4f 33 27 20       	sub    $0x2027334f,%eax
+  57:	27                   	(bad)  
+  58:	2d 66 6c 74 6f       	sub    $0x6f746c66,%eax
+  5d:	27                   	(bad)  
+	...
+
+Disassembly of section .comment:
+
+0000000000000000 <.comment>:
+   0:	00 47 43             	add    %al,0x43(%rdi)
+   3:	43 3a 20             	rex.XB cmp (%r8),%spl
+   6:	28 47 4e             	sub    %al,0x4e(%rdi)
+   9:	55                   	push   %rbp
+   a:	29 20                	sub    %esp,(%rax)
+   c:	39 2e                	cmp    %ebp,(%rsi)
+   e:	33 2e                	xor    (%rsi),%ebp
+  10:	30 00                	xor    %al,(%rax)
+
+Disassembly of section .eh_frame:
+
+0000000000000000 <.eh_frame>:
+   0:	14 00                	adc    $0x0,%al
+   2:	00 00                	add    %al,(%rax)
+   4:	00 00                	add    %al,(%rax)
+   6:	00 00                	add    %al,(%rax)
+   8:	01 7a 52             	add    %edi,0x52(%rdx)
+   b:	00 01                	add    %al,(%rcx)
+   d:	78 10                	js     1f <.eh_frame+0x1f>
+   f:	01 1b                	add    %ebx,(%rbx)
+  11:	0c 07                	or     $0x7,%al
+  13:	08 90 01 00 00 14    	or     %dl,0x14000001(%rax)
+  19:	00 00                	add    %al,(%rax)
+  1b:	00 1c 00             	add    %bl,(%rax,%rax,1)
+  1e:	00 00                	add    %al,(%rax)
+  20:	00 00                	add    %al,(%rax)
+  22:	00 00                	add    %al,(%rax)
+  24:	41 00 00             	add    %al,(%r8)
+	...

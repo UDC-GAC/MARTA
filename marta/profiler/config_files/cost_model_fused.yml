@@ -1,0 +1,202 @@
+- kernel:
+      name: "cost_model"
+      path: "kernels/cost_model"
+      description: "Setup for experiment cost_model"
+      debug: False
+      show_progress_bars: True
+      preamble:
+          command: "rm -Rf bin asm_codes && sudo cpupower frequency-set -u 2.1GHz && sudo cpupower frequency-set -d 2.1GHz"
+      finalize:
+          clean_tmp_files: False
+          clean_asm_files: False
+          clean_bin_files: False
+          command: "echo 'alright!'"
+      compilation:
+          enabled: True
+          processes: 4
+          language: "C"
+          compiler_flags: 
+            { 
+                "gcc": " -mtune=cascadelake ",
+                #"icc": " -mtune=cascadelake ",
+            }
+          common_flags: " -mfma -mavx2 "
+          inlined_kernel: True
+          asm_syntax: "intel"
+          asm_analysis: False
+          debug: False
+      configuration:
+          kernel_cfg: [
+#   # Cases for 4 elements 1CL
+#   "-DV_LEN=4 -DX_N=4 -DCL=1 -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=2 -DX_IDX_D=3",
+#   "-DV_LEN=4 -DX_N=4 -DCL=1 -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=4 -DX_IDX_D=5",
+#   "-DV_LEN=4 -DX_N=4 -DCL=1 -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=2 -DX_IDX_D=7",
+#   "-DV_LEN=4 -DX_N=4 -DCL=1 -DX_IDX_A=0 -DX_IDX_B=3 -DX_IDX_C=5 -DX_IDX_D=7",
+#     # Cases for 4 elements 2CL
+#   "-DV_LEN=4 -DX_N=4 -DCL=2 -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=16 -DX_IDX_D=17",
+#   "-DV_LEN=4 -DX_N=4 -DCL=2 -DX_IDX_A=0 -DX_IDX_B=4 -DX_IDX_C=16 -DX_IDX_D=17",
+#   "-DV_LEN=4 -DX_N=4 -DCL=2 -DX_IDX_A=3 -DX_IDX_B=4 -DX_IDX_C=5 -DX_IDX_D=17",
+#   "-DV_LEN=4 -DX_N=4 -DCL=2 -DX_IDX_A=3 -DX_IDX_B=17 -DX_IDX_C=18 -DX_IDX_D=19",
+#   "-DV_LEN=4 -DX_N=4 -DCL=2 -DX_IDX_A=0 -DX_IDX_B=4 -DX_IDX_C=16 -DX_IDX_D=20",
+#   "-DV_LEN=4 -DX_N=4 -DCL=2 -DX_IDX_A=0 -DX_IDX_B=16 -DX_IDX_C=4 -DX_IDX_D=20",
+#   # Cases for 4 elements 3CL
+#   "-DV_LEN=4 -DX_N=4 -DCL=3 -DX_IDX_A=0 -DX_IDX_B=16 -DX_IDX_C=42
+#   -DX_IDX_D=43",
+#   "-DV_LEN=4 -DX_N=4 -DCL=3 -DX_IDX_A=0 -DX_IDX_B=16 -DX_IDX_C=42 -DX_IDX_D=44",
+#   "-DV_LEN=4 -DX_N=4 -DCL=3 -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=29 -DX_IDX_D=35",
+#   "-DV_LEN=4 -DX_N=4 -DCL=3 -DX_IDX_A=0 -DX_IDX_B=17 -DX_IDX_C=18
+#   -DX_IDX_D=52",
+#   "-DV_LEN=4 -DX_N=4 -DCL=3 -DX_IDX_A=0 -DX_IDX_B=17 -DX_IDX_C=51 -DX_IDX_D=52",
+#   # Cases for 4 elements 4CL
+#   "-DV_LEN=4 -DX_N=4 -DCL=4 -DX_IDX_A=0 -DX_IDX_B=36 -DX_IDX_C=60
+#   -DX_IDX_D=99",
+#   "-DV_LEN=4 -DX_N=4 -DCL=4 -DX_IDX_A=99 -DX_IDX_B=0 -DX_IDX_C=60
+#   -DX_IDX_D=36",
+# CL 1,0
+"-DFUSED_OP -DV_LEN=4 -DX_N=4 -DCL0=1 -DCL1=0 -DX0_IDX_A=0 -DX0_IDX_B=1 -DX0_IDX_C=2
+-DX0_IDX_D=3 -DX1_IDX_A=4 -DX1_IDX_B=5 -DX1_IDX_C=6 -DX1_IDX_D=7",
+"-DV_LEN=4 -DX_N=4 -DCL0=1 -DCL1=0 -DX0_IDX_A=0 -DX0_IDX_B=1 -DX0_IDX_C=2
+-DX0_IDX_D=3 -DX1_IDX_A=4 -DX1_IDX_B=5 -DX1_IDX_C=6 -DX1_IDX_D=7",
+# # CL 1,1
+"-DONLY_ONE_128BITS -DV_LEN=4 -DX_N=4 -DCL0=1 -DCL1=0 -DX0_IDX_A=0 -DX0_IDX_B=1 -DX0_IDX_C=2
+-DX0_IDX_D=3",
+# "-DFUSED_OP -DV_LEN=4 -DX_N=4 -DCL0=1 -DCL1=1 -DX0_IDX_A=0 -DX0_IDX_B=1 -DX0_IDX_C=2
+# -DX0_IDX_D=3 -DX1_IDX_A=16 -DX1_IDX_B=17 -DX1_IDX_C=18 -DX1_IDX_D=19",
+# "-DV_LEN=4 -DX_N=4 -DCL0=1 -DCL1=1 -DX0_IDX_A=0 -DX0_IDX_B=1 -DX0_IDX_C=2
+# -DX0_IDX_D=3 -DX1_IDX_A=16 -DX1_IDX_B=17 -DX1_IDX_C=18 -DX1_IDX_D=19",
+# # CL 1,2
+# "-DFUSED_OP -DV_LEN=4 -DX_N=4 -DCL0=1 -DCL1=2 -DX0_IDX_A=0 -DX0_IDX_B=1 -DX0_IDX_C=2
+# -DX0_IDX_D=3 -DX1_IDX_A=16 -DX1_IDX_B=17 -DX1_IDX_C=32 -DX1_IDX_D=33",
+# "-DV_LEN=4 -DX_N=4 -DCL0=1 -DCL1=2 -DX0_IDX_A=0 -DX0_IDX_B=1 -DX0_IDX_C=2
+# -DX0_IDX_D=3 -DX1_IDX_A=16 -DX1_IDX_B=17 -DX1_IDX_C=32 -DX1_IDX_D=33",
+# # CL 1,3
+# "-DFUSED_OP -DV_LEN=4 -DX_N=4 -DCL0=1 -DCL1=3 -DX0_IDX_A=0 -DX0_IDX_B=1 -DX0_IDX_C=2
+# -DX0_IDX_D=3 -DX1_IDX_A=16 -DX1_IDX_B=17 -DX1_IDX_C=32 -DX1_IDX_D=48",
+# "-DV_LEN=4 -DX_N=4 -DCL0=1 -DCL1=3 -DX0_IDX_A=0 -DX0_IDX_B=1 -DX0_IDX_C=2
+# -DX0_IDX_D=3 -DX1_IDX_A=16 -DX1_IDX_B=17 -DX1_IDX_C=32 -DX1_IDX_D=48",
+# # CL 1,4
+# "-DFUSED_OP -DV_LEN=4 -DX_N=4 -DCL0=1 -DCL1=4 -DX0_IDX_A=0 -DX0_IDX_B=1 -DX0_IDX_C=2
+# -DX0_IDX_D=3 -DX1_IDX_A=16 -DX1_IDX_B=32 -DX1_IDX_C=48 -DX1_IDX_D=64",
+# "-DV_LEN=4 -DX_N=4 -DCL0=1 -DCL1=4 -DX0_IDX_A=0 -DX0_IDX_B=1 -DX0_IDX_C=2
+# -DX0_IDX_D=3 -DX1_IDX_A=16 -DX1_IDX_B=32 -DX1_IDX_C=48 -DX1_IDX_D=64",
+
+# CL 2,1
+"-DONLY_ONE_128BITS -DV_LEN=4 -DX_N=4 -DCL0=2 -DCL1=1 -DX0_IDX_A=0 -DX0_IDX_B=1 -DX0_IDX_C=128
+-DX0_IDX_D=129",
+# "-DFUSED_OP -DV_LEN=4 -DX_N=4 -DCL0=2 -DCL1=1 -DX0_IDX_A=0 -DX0_IDX_B=1 -DX0_IDX_C=128
+# -DX0_IDX_D=129 -DX1_IDX_A=16 -DX1_IDX_B=17 -DX1_IDX_C=18 -DX1_IDX_D=19",
+# "-DV_LEN=4 -DX_N=4 -DCL0=2 -DCL1=1 -DX0_IDX_A=0 -DX0_IDX_B=1 -DX0_IDX_C=128
+# -DX0_IDX_D=129 -DX1_IDX_A=16 -DX1_IDX_B=17 -DX1_IDX_C=18 -DX1_IDX_D=19",
+# # CL 2,2
+# "-DFUSED_OP -DV_LEN=4 -DX_N=4 -DCL0=2 -DCL1=2 -DX0_IDX_A=0 -DX0_IDX_B=1 -DX0_IDX_C=128
+# -DX0_IDX_D=129 -DX1_IDX_A=16 -DX1_IDX_B=17 -DX1_IDX_C=32 -DX1_IDX_D=33",
+# "-DV_LEN=4 -DX_N=4 -DCL0=2 -DCL1=2 -DX0_IDX_A=0 -DX0_IDX_A=0 -DX0_IDX_B=1 -DX0_IDX_C=128
+# -DX0_IDX_D=129 -DX1_IDX_A=16 -DX1_IDX_B=17 -DX1_IDX_C=32 -DX1_IDX_D=33",
+# # CL 2,3
+# "-DFUSED_OP -DV_LEN=4 -DX_N=4 -DCL0=2 -DCL1=3 -DX0_IDX_A=0 -DX0_IDX_B=1 -DX0_IDX_C=128
+# -DX0_IDX_D=129 -DX1_IDX_A=16 -DX1_IDX_B=17 -DX1_IDX_C=32 -DX1_IDX_D=48",
+# "-DV_LEN=4 -DX_N=4 -DCL0=2 -DCL1=3 -DX0_IDX_A=0 -DX0_IDX_B=1 -DX0_IDX_C=128
+# -DX0_IDX_D=129 -DX1_IDX_A=16 -DX1_IDX_B=17 -DX1_IDX_C=32 -DX1_IDX_D=48",
+# # CL 2,4
+# "-DFUSED_OP -DV_LEN=4 -DX_N=4 -DCL0=2 -DCL1=4 -DX0_IDX_A=0 -DX0_IDX_B=1 -DX0_IDX_C=128
+# -DX0_IDX_D=129 -DX1_IDX_A=16 -DX1_IDX_B=32 -DX1_IDX_C=48 -DX1_IDX_D=64",
+# "-DV_LEN=4 -DX_N=4 -DCL0=2 -DCL1=4 -DX0_IDX_A=0 -DX0_IDX_B=1 -DX0_IDX_C=128
+# -DX0_IDX_D=129 -DX1_IDX_A=16 -DX1_IDX_B=32 -DX1_IDX_C=48 -DX1_IDX_D=64",
+
+# CL 3,1
+"-DONLY_ONE_128BITS -DV_LEN=4 -DX_N=4 -DCL0=2 -DCL1=1 -DX0_IDX_A=0 -DX0_IDX_B=1 -DX0_IDX_C=128
+-DX0_IDX_D=192",
+# "-DFUSED_OP -DV_LEN=4 -DX_N=4 -DCL0=3 -DCL1=1 -DX0_IDX_A=0 -DX0_IDX_B=1 -DX0_IDX_C=128
+# -DX0_IDX_D=192 -DX1_IDX_A=16 -DX1_IDX_B=17 -DX1_IDX_C=18 -DX1_IDX_D=19",
+# "-DV_LEN=4 -DX_N=4 -DCL0=3 -DCL1=1 -DX0_IDX_A=0 -DX0_IDX_B=1 -DX0_IDX_C=128
+# -DX0_IDX_D=192 -DX1_IDX_A=16 -DX1_IDX_B=17 -DX1_IDX_C=18 -DX1_IDX_D=19",
+
+# CL 3,2
+# "-DFUSED_OP -DV_LEN=4 -DX_N=4 -DCL0=3 -DCL1=2 -DX0_IDX_A=0 -DX0_IDX_B=1 -DX0_IDX_C=128
+# -DX0_IDX_D=192 -DX1_IDX_A=16 -DX1_IDX_B=17 -DX1_IDX_C=32 -DX1_IDX_D=33",
+# "-DV_LEN=4 -DX_N=4 -DCL0=3 -DCL1=2 -DX0_IDX_A=0 -DX0_IDX_A=0 -DX0_IDX_B=1 -DX0_IDX_C=128
+# -DX0_IDX_D=192 -DX1_IDX_A=16 -DX1_IDX_B=17 -DX1_IDX_C=32 -DX1_IDX_D=33",
+# # CL 3,3
+# "-DFUSED_OP -DV_LEN=4 -DX_N=4 -DCL0=3 -DCL1=3 -DX0_IDX_A=0 -DX0_IDX_B=1 -DX0_IDX_C=128
+# -DX0_IDX_D=192 -DX1_IDX_A=16 -DX1_IDX_B=17 -DX1_IDX_C=32 -DX1_IDX_D=48",
+# "-DV_LEN=4 -DX_N=4 -DCL0=3 -DCL1=3 -DX0_IDX_A=0 -DX0_IDX_B=1 -DX0_IDX_C=128
+# -DX0_IDX_D=192 -DX1_IDX_A=16 -DX1_IDX_B=17 -DX1_IDX_C=32 -DX1_IDX_D=48",
+# # CL 3,4
+# "-DFUSED_OP -DV_LEN=4 -DX_N=4 -DCL0=3 -DCL1=4 -DX0_IDX_A=0 -DX0_IDX_B=1 -DX0_IDX_C=128
+# -DX0_IDX_D=192 -DX1_IDX_A=16 -DX1_IDX_B=32 -DX1_IDX_C=48 -DX1_IDX_D=64",
+# "-DV_LEN=4 -DX_N=4 -DCL0=3 -DCL1=4 -DX0_IDX_A=0 -DX0_IDX_B=1 -DX0_IDX_C=128
+# -DX0_IDX_D=192 -DX1_IDX_A=16 -DX1_IDX_B=32 -DX1_IDX_C=48 -DX1_IDX_D=64",
+
+# CL 4,1
+# "-DFUSED_OP -DV_LEN=4 -DX_N=4 -DCL0=4 -DCL1=1 -DX0_IDX_A=0 -DX0_IDX_B=128 -DX0_IDX_C=192
+# -DX0_IDX_D=208 -DX1_IDX_A=16 -DX1_IDX_B=17 -DX1_IDX_C=18 -DX1_IDX_D=19",
+# "-DV_LEN=4 -DX_N=4 -DCL0=4 -DCL1=1 -DX0_IDX_A=0 -DX0_IDX_B=128 -DX0_IDX_C=192
+# -DX0_IDX_D=208 -DX1_IDX_A=16 -DX1_IDX_B=17 -DX1_IDX_C=18 -DX1_IDX_D=19",
+"-DONLY_ONE_128BITS -DV_LEN=4 -DX_N=4 -DCL0=2 -DCL1=1 -DX0_IDX_A=0 -DX0_IDX_B=128 -DX0_IDX_C=192
+-DX0_IDX_D=208",
+# CL 4,2
+# "-DFUSED_OP -DV_LEN=4 -DX_N=4 -DCL0=4 -DCL1=2 -DX0_IDX_A=0 -DX0_IDX_B=128 -DX0_IDX_C=192
+# -DX0_IDX_D=208 -DX1_IDX_A=16 -DX1_IDX_B=17 -DX1_IDX_C=32 -DX1_IDX_D=33",
+# "-DV_LEN=4 -DX_N=4 -DCL0=4 -DCL1=2 -DX0_IDX_A=0 -DX0_IDX_B=128 -DX0_IDX_C=192
+# -DX0_IDX_D=208 -DX1_IDX_A=16 -DX1_IDX_B=17 -DX1_IDX_C=32 -DX1_IDX_D=33",
+# # CL 4,3
+# "-DFUSED_OP -DV_LEN=4 -DX_N=4 -DCL0=4 -DCL1=3 -DX0_IDX_A=0 -DX0_IDX_B=128 -DX0_IDX_C=192
+# -DX0_IDX_D=208 -DX1_IDX_A=16 -DX1_IDX_B=17 -DX1_IDX_C=32 -DX1_IDX_D=48",
+# "-DV_LEN=4 -DX_N=4 -DCL0=4 -DCL1=3 -DX0_IDX_A=0 -DX0_IDX_B=128 -DX0_IDX_C=192
+# -DX0_IDX_D=208 -DX1_IDX_A=16 -DX1_IDX_B=17 -DX1_IDX_C=32 -DX1_IDX_D=48",
+# # CL 4,4
+# "-DFUSED_OP -DV_LEN=4 -DX_N=4 -DCL0=4 -DCL1=4 -DX0_IDX_A=0 -DX0_IDX_A=0 -DX0_IDX_B=128 -DX0_IDX_C=192
+# -DX0_IDX_D=208 -DX1_IDX_A=16 -DX1_IDX_B=32 -DX1_IDX_C=48 -DX1_IDX_D=64",
+# "-DV_LEN=4 -DX_N=4 -DCL0=4 -DCL1=4 -DX0_IDX_A=0 -DX0_IDX_B=128 -DX0_IDX_C=192
+# -DX0_IDX_D=208 -DX1_IDX_A=16 -DX1_IDX_B=32 -DX1_IDX_C=48 -DX1_IDX_D=64",
+          ]
+          
+          d_features:
+                X_ORIG:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[0]"
+          flops: "0"
+      execution:
+          enabled: True
+          papi_counters: [
+            "CPU_CLK_THREAD_UNHALTED:THREAD_P",
+            "INST_RETIRED:ANY_P",
+            "UOPS_RETIRED:ALL",
+            "UOPS_ISSUED:ALL",
+            "UOPS_EXECUTED:THREAD",            
+            "UOPS_RETIRED:STALL_CYCLES",
+            "UOPS_ISSUED:STALL_CYCLES",
+            "UOPS_EXECUTED:STALL_CYCLES",
+            #"CPU_CLK_UNHALTED",
+            #"ix86arch::UNHALTED_REFERENCE_CYCLES",
+            #"UNHALTED_REFERENCE_CYCLES",
+            #"UOPS_EXECUTED:CORE_CYCLES_NONE",
+            #"UOPS_ISSUED:STALL_CYCLES",
+            #"INST_RETIRED:ANY_P",
+            #"UOPS_ISSUED:ALL",
+            #"UOPS_RETIRED:ALL",
+            #"FP_ARITH:SCALAR_DOUBLE",
+            #"FP_ARITH:128B_PACKED_DOUBLE",
+            #"FP_ARITH:256B_PACKED_DOUBLE",
+            #"FP_ARITH:512B_PACKED_DOUBLE",
+            #"PAPI_BR_TKN",
+            #"PAPI_BR_MSP",
+            #"MEM_LOAD_UOPS_RETIRED:L1_HIT",
+            #"MEM_LOAD_UOPS_RETIRED:L1_MISS",
+            #"ICACHE_64B:IFTAG_HIT",
+            ]
+          time: False
+          tsc: False
+          threshold_outliers: 3
+          mean_and_discard_outliers: True
+          nexec: 5
+          nsteps: 1000000
+          cpu_affinity: 11
+          prefix: ""
+      output:
+          name: "default"
+          columns: "all"
+          report: True
+          verbose: True

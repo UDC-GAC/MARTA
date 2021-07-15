@@ -1,0 +1,76 @@
+- kernel:
+      name: "data_packing_case_2"
+      path: "kernels/data_packing_case_2"
+      description: "Setup for experiment data packing case 0"
+      debug: False
+      show_progress_bars: True
+      preamble:
+          command: "rm -Rf bin asm_codes && sudo cpupower frequency-set -u 2.1GHz && sudo cpupower frequency-set -d 2.1GHz"
+      finalize:
+          clean_tmp_files: False
+          clean_asm_files: False
+          clean_bin_files: False
+          command: ""
+      compilation:
+          enabled: True
+          processes: 2
+          language: "C"
+          compiler_flags: 
+            { 
+                "gcc": " -O3 -mtune=cascadelake -fno-loop-interchange -flto -fsimd-cost-model=unlimited -fvect-cost-model=unlimited ",
+                "icc": " -O3 -mtune=cascadelake -ipo -ffat-lto-objects -inline-forceinline ",
+            }
+          common_flags: "  "
+          asm_analysis: True 
+          debug: False
+      configuration:
+          kernel_cfg: [" -mfma -mavx2 AUTOVEC=true ", " -mfma -mavx2 -DSIMD_CODE "]
+          macveth_flags: " -misa=avx2 "
+          features:
+                ORIG_y:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[0]"
+                ORIG_A:    
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[0]"
+                ORIG_x:    
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[0]"
+          flops: "0"
+      execution:
+          enabled: True
+          papi_counters: [
+            "CPU_CLK_THREAD_UNHALTED:THREAD_P",
+            "UNHALTED_REFERENCE_CYCLES",
+            "UOPS_EXECUTED:STALL_CYCLES",
+            "PAPI_RES_STL",
+            "INST_RETIRED:ANY_P",
+            "UOPS_ISSUED:ALL",
+            "UOPS_RETIRED:ALL",
+            "FP_ARITH:SCALAR_DOUBLE",
+            "FP_ARITH:128B_PACKED_DOUBLE",
+            "FP_ARITH:256B_PACKED_DOUBLE",
+            "FP_ARITH:512B_PACKED_DOUBLE",
+            "PAPI_BR_TKN",
+            "PAPI_BR_MSP",
+            "MEM_LOAD_UOPS_RETIRED:L1_HIT",
+            "MEM_LOAD_UOPS_RETIRED:L1_MISS",
+            "ICACHE_64B:IFTAG_HIT",
+            ]
+          threshold_outliers: 3
+          mean_and_discard_outliers: True
+          nexec: 5
+          nsteps: 10000
+          cpu_affinity: 11
+          prefix: ""
+      output:
+          name: "default"
+          columns: "all"
+          report: True
+          verbose: True

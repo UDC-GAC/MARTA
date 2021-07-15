@@ -1,0 +1,225 @@
+- kernel:
+      name: "cost_model"
+      path: "kernels/cost_model"
+      description: "Setup for experiment cost_model"
+      debug: False
+      show_progress_bars: True
+      preamble:
+          command: "rm -Rf bin asm_codes && sudo cpupower frequency-set -u 2.1GHz && sudo cpupower frequency-set -d 2.1GHz"
+      finalize:
+          clean_tmp_files: False
+          clean_asm_files: False
+          clean_bin_files: False
+          command: "echo 'alright!'"
+      compilation:
+          enabled: True
+          processes: 32
+          language: "C"
+          compiler_flags: 
+            { 
+                "gcc": " -mtune=cascadelake ",
+                "icc": " -mtune=cascadelake ",
+            }
+          common_flags: " -mfma -mavx512f -mavx512vl -DFULL_256BITS "
+          inlined_kernel: True
+          asm_syntax: "intel"
+          asm_analysis: False
+          debug: False
+      configuration:
+          kernel_cfg: [
+            # test_case0: fusing x2 128 bits operations, random values
+          " -DBIN_NAME=test_case_0_256
+            -DTEST_CASE=0 -DX_N=8 -DY_N=8 -DA_N=8
+            -DX_IDX_A=1006 -DX_IDX_B=898 -DX_IDX_C=1178 -DX_IDX_D=1070
+            -DX_IDX_E=4567 -DX_IDX_F=4583 -DX_IDX_G=4567 -DX_IDX_H=4583 
+            -DA_IDX_A=5440 -DA_IDX_B=5440 -DA_IDX_C=5472 -DA_IDX_D=5472 
+            -DA_IDX_E=4800 -DA_IDX_F=4800 -DA_IDX_G=4816 -DA_IDX_H=4816 
+            -DY_IDX_A=1192 -DY_IDX_B=1192 -DY_IDX_C=1196 -DY_IDX_D=1196 
+            -DY_IDX_E=1728 -DY_IDX_F=1728 -DY_IDX_G=1744 -DY_IDX_H=1744",
+            # test_case1: full reduction
+          " -DBIN_NAME=test_case_1_256
+            -DTEST_CASE=1 -DX_N=8 -DY_N=8 -DA_N=8
+            -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=2 -DX_IDX_D=3
+            -DX_IDX_E=32 -DX_IDX_F=33 -DX_IDX_G=34 -DX_IDX_H=35 
+            -DA_IDX_A=0 -DA_IDX_B=1 -DA_IDX_C=2 -DA_IDX_D=3 
+            -DA_IDX_E=32 -DA_IDX_F=33 -DA_IDX_G=34 -DA_IDX_H=35 
+            -DY_IDX_A=0 -DY_IDX_B=0 -DY_IDX_C=0 -DY_IDX_D=0 
+            -DY_IDX_E=0 -DY_IDX_F=0 -DY_IDX_G=0 -DY_IDX_H=0",
+            # test_case2: perfectly aligned
+            " -DBIN_NAME=test_case_2_256 
+            -DTEST_CASE=2 -DX_N=8 -DY_N=8 -DA_N=8
+            -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=2 -DX_IDX_D=3
+            -DX_IDX_E=4 -DX_IDX_F=5 -DX_IDX_G=6 -DX_IDX_H=7 
+            -DA_IDX_A=0 -DA_IDX_B=1 -DA_IDX_C=2 -DA_IDX_D=3 
+            -DA_IDX_E=4 -DA_IDX_F=5 -DA_IDX_G=6 -DA_IDX_H=7 
+            -DY_IDX_A=0 -DY_IDX_B=1 -DY_IDX_C=2 -DY_IDX_D=3 
+            -DY_IDX_E=4 -DY_IDX_F=5 -DY_IDX_G=6 -DY_IDX_H=7",
+            # test_case3: fusing x2 128 bits operations, random values
+            " -DBIN_NAME=test_case_3_256 
+            -DTEST_CASE=3 -DX_N=8 -DY_N=8 -DA_N=8
+            -DX_IDX_A=1006 -DX_IDX_B=898 -DX_IDX_C=1178 -DX_IDX_D=1070
+            -DX_IDX_E=4611 -DX_IDX_F=4627 -DX_IDX_G=4612 -DX_IDX_H=4628
+            -DA_IDX_A=5440 -DA_IDX_B=5440 -DA_IDX_C=5472 -DA_IDX_D=5472 
+            -DA_IDX_E=4800 -DA_IDX_F=4801 -DA_IDX_G=4816 -DA_IDX_H=4817 
+            -DY_IDX_A=1192 -DY_IDX_B=1192 -DY_IDX_C=1196 -DY_IDX_D=1196 
+            -DY_IDX_E=1728 -DY_IDX_F=1729 -DY_IDX_G=1744 -DY_IDX_H=1745",
+            # test_case4: 2 reductions full gather same CL
+            " -DBIN_NAME=test_case_4_256
+            -DTEST_CASE=4 -DX_N=8 -DY_N=8 -DA_N=8
+            -DX_IDX_A=0 -DX_IDX_B=3 -DX_IDX_C=2 -DX_IDX_D=5
+            -DX_IDX_E=4 -DX_IDX_F=8 -DX_IDX_G=6 -DX_IDX_H=10
+            -DA_IDX_A=0 -DA_IDX_B=2 -DA_IDX_C=2 -DA_IDX_D=4
+            -DA_IDX_E=4 -DA_IDX_F=9 -DA_IDX_G=6 -DA_IDX_H=11 
+            -DY_IDX_A=0 -DY_IDX_B=0 -DY_IDX_C=0 -DY_IDX_D=0 
+            -DY_IDX_E=27 -DY_IDX_F=27 -DY_IDX_G=27 -DY_IDX_H=27", 
+            # test_case5: fusing x2 64 bits onto full vector
+            " -DBIN_NAME=test_case_5_256 
+            -DTEST_CASE=5 -DX_N=8 -DY_N=8 -DA_N=8
+            -DX_IDX_A=98 -DX_IDX_B=147 -DX_IDX_C=180 -DX_IDX_D=229
+            -DX_IDX_E=908 -DX_IDX_F=996 -DX_IDX_G=1098 -DX_IDX_H=1186
+            -DA_IDX_A=72 -DA_IDX_B=108 -DA_IDX_C=95 -DA_IDX_D=131
+            -DA_IDX_E=490 -DA_IDX_F=562 -DA_IDX_G=519 -DA_IDX_H=591 
+            -DY_IDX_A=1 -DY_IDX_B=1 -DY_IDX_C=1 -DY_IDX_D=1
+            -DY_IDX_E=27 -DY_IDX_F=27 -DY_IDX_G=27 -DY_IDX_H=27",
+            # test_case6: 4+3 full reduction
+          " -DBIN_NAME=test_case_6_256
+            -DTEST_CASE=6 -DX_N=7 -DY_N=7 -DA_N=7
+            -DX_IDX_A=22 -DX_IDX_B=33 -DX_IDX_C=104 -DX_IDX_D=115
+            -DX_IDX_E=190 -DX_IDX_F=380 -DX_IDX_G=570  
+            -DA_IDX_A=20 -DA_IDX_B=30 -DA_IDX_C=43 -DA_IDX_D=53 
+            -DA_IDX_E=29 -DA_IDX_F=58 -DA_IDX_G=87  
+            -DY_IDX_A=1 -DY_IDX_B=1 -DY_IDX_C=1 -DY_IDX_D=1 
+            -DY_IDX_E=1 -DY_IDX_F=1 -DY_IDX_G=1 ",
+          # test_case7: 4+3 two reductions
+          " -DBIN_NAME=test_case_7_256
+            -DTEST_CASE=7 -DX_N=7 -DY_N=7 -DA_N=7
+            -DX_IDX_A=22 -DX_IDX_B=33 -DX_IDX_C=104 -DX_IDX_D=115
+            -DX_IDX_E=190 -DX_IDX_F=380 -DX_IDX_G=570  
+            -DA_IDX_A=20 -DA_IDX_B=30 -DA_IDX_C=43 -DA_IDX_D=53 
+            -DA_IDX_E=29 -DA_IDX_F=58 -DA_IDX_G=87  
+            -DY_IDX_A=1 -DY_IDX_B=1 -DY_IDX_C=1 -DY_IDX_D=1 
+            -DY_IDX_E=27 -DY_IDX_F=27 -DY_IDX_G=27 ",
+          # test_case8: 4+3 reduction + scatter
+          " -DBIN_NAME=test_case_8_256
+            -DTEST_CASE=8 -DX_N=7 -DY_N=7 -DA_N=7
+            -DX_IDX_A=22 -DX_IDX_B=33 -DX_IDX_C=104 -DX_IDX_D=115
+            -DX_IDX_E=190 -DX_IDX_F=380 -DX_IDX_G=570  
+            -DA_IDX_A=20 -DA_IDX_B=30 -DA_IDX_C=43 -DA_IDX_D=53 
+            -DA_IDX_E=29 -DA_IDX_F=58 -DA_IDX_G=87  
+            -DY_IDX_A=1 -DY_IDX_B=1 -DY_IDX_C=1 -DY_IDX_D=1 
+            -DY_IDX_E=50 -DY_IDX_F=73 -DY_IDX_G=96 ",
+          # test_case9: 4+3 scatter + reduction
+          " -DBIN_NAME=test_case_9_256
+            -DTEST_CASE=9 -DX_N=7 -DY_N=7 -DA_N=7
+            -DX_IDX_A=22 -DX_IDX_B=33 -DX_IDX_C=104 -DX_IDX_D=115
+            -DX_IDX_E=190 -DX_IDX_F=380 -DX_IDX_G=570  
+            -DA_IDX_A=20 -DA_IDX_B=30 -DA_IDX_C=43 -DA_IDX_D=53 
+            -DA_IDX_E=29 -DA_IDX_F=58 -DA_IDX_G=87  
+            -DY_IDX_A=15 -DY_IDX_B=22 -DY_IDX_C=38 -DY_IDX_D=45 
+            -DY_IDX_E=27 -DY_IDX_F=27 -DY_IDX_G=27 ",
+          # test_case10: 4+3 full scatter
+          " -DBIN_NAME=test_case_10_256
+            -DTEST_CASE=10 -DX_N=7 -DY_N=7 -DA_N=7
+            -DX_IDX_A=22 -DX_IDX_B=33 -DX_IDX_C=104 -DX_IDX_D=115
+            -DX_IDX_E=190 -DX_IDX_F=380 -DX_IDX_G=570  
+            -DA_IDX_A=20 -DA_IDX_B=30 -DA_IDX_C=43 -DA_IDX_D=53 
+            -DA_IDX_E=29 -DA_IDX_F=58 -DA_IDX_G=87  
+            -DY_IDX_A=15 -DY_IDX_B=22 -DY_IDX_C=38 -DY_IDX_D=45 
+            -DY_IDX_E=65 -DY_IDX_F=103 -DY_IDX_G=141 ",
+          # test_case11: 4+3 two stores
+          " -DBIN_NAME=test_case_11_256
+            -DTEST_CASE=11 -DX_N=7 -DY_N=7 -DA_N=7
+            -DX_IDX_A=22 -DX_IDX_B=33 -DX_IDX_C=104 -DX_IDX_D=115
+            -DX_IDX_E=190 -DX_IDX_F=380 -DX_IDX_G=570  
+            -DA_IDX_A=20 -DA_IDX_B=30 -DA_IDX_C=43 -DA_IDX_D=53 
+            -DA_IDX_E=29 -DA_IDX_F=58 -DA_IDX_G=87  
+            -DY_IDX_A=3 -DY_IDX_B=4 -DY_IDX_C=5 -DY_IDX_D=6 
+            -DY_IDX_E=28 -DY_IDX_F=29 -DY_IDX_G=30 ",
+          ###########################################
+          # 3 + 3
+          # test_case12: 3+3 full reduction
+          " -DBIN_NAME=test_case_12_256
+            -DTEST_CASE=12 -DX_N=6 -DY_N=6 -DA_N=6
+            -DX_IDX_A=0 -DX_IDX_B=82 -DX_IDX_C=164 -DX_IDX_D=190
+            -DX_IDX_E=380 -DX_IDX_F=570  
+            -DA_IDX_A=0 -DA_IDX_B=23 -DA_IDX_C=46 -DA_IDX_D=29 
+            -DA_IDX_E=58 -DA_IDX_F=87   
+            -DY_IDX_A=1 -DY_IDX_B=1 -DY_IDX_C=1 -DY_IDX_D=1 
+            -DY_IDX_E=1 -DY_IDX_F=1 ",
+          # test_case13: 3+3 two reductions
+          " -DBIN_NAME=test_case_13_256
+            -DTEST_CASE=13 -DX_N=6 -DY_N=6 -DA_N=6
+            -DX_IDX_A=0 -DX_IDX_B=82 -DX_IDX_C=164 -DX_IDX_D=190
+            -DX_IDX_E=380 -DX_IDX_F=570  
+            -DA_IDX_A=0 -DA_IDX_B=23 -DA_IDX_C=46 -DA_IDX_D=29 
+            -DA_IDX_E=58 -DA_IDX_F=87   
+            -DY_IDX_A=1 -DY_IDX_B=1 -DY_IDX_C=1 -DY_IDX_D=27 
+            -DY_IDX_E=27 -DY_IDX_F=27 ",
+          # test_case14: 3+3 full scatter
+          " -DBIN_NAME=test_case_14_256
+            -DTEST_CASE=14 -DX_N=6 -DY_N=6 -DA_N=6
+            -DX_IDX_A=0 -DX_IDX_B=82 -DX_IDX_C=164 -DX_IDX_D=190
+            -DX_IDX_E=380 -DX_IDX_F=570  
+            -DA_IDX_A=0 -DA_IDX_B=23 -DA_IDX_C=46 -DA_IDX_D=29 
+            -DA_IDX_E=58 -DA_IDX_F=87   
+            -DY_IDX_A=1 -DY_IDX_B=8 -DY_IDX_C=15 -DY_IDX_D=50 
+            -DY_IDX_E=73 -DY_IDX_F=96 ",
+          # test_case15: 3+3 two mask stores
+          " -DBIN_NAME=test_case_15_256
+            -DTEST_CASE=15 -DX_N=6 -DY_N=6 -DA_N=6
+            -DX_IDX_A=0 -DX_IDX_B=82 -DX_IDX_C=164 -DX_IDX_D=190
+            -DX_IDX_E=380 -DX_IDX_F=570  
+            -DA_IDX_A=0 -DA_IDX_B=23 -DA_IDX_C=46 -DA_IDX_D=29 
+            -DA_IDX_E=58 -DA_IDX_F=87   
+            -DY_IDX_A=1 -DY_IDX_B=2 -DY_IDX_C=3 -DY_IDX_D=28 
+            -DY_IDX_E=29 -DY_IDX_F=30 ", 
+          ]
+          d_features:
+                AUTO_VEC:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[0]"  
+          flops: "0"
+      execution:
+          enabled: True
+          papi_counters: [
+            "CPU_CLK_THREAD_UNHALTED:THREAD_P",
+            "INST_RETIRED:ANY_P",
+            "UOPS_RETIRED:ALL",
+            "UOPS_ISSUED:ALL",
+            "UOPS_EXECUTED:THREAD",            
+            "UOPS_RETIRED:STALL_CYCLES",
+            "UOPS_ISSUED:STALL_CYCLES",
+            "UOPS_EXECUTED:STALL_CYCLES",
+            #"CPU_CLK_UNHALTED",
+            #"ix86arch::UNHALTED_REFERENCE_CYCLES",
+            #"UNHALTED_REFERENCE_CYCLES",
+            #"UOPS_EXECUTED:CORE_CYCLES_NONE",
+            #"UOPS_ISSUED:STALL_CYCLES",
+            #"INST_RETIRED:ANY_P",
+            #"UOPS_ISSUED:ALL",
+            #"UOPS_RETIRED:ALL",
+            #"FP_ARITH:SCALAR_DOUBLE",
+            #"FP_ARITH:128B_PACKED_DOUBLE",
+            #"FP_ARITH:256B_PACKED_DOUBLE",
+            #"FP_ARITH:512B_PACKED_DOUBLE",
+            #"PAPI_BR_TKN",
+            #"PAPI_BR_MSP",
+            #"MEM_LOAD_UOPS_RETIRED:L1_HIT",
+            #"MEM_LOAD_UOPS_RETIRED:L1_MISS",
+            #"ICACHE_64B:IFTAG_HIT",
+            ]
+          time: False
+          tsc: False
+          threshold_outliers: 3
+          mean_and_discard_outliers: True
+          nexec: 5
+          nsteps: 100000
+          cpu_affinity: 11
+          prefix: ""
+      output:
+          name: "default"
+          columns: "all"
+          report: True
+          verbose: True

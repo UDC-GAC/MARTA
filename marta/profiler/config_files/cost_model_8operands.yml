@@ -1,0 +1,312 @@
+- kernel:
+      name: "cost_model"
+      path: "kernels/cost_model"
+      description: "Setup for experiment cost_model"
+      debug: False
+      show_progress_bars: True
+      preamble:
+          command: "rm -Rf bin asm_codes && sudo cpupower frequency-set -u 2.1GHz && sudo cpupower frequency-set -d 2.1GHz"
+      finalize:
+          clean_tmp_files: False
+          clean_asm_files: False
+          clean_bin_files: False
+          command: "echo 'alright!'"
+      compilation:
+          enabled: True
+          processes: 4
+          language: "C"
+          compiler_flags: 
+            { 
+                "gcc": " -mtune=cascadelake ",
+                #"icc": " -mtune=cascadelake ",
+            }
+          common_flags: " -mfma -mavx2 -DONLY_PACKING_8OPS "
+          inlined_kernel: True
+          asm_syntax: "intel"
+          asm_analysis: False
+          debug: False
+      configuration:
+          kernel_cfg: [
+  ## 5 ELEMENTS
+  # Cases for 5 elements 1CL
+  "-DV_LEN=8 -DX_N=5 -DCL=1 -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=2 -DX_IDX_D=3
+  -DX_IDX_E=4 ",
+  "-DV_LEN=8 -DX_N=5 -DCL=1 -DX_IDX_A=3 -DX_IDX_B=4 -DX_IDX_C=5 -DX_IDX_D=6
+  -DX_IDX_E=7 ",
+  "-DV_LEN=8 -DX_N=5 -DCL=1 -DX_IDX_A=1 -DX_IDX_B=4 -DX_IDX_C=5 -DX_IDX_D=6
+  -DX_IDX_E=7 ",
+  "-DV_LEN=8 -DX_N=5 -DCL=1 -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=5 -DX_IDX_D=6
+  -DX_IDX_E=7 ",
+  "-DV_LEN=8 -DX_N=5 -DCL=1 -DX_IDX_A=1 -DX_IDX_B=4 -DX_IDX_C=6 -DX_IDX_D=9
+  -DX_IDX_E=11 ",
+  # Cases for 5 elements 2CL
+  "-DV_LEN=8 -DX_N=5 -DCL=2 -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=2 -DX_IDX_D=3
+  -DX_IDX_E=16 ",
+  "-DV_LEN=8 -DX_N=5 -DCL=2 -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=2 -DX_IDX_D=16
+  -DX_IDX_E=17 ",
+  "-DV_LEN=8 -DX_N=5 -DCL=2 -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=2 -DX_IDX_D=20
+  -DX_IDX_E=26 ",
+  "-DV_LEN=8 -DX_N=5 -DCL=2 -DX_IDX_A=0 -DX_IDX_B=5 -DX_IDX_C=11 -DX_IDX_D=20
+  -DX_IDX_E=26 ",
+  "-DV_LEN=8 -DX_N=5 -DCL=2 -DX_IDX_A=1 -DX_IDX_B=2 -DX_IDX_C=11 -DX_IDX_D=20
+  -DX_IDX_E=26 ",
+  "-DV_LEN=8 -DX_N=5 -DCL=2 -DX_IDX_A=1 -DX_IDX_B=17 -DX_IDX_C=19 -DX_IDX_D=20
+  -DX_IDX_E=26 ",
+  # Cases for 5 elements 3CL
+  "-DV_LEN=8 -DX_N=5 -DCL=3 -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=2 -DX_IDX_D=16
+  -DX_IDX_E=32 ",
+  "-DV_LEN=8 -DX_N=5 -DCL=3 -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=2 -DX_IDX_D=17
+  -DX_IDX_E=35 ",
+  "-DV_LEN=8 -DX_N=5 -DCL=3 -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=16 -DX_IDX_D=17
+  -DX_IDX_E=32 ",
+  "-DV_LEN=8 -DX_N=5 -DCL=3 -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=16 -DX_IDX_D=19
+  -DX_IDX_E=32 ",
+  "-DV_LEN=8 -DX_N=5 -DCL=3 -DX_IDX_A=7 -DX_IDX_B=11 -DX_IDX_C=16 -DX_IDX_D=19
+  -DX_IDX_E=32 ",
+  # Cases for 5 elements 4CL
+  "-DV_LEN=8 -DX_N=5 -DCL=4 -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=16 -DX_IDX_D=32
+  -DX_IDX_E=48 ",
+  "-DV_LEN=8 -DX_N=5 -DCL=4 -DX_IDX_A=7 -DX_IDX_B=11 -DX_IDX_C=16 -DX_IDX_D=32
+  -DX_IDX_E=48 ",  
+  # Cases for 5 elements 5CL
+  "-DV_LEN=8 -DX_N=5 -DCL=5 -DX_IDX_A=0 -DX_IDX_B=16 -DX_IDX_C=32 -DX_IDX_D=48
+  -DX_IDX_E=64 ",
+  "-DV_LEN=8 -DX_N=5 -DCL=5 -DX_IDX_A=1 -DX_IDX_B=19 -DX_IDX_C=35 -DX_IDX_D=49
+  -DX_IDX_E=69 ",
+  ## 6 ELEMENTS
+  # Cases for 6 elements 1CL
+  "-DV_LEN=8 -DX_N=6 -DCL=1 -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=2 -DX_IDX_D=3
+  -DX_IDX_E=4 -DX_IDX_F=5",
+  "-DV_LEN=8 -DX_N=6 -DCL=1 -DX_IDX_A=3 -DX_IDX_B=4 -DX_IDX_C=5 -DX_IDX_D=6
+  -DX_IDX_E=7 -DX_IDX_F=8",
+  "-DV_LEN=8 -DX_N=6 -DCL=1 -DX_IDX_A=3 -DX_IDX_B=4 -DX_IDX_C=5 -DX_IDX_D=6
+  -DX_IDX_E=7 -DX_IDX_F=9",
+  "-DV_LEN=8 -DX_N=6 -DCL=1 -DX_IDX_A=1 -DX_IDX_B=4 -DX_IDX_C=5 -DX_IDX_D=6
+  -DX_IDX_E=7 -DX_IDX_F=8",
+  "-DV_LEN=8 -DX_N=6 -DCL=1 -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=5 -DX_IDX_D=6
+  -DX_IDX_E=7 -DX_IDX_F=8",
+  "-DV_LEN=8 -DX_N=6 -DCL=1 -DX_IDX_A=1 -DX_IDX_B=4 -DX_IDX_C=6 -DX_IDX_D=9
+  -DX_IDX_E=11 -DX_IDX_F=12",
+  "-DV_LEN=8 -DX_N=6 -DCL=1 -DX_IDX_A=1 -DX_IDX_B=4 -DX_IDX_C=6 -DX_IDX_D=9
+  -DX_IDX_E=11 -DX_IDX_F=13",
+  # Cases for 6 elements 2CL
+  "-DV_LEN=8 -DX_N=6 -DCL=2 -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=2 -DX_IDX_D=3
+  -DX_IDX_E=16 -DX_IDX_F=17",
+  "-DV_LEN=8 -DX_N=6 -DCL=2 -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=2 -DX_IDX_D=16
+  -DX_IDX_E=17 -DX_IDX_F=18",
+  "-DV_LEN=8 -DX_N=6 -DCL=2 -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=2 -DX_IDX_D=16
+  -DX_IDX_E=17 -DX_IDX_F=19",
+  "-DV_LEN=8 -DX_N=6 -DCL=2 -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=2 -DX_IDX_D=20
+  -DX_IDX_E=26 -DX_IDX_F=29",
+  "-DV_LEN=8 -DX_N=6 -DCL=2 -DX_IDX_A=0 -DX_IDX_B=5 -DX_IDX_C=11 -DX_IDX_D=20
+  -DX_IDX_E=26 -DX_IDX_F=27",
+  "-DV_LEN=8 -DX_N=6 -DCL=2 -DX_IDX_A=0 -DX_IDX_B=5 -DX_IDX_C=11 -DX_IDX_D=20
+  -DX_IDX_E=26 -DX_IDX_F=29",
+  "-DV_LEN=8 -DX_N=6 -DCL=2 -DX_IDX_A=1 -DX_IDX_B=2 -DX_IDX_C=11 -DX_IDX_D=20
+  -DX_IDX_E=26 -DX_IDX_F=29",
+  "-DV_LEN=8 -DX_N=6 -DCL=2 -DX_IDX_A=1 -DX_IDX_B=17 -DX_IDX_C=19 -DX_IDX_D=20
+  -DX_IDX_E=26 -DX_IDX_F=31",
+  # Cases for 6 elements 3CL
+  "-DV_LEN=8 -DX_N=6 -DCL=3 -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=2 -DX_IDX_D=16
+  -DX_IDX_E=32 -DX_IDX_F=33",
+  "-DV_LEN=8 -DX_N=6 -DCL=3 -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=2 -DX_IDX_D=3
+  -DX_IDX_E=16 -DX_IDX_F=32",
+  "-DV_LEN=8 -DX_N=6 -DCL=3 -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=2 -DX_IDX_D=19
+  -DX_IDX_E=33 -DX_IDX_F=38",
+  "-DV_LEN=8 -DX_N=6 -DCL=3 -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=16 -DX_IDX_D=17
+  -DX_IDX_E=32 -DX_IDX_F=38",
+  "-DV_LEN=8 -DX_N=6 -DCL=3 -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=16 -DX_IDX_D=19
+  -DX_IDX_E=32 -DX_IDX_F=38",
+  "-DV_LEN=8 -DX_N=6 -DCL=3 -DX_IDX_A=7 -DX_IDX_B=11 -DX_IDX_C=16 -DX_IDX_D=19
+  -DX_IDX_E=32 -DX_IDX_F=38",
+  # Cases for 6 elements 4CL
+  "-DV_LEN=8 -DX_N=6 -DCL=4 -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=16 -DX_IDX_D=32
+  -DX_IDX_E=48 -DX_IDX_F=49",
+  "-DV_LEN=8 -DX_N=6 -DCL=4 -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=2 -DX_IDX_D=32
+  -DX_IDX_E=48 -DX_IDX_F=65",
+  "-DV_LEN=8 -DX_N=6 -DCL=4 -DX_IDX_A=7 -DX_IDX_B=11 -DX_IDX_C=16 -DX_IDX_D=32
+  -DX_IDX_E=48 -DX_IDX_F=50",  
+  # Cases for 6 elements 5CL
+  "-DV_LEN=8 -DX_N=6 -DCL=5 -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=16 -DX_IDX_D=32
+  -DX_IDX_E=48 -DX_IDX_F=64",
+  "-DV_LEN=8 -DX_N=6 -DCL=5 -DX_IDX_A=0 -DX_IDX_B=11 -DX_IDX_C=16 -DX_IDX_D=32
+  -DX_IDX_E=48 -DX_IDX_F=64",
+  # Cases for 6 elements 6CL
+  "-DV_LEN=8 -DX_N=6 -DCL=6 -DX_IDX_A=0 -DX_IDX_B=18 -DX_IDX_C=33 -DX_IDX_D=49
+  -DX_IDX_E=64 -DX_IDX_F=83",
+  ## 7 ELEMENTS
+  # Cases for 7 elements 1CL
+  "-DV_LEN=8 -DX_N=7 -DCL=1 -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=2 -DX_IDX_D=3
+  -DX_IDX_E=4 -DX_IDX_F=5 -DX_IDX_G=6",
+  "-DV_LEN=8 -DX_N=7 -DCL=1 -DX_IDX_A=3 -DX_IDX_B=4 -DX_IDX_C=5 -DX_IDX_D=6
+  -DX_IDX_E=7 -DX_IDX_F=8 -DX_IDX_G=9",
+  "-DV_LEN=8 -DX_N=7 -DCL=1 -DX_IDX_A=3 -DX_IDX_B=4 -DX_IDX_C=5 -DX_IDX_D=6
+  -DX_IDX_E=7 -DX_IDX_F=9 -DX_IDX_G=11",
+  "-DV_LEN=8 -DX_N=7 -DCL=1 -DX_IDX_A=1 -DX_IDX_B=4 -DX_IDX_C=5 -DX_IDX_D=6
+  -DX_IDX_E=7 -DX_IDX_F=8 -DX_IDX_G=9",
+  "-DV_LEN=8 -DX_N=7 -DCL=1 -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=5 -DX_IDX_D=6
+  -DX_IDX_E=7 -DX_IDX_F=8 -DX_IDX_G=9",
+  "-DV_LEN=8 -DX_N=7 -DCL=1 -DX_IDX_A=1 -DX_IDX_B=4 -DX_IDX_C=6 -DX_IDX_D=9
+  -DX_IDX_E=11 -DX_IDX_F=12 -DX_IDX_G=13",
+  "-DV_LEN=8 -DX_N=7 -DCL=1 -DX_IDX_A=1 -DX_IDX_B=4 -DX_IDX_C=6 -DX_IDX_D=9
+  -DX_IDX_E=11 -DX_IDX_F=13 -DX_IDX_G=15",
+  # Cases for 7 elements 2CL
+  "-DV_LEN=8 -DX_N=7 -DCL=2 -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=2 -DX_IDX_D=3
+  -DX_IDX_E=16 -DX_IDX_F=17 -DX_IDX_G=18",
+  "-DV_LEN=8 -DX_N=7 -DCL=2 -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=2 -DX_IDX_D=16
+  -DX_IDX_E=17 -DX_IDX_F=18 -DX_IDX_G=19",
+  "-DV_LEN=8 -DX_N=7 -DCL=2 -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=2 -DX_IDX_D=16
+  -DX_IDX_E=17 -DX_IDX_F=19 -DX_IDX_G=20",
+  "-DV_LEN=8 -DX_N=7 -DCL=2 -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=2 -DX_IDX_D=20
+  -DX_IDX_E=26 -DX_IDX_F=29 -DX_IDX_G=30",
+  "-DV_LEN=8 -DX_N=7 -DCL=2 -DX_IDX_A=0 -DX_IDX_B=5 -DX_IDX_C=11 -DX_IDX_D=20
+  -DX_IDX_E=26 -DX_IDX_F=27 -DX_IDX_G=28",
+  "-DV_LEN=8 -DX_N=7 -DCL=2 -DX_IDX_A=0 -DX_IDX_B=5 -DX_IDX_C=11 -DX_IDX_D=20
+  -DX_IDX_E=26 -DX_IDX_F=29 -DX_IDX_G=31",
+  "-DV_LEN=8 -DX_N=7 -DCL=2 -DX_IDX_A=1 -DX_IDX_B=2 -DX_IDX_C=11 -DX_IDX_D=20
+  -DX_IDX_E=26 -DX_IDX_F=29 -DX_IDX_G=31",
+  "-DV_LEN=8 -DX_N=7 -DCL=2 -DX_IDX_A=1 -DX_IDX_B=17 -DX_IDX_C=19 -DX_IDX_D=20
+  -DX_IDX_E=26 -DX_IDX_F=31 -DX_IDX_G=33",
+  "-DV_LEN=8 -DX_N=7 -DCL=2 -DX_IDX_A=1 -DX_IDX_B=17 -DX_IDX_C=19 -DX_IDX_D=20
+  -DX_IDX_E=26 -DX_IDX_F=31 -DX_IDX_G=32",
+  "-DV_LEN=8 -DX_N=7 -DCL=2 -DX_IDX_A=1 -DX_IDX_B=17 -DX_IDX_C=19 -DX_IDX_D=20
+  -DX_IDX_E=26 -DX_IDX_F=31 -DX_IDX_G=35",
+  # Cases for 7 elements 3CL
+  "-DV_LEN=8 -DX_N=7 -DCL=3 -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=2 -DX_IDX_D=16
+  -DX_IDX_E=32 -DX_IDX_F=33 -DX_IDX_G=34",
+  "-DV_LEN=8 -DX_N=7 -DCL=3 -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=2 -DX_IDX_D=3
+  -DX_IDX_E=16 -DX_IDX_F=32 -DX_IDX_G=38",
+  "-DV_LEN=8 -DX_N=7 -DCL=3 -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=2 -DX_IDX_D=19
+  -DX_IDX_E=33 -DX_IDX_F=38 -DX_IDX_G=40",
+  "-DV_LEN=8 -DX_N=7 -DCL=3 -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=16 -DX_IDX_D=17
+  -DX_IDX_E=32 -DX_IDX_F=38 -DX_IDX_G=39",
+  "-DV_LEN=8 -DX_N=7 -DCL=3 -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=16 -DX_IDX_D=19
+  -DX_IDX_E=32 -DX_IDX_F=38 -DX_IDX_G=39",
+  "-DV_LEN=8 -DX_N=7 -DCL=3 -DX_IDX_A=7 -DX_IDX_B=11 -DX_IDX_C=16 -DX_IDX_D=19
+  -DX_IDX_E=32 -DX_IDX_F=38 -DX_IDX_G=39",
+  # Cases for 7 elements 4CL
+  "-DV_LEN=8 -DX_N=7 -DCL=4 -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=16 -DX_IDX_D=32
+  -DX_IDX_E=48 -DX_IDX_F=49 -DX_IDX_G=50",
+  "-DV_LEN=8 -DX_N=7 -DCL=4 -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=2 -DX_IDX_D=32
+  -DX_IDX_E=48 -DX_IDX_F=65 -DX_IDX_G=66",
+  "-DV_LEN=8 -DX_N=7 -DCL=4 -DX_IDX_A=7 -DX_IDX_B=11 -DX_IDX_C=16 -DX_IDX_D=32
+  -DX_IDX_E=48 -DX_IDX_F=50 -DX_IDX_G=51",  
+  "-DV_LEN=8 -DX_N=7 -DCL=4 -DX_IDX_A=7 -DX_IDX_B=11 -DX_IDX_C=16 -DX_IDX_D=32
+  -DX_IDX_E=48 -DX_IDX_F=50 -DX_IDX_G=55",  
+  # Cases for 7 elements 5CL
+  "-DV_LEN=8 -DX_N=7 -DCL=5 -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=16 -DX_IDX_D=32
+  -DX_IDX_E=48 -DX_IDX_F=64 -DX_IDX_G=65",
+  "-DV_LEN=8 -DX_N=7 -DCL=5 -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=16 -DX_IDX_D=32
+  -DX_IDX_E=48 -DX_IDX_F=64 -DX_IDX_G=67",
+  "-DV_LEN=8 -DX_N=7 -DCL=5 -DX_IDX_A=0 -DX_IDX_B=11 -DX_IDX_C=16 -DX_IDX_D=32
+  -DX_IDX_E=48 -DX_IDX_F=64 -DX_IDX_G=65",
+  "-DV_LEN=8 -DX_N=7 -DCL=5 -DX_IDX_A=0 -DX_IDX_B=11 -DX_IDX_C=16 -DX_IDX_D=32
+  -DX_IDX_E=49 -DX_IDX_F=65 -DX_IDX_G=69",
+  # Cases for 7 elements 6CL
+  "-DV_LEN=8 -DX_N=7 -DCL=6 -DX_IDX_A=0 -DX_IDX_B=18 -DX_IDX_C=33 -DX_IDX_D=49
+  -DX_IDX_E=64 -DX_IDX_F=83 -DX_IDX_G=84",
+  "-DV_LEN=8 -DX_N=7 -DCL=6 -DX_IDX_A=0 -DX_IDX_B=18 -DX_IDX_C=33 -DX_IDX_D=49
+  -DX_IDX_E=64 -DX_IDX_F=83 -DX_IDX_G=85",
+  # Cases for 7 elements 7CL
+  "-DV_LEN=8 -DX_N=7 -DCL=7 -DX_IDX_A=0 -DX_IDX_B=18 -DX_IDX_C=33 -DX_IDX_D=49
+  -DX_IDX_E=64 -DX_IDX_F=83 -DX_IDX_G=99",
+  ## 8 ELEMENTS
+  # Cases for 8 elements 1CL
+  "-DV_LEN=8 -DX_N=8 -DCL=1 -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=2 -DX_IDX_D=3
+  -DX_IDX_E=4 -DX_IDX_F=5 -DX_IDX_G=6 -DX_IDX_H=7",
+  "-DV_LEN=8 -DX_N=8 -DCL=1 -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=2 -DX_IDX_D=3
+  -DX_IDX_E=8 -DX_IDX_F=9 -DX_IDX_G=10 -DX_IDX_H=11",
+  "-DV_LEN=8 -DX_N=8 -DCL=1 -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=5 -DX_IDX_D=6
+  -DX_IDX_E=9 -DX_IDX_F=10 -DX_IDX_G=12 -DX_IDX_H=13",
+  "-DV_LEN=8 -DX_N=8 -DCL=1 -DX_IDX_A=0 -DX_IDX_B=2 -DX_IDX_C=4 -DX_IDX_D=6
+  -DX_IDX_E=8 -DX_IDX_F=10 -DX_IDX_G=12 -DX_IDX_H=14",
+  # Cases for 8 elements 2CL
+  "-DV_LEN=8 -DX_N=8 -DCL=2 -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=2 -DX_IDX_D=3
+  -DX_IDX_E=16 -DX_IDX_F=17 -DX_IDX_G=18 -DX_IDX_H=19",
+  "-DV_LEN=8 -DX_N=8 -DCL=2 -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=2 -DX_IDX_D=3
+  -DX_IDX_E=16 -DX_IDX_F=17 -DX_IDX_G=20 -DX_IDX_H=22",
+  "-DV_LEN=8 -DX_N=8 -DCL=2 -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=12 -DX_IDX_D=13
+  -DX_IDX_E=16 -DX_IDX_F=17 -DX_IDX_G=20 -DX_IDX_H=22",
+  "-DV_LEN=8 -DX_N=8 -DCL=2 -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=12 -DX_IDX_D=13
+  -DX_IDX_E=16 -DX_IDX_F=17 -DX_IDX_G=18 -DX_IDX_H=19",
+  # Cases for 8 elements 3CL
+  "-DV_LEN=8 -DX_N=8 -DCL=3 -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=2 -DX_IDX_D=3
+  -DX_IDX_E=16 -DX_IDX_F=17 -DX_IDX_G=32 -DX_IDX_H=33",
+  "-DV_LEN=8 -DX_N=8 -DCL=3 -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=6 -DX_IDX_D=7
+  -DX_IDX_E=16 -DX_IDX_F=17 -DX_IDX_G=32 -DX_IDX_H=33",
+  "-DV_LEN=8 -DX_N=8 -DCL=3 -DX_IDX_A=0 -DX_IDX_B=3 -DX_IDX_C=6 -DX_IDX_D=11
+  -DX_IDX_E=16 -DX_IDX_F=18 -DX_IDX_G=32 -DX_IDX_H=37",
+  # Cases for 8 elements 4CL
+  "-DV_LEN=8 -DX_N=8 -DCL=4 -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=16 -DX_IDX_D=17
+  -DX_IDX_E=32 -DX_IDX_F=33 -DX_IDX_G=48 -DX_IDX_H=49",
+  "-DV_LEN=8 -DX_N=8 -DCL=4 -DX_IDX_A=0 -DX_IDX_B=5 -DX_IDX_C=16 -DX_IDX_D=19
+  -DX_IDX_E=32 -DX_IDX_F=35 -DX_IDX_G=48 -DX_IDX_H=50",
+  # Cases for 8 elements 5CL
+  "-DV_LEN=8 -DX_N=8 -DCL=5 -DX_IDX_A=0 -DX_IDX_B=1 -DX_IDX_C=16 -DX_IDX_D=17
+  -DX_IDX_E=32 -DX_IDX_F=33 -DX_IDX_G=48 -DX_IDX_H=99",
+  "-DV_LEN=8 -DX_N=8 -DCL=5 -DX_IDX_A=0 -DX_IDX_B=3 -DX_IDX_C=16 -DX_IDX_D=19
+  -DX_IDX_E=32 -DX_IDX_F=35 -DX_IDX_G=48 -DX_IDX_H=99",
+  # Cases for 8 elements 6CL
+  "-DV_LEN=8 -DX_N=8 -DCL=6 -DX_IDX_A=11 -DX_IDX_B=12 -DX_IDX_C=13 -DX_IDX_D=50
+  -DX_IDX_E=69 -DX_IDX_F=78 -DX_IDX_G=99 -DX_IDX_H=135",
+  # Cases for 8 elements 7CL
+  "-DV_LEN=8 -DX_N=8 -DCL=7 -DX_IDX_A=11 -DX_IDX_B=12 -DX_IDX_C=33 -DX_IDX_D=50
+  -DX_IDX_E=69 -DX_IDX_F=78 -DX_IDX_G=99 -DX_IDX_H=135",
+    "-DV_LEN=8 -DX_N=8 -DCL=7 -DX_IDX_A=11 -DX_IDX_B=15 -DX_IDX_C=33 -DX_IDX_D=50
+  -DX_IDX_E=69 -DX_IDX_F=78 -DX_IDX_G=99 -DX_IDX_H=135",
+  # Cases for 8 elements 8CL
+  "-DV_LEN=8 -DX_N=8 -DCL=8 -DX_IDX_A=0 -DX_IDX_B=16 -DX_IDX_C=32 -DX_IDX_D=48
+  -DX_IDX_E=64 -DX_IDX_F=80 -DX_IDX_G=96 -DX_IDX_H=112",
+  "-DV_LEN=8 -DX_N=8 -DCL=8 -DX_IDX_A=11 -DX_IDX_B=16 -DX_IDX_C=33 -DX_IDX_D=50
+  -DX_IDX_E=69 -DX_IDX_F=78 -DX_IDX_G=99 -DX_IDX_H=135",
+          ]
+          
+          d_features:
+                X_ORIG:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[0]"
+          flops: "0"
+      execution:
+          enabled: True
+          papi_counters: [
+            "CPU_CLK_THREAD_UNHALTED:THREAD_P",
+            "INST_RETIRED:ANY_P",
+            "UOPS_RETIRED:ALL",
+            "UOPS_ISSUED:ALL",
+            "UOPS_EXECUTED:THREAD",            
+            "UOPS_RETIRED:STALL_CYCLES",
+            "UOPS_ISSUED:STALL_CYCLES",
+            "UOPS_EXECUTED:STALL_CYCLES",
+            #"CPU_CLK_UNHALTED",
+            #"ix86arch::UNHALTED_REFERENCE_CYCLES",
+            #"UNHALTED_REFERENCE_CYCLES",
+            #"UOPS_EXECUTED:CORE_CYCLES_NONE",
+            #"UOPS_ISSUED:STALL_CYCLES",
+            #"INST_RETIRED:ANY_P",
+            #"UOPS_ISSUED:ALL",
+            #"UOPS_RETIRED:ALL",
+            #"FP_ARITH:SCALAR_DOUBLE",
+            #"FP_ARITH:128B_PACKED_DOUBLE",
+            #"FP_ARITH:256B_PACKED_DOUBLE",
+            #"FP_ARITH:512B_PACKED_DOUBLE",
+            #"PAPI_BR_TKN",
+            #"PAPI_BR_MSP",
+            #"MEM_LOAD_UOPS_RETIRED:L1_HIT",
+            #"MEM_LOAD_UOPS_RETIRED:L1_MISS",
+            #"ICACHE_64B:IFTAG_HIT",
+            ]
+          time: False
+          tsc: False
+          threshold_outliers: 3
+          mean_and_discard_outliers: True
+          nexec: 5
+          nsteps: 1000000
+          cpu_affinity: 11
+          prefix: ""
+      output:
+          name: "default"
+          columns: "all"
+          report: True
+          verbose: True
