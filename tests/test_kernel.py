@@ -1,11 +1,6 @@
-import sys
-import os
 import pytest
 
-# FIXME: This is a DIY shitty
-sys.path.append(os.path.realpath(os.path.dirname(__file__) + "/.."))
-
-from ..kernel import Kernel
+from marta.profiler.kernel import Kernel
 
 
 def test_compute_flops():

@@ -1,11 +1,6 @@
-import sys
-import os
 import pytest
 
-# FIXME: This is a DIY shitty
-sys.path.append(os.path.realpath(os.path.dirname(__file__) + "/.."))
-
-from asm_analyzer import ASMParserFactory
+from marta.profiler.asm_analyzer import ASMParserFactory
 
 
 def test_wrong_backend():
