@@ -27,7 +27,8 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        python -m pip install codecov build
+        pip install virtualenv
+        pip install codecov build
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Build package
       run: |
