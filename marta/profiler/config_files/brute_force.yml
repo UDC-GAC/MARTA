@@ -24,17 +24,17 @@
                     evaluate: True
                     type: "static"
                     val_type: "numeric"
-                    value: "[1,2]"
+                    value: "[1]"
                 N_LOADS:
                     evaluate: True
                     type: "static"
                     val_type: "numeric"
-                    value: "[2]"
+                    value: "[1]"
                 KERNEL:
                     evaluate: True
                     type: "static"
                     val_type: "string"
-                    value: "[f\"kernels/kernel_avx_permutevar_{i}\" for i in range(4096)]"
+                    value: "[f\"kernels/kernel_avx_1perm_{i}\" for i in range(40320)]"
           flops: "1"
           meta_info:
                 path: "./profiler/kernels/brute_force/"
