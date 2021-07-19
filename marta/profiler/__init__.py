@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import sys
-from profiler.profiler import Profiler
+from .profiler import Profiler
 
 
 def entry_point() -> None:
@@ -22,4 +22,3 @@ def entry_point() -> None:
 
 if __name__ == "__main__":
     entry_point()
-
