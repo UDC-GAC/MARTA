@@ -1,16 +1,18 @@
-<h2 align="center">MARTA - Micro ARchitectural Toolkit for Analysis</h2>
+# MARTA - Micro ARchitectural Toolkit for Analysis
 
-<p align="center">
-<a href="https://github.com/psf/black/blob/master/LICENSE"><img alt="License: MIT" src="https://black.readthedocs.io/en/stable/_static/license.svg"></a>
-<a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
-</p>
+[![Python
+package](https://github.com/markoshorro/MARTA/actions/workflows/python-package.yml/badge.svg)](https://github.com/markoshorro/MARTA/actions/workflows/python-package.yml)
+[![Code Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+
 
 MARTA is a toolkit for analyzing performance in any architecture given any kind,
 in form and shape, of C/C++ code and a set of features to take into account.
 
 This toolkit performs in two stages: profiling and analysis. The first component
-compiles, executes and gathers information in a CSV file, and the second
-component post-process that data offline given a set of parameters to consider.
+compiles, executes and collects information from hardware counters, and the second
+component post-process that data offline given a set of parameters to consider,
+applying ML techniques for classification in order to generate knowledge.
 For instance, having a piece of code or kernel such as:
 
 ```
@@ -22,20 +24,22 @@ for (int i = INIT_VAL; i < UPPER_BOUND; i += STEP) {
 It could be interesting to analyze the deviation in performance of same code
 but varying `INIT_VAL`, `UPPER_BOUND` and `STEP`. Just given that little code
 and those variables or parameters, MARTA extracts information in form of decision tree
-regarding performance. Decision tree informs how those variables affect to
-kernel performance.
+regarding performance. Decision tree categorizes the performance of the kernel
+according to the dimensions of interest specified.
 
-MARTA is also a very low intrusive profiler (even though requires recompiling).
+MARTA is also a very low intrusive profiler, even though it requires recompiling.
 Just with a header and two directives indicating the start and end of the
 region of interest (ROI), it can perform different compilations and executions,
 for instance, using different flags and/or compilers, and generating a readable
-table with performance metrics.
-
-It is recommended to check out testing configuration files for more clarity.
+table with performance metrics. This enables a fast comparison between
+compilers for a vast set of different combinations of parameters and flags.
 
 ## Dependencies
 
 - Python >=3.7
+- Libraries specified in [`requirements.txt`](requirements.txt)
+- PAPI >=5.7.0
+- Linux environment with root access
 
 ## Getting started
 
@@ -50,26 +54,38 @@ This project has two big and independent components:
   as well as detecting false positives/negatives. Typically, this system is
   either a decision tree or a random forest algorithm.
 
-TODO: What does **categorizing performance** means?
-
 ### Installation
 
-MARTA supports out-of-tree building and execution. This method could be
+MARTA supports out-of-tree execution. This method could be
 preferred in order to avoid copying files, for instance, in an already
 existent project.
 
 #### Out-of-tree
 
+Install a pre-built package (if any) or build the wheel and install it:
+
+```
+cd MARTA
+python -m build
+python -m pip install dist/<marta-wheel>
+# or just
+python -m pip install <marta-wheel>
+```
+
+This will install a module named `marta`, and two console scripts:
+`marta_profiler` and `marta_analyzer`.
+
 #### From sources
 
-## Micro-benchmarking
+If you just want to use MARTA as a module this can be done easily by just:
 
-Micro-benchmarking is not an easy task, it requires fine-grained tuning in
-order to measure properly very small and critical regions of interest. We could
-debate what is realistic or not when it comes to measuring instructions, since
-the chain of operations has an impact on the throughput. Nonetheless, this
-toolkit integrates different macros and functions trying to avoid the set 
+```
+cd MARTA/marta
+python -m profiler ... 
+# or
+python -m analyzer ...
+``` 
 
 ## License, copyright and authors
 
-See [LICENSE](LICENSE), [COPYRIGHT](COPYRIGHT) and [AUTHORS](AUTHORS) files, respectively, for further information
+See [LICENSE](LICENSE), [COPYRIGHT](COPYRIGHT) and [AUTHORS](AUTHORS) files, respectively, for further information.
