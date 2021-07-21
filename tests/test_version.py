@@ -12,7 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-with open("marta/__version__") as f:
-    __version__ = f.readline()
+import re
+from ast import literal_eval
 
-__all__ = ["__version__"]
+
+def test_version():
+    """Test version string"""
+    from marta import __version__
+
+    version_parts = re.split("[.-]", __version__)
+    if __version__ != "UNKNOWN":
+        assert 3 <= len(version_parts), "must have at least Major.minor.patch"

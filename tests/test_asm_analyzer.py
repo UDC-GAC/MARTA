@@ -1,6 +1,6 @@
 import pytest
 
-from marta.profiler.asm_analyzer import ASMParserFactory
+from profiler.asm_analyzer import ASMParserFactory
 
 
 def test_wrong_backend():

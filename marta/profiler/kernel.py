@@ -54,14 +54,20 @@ class Kernel:
         :type filename: str
         """
         # storing results with metadata, but cleaning first, just in case
-        df.drop([""], axis=1, inplace=True)
+        try:
+            df.drop([""], axis=1, inplace=True)
+        except KeyError:
+            pass
         df = df.fillna(0)
         cols = list(df.columns)
         # Set column order
-        cols.remove("compiler")
-        cols.remove("compiler_flags")
-        cols = ["compiler", "compiler_flags"] + cols
-        df = df[cols]
+        try:
+            cols.remove("compiler")
+            cols.remove("compiler_flags")
+            cols = ["compiler", "compiler_flags"] + cols
+            df = df[cols]
+        except ValueError:
+            pass
         if output_format == "html":
             df.to_html(filename, index=False)
         elif output_format == "json":
@@ -365,8 +371,7 @@ class Kernel:
         asm_file = f"{name_bin}_{compiler}_{compiler_flags_suffix}.s"
         if self.asm_count:
             asm_dict = ASMParserFactory.parse_asm(
-                self.asm_syntax,
-                f"asm_codes/{asm_file}",
+                self.asm_syntax, f"asm_codes/{asm_file}",
             )
             data.update(asm_dict)
         if self.static_analysis != "":
