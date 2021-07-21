@@ -302,7 +302,7 @@ class Kernel:
                 except KeyError:
                     perror("Error: bad key for MACVETH target")
 
-        # MACVETH syntax flags
+        # ASM syntax flags
         other_flags += f" ASM_SYNTAX={self.asm_syntax} "
 
         if self.measure_time:
@@ -365,7 +365,8 @@ class Kernel:
         asm_file = f"{name_bin}_{compiler}_{compiler_flags_suffix}.s"
         if self.asm_count:
             asm_dict = ASMParserFactory.parse_asm(
-                self.asm_syntax, f"asm_codes/{asm_file}",
+                self.asm_syntax,
+                f"asm_codes/{asm_file}",
             )
             data.update(asm_dict)
         if self.static_analysis != "":
@@ -499,7 +500,7 @@ class Kernel:
         # Computing average
         for execution in range(self.nexec):
             new_dict = data.copy()
-            if avg_time != None:
+            if type(avg_time) != type(None):
                 new_dict.update(
                     {"FLOPSs": Kernel.compute_flops(self.flops, avg_time[execution])}
                 )
@@ -512,7 +513,7 @@ class Kernel:
                     new_dict.update({"tsc": avg_tsc[execution]})
             if self.papi_counters != None:
                 new_dict.update(
-                    dict(zip(self.papi_counters, avg_papi_counters[execution]))
+                    dict(zip(self.papi_counters, [avg_papi_counters[execution]]))
                 )
             list_rows += [new_dict]
         return list_rows

@@ -12,10 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import cpuinfo as cpu
+# Standard libraries
 import os
-import json
-from .timing import Timing
+
+# Third-party libraries
+import cpuinfo as cpu
+
+# Local imports
+from profiler.timing import Timing
 
 
 class Report:

@@ -12,13 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Standard libraries
 import os
-from .timing import Timing
+
+# Local imports
+from profiler.timing import Timing
 
 
 class Benchmark:
-    """Benchmark class if meant for generating small benchmarks dynamically
-    """
+    """Benchmark class if meant for generating small benchmarks dynamically"""
 
     def compile(self, output="", compiler="gcc", flags="-O3") -> None:
         if output != "":

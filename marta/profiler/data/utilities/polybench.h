@@ -324,13 +324,13 @@ BEGIN_C_DECLS
 #define polybench_start_instruments polybench_timer_start();
 #define polybench_stop_instruments polybench_timer_stop();
 #define polybench_print_instruments polybench_timer_print();
-// #define polybench_print_instruments_flops(flops) \
-//   polybench_timer_print_flops(flops);
+#define polybench_print_instruments_flops(flops) \
+  polybench_timer_print_flops(flops);
 extern double polybench_program_total_flops;
 extern void polybench_timer_start();
 extern void polybench_timer_stop();
 extern void polybench_timer_print();
-// extern void polybench_timer_print_flops(long flops);
+extern void polybench_timer_print_flops(long flops);
 #endif
 
 /* PAPI support. */

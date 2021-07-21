@@ -12,7 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Standard libraries
 import sys
+
+# Third-party libraries
 from colorama import Fore, Style
 
 

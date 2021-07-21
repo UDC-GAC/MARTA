@@ -12,15 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Standard libraries
 import os
 import json
-from .marta_utilities import pwarning
+
+# Local imports
+from profiler.marta_utilities import pwarning
 
 
 class StaticCodeAnalyzer:
     @staticmethod
     def fix_json(json_file="perf.json") -> str:
-        """This method is needed if LLVM-MCA version is previous to 12.0.0
+        """This method is needed if LLVM-MCA version is previous to 13.0.0
 
         :param json_file: Input JSON file, defaults to "perf.json"
         :type json_file: str, optional
@@ -77,15 +80,15 @@ class StaticCodeAnalyzer:
                 with open(f"{json_file}") as f:
                     dom = json.loads(f.read())
 
+        d = {}
         try:
             summary = dom[region]["SummaryView"]
         except KeyError:
             pwarning("llvm-mca data could not be parsed")
-            return {}
+            return d
         finally:
             os.remove(f"{json_file}")
 
-        d = {}
         d.update({"llvm-mca_IPC": summary["IPC"]})
         d.update(
             {

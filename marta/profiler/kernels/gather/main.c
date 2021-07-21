@@ -39,6 +39,14 @@
 #include "marta_wrapper.h"
 #include <immintrin.h>
 
+void static gather(DATA_TYPE *restrict A) {
+  __m256i idx_gather =
+      _mm256_set_epi32(IDX7, IDX6, IDX5, IDX4, IDX3, IDX2, IDX1, IDX0);
+  __m256 tmp256 = _mm256_i32gather_ps(&A[0], idx_gather, 4);
+  DO_NOT_TOUCH(idx_gather);
+  DO_NOT_TOUCH_XMM(tmp256);
+}
+
 MARTA_BENCHMARK_BEGIN(MARTA_NO_HEADER);
 
 #ifdef MARTA_PARAMETRIC_LOOP
@@ -47,23 +55,23 @@ if (argc > 1) {
 }
 #endif
 
+int n = N;
+
 // Initialization section
 POLYBENCH_1D_ARRAY_DECL(A, DATA_TYPE, N, n);
 
 init_1darray(n, POLYBENCH_ARRAY(A));
 
-__m256 tmp256, __tmp1, __tmp17;
+// __m256 tmp256, __tmp1, __tmp17;
 
-polybench_start_instruments;
-BEGIN_LOOP(TSTEPS);
-__m256i idx_gather =
-    _mm256_set_epi32(IDX7, IDX6, IDX5, IDX4, IDX3, IDX2, IDX1, IDX0);
-tmp256 = _mm256_i32gather_ps(&POLYBENCH_ARRAY(A)[0], idx_gather, 4);
-DO_NOT_TOUCH(idx_gather);
-DO_NOT_TOUCH(tmp256);
-END_LOOP;
-polybench_stop_instruments;
-polybench_print_instruments;
+// polybench_start_instruments;
+// INIT_BEGIN_LOOP(TSTEPS);
+
+// END_LOOP;
+// polybench_stop_instruments;
+// polybench_print_instruments;
+
+PROFILE_FUNCTION_LOOP(gather(POLYBENCH_ARRAY(A)), TSTEPS);
 
 // if (argc >= 42) {
 //   printf("tmp %f", tmp256[2]);
