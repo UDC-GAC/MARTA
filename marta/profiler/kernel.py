@@ -20,11 +20,11 @@ import pickle
 import pandas as pd
 import subprocess
 from typing import Union, Any
-from .report import Report
-from .asm_analyzer import ASMParserFactory
-from .timing import Timing
-from .static_code_analyzer import StaticCodeAnalyzer
-from .marta_utilities import perror, pwarning, pinfo
+from profiler.report import Report
+from profiler.asm_analyzer import ASMParserFactory
+from profiler.timing import Timing
+from profiler.static_code_analyzer import StaticCodeAnalyzer
+from profiler.marta_utilities import perror, pwarning, pinfo
 
 
 class Kernel:

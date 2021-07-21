@@ -20,6 +20,7 @@ import cpuinfo as cpu
 
 # Local imports
 from profiler.timing import Timing
+from profiler.kernel import Kernel
 
 
 class Report:
@@ -48,7 +49,7 @@ class Report:
         return f"{cpu_info}\n"
 
     @staticmethod
-    def generate_report(kernel, verbose=True) -> str:
+    def generate_report(kernel: Kernel, verbose=True) -> str:
         """
         Generate custom header for CSV file
 

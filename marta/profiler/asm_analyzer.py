@@ -43,7 +43,7 @@ class ASMParser(ABC):
         pass
 
     @staticmethod
-    def skip_asm_instruction(ins: str) -> bool:
+    def skip_asm_instruction(ins: list[str]) -> bool:
         """
         Auxiliary function for skipping certain ASM operations
 
@@ -59,6 +59,13 @@ class ASMParser(ABC):
             if i == "ret" or i == "endbr64":
                 return True
         return False
+
+    @staticmethod
+    def tokenize_instruction(tok: list[str]) -> list[str]:
+        if len(tok) == 1:
+            tok = tok[0].split(" ")
+            tok = [t for t in tok if t != "" and t[0] != "#"]
+        return tok
 
 
 class ASMParserATT(ASMParser):
@@ -141,9 +148,7 @@ class ASMParserATT(ASMParser):
                     if not count or ASMParser.skip_asm_instruction(tok):
                         continue
                     # Fix for Intel Compiler ASM output
-                    if len(tok) == 1:
-                        tok = tok[0].split(" ")
-                        tok = [t for t in tok if t != "" and t[0] != "#"]
+                    tok = ASMParser.tokenize_instruction(tok)
                     raw_asm = ASMParserATT.get_raw_asm_type(tok)
                     if raw_asm in raw_inst.keys():
                         raw_inst[raw_asm] += 1
@@ -159,18 +164,18 @@ class ASMParserIntel(ASMParser):
     def operand_to_suffix(op: str) -> str:
         op = op.strip().replace(" ", "")
         if (op.startswith("zmm")) or (op.startswith("ymm")) or (op.startswith("xmm")):
-            return op[1:4].upper()
-        elif op.startswith("$"):
+            return op[:-1].upper()
+        elif op.startswith("0x") or re.match("^[0-9]+", op):
             return "IMM"
-        elif re.match("^[-0-9]*\(", op):
+        elif re.match("^[-0-9]*\[", op) or "word" in op:
             return "MEM"
         elif op.startswith("."):
             return "LABEL"
         else:
-            return "GP"
+            return "GPR"
 
     @staticmethod
-    def get_raw_asm_type(ins: str) -> str:
+    def get_raw_asm_type(ins: list[str]) -> str:
         """
         Get ASM variant, i.e. mnemonic[_operand_type], where operand_type can be a
         register, memory or a immediate value
@@ -212,22 +217,21 @@ class ASMParserIntel(ASMParser):
             with open(asm_file, "r") as f:
                 # Get the previous contents
                 lines = f.readlines()
-                for l in lines:
-                    if l[0] == "#" or l == "\n":
+                for line in lines:
+                    if line[0] == "#" or line == "\n":
                         continue
-                    tok = l.strip().split("#")
+                    tok = line.strip().split("#")
                     tok = tok[0].strip().split("\t")
-                    if tok[0] == ".cfi_endproc":
+                    if "LLVM-MCA-END kernel" in line:
                         return raw_inst
-                    if tok[0] == ".cfi_startproc":
+                    if "LLVM-MCA-BEGIN kernel" in line:
                         count = True
+                        raw_inst = {}
                         continue
                     if not count or ASMParser.skip_asm_instruction(tok):
                         continue
                     # Fix for Intel Compiler ASM output
-                    if len(tok) == 1:
-                        tok = tok[0].split(" ")
-                        tok = [t for t in tok if t != "" and t[0] != "#"]
+                    tok = ASMParser.tokenize_instruction(tok)
                     raw_asm = ASMParserIntel.get_raw_asm_type(tok)
                     if raw_asm in raw_inst.keys():
                         raw_inst[raw_asm] += 1

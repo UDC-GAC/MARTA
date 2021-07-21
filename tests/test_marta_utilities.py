@@ -12,27 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-
 import pytest
 
-from profiler.benchmark import Benchmark
+from profiler.marta_utilities import perror
 
 
-@pytest.fixture(autouse=True)
-def run_before_and_after_tests():
-    f = "/tmp/test.c"
-    os.system(f"cp tests/src/hello_world.c {f}")
-    assert os.path.exists(f)
-    yield
-    os.system(f"rm {f}")
-    assert not os.path.exists(f)
-
-
-def test_compile():
-    b = Benchmark("test.c")
-    output = "/tmp/a.out"
-    b.compile(output=output)
-    assert os.path.exists(output)
-    os.system(f"rm {output}")
-    assert not os.path.exists(output)
+def test_perror():
+    with pytest.raises(SystemExit) as pytest_wrapped_e:
+        perror("Error", 1)
+    assert pytest_wrapped_e.type == SystemExit
+    assert pytest_wrapped_e.value.code == 1
