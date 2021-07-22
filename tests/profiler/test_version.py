@@ -12,13 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pytest
-
-from profiler.marta_utilities import perror
+import re
 
 
-def test_perror():
-    with pytest.raises(SystemExit) as pytest_wrapped_e:
-        perror("Error", 1)
-    assert pytest_wrapped_e.type == SystemExit
-    assert pytest_wrapped_e.value.code == 1
+def test_version():
+    """Test version string"""
+    from marta import __version__
+
+    version_parts = re.split("[.-]", __version__)
+    if __version__ != "UNKNOWN":
+        assert 3 <= len(version_parts), "must have at least Major.minor.patch"

@@ -12,14 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import re
-from ast import literal_eval
+import pytest
+
+from marta.analyzer.decision_tree import DecisionTree
 
 
-def test_version():
-    """Test version string"""
-    from marta import __version__
-
-    version_parts = re.split("[.-]", __version__)
-    if __version__ != "UNKNOWN":
-        assert 3 <= len(version_parts), "must have at least Major.minor.patch"
+def test_decision_tree_config():
+    dtconfig = DecisionTree.DTConfig({})
+    assert dtconfig.max_depth == 10
+    assert dtconfig.max_leaves == 50
+    assert dtconfig.criterion == "gini"

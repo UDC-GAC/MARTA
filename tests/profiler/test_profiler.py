@@ -5,7 +5,7 @@ from marta.profiler.profiler import Profiler
 
 def test_profiler_correct_file():
     with pytest.raises(SystemExit) as pytest_wrapped_e:
-        Profiler(["tests/config/correct.yml"])
+        Profiler(["tests/profiler/config/correct.yml"])
     assert pytest_wrapped_e.type == SystemExit
     assert pytest_wrapped_e.value.code == 0
 

@@ -1,6 +1,6 @@
 import pytest
 
-from profiler.asm_analyzer import (
+from marta.profiler.asm_analyzer import (
     ASMParserFactory,
     ASMParser,
     ASMParserATT,
