@@ -17,6 +17,7 @@
 # Standard libraries
 import re
 from abc import ABC, abstractmethod
+from typing import List
 
 # Local imports
 from marta.utils.marta_utilities import perror, pwarning
@@ -43,7 +44,7 @@ class ASMParser(ABC):
         pass
 
     @staticmethod
-    def skip_asm_instruction(ins: list[str]) -> bool:
+    def skip_asm_instruction(ins: List[str]) -> bool:
         """
         Auxiliary function for skipping certain ASM operations
 
@@ -61,7 +62,7 @@ class ASMParser(ABC):
         return False
 
     @staticmethod
-    def tokenize_instruction(tok: list[str]) -> list[str]:
+    def tokenize_instruction(tok: List[str]) -> List[str]:
         if len(tok) == 1:
             tok = tok[0].split(" ")
             tok = [t for t in tok if t != "" and t[0] != "#"]
@@ -175,7 +176,7 @@ class ASMParserIntel(ASMParser):
             return "GPR"
 
     @staticmethod
-    def get_raw_asm_type(ins: list[str]) -> str:
+    def get_raw_asm_type(ins: List[str]) -> str:
         """
         Get ASM variant, i.e. mnemonic[_operand_type], where operand_type can be a
         register, memory or a immediate value
