@@ -1,34 +1,47 @@
 #!/bin/python3
-# -*- coding: utf-8 -*-
-"""
-.. module:: profiler
-   :synopsis: This module enables measurements given a configuration file
-.. moduleauthor:: Marcos Horro <marcos.horro@udc.es>
-"""
+# Copyright 2021 Marcos Horro
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
+# -*- coding: utf-8 -*-
+
+# Standard libraries
 import os
 import copy
 import sys
-from typing import Iterable, Union
 import yaml
 import argparse
-import pandas as pd
-import numpy as np
 import pkg_resources
 import pickle
 import itertools as it
 import multiprocessing as mp
-
-from .marta_utilities import perror, pwarning, pinfo
-from .benchmark import Benchmark
-from .kernel import Kernel
-from .project import Project
-from .utils import custom_mp
-from .timing import Timing
+from typing import Iterable, Union
 from datetime import datetime as dt
+
+# Third-party libraries
+import pandas as pd
+import numpy as np
 from tqdm import tqdm
 from tqdm.auto import tqdm
 from itertools import repeat
+
+# Local imports
+from profiler.marta_utilities import perror, pwarning, pinfo
+from profiler.benchmark import Benchmark
+from profiler.kernel import Kernel
+from profiler.project import Project
+from profiler.utils import custom_mp
+from profiler.timing import Timing
 
 
 class Profiler:
@@ -122,8 +135,7 @@ class Profiler:
         subparsers = parser.add_subparsers(dest="subparser", help="sub-command help")
         parser_project = subparsers.add_parser(
             "project",
-            aliases=["P", "proj"],
-            help="generate a blank project in current folder, with minimal files in order to work properly",
+            help="generate a blank project in current folder, with minimal files",
         )
         parser_project.add_argument(
             "-n",

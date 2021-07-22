@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import sys
-from .profiler import Profiler
+from profiler.profiler import Profiler
 
 
 def entry_point() -> None:

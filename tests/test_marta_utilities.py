@@ -12,7 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-with open("marta/__version__") as f:
-    __version__ = f.readline()
+import pytest
 
-__all__ = ["__version__"]
+from profiler.marta_utilities import perror
+
+
+def test_perror():
+    with pytest.raises(SystemExit) as pytest_wrapped_e:
+        perror("Error", 1)
+    assert pytest_wrapped_e.type == SystemExit
+    assert pytest_wrapped_e.value.code == 1

@@ -23,8 +23,10 @@
 #endif
 
 #include "polybench.h"
+
 #include "polybench_definitions.h"
 
+#include <assert.h>
 #include <math.h>
 #include <sched.h>
 #include <stdarg.h>
@@ -50,6 +52,10 @@
 #define NRUNS 10000
 #endif
 
+#ifndef TSTEPS
+#define TSTEPS NRUNS
+#endif
+
 #ifndef MARTA_NO_HEADER
 #define MARTA_NO_HEADER 0
 #endif
@@ -66,6 +72,11 @@
 #define MARTA_INTEL_FLUSH_DATA 0
 #endif
 
+#define EXPAND_STRING(s) #s
+#define TO_STRING(s) EXPAND_STRING(s)
+
+typedef unsigned long long int marta_cycles_t;
+
 /**
  * Flush cache using clflush instruction.
  * @param p memory address
@@ -80,13 +91,13 @@ void intel_clflush(volatile void *p, unsigned int allocation_size) {
     return;
 
   for (i = 0; i < allocation_size; i += cache_line) {
-    asm volatile("clflush (%0)\n\t" : : "r"(&cp[i]) : "memory");
+    __asm volatile("clflush (%0)\n\t" : : "r"(&cp[i]) : "memory");
   }
 
   /* according to Intel 64 and IA-32 Architectures optimization reference
    * manual 7.4.9, this instruction is no longer required; but just in case...
    */
-  asm volatile("sfence\n\t" : : : "memory");
+  __asm volatile("sfence\n\t" : : : "memory");
 }
 
 /**
@@ -105,24 +116,61 @@ void intel_clflush(volatile void *p, unsigned int allocation_size) {
     polybench_print_instruments;                                               \
   }
 
-#define BEGIN_LOOP(TSTEPS)                                                     \
-  asm volatile("mov %0, %%eax" : : "r"(TSTEPS) : "eax");                       \
-  asm volatile("begin_loop:");
+#define RDTSC(t)                                                               \
+  __asm volatile("rdtsc" : "=a"(__cycles_lo), "=d"(__cycles_hi));              \
+  t = (marta_cycles_t)__cycles_hi << 32 | __cycles_lo;
 
+#define PRE_LOOP                                                               \
+  __asm volatile("mov $" TO_STRING(TSTEPS) ", %%ecx" : : : "ecx");
+
+#define BEGIN_LOOP                                                             \
+  __asm volatile("begin_loop:");                                               \
+  __asm volatile("# LLVM-MCA-BEGIN kernel");                                   \
+  __asm volatile("" :::);
+
+#define INIT_BEGIN_LOOP(TSTEPS)                                                \
+  PRE_LOOP;                                                                    \
+  BEGIN_LOOP;
+
+#define INIT_BEGIN_CYCLES_LOOP(TSTEPS)                                         \
+  polybench_prepare_instruments();                                             \
+  marta_cycles_t t0;                                                           \
+  RDTSC(t0);                                                                   \
+  PRE_LOOP;                                                                    \
+  BEGIN_LOOP;
+
+// According to Intel's optimization guide it is better to avoid dec in benefit
+// of sub/add/cmp when using loops
+// Intel® 64 and IA-32 Architectures Optimization Reference Manual
+// https://software.intel.com/content/dam/develop/external/us/en/documents-tps/64-ia-32-architectures-optimization-manual.pdf
 #define END_LOOP                                                               \
-  asm volatile("dec %%eax\n\t"                                                 \
-               "jne begin_loop"                                                \
-               :                                                               \
-               :                                                               \
-               :);
+  __asm volatile("# LLVM-MCA-END kernel");                                     \
+  __asm volatile("" :::);                                                      \
+  __asm volatile("sub $1, %%ecx\n\t"                                           \
+                 "jne begin_loop"                                              \
+                 :                                                             \
+                 :                                                             \
+                 :);
+
+#if defined(DEC_END_LOOP)
+#undef END_LOOP
+#define END_LOOP                                                               \
+  __asm volatile("# LLVM-MCA-END kernel");                                     \
+  __asm volatile("" :::);                                                      \
+  __asm volatile("dec %%eax\n\t"                                               \
+                 "jne begin_loop"                                              \
+                 :                                                             \
+                 :                                                             \
+                 :);
+#endif
 
 /**
  * CLOBBER_MEMORY - Acts as a read/write memory barrier.
  */
-#define CLOBBER_MEMORY asm volatile("" : : : "memory")
+#define CLOBBER_MEMORY __asm volatile("" : : : "memory")
 
 /**
- * DO_NOT_TOUCH[_WRITE|_READ](x) - Avoid compiler optimizations
+ * DO_NOT_TOUCH[_WRITE|_READ|...](x) - Avoid compiler optimizations
  * Output   : none
  * Input    : x
  * Clobber  : "memory"
@@ -137,17 +185,25 @@ void intel_clflush(volatile void *p, unsigned int allocation_size) {
  *  "m": memory allowed as input
  */
 
-#if defined(__INTEL_COMPILER)
-#define DO_NOT_TOUCH(var)
-#define DO_NOT_TOUCH_WRITE(var)
-#define DO_NOT_TOUCH_READ(var)
-#else
-//#define DO_NOT_TOUCH(var) asm volatile("" : "+m,r"(var) : : "memory")
-#define DO_NOT_TOUCH(var)
-//#define DO_NOT_TOUCH(var) asm volatile("" : : "rm"(var) : "memory")
-#define DO_NOT_TOUCH_WRITE(var) asm volatile("" : : "rm"(var) : "memory")
-#define DO_NOT_TOUCH_READ(var) asm volatile("" : "+r,m"(var))
-#endif
+#define DO_NOT_TOUCH_XMM(var)                                                  \
+  __asm volatile(""                                                            \
+                 : "+x"(var)                                                   \
+                 : /* no inputs */                                             \
+                 : /* no clobbering */);
+#define DO_NOT_TOUCH_YMM(var)                                                  \
+  __asm volatile(""                                                            \
+                 : "+t"(var)                                                   \
+                 : /* no inputs */                                             \
+                 : /* no clobbering */);
+#define DO_NOT_TOUCH_ZMM(var)                                                  \
+  __asm volatile(""                                                            \
+                 : "+g"(var)                                                   \
+                 : /* no inputs */                                             \
+                 : /* no clobbering */);
+#define DO_NOT_TOUCH_IO(var) __asm volatile("" : "+"(var)::);
+#define DO_NOT_TOUCH_WRITE(var) __asm volatile("" : : "rm"(var) : "memory")
+#define DO_NOT_TOUCH_READ(var) __asm volatile("" : "+r,m"(var))
+#define DO_NOT_TOUCH(var) DO_NOT_TOUCH_XMM(var)
 
 #define PROFILE_FUNCTION_NO_LOOP(X)                                            \
   {                                                                            \
@@ -157,16 +213,41 @@ void intel_clflush(volatile void *p, unsigned int allocation_size) {
     polybench_print_instruments;                                               \
   }
 
-#define PROFILE_FUNCTION_TSTEPS_LOOP(X)                                        \
+#define PROFILE_FUNCTION_LOOP(X, TSTEPS)                                       \
   {                                                                            \
     polybench_start_instruments;                                               \
-    _Pragma("nounroll_and_jam");                                               \
-    for (int t = 0; t < TSTEPS; ++t) {                                         \
-      X;                                                                       \
-    }                                                                          \
+    INIT_BEGIN_LOOP(TSTEPS);                                                   \
+    X;                                                                         \
+    END_LOOP;                                                                  \
     polybench_stop_instruments;                                                \
     polybench_print_instruments;                                               \
   }
+
+#define PROFILE_FUNCTION_CYCLES_LOOP(X, TSTEPS)                                \
+  {                                                                            \
+    INIT_BEGIN_CYCLES_LOOP(TSTEPS)                                             \
+    X;                                                                         \
+    END_LOOP;                                                                  \
+    __asm volatile("rdtsc" : "=a"(__cycles_lo), "=d"(__cycles_hi));            \
+    marta_cycles_t t1 = ((marta_cycles_t)__cycles_hi << 32 | __cycles_lo);     \
+    printf("%Ld\n", (t1 - t0));                                                \
+  }
+
+#define PROFILE_FUNCTION_CYCLES_NO_LOOP(X)                                     \
+  {                                                                            \
+    marta_cycles_t t0;                                                         \
+    RDTSC(t0);                                                                 \
+    X;                                                                         \
+    __asm volatile("rdtsc" : "=a"(__cycles_lo), "=d"(__cycles_hi));            \
+    printf("%Ld\n", ((marta_cycles_t)__cycles_hi << 32 | __cycles_lo) - t0);   \
+  }
+
+#ifdef MARTA_RDTSC
+#undef PROFILE_FUNCTION_NO_LOOP
+#undef PROFILE_FUNCTION_LOOP
+#define PROFILE_FUNCTION_LOOP(X, TSTEPS) PROFILE_FUNCTION_CYCLES_LOOP(X, TSTEPS)
+#define PROFILE_FUNCTION_NO_LOOP(X) PROFILE_FUNCTION_CYCLES_NO_LOOP(X)
+#endif
 
 #define PROFILE_FUNCTION_SINGLE_VAL_DCE(STEPS, X, Y)                           \
   {                                                                            \
@@ -180,21 +261,6 @@ void intel_clflush(volatile void *p, unsigned int allocation_size) {
     }                                                                          \
     polybench_stop_instruments;                                                \
     polybench_print_instruments;                                               \
-  }
-
-/**
- * Macro to encapsulate a function call in the main function to enable
- * its profiling with the PolyBench harness.
- */
-#define PROFILE_FUNCTION(STEPS, X, name, features, flops, i)                   \
-  {                                                                            \
-    polybench_prepare_instruments;                                             \
-    polybench_start_instruments;                                               \
-    for (int t = 0; t < STEPS; ++t) {                                          \
-      X;                                                                       \
-    }                                                                          \
-    polybench_stop_instruments;                                                \
-    printf("%s,%s,%ld,", name, features, flops);                               \
   }
 
 /* DCE code. Must scan the entire live-out data.
@@ -278,18 +344,16 @@ DATA_TYPE marta_avoid_dce_sum(const char *fmt, ...) {
     exit(1);                                                                   \
   }
 
-#ifndef NRUNS
-#define NRUNS 1000
-#endif
-
 #define MARTA_BENCHMARK_BEGIN(cond)                                            \
   int main(int argc, char **argv) {                                            \
     MARTA_CHECK_HEADERS(cond);                                                 \
-    cpu_set_t mask;                                                            \
-    CPU_ZERO(&mask);                                                           \
-    CPU_SET(MARTA_CPU_AFFINITY, &mask);                                        \
-    int TSTEPS = NRUNS;                                                        \
-    int result = sched_setaffinity(0, sizeof(mask), &mask);
+    cpu_set_t MARTA_CPU_MASK;                                                  \
+    CPU_ZERO(&MARTA_CPU_MASK);                                                 \
+    CPU_SET(MARTA_CPU_AFFINITY, &MARTA_CPU_MASK);                              \
+    assert(sched_setaffinity(0, sizeof(MARTA_CPU_MASK), &MARTA_CPU_MASK) ==    \
+           0);                                                                 \
+    unsigned int __cycles_lo;                                                  \
+    unsigned int __cycles_hi;
 
 #define MARTA_BENCHMARK_END                                                    \
   return 0;                                                                    \

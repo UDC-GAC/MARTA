@@ -158,7 +158,7 @@ asm_code:
 
 asm_code_main:
 	cp $(MAIN_FILE) $(TMP_SRC)
-	$(V)$(CC) $(FLAGS_MAIN) $(POLY_TFLAGS) $(TMP_SRC) -S
+	$(V)$(CC) $(FLAGS_MAIN) $(POLY_TFLAGS) $(TMP_SRC) -masm=$(ASM_SYNTAX) -S
 	mv $(TMP_ASM) $(BASE_ASM_NAME).s
 	rm $(TMP_SRC)
 

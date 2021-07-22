@@ -1,6 +1,6 @@
 import pytest
 
-from marta.profiler.kernel import Kernel
+from profiler.kernel import Kernel
 
 
 def test_compute_flops():

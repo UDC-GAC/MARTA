@@ -12,12 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Standard libraries
 from __future__ import annotations
 from typing import Union
 import datetime as dt
 import os
-import numpy as np
 import time
+
+# Third-party libraries
+import numpy as np
 
 
 class Timing:

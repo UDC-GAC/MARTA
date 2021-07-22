@@ -12,7 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-with open("marta/__version__") as f:
-    __version__ = f.readline()
-
-__all__ = ["__version__"]
+import pytest

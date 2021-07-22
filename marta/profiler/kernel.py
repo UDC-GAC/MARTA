@@ -20,11 +20,11 @@ import pickle
 import pandas as pd
 import subprocess
 from typing import Union, Any
-from .report import Report
-from .asm_analyzer import ASMParserFactory
-from .timing import Timing
-from .static_code_analyzer import StaticCodeAnalyzer
-from .marta_utilities import perror, pwarning, pinfo
+from profiler.report import Report
+from profiler.asm_analyzer import ASMParserFactory
+from profiler.timing import Timing
+from profiler.static_code_analyzer import StaticCodeAnalyzer
+from profiler.marta_utilities import perror, pwarning, pinfo
 
 
 class Kernel:
@@ -54,14 +54,20 @@ class Kernel:
         :type filename: str
         """
         # storing results with metadata, but cleaning first, just in case
-        df.drop([""], axis=1, inplace=True)
+        try:
+            df.drop([""], axis=1, inplace=True)
+        except KeyError:
+            pass
         df = df.fillna(0)
         cols = list(df.columns)
         # Set column order
-        cols.remove("compiler")
-        cols.remove("compiler_flags")
-        cols = ["compiler", "compiler_flags"] + cols
-        df = df[cols]
+        try:
+            cols.remove("compiler")
+            cols.remove("compiler_flags")
+            cols = ["compiler", "compiler_flags"] + cols
+            df = df[cols]
+        except ValueError:
+            pass
         if output_format == "html":
             df.to_html(filename, index=False)
         elif output_format == "json":
@@ -302,7 +308,7 @@ class Kernel:
                 except KeyError:
                     perror("Error: bad key for MACVETH target")
 
-        # MACVETH syntax flags
+        # ASM syntax flags
         other_flags += f" ASM_SYNTAX={self.asm_syntax} "
 
         if self.measure_time:
@@ -499,7 +505,7 @@ class Kernel:
         # Computing average
         for execution in range(self.nexec):
             new_dict = data.copy()
-            if avg_time != None:
+            if type(avg_time) != type(None):
                 new_dict.update(
                     {"FLOPSs": Kernel.compute_flops(self.flops, avg_time[execution])}
                 )
@@ -512,7 +518,7 @@ class Kernel:
                     new_dict.update({"tsc": avg_tsc[execution]})
             if self.papi_counters != None:
                 new_dict.update(
-                    dict(zip(self.papi_counters, avg_papi_counters[execution]))
+                    dict(zip(self.papi_counters, [avg_papi_counters[execution]]))
                 )
             list_rows += [new_dict]
         return list_rows

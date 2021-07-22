@@ -5,7 +5,7 @@
 ################################################################################
 
 # Some useful paths
-PARENT_DIR=../
+PARENT_DIR=../../../
 BIN_DIR=$(PARENT_DIR)bin/
 ASM_DIR=$(PARENT_DIR)asm_codes/
 DUMP_DIR=$(PARENT_DIR)dumps/
@@ -20,7 +20,8 @@ PAPI_INCLUDE?=$(USRDIR)/include
 PAPI_FLAGS=-I$(PAPI_INCLUDE) -L$(PAPI_LIB) -lpapi
 POLYBENCH_FLAGS = -I ../utilities ../utilities/polybench.c
 POLY_TFLAGS= -DPOLYBENCH_TIME $(POLYBENCH_FLAGS)
-POLY_RFLAGS= -DPOLYBENCH_TIME -DPOLYBENCH_CYCLE_ACCURATE_TIMER $(POLYBENCH_FLAGS)
+POLY_CFLAGS= -DMARTA_RDTSC $(POLYBENCH_FLAGS)
+#POLY_CFLAGS= -DPOLYBENCH_TIME -DPOLYBENCH_CYCLE_ACCURATE_TIMER $(POLYBENCH_FLAGS)
 POLY_PFLAGS= -DPOLYBENCH_PAPI $(POLYBENCH_FLAGS) $(PAPI_FLAGS)
 
 ASM_SYNTAX?=intel
@@ -54,7 +55,7 @@ else ifeq ($(COMP),gcc)
 	FLAGS_ASM+= $(FLAGS_KERN)
 	FLAGS_MAIN+= $(FLAGS_KERN)
 	ifeq ($(KERNEL_INLINED),true)
-		FLAGS_MAIN+= -lto
+		FLAGS_MAIN+= -flto 
 	endif
 else ifeq ($(COMP),clang)
 	CC=clang
@@ -66,7 +67,7 @@ else ifeq ($(COMP),clang)
 	FLAGS_ASM+= $(FLAGS_KERN)
 	FLAGS_MAIN+= $(FLAGS_KERN)
 	ifeq ($(KERNEL_INLINED),true)
-		FLAGS_MAIN+= -lto
+		FLAGS_MAIN+= -flto 
 	endif
 else
 	echo "Compiler unknown"
@@ -90,8 +91,9 @@ endif
 
 .PHONY: all clean
 
-KERNEL_NAME?=$(BASENAME)_$(SUFFIX_ASM)_$(COMP)
+KERNEL_NAME?=$(BASENAME)_$(SUFFIX_ASM)_$(COMP)_$(COMP_FLAGS)
 TMP_SRC?=___tmp_$(KERNEL_NAME).c
+TMP_ASM?=___tmp_$(KERNEL_NAME).s
 TMP_BIN?=___tmp_$(KERNEL_NAME).o
 
 BASE_BIN_NAME?=$(BIN_DIR)$(KERNEL_NAME)
@@ -108,11 +110,14 @@ ifeq ($(COMPILE_KERNEL),true)
 		MAIN_RULES+= kernel
 	endif
 	FLAGS_MAIN+= $(KERNEL_NAME).o
-
 endif
 
-ifeq ($(ASM_CODE),true)
+ifeq ($(ASM_CODE_KERNEL),true)
 	MAIN_RULES+= asm_code
+endif
+
+ifeq ($(ASM_CODE_MAIN),true)
+	MAIN_RULES+= asm_code_main
 endif
 
 
@@ -136,7 +141,7 @@ ifeq ($(PAPI),true)
 endif
 
 ifeq ($(DUMP),true)
-	TARGETSS+= $(BINARY_NAME)_dump
+	TARGETS+= $(BINARY_NAME)_dump
 endif
 
 # Targets to compile
@@ -150,6 +155,12 @@ macveth:
 
 asm_code:
 	$(V)$(CC) -c $(FLAGS_ASM) $(TARGET).c -masm=$(ASM_SYNTAX) -S -o $(BASE_ASM_NAME).s
+
+asm_code_main:
+	cp $(MAIN_FILE) $(TMP_SRC)
+	$(V)$(CC) $(FLAGS_MAIN) $(POLY_TFLAGS) $(TMP_SRC) -masm=$(ASM_SYNTAX) -S
+	mv $(TMP_ASM) $(BASE_ASM_NAME).s
+	rm $(TMP_SRC)
 
 kernel_macveth: macveth
 	$(V)$(CC) -c $(FLAGS_KERN) $(TMP_SRC)
@@ -168,9 +179,9 @@ custom_asm:
 $(BINARY_NAME)_time: $(MAIN_RULES)
 	$(V)$(CC) $(FLAGS_MAIN) $(POLY_TFLAGS) $(MAIN_FILE) -o $(BASE_BIN_NAME)_time.o
 
-# -DPOLYBENCH_CYCLE_ACCURATE_TIMER (TSC)
+# RDTSC instruction for measuring
 $(BINARY_NAME)_tsc: $(MAIN_RULES)
-	$(V)$(CC) $(FLAGS_MAIN) $(POLY_RFLAGS) $(MAIN_FILE) -o $(BASE_BIN_NAME)_tsc.o
+	$(V)$(CC) $(FLAGS_MAIN) $(POLY_CFLAGS) $(MAIN_FILE) -o $(BASE_BIN_NAME)_tsc.o
 
 # -DPOLYBENCH_PAPI (hardware counters)
 $(BINARY_NAME)_papi: $(MAIN_RULES)

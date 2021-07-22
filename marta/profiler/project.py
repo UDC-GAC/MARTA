@@ -12,11 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Standard libraries
 import os
-import sys
 from typing import List
+
+# Third-party libraries
 from shutil import copytree
-from .marta_utilities import perror
+
+# Local imports
+from profiler.marta_utilities import perror
 
 
 class Project:

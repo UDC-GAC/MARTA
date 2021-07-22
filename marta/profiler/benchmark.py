@@ -12,18 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Standard libraries
 import os
-from .timing import Timing
+
+# Local imports
+from profiler.timing import Timing
 
 
 class Benchmark:
-    """Benchmark class if meant for generating small benchmarks dynamically
-    """
+    """Benchmark class if meant for generating small benchmarks dynamically"""
 
     def compile(self, output="", compiler="gcc", flags="-O3") -> None:
         if output != "":
             output = f"-o {output}"
-        input_file = f"{self.name}"
+        input_file = f"{self.path}{self.name}"
         os.system(f"{compiler} {flags} {input_file} {output}")
 
     def compile_run_benchmark(
@@ -33,11 +35,9 @@ class Benchmark:
         d, _ = Timing.measure_benchmark(
             self.name, self.btype, bin_file=bin_file, tmp_file=tmp_file
         )
-        # os.remove(f"{bin_file}")
-        # os.remove(f"{tmp_file}")
         return d[self.btype]
 
-    def __init__(self, name: str, path=".", btype="tsc"):
+    def __init__(self, name: str, path="/tmp/", btype="tsc"):
         self.name = name
         self.path = path
         self.btype = btype

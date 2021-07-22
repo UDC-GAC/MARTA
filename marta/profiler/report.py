@@ -12,10 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import cpuinfo as cpu
+# Standard libraries
 import os
-import json
-from .timing import Timing
+
+# Third-party libraries
+import cpuinfo as cpu
+
+# Local imports
+from profiler.timing import Timing
+from profiler.kernel import Kernel
 
 
 class Report:
@@ -44,7 +49,7 @@ class Report:
         return f"{cpu_info}\n"
 
     @staticmethod
-    def generate_report(kernel, verbose=True) -> str:
+    def generate_report(kernel: Kernel, verbose=True) -> str:
         """
         Generate custom header for CSV file
 

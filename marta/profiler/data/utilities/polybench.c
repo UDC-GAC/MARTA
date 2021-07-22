@@ -392,17 +392,17 @@ void polybench_timer_print() {
 #endif
 }
 
-// void polybench_timer_print_flops(long flops) {
-// #ifndef POLYBENCH_CYCLE_ACCURATE_TIMER
-//   long double diff = (long double)(polybench_t_end - polybench_t_start);
-//   printf("%Lf,%Lf\n", diff, flops / (diff) / 1e9);
-// #else
-//   printf("%Lf,%f\n",
-//          (long double)(polybench_c_end - polybench_c_start) / CLOCKS_PER_SEC,
-//          flops / (double)(polybench_c_end - polybench_c_start) /
-//              CLOCKS_PER_SEC);
-// #endif
-// }
+void polybench_timer_print_flops(long flops) {
+#ifndef POLYBENCH_CYCLE_ACCURATE_TIMER
+  long double diff = (long double)(polybench_t_end - polybench_t_start);
+  printf("%Lf,%Lf\n", diff, flops / (diff) / 1e9);
+#else
+  printf("%Lf,%f\n",
+         (long double)(polybench_c_end - polybench_c_start) / CLOCKS_PER_SEC,
+         flops / (double)(polybench_c_end - polybench_c_start) /
+             CLOCKS_PER_SEC);
+#endif
+}
 
 /*
  * These functions are used only if the user defines a specific
