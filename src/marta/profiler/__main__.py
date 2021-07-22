@@ -12,9 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .analyzer import Analyzer
+from . import entry_point
 
-if __name__ == "__main__":
-    analyzer = Analyzer()
-    analyzer.train_model()
-
+entry_point()

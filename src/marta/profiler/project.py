@@ -20,7 +20,7 @@ from typing import List
 from shutil import copytree
 
 # Local imports
-from profiler.marta_utilities import perror
+from marta.utils.marta_utilities import perror
 
 
 class Project:

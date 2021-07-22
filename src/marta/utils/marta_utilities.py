@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# -*- coding: utf-8 -*-
+
 # Standard libraries
 import sys
 
@@ -38,3 +40,10 @@ def pwarning(msg: str) -> None:
 def pinfo(msg: str) -> None:
     colored_msg = colored(f"[INFO] {msg}", Fore.CYAN, Style.NORMAL)
     print(f"{colored_msg}")
+
+
+def pdebug(msg: str, debug=False) -> None:
+    if debug:
+        colored_msg = colored(f"[DEBUG] {msg}", Fore.MAGENTA, Style.NORMAL)
+        print(f"{colored_msg}")
+

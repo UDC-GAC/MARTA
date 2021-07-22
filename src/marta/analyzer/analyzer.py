@@ -16,13 +16,18 @@
 
 # -*- coding: utf-8 -*-
 
+# Standard library
 import argparse
-import numpy as np
 import os
+
+# Third-party libraries
+import numpy as np
 import pandas as pd
-import sys
 import yaml
-from .decision_tree import DecisionTree
+
+# Local imports
+from marta.analyzer.decision_tree import DecisionTree
+from marta.utils.marta_utilities import perror
 
 
 class Analyzer:
@@ -93,10 +98,10 @@ class Analyzer:
             except TypeError:
                 cond = getattr(df, d) == self.filter_rows[d]
             except Exception:
-                self.perror("check kernel[prepare_data[rows]]")
+                perror("check kernel[prepare_data[rows]]")
             df = df[cond].copy()
         if df.count()[0] == 0:
-            self.perror("dataset empty, check constraints in data please!",)
+            perror("dataset empty, check constraints in data please!",)
         f_cols = self.filter_cols + [cat]
         df = df[list(f_cols)]
         df.to_csv(output_file, index=False)
@@ -119,14 +124,10 @@ class Analyzer:
             if self.dt_cfg.graph_tree:
                 dt.export_graph_tree()
             dt.get_summary()
-
-    def perror(self, msg: str, exit_code=1) -> None:
-        print(f"[FATAL ERROR] {msg}")
-        sys.exit(exit_code)
-
-    def dprint(self, msg: str) -> None:
-        if self.debug:
-            print(f"[DEBUG] {msg}")
+        elif self.class_type == "randomforest":
+            raise TypeError
+        else:
+            raise TypeError
 
     def __init__(self):
         try:
@@ -186,15 +187,15 @@ class Analyzer:
             if self.rm_temp_files:
                 self.remove_files()
         except KeyError as K:
-            self.perror(f"key {K} missing in configuration file")
+            perror(f"key {K} missing in configuration file")
         except TypeError as T:
-            self.perror(f"key {T} wrong type")
+            perror(f"key {T} wrong type")
         except ValueError as V:
             key, value, msg = V.args
-            self.perror(f"{key} = {value}, {msg}")
+            perror(f"{key} = {value}, {msg}")
         except SyntaxError as S:
-            self.perror(f"syntax error in {S}")
+            perror(f"syntax error in {S}")
         except NameError as N:
-            self.perror(f"{N}")
+            perror(f"{N}")
         except Exception as E:
-            self.perror(f"something went wrong: {E}")
+            perror(f"something went wrong: {E}")

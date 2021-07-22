@@ -36,12 +36,12 @@ from tqdm.auto import tqdm
 from itertools import repeat
 
 # Local imports
-from profiler.marta_utilities import perror, pwarning, pinfo
-from profiler.benchmark import Benchmark
-from profiler.kernel import Kernel
-from profiler.project import Project
-from profiler.utils import custom_mp
-from profiler.timing import Timing
+from marta.utils.marta_utilities import perror, pwarning, pinfo
+from marta.profiler.benchmark import Benchmark
+from marta.profiler.kernel import Kernel
+from marta.profiler.project import Project
+from marta.profiler.utils import custom_mp
+from marta.profiler.timing import Timing
 
 
 class Profiler:

@@ -14,21 +14,84 @@
 # limitations under the License.
 
 # -*- coding: utf-8 -*-
+
 from __future__ import annotations
 import os
-import pickle
-import pandas as pd
-import subprocess
 from typing import Union, Any
-from profiler.report import Report
-from profiler.asm_analyzer import ASMParserFactory
-from profiler.timing import Timing
-from profiler.static_code_analyzer import StaticCodeAnalyzer
-from profiler.marta_utilities import perror, pwarning, pinfo
+import subprocess
+import pickle
+
+# Third-party libraries
+import pandas as pd
+
+# Local imports
+from marta.profiler.report import Report
+from marta.profiler.asm_analyzer import ASMParserFactory
+from marta.profiler.timing import Timing
+from marta.profiler.static_code_analyzer import StaticCodeAnalyzer
+from marta.utils.marta_utilities import perror, pwarning, pinfo
 
 
 class Kernel:
     debug = False
+
+    def generate_report(self, verbose=True) -> str:
+        """Generate report based on the details of the execution
+
+        :param verbose: Verbose mode to display machine information, defaults to True
+        :type verbose: bool, optional
+        :return: Text file for output
+        :rtype: str
+        """
+        content = f"#" * 80 + "\n"
+        content += f"#            MARTA file report: {self.kernel}\n"
+        content += f"#" * 80 + "\n"
+        if verbose:
+            content += f"\n# -- MACHINE INFO\n"
+            content += Report.get_machine_info()
+
+        content += f"\n# -- TIME ELAPSED : {Timing.to_seconds(Timing.total_time)}\n"
+        content += f"\t- Total Compilation time: {Timing.to_seconds(Timing.compilation_time)}\n"
+        content += (
+            f"\t- Total Execution time: {Timing.to_seconds(Timing.execution_time)}\n"
+        )
+        content += f"\n# -- EXPERIMENT PARAMETERS\n"
+        content += f"- Kernel name: {self.kernel}\n"
+        content += f"- Description: {self.descr}\n"
+        content += f"- Compilers used:\n"
+        for compiler in self.compiler_flags:
+            content += f"\t{compiler} -> {self.compiler_flags[compiler]}\n"
+        content += f"- Kernel configurations: {self.kernel_cfg}\n"
+        content += f"- FLOPS: {self.flops}\n"
+        content += f"- Loop iterations: {self.nsteps}\n"
+        content += f"- Number of repetitions: {self.nexec}\n"
+        content += f"- CPU affinity (if any): {self.cpu_affinity}\n"
+        if self.papi_counters != None:
+            content += f"- Hardware counters used:\n"
+            for l in self.papi_counters:
+                content += f"\t{l}\n"
+
+        # Get compilation flags and so
+        content += f"\n# -- COMPILATION (stdout)\n"
+        try:
+            with open("log/___tmp.stdout") as f:
+                for l in f.readlines():
+                    content += l
+            os.remove("log/___tmp.stdout")
+        except FileNotFoundError:
+            content += "stdout was redirected manually.\n"
+
+        # Generate errors
+        content += f"\n# -- WARNINGS/ERRORS (stderr)\n"
+        try:
+            with open("log/___tmp.stderr") as f:
+                for l in f.readlines():
+                    content += l
+            os.remove("log/___tmp.stderr")
+        except FileNotFoundError:
+            content += "stderr was redirected manually.\n"
+
+        return content
 
     def save_results(
         self,
@@ -78,7 +141,7 @@ class Kernel:
         if generate_report:
             report_filename = filename.replace(".csv", ".log")
             with open(report_filename, "w") as f:
-                f.write(Report.generate_report(self))
+                f.write(self.generate_report())
 
     @staticmethod
     def compile_parse_asm(
@@ -522,6 +585,9 @@ class Kernel:
                 )
             list_rows += [new_dict]
         return list_rows
+
+    def __init__(self) -> None:
+        pass
 
     def __init__(self, cfg: dict) -> None:
         try:

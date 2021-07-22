@@ -19,7 +19,7 @@ import re
 from abc import ABC, abstractmethod
 
 # Local imports
-from profiler.marta_utilities import perror, pwarning
+from marta.utils.marta_utilities import perror, pwarning
 
 
 class ASMParserFactory:

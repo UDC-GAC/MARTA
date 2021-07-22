@@ -17,7 +17,7 @@ import os
 import json
 
 # Local imports
-from profiler.marta_utilities import pwarning
+from marta.utils.marta_utilities import pwarning
 
 
 class StaticCodeAnalyzer:

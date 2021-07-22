@@ -16,7 +16,7 @@
 import os
 
 # Local imports
-from profiler.timing import Timing
+from marta.profiler.timing import Timing
 
 
 class Benchmark:

@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import sys
-from analyzer.analyzer import Analyzer
+from marta.analyzer.analyzer import Analyzer
 
 
 def entry_point() -> None:
