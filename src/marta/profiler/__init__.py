@@ -12,13 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
-from marta.profiler.profiler import Profiler
-
-
-def entry_point() -> None:
-    Profiler(sys.argv[1:])
-
+from marta.profiler.cli import cli
 
 if __name__ == "__main__":
-    entry_point()
+    cli()

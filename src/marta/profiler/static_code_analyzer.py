@@ -15,9 +15,14 @@
 # Standard libraries
 import os
 import json
+import subprocess
 
 # Local imports
 from marta.utils.marta_utilities import pwarning
+
+
+class LLVMMCAError(Exception):
+    pass
 
 
 class StaticCodeAnalyzer:
@@ -68,10 +73,22 @@ class StaticCodeAnalyzer:
         :return: Returns the IPC, Cycles and uOPS reported by the tool.
         :rtype: dict
         """
-        json_file = f"{name_bench.replace('.s','')}_perf.json"
-        os.system(
-            f"{self.binary} -march={self.arch} -mcpu={self.cpu} -iterations={iterations} {name_bench} -json -o {json_file}"
-        )
+        json_file = f"/tmp/{name_bench.replace('.s','')}_perf.json"
+
+        cmd = [
+            f"{self.binary}",
+            f"-march={self.arch}",
+            f"-mcpu={self.cpu}",
+            f"-iterations={iterations}",
+            f"{name_bench}",
+            f"-json",
+            "-o",
+            f"{json_file}",
+        ]
+        ret = subprocess.call(cmd)
+        if ret:
+            raise LLVMMCAError
+
         with open(f"{json_file}") as f:
             try:
                 dom = json.loads(f.read())

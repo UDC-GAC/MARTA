@@ -16,6 +16,7 @@
 
 # Standard libraries
 import sys
+import os
 
 # Third-party libraries
 from colorama import Fore, Style
@@ -47,3 +48,9 @@ def pdebug(msg: str, debug=False) -> None:
         colored_msg = colored(f"[DEBUG] {msg}", Fore.MAGENTA, Style.NORMAL)
         print(f"{colored_msg}")
 
+
+def create_dir_or_pass(dir_name):
+    try:
+        os.mkdir(dir_name)
+    except FileExistsError:
+        pass

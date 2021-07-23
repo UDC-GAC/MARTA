@@ -17,6 +17,9 @@ __pycache__/
 tmp/
 log/
 
+# benchmarks
+src/marta/profiler/kernels/*
+
 # results
 old_files/
 results/

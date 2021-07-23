@@ -12,6 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from marta.profiler.cli import cli
+import sys
+from marta.profiler.profiler import Profiler
 
-cli()
+
+def cli() -> None:
+    Profiler(sys.argv[1:])
+

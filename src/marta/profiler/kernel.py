@@ -25,6 +25,7 @@ import pickle
 import pandas as pd
 
 # Local imports
+from marta.profiler.compile import compile_makefile
 from marta.profiler.report import Report
 from marta.profiler.asm_analyzer import ASMParserFactory
 from marta.profiler.timing import Timing
@@ -142,66 +143,6 @@ class Kernel:
             report_filename = filename.replace(".csv", ".log")
             with open(report_filename, "w") as f:
                 f.write(self.generate_report())
-
-    @staticmethod
-    def compile_parse_asm(
-        kpath: str,
-        comp: str,
-        compiler_flags: str,
-        common_flags: str,
-        kconfig: str,
-        other_flags="",
-        suffix_file="",
-        debug="",
-    ) -> bool:
-        """
-        Compile benchmark according to a set of flags, suffixes and so
-
-        :param common_flags: Flags which are common for all versions
-        :type common_flags: str
-        :param custom_flags: Flags which are target-dependent
-        :type custom_flags: str
-        :param suffix_file: Suffix
-        :type suffix_file: str
-        :param debug: Suffix for execution command in order to redirect output if any
-        :type debug: str
-        :return: Dictionary of ASM occurrences
-        :rtype: dict
-        """
-
-        # Check if options in kernel config string:
-        tok = kconfig.split(" ")
-        for t in tok:
-            if "-D" in t:
-                kconfig = kconfig.replace(t, "")
-                common_flags += f" {t} "
-                continue
-            if "=" in t:
-                kconfig = kconfig.replace(t, "")
-                other_flags += f" {t} "
-
-        compiler_flags_suffix = compiler_flags.replace(" ", "_").replace("-", "")
-
-        comp_str = (
-            f"make -B -C {kpath} COMP={comp} COMP_FLAGS={compiler_flags_suffix} "
-            f" KERNEL_CONFIG='{kconfig}' "
-            f" COMMON_FLAGS='{common_flags}' "
-            f" SUFFIX_ASM='{suffix_file}' "
-            f" {other_flags} "
-            f" {debug}"
-        )
-        ret = os.system(comp_str)
-
-        if ret != 0:
-            # os.system returns a 16-bit value: 8 LSB for the signal, 8 MSB for
-            # the code
-            exit_code = (int(ret) >> 8) & 0xFF
-            exit_signal = int(ret) & 0xFF
-            pinfo(
-                f"'make' exited with code '{str(exit_code)}' (signal '{exit_signal}') while compiling in {kpath}."
-            )
-            return False
-        return True
 
     def define_papi_counters(self) -> None:
         """
@@ -330,7 +271,6 @@ class Kernel:
         debug: bool,
         quit_on_error=False,
     ) -> bool:
-        # FIXME: refactor this garbage, please
         tmp_pickle = pickle.loads(product_params)
         kconfig = tmp_pickle["KERNEL_CFG"]
         del tmp_pickle["KERNEL_CFG"]
@@ -398,7 +338,7 @@ class Kernel:
             else:
                 other_flags += f" ASM_CODE_KERNEL=true "
 
-        ret = Kernel.compile_parse_asm(
+        ret = compile_makefile(
             self.path_kernel,
             compiler,
             compiler_flags,
@@ -408,9 +348,8 @@ class Kernel:
             suffix_file,
             debug,
         )
-        if not ret and quit_on_error:
-            return False
-        return True
+
+        return not (not ret and quit_on_error)
 
     def run(self, product_params: bytes, compiler: str, compiler_flags="") -> list:
         # FIXME: need to refactor this function a bit

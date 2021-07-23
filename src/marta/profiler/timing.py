@@ -14,13 +14,17 @@
 
 # Standard libraries
 from __future__ import annotations
-from typing import Union
+import subprocess
+from typing import Optional
 import datetime as dt
 import os
 import time
 
 # Third-party libraries
 import numpy as np
+
+# Local imports
+from marta.utils.marta_utilities import pinfo, pwarning, create_dir_or_pass
 
 
 class Timing:
@@ -63,7 +67,7 @@ class Timing:
 
     @staticmethod
     def show_error(line: str, events: list) -> None:
-        print(f"Execution did not return a numeric value: \n'{line}'")
+        pwarning(f"Execution did not return a numeric value: \n'{line}'")
         if "FAILED" in line:
             print("Executions need to have access to PAPI library")
             print("Seems you do not have access, try: ")
@@ -77,15 +81,13 @@ class Timing:
 
     @staticmethod
     def dump_values(code: str, exec_opts: str, compiler: str) -> None:
-        try:
-            os.mkdir("dumps")
-        except FileExistsError:
-            pass
+        create_dir_or_pass("dumps")
         # Save execution values in an array
         suffix = f"dump"
         bin_file = f"{exec_opts} ./bin/{code}_{compiler}_{suffix}.o 1"
-        tmp_file = f"dumps/____tmp_{code}_{compiler}_{suffix}"
-        os.system(f"{bin_file}  > {tmp_file}")
+        dump_file = f"/tmp/dumps____tmp_{code}_{compiler}_{suffix}"
+        with open(dump_file, "w") as f:
+            subprocess.Popen([f"{bin_file}"], stdout=f)
 
     @staticmethod
     def measure_benchmark(
@@ -100,7 +102,7 @@ class Timing:
         mean_and_discard_outliers=True,
         bin_file="",
         tmp_file="",
-    ) -> tuple[Union[None, dict], int]:
+    ) -> tuple[Optional[dict], Optional[int]]:
         """Execute and time given benchmark nexec times
 
         :param code: Name of the code
@@ -128,16 +130,11 @@ class Timing:
         :return:  Set of values collected and the number of discarded values
         :rtype: tuple[Union[None, dict], int]
         """
-        try:
-            os.mkdir("tmp")
-        except FileExistsError:
-            pass
+
+        create_dir_or_pass("tmp")
 
         if nexec < 5:
-            print(
-                "For time_bench nexec must be, at least, 5; "
-                "changing to this minimum value..."
-            )
+            pinfo("Minimum number of executions is 5")
             nexec = 5
 
         compiler_flags_suffix = compiler_flags.replace(" ", "_").replace("-", "")
@@ -149,10 +146,14 @@ class Timing:
         if bin_file == "":
             bin_file = f"{exec_opts} ./bin/{code}_{compiler}_{compiler_flags_suffix}_{suffix}.o {nsteps}"
         if tmp_file == "":
-            tmp_file = f"tmp/____tmp_{code}_{compiler}_{suffix}"
-        os.system(f"{bin_file}  > {tmp_file}")
-        for _ in range(1, nexec):
-            os.system(f"{bin_file}  >> {tmp_file}")
+            tmp_file = f"/tmp/____tmp_{code}_{compiler}_{suffix}"
+
+        if os.path.exists(tmp_file):
+            os.remove(tmp_file)
+
+        with open(tmp_file, "a") as f:
+            for _ in range(nexec):
+                subprocess.Popen([f"{bin_file}"], stdout=f)
 
         try:
             results = np.loadtxt(tmp_file, delimiter=",")

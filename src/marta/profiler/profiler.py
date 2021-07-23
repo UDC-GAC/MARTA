@@ -36,7 +36,7 @@ from tqdm.auto import tqdm
 from itertools import repeat
 
 # Local imports
-from marta.utils.marta_utilities import perror, pwarning, pinfo
+from marta.utils.marta_utilities import perror, pwarning, pinfo, create_dir_or_pass
 from marta.profiler.benchmark import Benchmark
 from marta.profiler.kernel import Kernel
 from marta.profiler.project import Project
@@ -72,6 +72,8 @@ class Profiler:
             or ("-dump" in list_args)
             or ("--dump-config-file" in list_args)
             or ("--generate-project" in list_args)
+            or ("-h" in list_args)
+            or ("--help" in list_args)
             or ("project" in list_args)
         ):
             required_input = "?"
@@ -240,12 +242,9 @@ class Profiler:
     def create_directories(
         self, asm_dir="asm_codes", bin_dir="bin", tmp_dir="tmp", log_dir="log"
     ) -> None:
-        if not os.path.exists(asm_dir):
-            os.mkdir(asm_dir)
-        if not os.path.exists(bin_dir):
-            os.mkdir(bin_dir)
-        if not os.path.exists(tmp_dir):
-            os.mkdir(tmp_dir)
+        create_dir_or_pass(asm_dir)
+        create_dir_or_pass(bin_dir)
+        create_dir_or_pass(tmp_dir)
         if not os.path.exists(log_dir):
             os.mkdir(log_dir)
         else:
@@ -463,17 +462,15 @@ class Profiler:
         self.args = Profiler.parse_arguments(list_args)
 
         if self.args.dump_config_file:
-            s = Project.dump_config_file()
-            for line in s:
+            for line in Project.dump_config_file():
                 print(line, end="")
             sys.exit(0)
 
         if self.args.subparser == "project":
-            name = self.args.name
-            code = Project.generate_new_project(name)
+            code = Project.generate_new_project(self.args.name)
             if code != 0:
                 perror("Something went wrong...", code)
-            pinfo(f"Project generated in folder '{name}'!")
+            pinfo(f"Project generated in folder '{self.args.name}'!")
             sys.exit(0)
 
         if self.args.version:

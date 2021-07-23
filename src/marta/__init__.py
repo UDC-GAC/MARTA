@@ -12,8 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 
-with open("src/marta/__version__") as f:
+dir_path = os.path.dirname(os.path.realpath(__file__))
+
+with open(f"{dir_path}/__version__") as f:
     __version__ = f.readline()
 
 __all__ = ["__version__"]
