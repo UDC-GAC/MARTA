@@ -28,7 +28,7 @@ class CompilationError(Exception):
 def compile_file(
     src_file, output="", compiler="gcc", flags=["-O3"], temp=False
 ) -> None:
-    if output != "":
+    if output == "":
         output = f"/tmp/a.out"
     input_file = f"{src_file}"
     file_name = get_name_from_dir(input_file)

@@ -16,23 +16,22 @@ import os
 
 import pytest
 
-from marta.profiler.benchmark import Benchmark
+from marta.profiler.compile import compile_file
 
 
 @pytest.fixture(autouse=True)
 def run_before_and_after_tests():
-    f = "/tmp/test.c"
-    os.system(f"cp tests/profiler/src/hello_world.c {f}")
-    assert os.path.exists(f)
+    input_file = "/tmp/test.c"
+    os.system(f"cp tests/profiler/src/hello_world.c {input_file}")
+    assert os.path.exists(input_file)
     yield
-    os.system(f"rm {f}")
-    assert not os.path.exists(f)
+    os.remove(input_file)
+    assert not os.path.exists(input_file)
 
 
 def test_compile_run_benchmark():
-    b = Benchmark("/tmp/test.c")
-    output = "/tmp/a.out"
-    b.compile_run_benchmark()
-    assert os.path.exists(output)
-    os.system(f"rm {output}")
-    assert not os.path.exists(output)
+    input_file = "/tmp/test.c"
+    compile_file(input_file)
+    assert os.path.exists(input_file)
+    assert os.path.exists("/tmp/a.out")
+    os.remove("/tmp/a.out")

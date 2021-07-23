@@ -292,10 +292,11 @@ class Kernel:
                 f" -DMARTA_INTEL_FLUSH_DATA=1 -DPOLYBENCH_NO_FLUSH_CACHE "
             )
 
-        # FIXME: this should be removed at some point...
         other_flags = []
         if Kernel.get_asm_name(params_dict) != "":
             other_flags.append(Kernel.get_asm_name(params_dict))
+
+        # FIXME: this should be removed at some point...
         if "MACVETH" in kconfig:
             kconfig = kconfig.replace("MACVETH", "")
             local_common_flags += " -DMACVETH=1 "
@@ -366,12 +367,6 @@ class Kernel:
         name_bin, _ = Kernel.get_suffix_and_flags(kconfig, params_dict)
         name_bin = f"{self.kernel}_{name_bin}"
         compiler_flags_suffix = compiler_flags.replace(" ", "_").replace("-", "")
-        # if self.measure_time:
-        #     compiler_flags_suffix += "_time"
-        # elif self.measure_tsc:
-        #     compiler_flags_suffix += "_tsc"
-        # elif self.papi_counters != None:
-        #     compiler_flags_suffix += "_papi"
 
         asm_file = f"{name_bin}_{compiler}_{compiler_flags_suffix}.s"
         if self.asm_count:

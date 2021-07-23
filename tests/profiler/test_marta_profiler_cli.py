@@ -39,4 +39,5 @@ def test_marta_profiler_normal_exit(args):
 
 
 def check_output_if_needed(args):
+    # TODO
     pass
