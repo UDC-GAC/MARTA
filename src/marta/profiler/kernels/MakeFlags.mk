@@ -5,7 +5,7 @@
 ################################################################################
 
 # Some useful paths
-PARENT_DIR=../../../
+PARENT_DIR=../../../../../
 BIN_DIR=$(PARENT_DIR)bin/
 ASM_DIR=$(PARENT_DIR)asm_codes/
 DUMP_DIR=$(PARENT_DIR)dumps/

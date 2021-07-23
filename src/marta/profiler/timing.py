@@ -27,6 +27,10 @@ import numpy as np
 from marta.utils.marta_utilities import pinfo, pwarning, create_dir_or_pass
 
 
+class TimingError(Exception):
+    pass
+
+
 class Timing:
     total_time = time.time()
     compilation_time = 0
@@ -141,10 +145,19 @@ class Timing:
 
         # Save execution values in an array
         suffix = f"{benchmark_type}" if type(benchmark_type) == str else "papi"
-        if bin_file != "" and not bin_file.startswith("./"):
-            bin_file = f"./{bin_file}"
+        if (
+            bin_file != ""
+            and not bin_file.startswith("./")
+            and not os.path.exists(bin_file)
+        ):
+            bin_file = [f"./{bin_file}"]
         if bin_file == "":
-            bin_file = f"{exec_opts} ./bin/{code}_{compiler}_{compiler_flags_suffix}_{suffix}.o {nsteps}"
+            bin_file = [
+                f"./bin/{code}_{compiler}_{compiler_flags_suffix}_{suffix}.o",
+                f"{nsteps}",
+            ]
+            if exec_opts != "":
+                bin_file = [exec_opts] + bin_file
         if tmp_file == "":
             tmp_file = f"/tmp/____tmp_{code}_{compiler}_{suffix}"
 
@@ -153,7 +166,9 @@ class Timing:
 
         with open(tmp_file, "a") as f:
             for _ in range(nexec):
-                subprocess.Popen([f"{bin_file}"], stdout=f)
+                p = subprocess.Popen(bin_file, stdout=f)
+                p.wait()
+                f.flush()
 
         try:
             results = np.loadtxt(tmp_file, delimiter=",")

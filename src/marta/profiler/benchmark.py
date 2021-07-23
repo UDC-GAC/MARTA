@@ -12,32 +12,46 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Standard libraries
-import os
-
 # Local imports
 from marta.profiler.timing import Timing
+from marta.profiler.compile import CompilationError, compile_file
+from marta.utils.marta_utilities import perror
+
+
+class BenchmarkError(Exception):
+    pass
 
 
 class Benchmark:
     """Benchmark class if meant for generating small benchmarks dynamically"""
 
-    def compile(self, output="", compiler="gcc", flags="-O3") -> None:
-        if output != "":
-            output = f"-o {output}"
-        input_file = f"{self.path}{self.name}"
-        os.system(f"{compiler} {flags} {input_file} {output}")
-
     def compile_run_benchmark(
-        self, bin_file="a.out", tmp_file="___tmp.txt", flags=""
+        self,
+        compiler="gcc",
+        flags=["-O3"],
+        bin_file="/tmp/a.out",
+        tmp_file="/tmp/___tmp.txt",
     ) -> float:
-        self.compile(flags=flags)
+        try:
+            compile_file(
+                self.src_file,
+                output=bin_file,
+                compiler=compiler,
+                flags=flags,
+                temp=self.temp,
+            )
+        except FileNotFoundError as e:
+            perror(e)
+        except Exception:
+            raise BenchmarkError
+
         d, _ = Timing.measure_benchmark(
-            self.name, self.btype, bin_file=bin_file, tmp_file=tmp_file
+            self.src_file, self.btype, bin_file=bin_file, tmp_file=tmp_file
         )
         return d[self.btype]
 
-    def __init__(self, name: str, path="/tmp/", btype="tsc"):
-        self.name = name
+    def __init__(self, src_file: str, path="/tmp/", btype="tsc", temp=False):
+        self.src_file = src_file
         self.path = path
         self.btype = btype
+        self.temp = temp

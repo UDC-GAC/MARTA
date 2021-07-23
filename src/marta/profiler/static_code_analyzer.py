@@ -85,7 +85,7 @@ class StaticCodeAnalyzer:
             "-o",
             f"{json_file}",
         ]
-        ret = subprocess.call(cmd)
+        ret = subprocess.run(cmd)
         if ret:
             raise LLVMMCAError
 

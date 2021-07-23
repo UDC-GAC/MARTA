@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "../kernels/utilities/marta_wrapper.h"
+#include "marta_wrapper.h"
 
 void foo() {}
 

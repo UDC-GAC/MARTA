@@ -268,7 +268,8 @@ class Kernel:
         product_params: bytes,
         compiler: str,
         compiler_flags: str,
-        debug: bool,
+        make_stdout: subprocess.STDOUT,
+        make_stderr: subprocess.STDOUT,
         quit_on_error=False,
     ) -> bool:
         tmp_pickle = pickle.loads(product_params)
@@ -292,14 +293,15 @@ class Kernel:
             )
 
         # FIXME: this should be removed at some point...
-        other_flags = Kernel.get_asm_name(params_dict) + " "
+        other_flags = []
+        if Kernel.get_asm_name(params_dict) != "":
+            other_flags.append(Kernel.get_asm_name(params_dict))
         if "MACVETH" in kconfig:
             kconfig = kconfig.replace("MACVETH", "")
-            other_flags = " MACVETH=true "
             local_common_flags += " -DMACVETH=1 "
-            other_flags += (
-                " MVPATH=" + self.mvpath + " MACVETH_FLAGS='" + self.macveth_flags + "'"
-            )
+            other_flags.append("MACVETH=true")
+            other_flags.append("MVPATH=" + self.mvpath)
+            other_flags.append("MACVETH_FLAGS='" + self.macveth_flags + "'")
             if self.macveth_target != "":
                 try:
                     macveth_target = (
@@ -307,36 +309,36 @@ class Kernel:
                         .replace(".c", "")
                         .replace(".spf", "")
                     )
-                    other_flags += f" MACVETH_TARGET={macveth_target} "
+                    other_flags.append(f" MACVETH_TARGET={macveth_target}")
                 except KeyError:
-                    perror("Error: bad key for MACVETH target")
+                    perror("Bad key for MACVETH target")
 
         # ASM syntax flags
-        other_flags += f" ASM_SYNTAX={self.asm_syntax} "
+        other_flags.append(f"ASM_SYNTAX={self.asm_syntax}")
 
         if self.measure_time:
-            other_flags += f" TIME=true "
+            other_flags.append("TIME=true")
 
         if self.measure_tsc:
-            other_flags += f" TSC=true "
+            other_flags.append("TSC=true")
 
         if self.check_dump:
-            other_flags += f" DUMP=true "
+            other_flags.append("DUMP=true")
 
         if self.papi_counters != None:
-            other_flags += f" PAPI=true "
+            other_flags.append("PAPI=true")
 
         if not self.inlined:
-            other_flags += f" KERNEL_INLINED=true "
+            other_flags.append("KERNEL_INLINED=true")
 
         if self.kernel_compilation == "apart":
-            other_flags += f" COMPILE_KERNEL=true "
+            other_flags.append("COMPILE_KERNEL=true")
 
         if self.asm_count or self.static_analysis != "":
             if self.kernel_compilation == "infile":
-                other_flags += f" ASM_CODE_MAIN=true "
+                other_flags.append("ASM_CODE_MAIN=true")
             else:
-                other_flags += f" ASM_CODE_KERNEL=true "
+                other_flags.append("ASM_CODE_KERNEL=true")
 
         ret = compile_makefile(
             self.path_kernel,
@@ -346,7 +348,8 @@ class Kernel:
             kconfig,
             other_flags,
             suffix_file,
-            debug,
+            make_stdout,
+            make_stderr,
         )
 
         return not (not ret and quit_on_error)

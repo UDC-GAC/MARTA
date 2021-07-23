@@ -19,4 +19,11 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 with open(f"{dir_path}/__version__") as f:
     __version__ = f.readline()
 
-__all__ = ["__version__"]
+_ROOT = os.path.abspath(os.path.dirname(__file__))
+
+
+def get_data(path):
+    return os.path.join(_ROOT, "data", path)
+
+
+__all__ = ["__version__", "get_data"]

@@ -18,6 +18,7 @@
 # Standard libraries
 import os
 import copy
+import subprocess
 import sys
 import yaml
 import argparse
@@ -36,8 +37,9 @@ from tqdm.auto import tqdm
 from itertools import repeat
 
 # Local imports
+from marta import get_data
 from marta.utils.marta_utilities import perror, pwarning, pinfo, create_dir_or_pass
-from marta.profiler.benchmark import Benchmark
+from marta.profiler.benchmark import Benchmark, BenchmarkError
 from marta.profiler.kernel import Kernel
 from marta.profiler.project import Project
 from marta.profiler.utils import custom_mp
@@ -324,9 +326,11 @@ class Profiler:
         df = pd.DataFrame(columns=output_cols)
 
         # Silent compilation or not
-        debug = ""
+        make_stdout = subprocess.STDOUT
+        make_stderr = subprocess.STDOUT
         if not kernel.comp_debug:
-            debug = f" >> log/___tmp.stdout 2>> log/___tmp.stderr"
+            make_stdout = "/tmp/___marta_stdout.log"
+            make_stderr = "/tmp/___marta_stderr.log"
 
         if not self.args.quiet:
             # Print version if not quiet
@@ -347,11 +351,25 @@ class Profiler:
 
         overhead_loop = 0
         if kernel.nsteps > 1:
-            loop_benchmark = Benchmark("profiler/src/loop_overhead.c")
-            overhead_loop = loop_benchmark.compile_run_benchmark(
-                flags="-O3 -DMARTA_RDTSC profiler/kernels/utilities/polybench.c"
-            )
-            pinfo(f"Loop overhead (1 nop): {overhead_loop} cycles")
+            try:
+                loop_benchmark = Benchmark(
+                    get_data("profiler/src/loop_overhead.c"), temp=True
+                )
+                overhead_loop = loop_benchmark.compile_run_benchmark(
+                    flags=[
+                        "-O3",
+                        "-DMARTA_RDTSC",
+                        f"-I{get_data('profiler/utilities/')}",
+                        get_data("profiler/utilities/polybench.c"),
+                    ]
+                )
+                pinfo(f"Loop overhead: {overhead_loop} cycles")
+            except BenchmarkError:
+                msg = "Loop overhead could not be computed."
+                if exit_on_error:
+                    perror(f"{msg} Quitting.")
+                else:
+                    pwarning(f"{msg} Skipping.")
 
         pinfo(f"Compiling with {kernel.processes} processes")
         for compiler in kernel.compiler_flags:
@@ -373,7 +391,8 @@ class Profiler:
                             product,
                             repeat(compiler),
                             repeat(compiler_flags),
-                            repeat(debug),
+                            repeat(make_stdout),
+                            repeat(make_stderr),
                             repeat(exit_on_error),
                         )
                         if kernel.show_progress_bars:

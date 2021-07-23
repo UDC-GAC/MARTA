@@ -1,6 +1,6 @@
 - kernel:
       name: "gather"
-      path: "profiler/kernels/gather"
+      path: "src/marta/profiler/kernels/gather"
       description: "Setup for experiment gather"
       debug: False
       show_progress_bars: True

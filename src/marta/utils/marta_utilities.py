@@ -54,3 +54,7 @@ def create_dir_or_pass(dir_name):
         os.mkdir(dir_name)
     except FileExistsError:
         pass
+
+
+def get_name_from_dir(path_file):
+    return path_file.split("/")[-1]
