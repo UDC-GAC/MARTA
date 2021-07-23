@@ -1,0 +1,615 @@
+#!/bin/python3
+# Copyright 2021 Marcos Horro
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# -*- coding: utf-8 -*-
+
+from __future__ import annotations
+import os
+from typing import Union, Any
+import subprocess
+import pickle
+
+# Third-party libraries
+import pandas as pd
+
+# Local imports
+from marta.profiler.compile import compile_makefile
+from marta.profiler.report import Report
+from marta.profiler.asm_analyzer import ASMParserFactory
+from marta.profiler.timing import Timing
+from marta.profiler.static_code_analyzer import StaticCodeAnalyzer
+from marta.utils.marta_utilities import perror, pwarning, pinfo
+
+
+class Kernel:
+    debug = False
+
+    def generate_report(self, verbose=True) -> str:
+        """Generate report based on the details of the execution
+
+        :param verbose: Verbose mode to display machine information, defaults to True
+        :type verbose: bool, optional
+        :return: Text file for output
+        :rtype: str
+        """
+        content = f"#" * 80 + "\n"
+        content += f"#            MARTA file report: {self.kernel}\n"
+        content += f"#" * 80 + "\n"
+        if verbose:
+            content += f"\n# -- MACHINE INFO\n"
+            content += Report.get_machine_info()
+
+        content += f"\n# -- TIME ELAPSED : {Timing.to_seconds(Timing.total_time)}\n"
+        content += f"\t- Total Compilation time: {Timing.to_seconds(Timing.compilation_time)}\n"
+        content += (
+            f"\t- Total Execution time: {Timing.to_seconds(Timing.execution_time)}\n"
+        )
+        content += f"\n# -- EXPERIMENT PARAMETERS\n"
+        content += f"- Kernel name: {self.kernel}\n"
+        content += f"- Description: {self.descr}\n"
+        content += f"- Compilers used:\n"
+        for compiler in self.compiler_flags:
+            content += f"\t{compiler} -> {self.compiler_flags[compiler]}\n"
+        content += f"- Kernel configurations: {self.kernel_cfg}\n"
+        content += f"- FLOPS: {self.flops}\n"
+        content += f"- Loop iterations: {self.nsteps}\n"
+        content += f"- Number of repetitions: {self.nexec}\n"
+        content += f"- CPU affinity (if any): {self.cpu_affinity}\n"
+        if self.papi_counters != None:
+            content += f"- Hardware counters used:\n"
+            for l in self.papi_counters:
+                content += f"\t{l}\n"
+
+        # Get compilation flags and so
+        content += f"\n# -- COMPILATION (stdout)\n"
+        try:
+            with open("log/___tmp.stdout") as f:
+                for l in f.readlines():
+                    content += l
+            os.remove("log/___tmp.stdout")
+        except FileNotFoundError:
+            content += "stdout was redirected manually.\n"
+
+        # Generate errors
+        content += f"\n# -- WARNINGS/ERRORS (stderr)\n"
+        try:
+            with open("log/___tmp.stderr") as f:
+                for l in f.readlines():
+                    content += l
+            os.remove("log/___tmp.stderr")
+        except FileNotFoundError:
+            content += "stderr was redirected manually.\n"
+
+        return content
+
+    def save_results(
+        self,
+        df: pd.DataFrame,
+        filename: str,
+        output_format="csv",
+        generate_report=False,
+    ) -> None:
+        """
+        Save data as a pandas.DataFrame
+
+        :param df:
+        :type df: class:pandas.DataFrame
+        :param common_flags: List of flags used for compilation
+        :type common_flags: str
+        :param exec_args: List of arguments to pass when executing benchmark
+        :type exec_args: str
+        :param nruns: Number of times to execute the kernel
+        :type nruns: int
+        :param nexec: Number of time to execute whole experiment
+        :type nexec: int
+        :param filename: Name of the output file
+        :type filename: str
+        """
+        # storing results with metadata, but cleaning first, just in case
+        try:
+            df.drop([""], axis=1, inplace=True)
+        except KeyError:
+            pass
+        df = df.fillna(0)
+        cols = list(df.columns)
+        # Set column order
+        try:
+            cols.remove("compiler")
+            cols.remove("compiler_flags")
+            cols = ["compiler", "compiler_flags"] + cols
+            df = df[cols]
+        except ValueError:
+            pass
+        if output_format == "html":
+            df.to_html(filename, index=False)
+        elif output_format == "json":
+            df.to_json(filename, index=False)
+        else:
+            df.to_csv(filename, index=False)
+
+        if generate_report:
+            report_filename = filename.replace(".csv", ".log")
+            with open(report_filename, "w") as f:
+                f.write(self.generate_report())
+
+    def define_papi_counters(self) -> None:
+        """
+        Define PAPI counters in a new file recognized by PolyBench/C
+        """
+        path = os.getcwd()
+        if self.papi_counters_path != None:
+            path = f"{path}/utilities/{self.papi_counters_path}"
+        papi_counter_file = f"{path}/papi_counters.list"
+        try:
+            with open(papi_counter_file, "w") as f:
+                for ctr in self.papi_counters:
+                    f.write('"' + str(ctr) + '",\n')
+        except Exception:
+            perror("PAPI counters file could not have been set.")
+
+    @staticmethod
+    def compute_flops(flops: float, avg_time: Union[float, int, str]) -> float:
+        """
+        Evaluate FLOPS expression provided by user as string and return a floating
+        point value
+
+        :param flops: Expression provided by user, e.g. "X/42", where "X" is a parameter
+        :type flops: str
+        :param nruns: Number of times to execute the kernel
+        :type nruns: int
+        :param avg_time: Average time to execute the kernel
+        :type avg_time: float
+        :return: Dynamic number of FLOPS
+        :rtype: float
+        """
+        try:
+            flops_eval = eval(flops)
+        except TypeError:
+            flops_eval = flops
+        except NameError:
+            perror("FLOPS formula is not valid; please review it!")
+
+        if avg_time > 0:
+            return (flops_eval) / avg_time
+        else:
+            return 0.0
+
+    @staticmethod
+    def get_dict_from_d_flags(params: str) -> dict:
+        d = {}
+        for tok in params.strip().split(" "):
+            tmp = tok.split("=")
+            key = tmp[0].replace("-D", "")
+            if len(tmp) == 1:
+                value = 1
+            else:
+                value = tmp[1]
+            d.update({key: value})
+        return d
+
+    @staticmethod
+    def get_suffix_and_flags(kconfig: str, params: Union[dict, str]) -> tuple[str, str]:
+        custom_flags = ""
+        suffix_file = ""
+        custom_bin_name = None
+        # Parsing parameters
+        if type(params) is dict:
+            for pname in params.keys():
+                try:
+                    param_val_parsed = int(params[pname])
+                except ValueError:
+                    # NOTE: for includes or other paths, \"string\" notation is
+                    # needed, but this is not MARTA's responsibility.
+                    param_val_parsed = '"' + params[pname] + '"'
+                except TypeError:
+                    print(params[pname])
+                if pname != "ASM_NAME":
+                    custom_flags += f" -D{pname}={param_val_parsed}"
+                if pname == "BIN_NAME":
+                    custom_bin_name = params[pname]
+                key = pname.replace("/", "_")
+                val = (
+                    params[pname].replace("/", "_")
+                    if type(params[pname]) == str
+                    else params[pname]
+                )
+                suffix_file += f"_{key}{val}"
+            suffix_file = suffix_file.replace("/", "").replace(".c", "")
+        else:
+            custom_flags = params
+            for p in params.strip().replace("-", "").replace("D", "").split(" "):
+                suffix_file += f"_{p}"
+
+        # Parsing kconfig
+        for kparam in kconfig.strip().replace("-", "").split(" "):
+            if "BIN_NAME" in kparam:
+                custom_bin_name = kparam.split("=")[1]
+
+        # Avoid very long names
+        if custom_bin_name != None:
+            suffix_file = custom_bin_name
+        if len(suffix_file) > 256:
+            perror(
+                "Error: too long binary name. Try '-DBIN_NAME=<suffix>' for each compilation case instead"
+            )
+        return suffix_file, custom_flags
+
+    @staticmethod
+    def get_asm_name(params: Union[dict, Any]) -> str:
+        if not type(params) is dict:
+            return ""
+        # Parsing parameters
+        for pname in params.keys():
+            try:
+                param_val_parsed = int(params[pname])
+            except ValueError:
+                # NOTE: for includes or other paths, \"string\" notation is
+                # needed, but this is not MARTA's responsibility.
+                param_val_parsed = '"' + params[pname] + '"'
+            # FIXME:
+            if pname == "ASM_NAME":
+                return f" {pname}={param_val_parsed}"
+        return ""
+
+    def compile(
+        self,
+        product_params: bytes,
+        compiler: str,
+        compiler_flags: str,
+        make_stdout: subprocess.STDOUT,
+        make_stderr: subprocess.STDOUT,
+        quit_on_error=False,
+    ) -> bool:
+        tmp_pickle = pickle.loads(product_params)
+        kconfig = tmp_pickle["KERNEL_CFG"]
+        del tmp_pickle["KERNEL_CFG"]
+        params_dict = tmp_pickle
+        suffix_file, custom_flags = Kernel.get_suffix_and_flags(kconfig, params_dict)
+
+        custom_flags += compiler_flags
+        local_common_flags = self.common_flags + custom_flags
+        local_common_flags += f" -DNRUNS={self.nsteps} "
+        if self.cpu_affinity != -1:
+            local_common_flags += f" -DMARTA_CPU_AFFINITY={self.cpu_affinity} "
+
+        # MARTA flags
+        if self.init_data:
+            local_common_flags += f" -DMARTA_INIT_DATA=1 "
+        if self.intel_cache_flush:
+            local_common_flags += (
+                f" -DMARTA_INTEL_FLUSH_DATA=1 -DPOLYBENCH_NO_FLUSH_CACHE "
+            )
+
+        other_flags = []
+        if Kernel.get_asm_name(params_dict) != "":
+            other_flags.append(Kernel.get_asm_name(params_dict))
+
+        # FIXME: this should be removed at some point...
+        if "MACVETH" in kconfig:
+            kconfig = kconfig.replace("MACVETH", "")
+            local_common_flags += " -DMACVETH=1 "
+            other_flags.append("MACVETH=true")
+            other_flags.append("MVPATH=" + self.mvpath)
+            other_flags.append("MACVETH_FLAGS='" + self.macveth_flags + "'")
+            if self.macveth_target != "":
+                try:
+                    macveth_target = (
+                        tmp_pickle[self.macveth_target]
+                        .replace(".c", "")
+                        .replace(".spf", "")
+                    )
+                    other_flags.append(f" MACVETH_TARGET={macveth_target}")
+                except KeyError:
+                    perror("Bad key for MACVETH target")
+
+        # ASM syntax flags
+        other_flags.append(f"ASM_SYNTAX={self.asm_syntax}")
+
+        if self.measure_time:
+            other_flags.append("TIME=true")
+
+        if self.measure_tsc:
+            other_flags.append("TSC=true")
+
+        if self.check_dump:
+            other_flags.append("DUMP=true")
+
+        if self.papi_counters != None:
+            other_flags.append("PAPI=true")
+
+        if not self.inlined:
+            other_flags.append("KERNEL_INLINED=true")
+
+        if self.kernel_compilation == "apart":
+            other_flags.append("COMPILE_KERNEL=true")
+
+        if self.asm_count or self.static_analysis != "":
+            if self.kernel_compilation == "infile":
+                other_flags.append("ASM_CODE_MAIN=true")
+            else:
+                other_flags.append("ASM_CODE_KERNEL=true")
+
+        ret = compile_makefile(
+            self.path_kernel,
+            compiler,
+            compiler_flags,
+            local_common_flags,
+            kconfig,
+            other_flags,
+            suffix_file,
+            make_stdout,
+            make_stderr,
+        )
+
+        return not (not ret and quit_on_error)
+
+    def run(self, product_params: bytes, compiler: str, compiler_flags="") -> list:
+        # FIXME: need to refactor this function a bit
+        data = {}
+        if self.papi_counters != None:
+            avg_papi_counters = dict.fromkeys(self.papi_counters)
+        tmp_pickle = pickle.loads(product_params)
+        kconfig = tmp_pickle["KERNEL_CFG"]
+        del tmp_pickle["KERNEL_CFG"]
+        params_dict = tmp_pickle
+        name_bin, _ = Kernel.get_suffix_and_flags(kconfig, params_dict)
+        name_bin = f"{self.kernel}_{name_bin}"
+        compiler_flags_suffix = compiler_flags.replace(" ", "_").replace("-", "")
+
+        asm_file = f"{name_bin}_{compiler}_{compiler_flags_suffix}.s"
+        if self.asm_count:
+            asm_dict = ASMParserFactory.parse_asm(
+                self.asm_syntax, f"asm_codes/{asm_file}",
+            )
+            data.update(asm_dict)
+        if self.static_analysis != "":
+            # FIXME: host architecture for LLVM-MCA
+            S = StaticCodeAnalyzer("cascadelake", self.static_analysis)
+            data.update(S.compute_performance(f"asm_codes/{asm_file}", self.nsteps))
+
+        # FIXME: to remove at some point, this was something temporal
+        if "MACVETH" in kconfig:
+            file_name = (
+                "kernels/matrices/___" + name_bin.replace("matrices_", "") + ".log"
+            )
+            macveth_cols = ["Scop Vect.", "Scop Skipped"]
+            macveth_info = dict(zip(macveth_cols, [0, 0]))
+            with open(file_name) as f:
+                for l in f.readlines():
+                    if "Region vectorized" in l:
+                        macveth_info["Scop Vect."] += 1
+                    if "Skipping region" in l:
+                        macveth_info["Scop Skipped"] += 1
+            data.update(macveth_info)
+
+        # Dump values: -DPOLYBENCH_DUMP_ARRAYS
+        if self.check_dump:
+            Timing.dump_values(name_bin, self.exec_args, compiler)
+
+        # Average papi counters
+        if self.papi_counters != None:
+            avg_papi_counters, discarded_papi_values = Timing.measure_benchmark(
+                name_bin,
+                self.papi_counters,
+                self.exec_args,
+                compiler,
+                compiler_flags,
+                self.nexec,
+                self.nsteps,
+                self.threshold_outliers,
+                self.mean_and_discard_outliers,
+            )
+            if type(avg_papi_counters) == type(None):
+                return None
+            if discarded_papi_values != -1:
+                data.update(avg_papi_counters)
+                data.update({"DiscardedPapiValues": discarded_papi_values})
+
+        # Measuring time with gettimeofday in C
+        if self.measure_time:
+            avg_time, discarded_time_values = Timing.measure_benchmark(
+                name_bin,
+                "time",
+                self.exec_args,
+                compiler,
+                compiler_flags,
+                self.nexec,
+                self.nsteps,
+                self.threshold_outliers,
+                self.mean_and_discard_outliers,
+            )
+            if type(avg_time) == type(None):
+                return None
+            if discarded_time_values != -1:
+                data.update(avg_time)
+                data.update({"DiscardedTimeValues": discarded_time_values})
+        else:
+            avg_time = None
+
+        # Measuring TSC with rdtsc
+        if self.measure_tsc:
+            avg_tsc, discarded_tsc_values = Timing.measure_benchmark(
+                name_bin,
+                "tsc",
+                self.exec_args,
+                compiler,
+                compiler_flags,
+                self.nexec,
+                self.nsteps,
+                self.threshold_outliers,
+                self.mean_and_discard_outliers,
+            )
+            if type(avg_tsc) == type(None):
+                return None
+            if discarded_tsc_values != -1:
+                data.update(avg_tsc)
+                data.update({"DiscardedTscValues": discarded_tsc_values})
+        else:
+            avg_tsc = None
+        # Updating parameters
+        if type(params_dict) is not list:
+            data.update(params_dict)
+            for key in params_dict:
+                self.flops = self.flops.replace(key, str(params_dict[key]))
+        d = Kernel.get_dict_from_d_flags(kconfig)
+        if len(d.keys()) > 0:
+            data.update(d)
+        if kconfig != [""] and kconfig != "" and kconfig != " ":
+            data.update({"CFG": kconfig})
+        data.update({"compiler": compiler, "compiler_flags": compiler_flags})
+
+        # Getting meta-info if specified when updating the row
+        if self.meta_info_script != "":
+            # The script should return a dictionary
+            input_arg = (
+                data.get(self.meta_info_script_input, self.meta_info_script_input)
+                + self.meta_info_script_input_suffix
+            )
+            proc = subprocess.Popen(
+                ["python3", self.meta_info_script, input_arg],
+                stdout=subprocess.PIPE,
+                cwd=self.meta_info_path,
+            )
+            while True:
+                line = proc.stdout.readline()
+                try:
+                    if line.strip() == b"":
+                        break
+                    data.update(eval(line.strip()))
+                except Exception:
+                    perror(f"meta_info script does not return a dictionary: {line}!")
+                if not line:
+                    break
+
+        # Discard outliers
+        if self.mean_and_discard_outliers:
+            if self.measure_time:
+                data.update(
+                    {"FLOPSs": Kernel.compute_flops(self.flops, avg_time["time"])}
+                )
+            return data
+        list_rows = []
+
+        # Computing average
+        for execution in range(self.nexec):
+            new_dict = data.copy()
+            if type(avg_time) != type(None):
+                new_dict.update(
+                    {"FLOPSs": Kernel.compute_flops(self.flops, avg_time[execution])}
+                )
+            new_dict.update({"nexec": execution})
+            if type(avg_time) != type(None):
+                if self.measure_time:
+                    new_dict.update({"time": avg_time[execution]})
+            if type(avg_tsc) != type(None):
+                if self.measure_tsc:
+                    new_dict.update({"tsc": avg_tsc[execution]})
+            if self.papi_counters != None:
+                new_dict.update(
+                    dict(zip(self.papi_counters, [avg_papi_counters[execution]]))
+                )
+            list_rows += [new_dict]
+        return list_rows
+
+    def __init__(self) -> None:
+        pass
+
+    def __init__(self, cfg: dict) -> None:
+        try:
+            self.kernel = cfg["kernel"]["name"]
+        except KeyError:
+            perror("'name' key is missing!")
+        self.type = cfg["kernel"]["type"] if "type" in cfg["kernel"] else "regular"
+        if self.type not in ["regular", "micro"]:
+            perror("type of benchmarking must be 'regular' or 'micro'")
+        self.descr = cfg["kernel"].get("description", "")
+        self.path_kernel = cfg["kernel"].get("path", "./")
+        self.show_progress_bars = cfg["kernel"].get("show_progress_bars", True)
+        Kernel.debug = cfg["kernel"].get("debug", False)
+
+        try:
+            config_cfg = cfg["kernel"]["configuration"]
+            config_exec = cfg["kernel"]["execution"]
+        except KeyError:
+            perror(
+                "Check your configuration file: 'configuration' and 'execution' keys could be missing..."
+            )
+
+        try:
+            config_comp = cfg["kernel"]["compilation"]
+        except KeyError:
+            config_comp = {}
+            pwarning("No compilation options selected: using gcc with no flags")
+
+        self.compilation_enabled = config_comp.get("enabled", True)
+        try:
+            self.processes = int(config_comp["processes"])
+            if self.processes < 1:
+                raise ValueError
+            if self.processes > 16:
+                pwarning(
+                    f"Be careful with high degree of processes for compilation ({self.processes} processes set)"
+                )
+        except ValueError:
+            perror("processes must be an integer greater or equal to one")
+        except KeyError:
+            self.processes = 1
+        self.compiler_flags = config_comp.get("compiler_flags", {"gcc": [""]})
+        self.common_flags = config_comp.get("common_flags", "")
+        self.kernel_compilation = config_comp.get("kernel_compilation_type", "infile")
+        self.inlined = config_comp.get("kernel_inlined", False)
+        self.comp_debug = config_comp.get("debug", False)
+
+        # ASM analysis
+        asm_analysis = config_comp.get("asm_analysis", {})
+        self.asm_count = asm_analysis.get("count_ins", False)
+        self.asm_syntax = asm_analysis.get("syntax", "att")
+        self.static_analysis = asm_analysis.get("static_analysis", "")
+
+        # Configuration
+        self.kernel_cfg = config_cfg.get("kernel_cfg", [""])
+        self.d_features = config_cfg.get("d_features", [])
+        self.d_flags = config_cfg.get("d_flags", [])
+        self.flops = config_cfg.get("flops", 1)
+        meta_info = config_cfg.get("meta_info", {})
+        self.meta_info_script = meta_info.get("script", "")
+        self.meta_info_path = meta_info.get("path", ".")
+        self.meta_info_script_input = meta_info.get("input", "")
+        self.meta_info_script_input_suffix = meta_info.get("suffix", "")
+        self.macveth_path = config_cfg.get("macveth_path_buil", "''")
+        self.macveth_flags = config_cfg.get("macveth_flags", "-misa=avx2")
+        self.macveth_target = config_cfg.get("macveth_target", "")
+
+        # Execution arguments
+        self.intel_cache_flush = config_exec.get("intel_cache_flush", False)
+        self.init_data = config_exec.get("init_data", False)
+        self.check_dump = config_exec.get("check_dump", False)
+        self.execution_enabled = config_exec.get("enabled", True)
+        self.measure_time = config_exec.get("time", False)
+        self.measure_tsc = config_exec.get("tsc", False)
+        self.threshold_outliers = config_exec.get("threshold_outliers", 3)
+        self.mean_and_discard_outliers = config_exec.get(
+            "mean_and_discard_outliers", False
+        )
+        self.nexec = config_exec.get("nexec", 7)
+        self.nsteps = config_exec.get("nsteps", 1000)
+        self.cpu_affinity = config_exec.get("cpu_affinity", 0)
+        self.papi_counters_path = config_exec.get("papi_counters_path")
+        self.papi_counters = config_exec.get("papi_counters")
+        if self.papi_counters != None:
+            if type(self.papi_counters) != list:
+                perror("'papi_counters' must be a list of hardware events!")
+            self.define_papi_counters()
+        self.exec_args = config_exec.get("prefix", "")

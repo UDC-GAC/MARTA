@@ -1,1 +1,1 @@
-include marta/__version__
+include src/marta/__version__
