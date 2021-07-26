@@ -179,8 +179,7 @@ class Profiler:
                     else:
                         params_values = feature[f]["value"]
                 except NameError:
-                    print(f"Evaluation of expression for {f} went wrong!")
-                    sys.exit(1)
+                    perror(f"Evaluation of expression for {f} went wrong!")
             else:
                 params_values = [feature[f]]
             # This is useful for iterators, such as permutations, combinations...
@@ -343,7 +342,6 @@ class Profiler:
                 os.system(f'{preamble.get("command")}')
             except Exception:
                 perror("Preamble command went wrong...")
-                sys.exit(1)
 
         self.create_directories()
 
@@ -412,9 +410,8 @@ class Profiler:
                             pinfo("Compiling...")
                             output = pool.starmap(Kernel.compile, iterable)
                             if not output:
-                                perror("Compilation failed")
                                 pool.terminate()
-                                sys.exit(1)
+                                perror("Compilation failed")
                     Timing.accm_timer("compilation")
                 else:
                     pwarning("Compilation process disabled!")
