@@ -38,6 +38,12 @@ def pwarning(msg: str) -> None:
     print(f"{colored_msg}")
 
 
+def pexcept(msg: str, exception: Exception) -> None:
+    colored_msg = colored(f"[SYSTEM ERROR] {msg}", Fore.RED, Style.BRIGHT)
+    print(f"{colored_msg}")
+    raise exception
+
+
 def pinfo(msg: str) -> None:
     colored_msg = colored(f"[INFO] {msg}", Fore.CYAN, Style.NORMAL)
     print(f"{colored_msg}")

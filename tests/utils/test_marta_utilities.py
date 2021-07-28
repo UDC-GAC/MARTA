@@ -14,7 +14,7 @@
 
 import pytest
 
-from marta.utils.marta_utilities import perror
+from marta.utils.marta_utilities import perror, pexcept
 
 
 def test_perror():
@@ -22,3 +22,13 @@ def test_perror():
         perror("Error", 1)
     assert pytest_wrapped_e.type == SystemExit
     assert pytest_wrapped_e.value.code == 1
+
+
+class TestExcept(Exception):
+    pass
+
+
+def test_pexcept():
+    with pytest.raises(TestExcept) as pytest_wrapped_e:
+        pexcept("Error", TestExcept)
+    assert pytest_wrapped_e.type == TestExcept

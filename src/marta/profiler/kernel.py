@@ -20,6 +20,7 @@ import os
 from typing import Union, Any
 import subprocess
 import pickle
+from marta.profiler.config import parse_options
 
 # Third-party libraries
 import pandas as pd
@@ -30,7 +31,8 @@ from marta.profiler.report import Report
 from marta.profiler.asm_analyzer import ASMParserFactory
 from marta.profiler.timing import Timing
 from marta.profiler.static_code_analyzer import StaticCodeAnalyzer
-from marta.utils.marta_utilities import perror, pwarning, pinfo
+from marta.profiler.config import parse_options
+from marta.utils.marta_utilities import perror
 
 
 class Kernel:
@@ -527,89 +529,7 @@ class Kernel:
         pass
 
     def __init__(self, cfg: dict) -> None:
-        try:
-            self.kernel = cfg["kernel"]["name"]
-        except KeyError:
-            perror("'name' key is missing!")
-        self.type = cfg["kernel"]["type"] if "type" in cfg["kernel"] else "regular"
-        if self.type not in ["regular", "micro"]:
-            perror("type of benchmarking must be 'regular' or 'micro'")
-        self.descr = cfg["kernel"].get("description", "")
-        self.path_kernel = cfg["kernel"].get("path", "./")
-        self.show_progress_bars = cfg["kernel"].get("show_progress_bars", True)
-        Kernel.debug = cfg["kernel"].get("debug", False)
-
-        try:
-            config_cfg = cfg["kernel"]["configuration"]
-            config_exec = cfg["kernel"]["execution"]
-        except KeyError:
-            perror(
-                "Check your configuration file: 'configuration' and 'execution' keys could be missing..."
-            )
-
-        try:
-            config_comp = cfg["kernel"]["compilation"]
-        except KeyError:
-            config_comp = {}
-            pwarning("No compilation options selected: using gcc with no flags")
-
-        self.compilation_enabled = config_comp.get("enabled", True)
-        try:
-            self.processes = int(config_comp["processes"])
-            if self.processes < 1:
-                raise ValueError
-            if self.processes > 16:
-                pwarning(
-                    f"Be careful with high degree of processes for compilation ({self.processes} processes set)"
-                )
-        except ValueError:
-            perror("processes must be an integer greater or equal to one")
-        except KeyError:
-            self.processes = 1
-        self.compiler_flags = config_comp.get("compiler_flags", {"gcc": [""]})
-        self.common_flags = config_comp.get("common_flags", "")
-        self.kernel_compilation = config_comp.get("kernel_compilation_type", "infile")
-        self.inlined = config_comp.get("kernel_inlined", False)
-        self.comp_debug = config_comp.get("debug", False)
-
-        # ASM analysis
-        asm_analysis = config_comp.get("asm_analysis", {})
-        self.asm_count = asm_analysis.get("count_ins", False)
-        self.asm_syntax = asm_analysis.get("syntax", "att")
-        self.static_analysis = asm_analysis.get("static_analysis", "")
-
-        # Configuration
-        self.kernel_cfg = config_cfg.get("kernel_cfg", [""])
-        self.d_features = config_cfg.get("d_features", [])
-        self.d_flags = config_cfg.get("d_flags", [])
-        self.flops = config_cfg.get("flops", 1)
-        meta_info = config_cfg.get("meta_info", {})
-        self.meta_info_script = meta_info.get("script", "")
-        self.meta_info_path = meta_info.get("path", ".")
-        self.meta_info_script_input = meta_info.get("input", "")
-        self.meta_info_script_input_suffix = meta_info.get("suffix", "")
-        self.macveth_path = config_cfg.get("macveth_path_buil", "''")
-        self.macveth_flags = config_cfg.get("macveth_flags", "-misa=avx2")
-        self.macveth_target = config_cfg.get("macveth_target", "")
-
-        # Execution arguments
-        self.intel_cache_flush = config_exec.get("intel_cache_flush", False)
-        self.init_data = config_exec.get("init_data", False)
-        self.check_dump = config_exec.get("check_dump", False)
-        self.execution_enabled = config_exec.get("enabled", True)
-        self.measure_time = config_exec.get("time", False)
-        self.measure_tsc = config_exec.get("tsc", False)
-        self.threshold_outliers = config_exec.get("threshold_outliers", 3)
-        self.mean_and_discard_outliers = config_exec.get(
-            "mean_and_discard_outliers", False
-        )
-        self.nexec = config_exec.get("nexec", 7)
-        self.nsteps = config_exec.get("nsteps", 1000)
-        self.cpu_affinity = config_exec.get("cpu_affinity", 0)
-        self.papi_counters_path = config_exec.get("papi_counters_path")
-        self.papi_counters = config_exec.get("papi_counters")
-        if self.papi_counters != None:
-            if type(self.papi_counters) != list:
-                perror("'papi_counters' must be a list of hardware events!")
-            self.define_papi_counters()
-        self.exec_args = config_exec.get("prefix", "")
+        parsed_config = parse_options(cfg)
+        for key in parsed_config:
+            setattr(self, key, parsed_config[key])
+        self.define_papi_counters()

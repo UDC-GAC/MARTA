@@ -20,6 +20,7 @@ import os
 import copy
 import subprocess
 import sys
+from marta.profiler.config import check_correctness_file, get_kernel_config
 import yaml
 import argparse
 import pkg_resources
@@ -113,6 +114,14 @@ class Profiler:
             "--no-quit-on-error",
             action="store_true",
             help="quit if there is an error during compilation or execution of the kernel",
+            required=False,
+        )
+
+        optional_named.add_argument(
+            "-c",
+            "--check-config-file",
+            action="store_true",
+            help="quit if there is an error checking the configuration file",
             required=False,
         )
 
@@ -493,19 +502,15 @@ class Profiler:
             self.print_version()
             sys.exit(0)
 
-        try:
-            from yaml import CLoader as Loader
-        except ImportError:
-            from yaml import Loader
+        kernel_setup = get_kernel_config(self.args.input[0])
 
-        yml_config = self.args.input[0]
-        try:
-            with open(yml_config, "r") as ymlfile:
-                kernel_setup = yaml.load(ymlfile, Loader=Loader)
-        except FileNotFoundError:
-            perror("Configuration file not found")
-        except Exception:
-            perror("Unknown error when opening configuration file.")
+        # Sanity-check
+        if self.args.check_config_file:
+            if not check_correctness_file(kernel_setup):
+                perror("Configuration file is not correct")
+            else:
+                pinfo("Configuration file structure is correct (compilation files might be wrong)")
+                sys.exit(0)
 
         # For each kernel configuration
         for cfg in kernel_setup:

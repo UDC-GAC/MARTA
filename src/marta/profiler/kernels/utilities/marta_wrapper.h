@@ -185,25 +185,18 @@ void intel_clflush(volatile void *p, unsigned int allocation_size) {
  *  "m": memory allowed as input
  */
 
-#define DO_NOT_TOUCH_XMM(var)                                                  \
+/* This should only work for V4FSMODE (typically xmm registers, but it seems to
+   materizalize properly ymm and zmm registers too). */
+#define DO_NOT_TOUCH_V4FSMODE(var)                                             \
   __asm volatile(""                                                            \
                  : "+x"(var)                                                   \
                  : /* no inputs */                                             \
                  : /* no clobbering */);
-#define DO_NOT_TOUCH_YMM(var)                                                  \
-  __asm volatile(""                                                            \
-                 : "+t"(var)                                                   \
-                 : /* no inputs */                                             \
-                 : /* no clobbering */);
-#define DO_NOT_TOUCH_ZMM(var)                                                  \
-  __asm volatile(""                                                            \
-                 : "+g"(var)                                                   \
-                 : /* no inputs */                                             \
-                 : /* no clobbering */);
+
 #define DO_NOT_TOUCH_IO(var) __asm volatile("" : "+"(var)::);
 #define DO_NOT_TOUCH_WRITE(var) __asm volatile("" : : "rm"(var) : "memory")
 #define DO_NOT_TOUCH_READ(var) __asm volatile("" : "+r,m"(var))
-#define DO_NOT_TOUCH(var) DO_NOT_TOUCH_XMM(var)
+#define DO_NOT_TOUCH(var) DO_NOT_TOUCH_V4FSMODE(var)
 
 #define PROFILE_FUNCTION_NO_LOOP(X)                                            \
   {                                                                            \
