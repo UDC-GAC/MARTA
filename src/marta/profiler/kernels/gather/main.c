@@ -44,7 +44,7 @@ void static gather(DATA_TYPE *restrict A) {
       _mm256_set_epi32(IDX7, IDX6, IDX5, IDX4, IDX3, IDX2, IDX1, IDX0);
   __m256 tmp256 = _mm256_i32gather_ps(&A[0], idx_gather, 4);
   DO_NOT_TOUCH(idx_gather);
-  DO_NOT_TOUCH_XMM(tmp256);
+  DO_NOT_TOUCH(tmp256);
 }
 
 MARTA_BENCHMARK_BEGIN(MARTA_NO_HEADER);

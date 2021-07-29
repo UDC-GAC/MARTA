@@ -96,21 +96,12 @@ def compile_makefile(
         *other_flags,
     ]
 
-    if stdout != subprocess.STDOUT:
-        stdout = open(stdout, "a")
-
-    if stderr != subprocess.STDOUT:
-        stderr = open(stderr, "a")
-
-    cp = subprocess.run(cmd, stdout=stdout, stderr=stderr)
-
-    if stdout != subprocess.STDOUT:
-        stdout.flush()
-        stdout.close()
-
-    if stderr != subprocess.STDOUT:
-        stderr.flush()
-        stderr.close()
+    if type(stdout) != type(subprocess.STDOUT):
+        with open(stdout, "a") as fstdout:
+            with open(stderr, "a") as fstderr:
+                cp = subprocess.run(cmd, stdout=fstdout, stderr=fstderr)
+    else:
+        cp = subprocess.run(cmd)
 
     if cp.returncode != 0:
         # returns a 16-bit value:

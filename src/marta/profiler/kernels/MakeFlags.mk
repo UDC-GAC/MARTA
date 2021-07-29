@@ -47,7 +47,7 @@ else ifeq ($(COMP),gcc)
 	CXX=g++
 	FLAGS_MAIN+= -fno-dce -fno-tree-dce -fno-tree-builtin-call-dce
 	ifeq ($(AUTOVEC),true)
-		FLAGS_KERN+= -ftree-vectorize -ftree-vectorize -fsimd-cost-model=unlimited -fvect-cost-model=unlimited
+		FLAGS_KERN+= -ftree-vectorize -fsimd-cost-model=unlimited -fvect-cost-model=unlimited
 	endif
 	FLAGS_ASM+= $(FLAGS_KERN)
 	FLAGS_MAIN+= $(FLAGS_KERN)

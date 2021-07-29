@@ -74,7 +74,6 @@ class Profiler:
             or ("--version" in list_args)
             or ("-dump" in list_args)
             or ("--dump-config-file" in list_args)
-            or ("--generate-project" in list_args)
             or ("-h" in list_args)
             or ("--help" in list_args)
             or ("project" in list_args)
@@ -101,6 +100,7 @@ class Profiler:
         optional_named.add_argument(
             "-r",
             "--report",
+            action="store_true",
             help="output report file name, with data regarding the machine, compilation flags, warnings, and errors",
             required=False,
         )
@@ -299,7 +299,7 @@ class Profiler:
         config_output = cfg["kernel"].get("output", {})
         output_format = config_output.get("format", "csv")
         output_cols = config_output.get("columns", "all")
-        generate_report = config_output.get("report", False)
+        generate_report = config_output.get("report", False) | self.args.report
         if self.args.output is None:
             fname = config_output.get("name", kernel.kernel)
             tstamp = dt.now().strftime("%d_%m_%y___%H_%M_%S")
@@ -336,6 +336,7 @@ class Profiler:
         # Silent compilation or not
         make_stdout = subprocess.STDOUT
         make_stderr = subprocess.STDOUT
+
         if not kernel.comp_debug:
             make_stdout = "/tmp/___marta_stdout.log"
             make_stderr = "/tmp/___marta_stderr.log"
@@ -509,7 +510,9 @@ class Profiler:
             if not check_correctness_file(kernel_setup):
                 perror("Configuration file is not correct")
             else:
-                pinfo("Configuration file structure is correct (compilation files might be wrong)")
+                pinfo(
+                    "Configuration file structure is correct (compilation files might be wrong)"
+                )
                 sys.exit(0)
 
         # For each kernel configuration
