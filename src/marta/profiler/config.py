@@ -54,7 +54,7 @@ def parse_options(config: dict) -> dict:
         cfg["processes"] = int(config_comp["processes"])
         if cfg["processes"] < 1:
             raise ValueError
-        if cfg["processes"] > 16:
+        if cfg["processes"] > 32:
             pwarning(
                 f"Be careful with high degree of processes for compilation ({cfg['processes']} processes set)"
             )

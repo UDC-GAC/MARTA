@@ -341,10 +341,6 @@ class Profiler:
             make_stdout = "/tmp/___marta_stdout.log"
             make_stderr = "/tmp/___marta_stderr.log"
 
-        if not self.args.quiet:
-            # Print version if not quiet
-            Profiler.print_version()
-
         # Execute command preceding compilation and execution process
         preamble = cfg["kernel"].get("preamble")
         if preamble != None and preamble.get("command") != None:
@@ -514,6 +510,10 @@ class Profiler:
                     "Configuration file structure is correct (compilation files might be wrong)"
                 )
                 sys.exit(0)
+
+        if not self.args.quiet:
+            # Print version if not quiet
+            Profiler.print_version()
 
         # For each kernel configuration
         for cfg in kernel_setup:
