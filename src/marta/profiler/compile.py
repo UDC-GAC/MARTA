@@ -17,7 +17,7 @@
 
 import subprocess
 import shutil
-
+import pandas as pd
 from marta.utils.marta_utilities import pinfo, get_name_from_dir
 
 
@@ -25,9 +25,79 @@ class CompilationError(Exception):
     pass
 
 
+class CompilerAnalysis:
+    columns = ["loops_vectorized"]
+
+    def analysis(lines: list) -> pd.DataFrame:
+        pass
+
+
+class GCCAnalysis(CompilerAnalysis):
+    def analysis(lines: list) -> pd.DataFrame:
+        df = pd.DataFrame(
+            [0] * len(CompilerAnalysis.columns), columns=CompilerAnalysis.columns
+        )
+        vect_already_visited = []
+        for line in lines:
+            if "polybench" in line or "marta" in line:
+                continue
+            if "optimized: loop vectorized" in line:
+                file = line.split(" ")[0]
+                if file in vect_already_visited:
+                    continue
+                df["loops_vectorized"] += 1
+
+        return df
+
+
+class ICCAnalysis(CompilerAnalysis):
+    def analysis(lines: list) -> pd.DataFrame:
+        df = pd.DataFrame(
+            [0] * len(CompilerAnalysis.columns), columns=CompilerAnalysis.columns
+        )
+        active_loop = False
+        for line in lines:
+            if "polybench" in line or "marta" in line:
+                continue
+            if "LOOP BEGIN" in line:
+                active_loop = True
+                continue
+            if "LOOP END" in line:
+                active_loop = False
+                continue
+            if active_loop and "LOOP WAS VECTORIZED" in line:
+                df["loops_vectorized"] += 1
+
+        return df
+
+
+def vector_report_analysis(file: str, compiler: str) -> pd.DataFrame:
+    with open(file) as f:
+        if compiler == "gcc":
+            return GCCAnalysis.analysis(f.readlines())
+        if compiler == "icc":
+            return ICCAnalysis.analysis(f.readlines())
+    # clang not supported yet...
+    return {}
+
+
 def compile_file(
-    src_file, output="", compiler="gcc", flags=["-O3"], temp=False
+    src_file: str, output="", compiler="gcc", flags=["-O3"], temp=False
 ) -> None:
+    """Just compile a C file.
+
+    :param src_file: Source file
+    :type src_file: str
+    :param output: Output file, defaults to ""
+    :type output: str, optional
+    :param compiler: Compiler, defaults to "gcc"
+    :type compiler: str, optional
+    :param flags: List of flags, defaults to ["-O3"]
+    :type flags: list, optional
+    :param temp: Temporal file, defaults to False
+    :type temp: bool, optional
+    :raises CompilationError: If compilation does not succeeds
+    """
     if output == "":
         output = f"/tmp/a.out"
     input_file = f"{src_file}"

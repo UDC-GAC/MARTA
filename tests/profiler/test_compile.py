@@ -15,8 +15,13 @@
 import os
 
 import pytest
+import pandas as pd
 
-from marta.profiler.compile import compile_file
+from marta.profiler.compile import (
+    compile_file,
+    vector_report_analysis,
+    compile_makefile,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -35,3 +40,28 @@ def test_compile_run_benchmark():
     assert os.path.exists(input_file)
     assert os.path.exists("/tmp/a.out")
     os.remove("/tmp/a.out")
+
+
+def test_vector_analysis_gcc():
+    df = pd.DataFrame([0], columns=["loops_vectorized"])
+    val = vector_report_analysis("tests/profiler/reports/gcc", "gcc")
+    assert (df["loops_vectorized"] == val["loops_vectorized"]).all()
+
+
+def test_vector_analysis_gcc_vectorized():
+    df = pd.DataFrame([1], columns=["loops_vectorized"])
+    val = vector_report_analysis("tests/profiler/reports/gcc_loop_vectorized", "gcc")
+    assert (df["loops_vectorized"] == val["loops_vectorized"]).all()
+
+
+def test_vector_analysis_icc():
+    df = pd.DataFrame([0], columns=["loops_vectorized"])
+    val = vector_report_analysis("tests/profiler/reports/icc", "icc")
+    assert (df["loops_vectorized"] == val["loops_vectorized"]).all()
+
+
+def test_vector_analysis_icc_vectorized():
+    df = pd.DataFrame([1], columns=["loops_vectorized"])
+    val = vector_report_analysis("tests/profiler/reports/icc_loop_vectorized", "icc")
+    assert (df["loops_vectorized"] == val["loops_vectorized"]).all()
+

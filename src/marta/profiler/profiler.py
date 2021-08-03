@@ -21,9 +21,7 @@ import copy
 import subprocess
 import sys
 from marta.profiler.config import check_correctness_file, get_kernel_config
-import yaml
 import argparse
-import pkg_resources
 import pickle
 import itertools as it
 import multiprocessing as mp
@@ -45,6 +43,7 @@ from marta.profiler.kernel import Kernel
 from marta.profiler.project import Project
 from marta.profiler.utils import custom_mp
 from marta.profiler.timing import Timing
+from marta.profiler.version import print_version
 
 
 class Profiler:
@@ -221,18 +220,6 @@ class Profiler:
             return len(list(*params_values_copy))
         except Exception:
             return len(list(it.product(*params_values_copy)))
-
-    @staticmethod
-    def print_version() -> None:
-        """
-        Print version and copyright message (if not quiet execution)
-        """
-        __version__ = pkg_resources.require("marta")[0].version
-
-        print(
-            f"Micro ARchitectural Toolkit Analysis (MARTA) - Profiler v{__version__}\n",
-            end="",
-        )
 
     @staticmethod
     def dict_product(dicts: dict, kernel_cfg: list) -> bytes:
@@ -496,7 +483,7 @@ class Profiler:
             sys.exit(0)
 
         if self.args.version:
-            self.print_version()
+            print_version()
             sys.exit(0)
 
         kernel_setup = get_kernel_config(self.args.input[0])
@@ -513,7 +500,7 @@ class Profiler:
 
         if not self.args.quiet:
             # Print version if not quiet
-            Profiler.print_version()
+            print_version()
 
         # For each kernel configuration
         for cfg in kernel_setup:

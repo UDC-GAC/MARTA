@@ -34,20 +34,23 @@ FLAGS_ASM:= $(FLAGS)
 ifeq ($(COMP),icc)
 	CC=icc
 	CXX=icpc
+#  report with the loops in your code that were vectorized
+	OPT_FLAGS:= -qopt-report=1 -qopt-report-phase=vec 
 	ifeq ($(AUTOVEC),true)
-		FLAGS_KERN+= -vec-threshold0
+		FLAGS_KERN+= -vec-threshold0 
 	endif
-	FLAGS_ASM+= $(FLAGS_KERN)
-	FLAGS_MAIN+= $(FLAGS_KERN)
+	FLAGS_KERN+= $(OPT_FLAGS)
+	FLAGS_ASM+= $(FLAGS_KERN) $(OPT_FLAGS)
+	FLAGS_MAIN+= $(FLAGS_KERN) $(OPT_FLAGS)
 	ifeq ($(KERNEL_INLINED),true)
 		FLAGS_MAIN+= -ipo
 	endif
 else ifeq ($(COMP),gcc)
 	CC=gcc
 	CXX=g++
-	FLAGS_MAIN+= -fno-dce -fno-tree-dce -fno-tree-builtin-call-dce
+	FLAGS_MAIN+= -fno-dce -fno-tree-dce -fno-tree-builtin-call-dce 
 	ifeq ($(AUTOVEC),true)
-		FLAGS_KERN+= -ftree-vectorize -fsimd-cost-model=unlimited -fvect-cost-model=unlimited
+		FLAGS_KERN+= -ftree-vectorize -fsimd-cost-model=unlimited -fvect-cost-model=unlimited 
 	endif
 	FLAGS_ASM+= $(FLAGS_KERN)
 	FLAGS_MAIN+= $(FLAGS_KERN)
@@ -90,6 +93,21 @@ endif
 .PHONY: all clean
 
 KERNEL_NAME?=$(BASENAME)_$(SUFFIX_ASM)_$(COMP)_$(COMP_FLAGS)
+
+ifeq ($(COMP),icc)
+	FLAGS_KERN+= -qopt-report-file=/tmp/$(KERNEL_NAME).opt
+	FLAGS_MAIN+= -qopt-report-file=/tmp/$(KERNEL_NAME).opt
+	FLAGS_ASM+= -qopt-report-file=/tmp/$(KERNEL_NAME).opt
+else ifeq ($(COMP),gcc)
+	FLAGS_KERN+= -fopt-info-vec=/tmp/$(KERNEL_NAME).opt
+	FLAGS_MAIN+= -fopt-info-vec=/tmp/$(KERNEL_NAME).opt
+	FLAGS_ASM+= -fopt-info-vec=/tmp/$(KERNEL_NAME).opt
+else ifeq ($(COMP),clang)
+	FLAGS_KERN+= -Rpass=loop-vectorize 
+	FLAGS_MAIN+= -Rpass=loop-vectorize 
+	FLAGS_ASM+= -Rpass=loop-vectorize 
+endif
+
 TMP_SRC?=___tmp_$(KERNEL_NAME).c
 TMP_ASM?=___tmp_$(KERNEL_NAME).s
 TMP_BIN?=___tmp_$(KERNEL_NAME).o

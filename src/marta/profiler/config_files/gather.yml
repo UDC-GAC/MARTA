@@ -19,13 +19,14 @@
           compiler_flags: 
             { 
                 "gcc": [" -march=native -mtune=native -mavx2 -O3 "],
+                "icc": [" -march=native -mtune=native -mavx2 -O3 "],
             }
           inlined_kernel: True
           asm_analysis:
                 syntax: "intel"
                 count_ins: True
                 static_analysis: ""
-          debug: False
+          debug: True
       configuration:
           kernel_cfg: [
           " ",
