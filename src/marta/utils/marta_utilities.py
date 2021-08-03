@@ -17,9 +17,14 @@
 # Standard libraries
 import sys
 import os
+import shutil
+import filecmp
 
 # Third-party libraries
 from colorama import Fore, Style
+
+# Local imports
+from marta import get_data
 
 
 def colored(msg: str, color=Fore.RED, style=Style.NORMAL) -> str:
@@ -60,6 +65,55 @@ def create_dir_or_pass(dir_name):
         os.mkdir(dir_name)
     except FileExistsError:
         pass
+
+
+def create_directories(
+    asm_dir="asm_codes", bin_dir="bin", tmp_dir="tmp", log_dir="log", root=""
+) -> None:
+    if root != "":
+        if not os.path.isdir(root):
+            create_dir_or_pass(root)
+    create_dir_or_pass(root + asm_dir)
+    create_dir_or_pass(root + bin_dir)
+    create_dir_or_pass(root + tmp_dir)
+    if not os.path.exists(root + log_dir):
+        os.mkdir(root + log_dir)
+    else:
+        if os.path.exists(f"{root + log_dir}/___tmp.stdout"):
+            os.remove(f"{root + log_dir}/___tmp.stdout")
+        if os.path.exists(f"{root + log_dir}/___tmp.stderr"):
+            os.remove(f"{root + log_dir}/___tmp.stderr")
+
+
+def check_marta_files(path: str):
+    """Check if MARTA files are already present in project path, otherwise
+    create them.
+
+    :param path: Project kernel path
+    :type path: str
+    """
+    import os
+
+    already_makefile = True
+    already_marta_makefile = True
+
+    if not os.path.isfile(f"{path}/Makefile"):
+        already_makefile = False
+        mk_file = get_data(f"profiler/MARTA.mk")
+        shutil.copyfile(mk_file, f"{path}/Makefile")
+    elif not os.path.isfile(f"{path}/MARTA.mk"):
+        already_marta_makefile = False
+        mk_file = get_data(f"profiler/MARTA.mk")
+        # Do not create new file if not necessary
+        if not filecmp.cmp(mk_file, f"{path}/Makefile", shallow=False):
+            shutil.copyfile(mk_file, f"{path}/MARTA.mk")
+
+    if already_makefile and already_marta_makefile:
+        pinfo("Using existing Makefile. Remember to 'include MARTA.mk' in you Makefile")
+
+    if not os.path.isdir(f"{path}/utilities"):
+        utilities_dir = get_data(f"profiler/utilities")
+        shutil.copytree(utilities_dir, f"{path}/utilities")
 
 
 def get_name_from_dir(path_file):

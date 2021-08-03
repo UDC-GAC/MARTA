@@ -12,14 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# -*- coding: utf-8 -*-
+
+
 # Standard libraries
 import os
 from typing import List
 
 # Third-party libraries
-from shutil import copytree
+import shutil
 
 # Local imports
+from marta import get_data
 from marta.utils.marta_utilities import perror
 
 
@@ -30,23 +34,31 @@ class Project:
         Read config template line by line
 
         :return: List of strings with all lines
-        :rtype: list(str)
+        :rtype: list
         """
-        config_file = f"{os.path.dirname(__file__)}/data/template.yml"
+        config_file = get_data(f"profiler/template.yml")
         try:
-            with open(config_file) as f:
-                return f.readlines()
+            f = open(config_file)
+        except FileNotFoundError:
+            perror("Package corrupted: template.yml missing")
+        except IOError:
+            perror("I/O error...")
         except Exception:
             perror("Something went wrong when dumping file")
+        else:
+            with f:
+                return f.readlines()
 
     @staticmethod
-    def generate_new_project(name="marta_bench") -> int:
-        src = f"{os.path.dirname(__file__)}/data"
+    def generate_new_project(name="marta_bench", type="bench") -> int:
+        src = get_data(f"profiler/marta_{type}")
         dst = f"{os.getcwd()}/{name}"
         try:
-            copytree(src, dst)
+            shutil.copytree(src, dst)
         except FileExistsError:
             perror(f"'{name}' directory already exists!")
+        except FileNotFoundError:
+            perror(f"Package corrupted: marta_{type} files are missing")
         except Exception:
             perror(f"Something went wrong when creating new project '{name}'")
         return 0

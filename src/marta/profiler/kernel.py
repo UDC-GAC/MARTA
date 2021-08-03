@@ -15,12 +15,12 @@
 
 # -*- coding: utf-8 -*-
 
+# Standard library
 from __future__ import annotations
 import os
-from typing import Union, Any
 import subprocess
 import pickle
-from marta.profiler.config import parse_options
+from typing import Union, Any
 
 # Third-party libraries
 import pandas as pd
@@ -33,6 +33,7 @@ from marta.profiler.timing import Timing
 from marta.profiler.static_code_analyzer import StaticCodeAnalyzer
 from marta.profiler.config import parse_options
 from marta.utils.marta_utilities import perror
+from marta.profiler.config import parse_options
 
 
 class Kernel:
@@ -134,6 +135,8 @@ class Kernel:
             df = df[cols]
         except ValueError:
             pass
+
+        filename = f"{self.get_kernel_path()}/marta_profiler_data/{filename}"
         if output_format == "html":
             df.to_html(filename, index=False)
         elif output_format == "json":
@@ -142,7 +145,7 @@ class Kernel:
             df.to_csv(filename, index=False)
 
         if generate_report:
-            report_filename = filename.replace(".csv", ".log")
+            report_filename = filename.split(".")[0] + ".log"
             with open(report_filename, "w") as f:
                 f.write(self.generate_report())
 
@@ -150,10 +153,7 @@ class Kernel:
         """
         Define PAPI counters in a new file recognized by PolyBench/C
         """
-        path = os.getcwd()
-        if self.papi_counters_path != None:
-            path = f"{path}/utilities/{self.papi_counters_path}"
-        papi_counter_file = f"{path}/papi_counters.list"
+        papi_counter_file = f"{self.get_kernel_path()}/utilities/papi_counters.list"
         try:
             with open(papi_counter_file, "w") as f:
                 for ctr in self.papi_counters:
@@ -298,7 +298,6 @@ class Kernel:
         if Kernel.get_asm_name(params_dict) != "":
             other_flags.append(Kernel.get_asm_name(params_dict))
 
-        # FIXME: this should be removed at some point...
         if "MACVETH" in kconfig:
             kconfig = kconfig.replace("MACVETH", "")
             local_common_flags += " -DMACVETH=1 "
@@ -344,6 +343,8 @@ class Kernel:
                 other_flags.append("ASM_CODE_KERNEL=true")
 
         ret = compile_makefile(
+            self.kernel,
+            self.main_src,
             self.path_kernel,
             compiler,
             compiler_flags,
@@ -358,7 +359,7 @@ class Kernel:
         return not (not ret and quit_on_error)
 
     def run(self, product_params: bytes, compiler: str, compiler_flags="") -> list:
-        # FIXME: need to refactor this function a bit
+        # TODO: need to refactor this function a bit...
         data = {}
         if self.papi_counters != None:
             avg_papi_counters = dict.fromkeys(self.papi_counters)
@@ -373,13 +374,19 @@ class Kernel:
         asm_file = f"{name_bin}_{compiler}_{compiler_flags_suffix}.s"
         if self.asm_count:
             asm_dict = ASMParserFactory.parse_asm(
-                self.asm_syntax, f"asm_codes/{asm_file}",
+                self.asm_syntax,
+                f"{self.get_kernel_path()}/marta_profiler_data/asm_codes/{asm_file}",
             )
             data.update(asm_dict)
         if self.static_analysis != "":
             # FIXME: host architecture for LLVM-MCA
             S = StaticCodeAnalyzer("cascadelake", self.static_analysis)
-            data.update(S.compute_performance(f"asm_codes/{asm_file}", self.nsteps))
+            data.update(
+                S.compute_performance(
+                    f"{self.get_kernel_path()}/marta_profiler_data/asm_codes/{asm_file}",
+                    self.nsteps,
+                )
+            )
 
         # FIXME: to remove at some point, this was something temporal
         if "MACVETH" in kconfig:
@@ -412,6 +419,7 @@ class Kernel:
                 self.nsteps,
                 self.threshold_outliers,
                 self.mean_and_discard_outliers,
+                bin_path=f"{self.get_kernel_path()}/marta_profiler_data/bin",
             )
             if type(avg_papi_counters) == type(None):
                 return None
@@ -431,6 +439,7 @@ class Kernel:
                 self.nsteps,
                 self.threshold_outliers,
                 self.mean_and_discard_outliers,
+                bin_path=f"{self.get_kernel_path()}/marta_profiler_data/bin",
             )
             if type(avg_time) == type(None):
                 return None
@@ -452,6 +461,7 @@ class Kernel:
                 self.nsteps,
                 self.threshold_outliers,
                 self.mean_and_discard_outliers,
+                bin_path=f"{self.get_kernel_path()}/marta_profiler_data/bin",
             )
             if type(avg_tsc) == type(None):
                 return None
@@ -524,6 +534,9 @@ class Kernel:
                 )
             list_rows += [new_dict]
         return list_rows
+
+    def get_kernel_path(self):
+        return self.path_kernel
 
     def __init__(self) -> None:
         pass

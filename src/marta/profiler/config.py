@@ -12,8 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import yaml
-from marta.utils.marta_utilities import pwarning, pexcept, perror
+
+from marta.utils.marta_utilities import pwarning, pexcept, perror, check_marta_files
 
 
 class MARTAConfigError(Exception):
@@ -30,7 +32,15 @@ def parse_options(config: dict) -> dict:
     if cfg["bench_type"] not in ["regular", "micro"]:
         pexcept("type of benchmarking must be 'regular' or 'micro'", MARTAConfigError)
     cfg["descr"] = config["kernel"].get("description", "")
-    cfg["path_kernel"] = config["kernel"].get("path", "./")
+    try:
+        cfg["path_kernel"] = config["kernel"].get("path", ".")
+        if not os.path.isdir(cfg["path_kernel"]):
+            raise MARTAConfigError
+        check_marta_files(cfg["path_kernel"])
+    except MARTAConfigError:
+        perror("Kernel path does not exists")
+    except Exception:
+        perror("Something went wrong when checking path")
     cfg["show_progress_bars"] = config["kernel"].get("show_progress_bars", True)
     cfg["debug"] = config["kernel"].get("debug", False)
 
@@ -65,6 +75,7 @@ def parse_options(config: dict) -> dict:
     cfg["compiler_flags"] = config_comp.get("compiler_flags", {"gcc": [""]})
     cfg["common_flags"] = config_comp.get("common_flags", "")
     cfg["kernel_compilation"] = config_comp.get("kernel_compilation_type", "infile")
+    cfg["main_src"] = config_comp.get("main_src", False)
     cfg["inlined"] = config_comp.get("kernel_inlined", False)
     cfg["comp_debug"] = config_comp.get("debug", False)
 

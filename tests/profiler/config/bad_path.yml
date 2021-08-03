@@ -1,6 +1,6 @@
 - kernel:
       name: "correct"
-      path: "tests/"
+      path: "path/kernel"
       description: "Setup for experiment gather"
       preamble:
           command: "echo 'hello_world'"
@@ -36,19 +36,6 @@
               script: "count_intrinsics.py"
               input: "KERNEL"
               suffix: ".c"
-      execution:
-          enabled: False
-          papi_counters: ["INSTRUCTIONS_RETIRED"]
-          time: False
-          tsc: True
-          threshold_outliers: 3
-          mean_and_discard_outliers: True
-          init_data: True
-          intel_cache_flush: False
-          check_dump: False
-          nexec: 7
-          nsteps: 1
-          cpu_affinity: 11
       output:
           name: "default"
           columns: "all"

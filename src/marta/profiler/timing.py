@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# -*- coding: utf-8 -*-
+
+
 # Standard libraries
 from __future__ import annotations
 import subprocess
@@ -88,7 +91,9 @@ class Timing:
         create_dir_or_pass("dumps")
         # Save execution values in an array
         suffix = f"dump"
-        bin_file = f"{exec_opts} ./bin/{code}_{compiler}_{suffix}.o 1"
+        bin_file = (
+            f"{exec_opts} ./marta_profiler_data/bin/{code}_{compiler}_{suffix}.o 1"
+        )
         dump_file = f"/tmp/dumps____tmp_{code}_{compiler}_{suffix}"
         with open(dump_file, "w") as f:
             subprocess.Popen([f"{bin_file}"], stdout=f)
@@ -105,6 +110,7 @@ class Timing:
         threshold_outliers=3,
         mean_and_discard_outliers=True,
         bin_file="",
+        bin_path="",
         tmp_file="",
     ) -> tuple[Optional[dict], Optional[int]]:
         """Execute and time given benchmark nexec times
@@ -135,8 +141,6 @@ class Timing:
         :rtype: tuple[Union[None, dict], int]
         """
 
-        create_dir_or_pass("tmp")
-
         if nexec < 5:
             pinfo("Minimum number of executions is 5")
             nexec = 5
@@ -153,13 +157,15 @@ class Timing:
             bin_file = [f"./{bin_file}"]
         if bin_file == "":
             bin_file = [
-                f"./bin/{code}_{compiler}_{compiler_flags_suffix}_{suffix}.o",
+                f"./{bin_path}/{code}_{compiler}_{compiler_flags_suffix}_{suffix}.o",
                 f"{nsteps}",
             ]
             if exec_opts != "":
                 bin_file = [exec_opts] + bin_file
         if tmp_file == "":
-            tmp_file = f"/tmp/____tmp_{code}_{compiler}_{suffix}"
+            tmp_file = (
+                f"/tmp/____tmp_{code}_{compiler}_{compiler_flags_suffix}_{suffix}"
+            )
 
         if os.path.exists(tmp_file):
             os.remove(tmp_file)

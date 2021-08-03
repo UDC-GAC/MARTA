@@ -37,11 +37,10 @@ from itertools import repeat
 
 # Local imports
 from marta import get_data
-from marta.utils.marta_utilities import perror, pwarning, pinfo, create_dir_or_pass
+from marta.utils.marta_utilities import perror, pwarning, pinfo, create_directories
 from marta.profiler.benchmark import Benchmark, BenchmarkError
 from marta.profiler.kernel import Kernel
 from marta.profiler.project import Project
-from marta.profiler.utils import custom_mp
 from marta.profiler.timing import Timing
 from marta.profiler.version import print_version
 
@@ -236,20 +235,6 @@ class Profiler:
         dicts.update({"KERNEL_CFG": kernel_cfg})
         return (pickle.dumps(dict(zip(dicts, x))) for x in it.product(*dicts.values()))
 
-    def create_directories(
-        self, asm_dir="asm_codes", bin_dir="bin", tmp_dir="tmp", log_dir="log"
-    ) -> None:
-        create_dir_or_pass(asm_dir)
-        create_dir_or_pass(bin_dir)
-        create_dir_or_pass(tmp_dir)
-        if not os.path.exists(log_dir):
-            os.mkdir(log_dir)
-        else:
-            if os.path.exists(f"{log_dir}/___tmp.stdout"):
-                os.remove(f"{log_dir}/___tmp.stdout")
-            if os.path.exists(f"{log_dir}/___tmp.stderr"):
-                os.remove(f"{log_dir}/___tmp.stderr")
-
     def clean_files(self, finalize_actions: dict) -> None:
         if finalize_actions != None:
             # Cleaning directories
@@ -336,7 +321,7 @@ class Profiler:
             except Exception:
                 perror("Preamble command went wrong...")
 
-        self.create_directories()
+        create_directories(root=f"{kernel.get_kernel_path()}/marta_profiler_data/")
 
         exit_on_error = not self.args.no_quit_on_error
 
@@ -488,7 +473,7 @@ class Profiler:
 
         kernel_setup = get_kernel_config(self.args.input[0])
 
-        # Sanity-check
+        # Sanity-checks
         if self.args.check_config_file:
             if not check_correctness_file(kernel_setup):
                 perror("Configuration file is not correct")

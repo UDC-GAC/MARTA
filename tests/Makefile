@@ -4,11 +4,19 @@
 #                                                                              #
 ################################################################################
 
+ifndef TARGET
+$(error TARGET is not set)
+endif
+
+ifndef BINARY_NAME
+$(error BINARY_NAME is not set)
+endif
+
 # Some useful paths
 MKFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 CUR_DIR := $(notdir $(patsubst %/,%,$(dir $(mkfile_path))))
 
-PARENT_DIR?=$(CUR_DIR)
+PARENT_DIR?=$(CUR_DIR)marta_profiler_data/
 BIN_DIR=$(PARENT_DIR)bin/
 ASM_DIR=$(PARENT_DIR)asm_codes/
 DUMP_DIR=$(PARENT_DIR)dumps/
@@ -77,7 +85,7 @@ else
 	exit 1
 endif
 
-MAIN_FILE=$(MAIN_SRC)$(MAIN_SUFFIX)
+MAIN_FILE?=main.c
 
 # if @ specified, then not verbose
 V = 
@@ -106,6 +114,7 @@ else ifeq ($(COMP),gcc)
 	FLAGS_MAIN+= -fopt-info-vec=/tmp/$(KERNEL_NAME).opt
 	FLAGS_ASM+= -fopt-info-vec=/tmp/$(KERNEL_NAME).opt
 else ifeq ($(COMP),clang)
+# TODO
 	FLAGS_KERN+= -Rpass=loop-vectorize 
 	FLAGS_MAIN+= -Rpass=loop-vectorize 
 	FLAGS_ASM+= -Rpass=loop-vectorize 

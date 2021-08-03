@@ -22,9 +22,9 @@ init_1darray(n, POLYBENCH_ARRAY(A));
 init_1darray(n, POLYBENCH_ARRAY(B));
 init_1darray(n, POLYBENCH_ARRAY(C));
 
-// TODO:
-PROFILE_FUNCTION_TSTEPS_LOOP(kern(POLYBENCH_ARRAY(A), POLYBENCH_ARRAY(B),
-                                  POLYBENCH_ARRAY(C)));
+PROFILE_FUNCTION_LOOP(kernel(POLYBENCH_ARRAY(A), POLYBENCH_ARRAY(B),
+                             POLYBENCH_ARRAY(C)),
+                      TSTEPS);
 
 // TODO: free memory, avoid DCE
 MARTA_AVOID_DCE(POLYBENCH_ARRAY(A));

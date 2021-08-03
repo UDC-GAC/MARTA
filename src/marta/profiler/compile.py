@@ -14,10 +14,14 @@
 
 # -*- coding: utf-8 -*-
 
-
+# Standard library
 import subprocess
 import shutil
+
+# Third-party libraries
 import pandas as pd
+
+# Local imports
 from marta.utils.marta_utilities import pinfo, get_name_from_dir
 
 
@@ -115,8 +119,10 @@ def compile_file(
 
 
 def compile_makefile(
+    target: str,
+    main_src: str,
     kpath: str,
-    comp: str,
+    compiler: str,
     compiler_flags: str,
     common_flags: str,
     kconfig: str,
@@ -158,7 +164,10 @@ def compile_makefile(
         "-B",
         "-C",
         kpath,
-        f"COMP={comp}",
+        f"TARGET={target}",
+        f"BINARY_NAME={target}",
+        f"MAIN_FILE={main_src}",
+        f"COMP={compiler}",
         f"COMP_FLAGS={compiler_flags_suffix}",
         f"KERNEL_CONFIG={kconfig}",
         f"COMMON_FLAGS={common_flags}",

@@ -27,20 +27,28 @@ def test_check_correctness_file_kernel():
         assert check_correctness_kernel(kernel)
 
 
-def test_check_correctness_file_kernel():
-    kernel_setup = get_kernel_config("tests/profiler/config/incorrect_kernel.yml")
+def test_check_correctness_file_bad_path():
+    kernel_setup = get_kernel_config("tests/profiler/config/bad_path.yml")
+    with pytest.raises(SystemExit) as pytest_wrapped_e:
+        check_correctness_file(kernel_setup)
+    assert pytest_wrapped_e.type == SystemExit
+    assert pytest_wrapped_e.value.code == 1
+
+
+def test_check_correctness_incorrect():
+    kernel_setup = get_kernel_config("tests/profiler/config/incorrect_file.yml")
     assert check_correctness_file(kernel_setup) == False
     for kernel in kernel_setup:
         assert check_correctness_kernel(kernel) == False
 
 
-def test_check_correctness_1():
+def test_check_correctness_incorrect_0():
     kernel_setup = get_kernel_config("tests/profiler/config/incorrect_file.yml")
     assert check_correctness_file(kernel_setup) == False
 
 
 def test_check_not_found():
     with pytest.raises(SystemExit) as pytest_wrapped_e:
-        kernel_setup = get_kernel_config("tests/profiler/config/404.yml")
+        get_kernel_config("tests/profiler/config/404.yml")
     assert pytest_wrapped_e.type == SystemExit
     assert pytest_wrapped_e.value.code == 1

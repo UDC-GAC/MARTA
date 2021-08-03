@@ -13,8 +13,9 @@
 # limitations under the License.
 
 import pytest
+import os
 
-from marta.utils.marta_utilities import perror, pexcept
+from marta.utils.marta_utilities import perror, pexcept, check_marta_files
 
 
 def test_perror():
@@ -32,3 +33,12 @@ def test_pexcept():
     with pytest.raises(TestExcept) as pytest_wrapped_e:
         pexcept("Error", TestExcept)
     assert pytest_wrapped_e.type == TestExcept
+
+
+def test_check_marta_files_no_mod():
+    check_marta_files("/tmp/")
+    assert os.path.isfile("/tmp/Makefile")
+    check_marta_files("/tmp/")
+    assert os.path.isfile("/tmp/MARTA.mk") == False
+    os.remove("/tmp/Makefile")
+

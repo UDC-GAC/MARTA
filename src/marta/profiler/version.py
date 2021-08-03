@@ -12,7 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# -*- coding: utf-8 -*-
+
 import pkg_resources
+
 
 def print_version() -> None:
     """
@@ -20,9 +23,9 @@ def print_version() -> None:
     """
     __version__ = pkg_resources.require("marta")[0].version
     s = """
-__  __    _    ____ _____  _    
-|  \/  |  / \  |  _ |_   _|/ \   
-| |\/| | / _ \ | |_) || | / _ \  
+ __  __    _    ____ _____  _
+|  \/  |  / \  |  _ |_   _|/ \ 
+| |\/| | / _ \ | |_) || | / _ \ 
 | |  | |/ ___ \|  _ < | |/ ___ \ 
 |_|  |_/_/   \_|_| \_\|_/_/   \_\\
     """
