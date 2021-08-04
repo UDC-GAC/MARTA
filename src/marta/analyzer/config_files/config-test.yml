@@ -1,12 +1,11 @@
 - kernel:
-      input: tmp/marta.csv
-      output: test_output
+      input: src/marta/analyzer/tmp/test.csv
+      output: src/marta/analyzer/tmp/test_output
       force_replacement: True
       clean: False
       debug: False
       prepare_data:
-          cols: I0 J0 STEP_I STEP_J N M
-          #rows: { "I0": 0 }
+          cols: I0 STEP_I J0 STEP_J N M INSTRUCTIONS_RETIRED
           target: FLOPSs
           norm:
               enabled: False
@@ -23,12 +22,6 @@
               criterion: "gini"
               min_score: 0.8
               pruning_mccp_alpha: 0.0
-              text_tree: False
+              text_tree: True
               graph_tree: True
               orientation: "horizontal"
-      recommender:
-          pred: FLOPSs
-          interest_dim:
-              value: 6.5
-              type: numeric
-          dim: I J It Jt Is Js Jters Iters NELEMS

@@ -12,7 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from marta.analyzer.cli import cli
+import sys
+from marta.analyzer.analyzer import Analyzer
 
-if __name__ == "__main__":
-    cli()
+
+def cli() -> None:
+    Analyzer(sys.argv[1:])
+

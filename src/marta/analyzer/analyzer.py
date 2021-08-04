@@ -26,12 +26,13 @@ import pandas as pd
 import yaml
 
 # Local imports
+from marta.analyzer.config import parse_options
 from marta.analyzer.decision_tree import DecisionTree
 from marta.utils.marta_utilities import perror
 
 
 class Analyzer:
-    def parse_arguments(self) -> argparse.Namespace:
+    def parse_arguments(self, args: list) -> argparse.Namespace:
         """Parse arguments
 
         :return: list of arguments (sys.argv)
@@ -42,9 +43,14 @@ class Analyzer:
         )
         required_named = parser.add_argument_group("required named arguments")
         required_named.add_argument(
-            "-i", "--input", help="input file name", required=True
+            "input",
+            metavar="input",
+            type=str,
+            nargs=1,
+            help="input configuration file",
         )
-        return parser.parse_args()
+
+        return parser.parse_args(args)
 
     def remove_files(self, tmp_files=["___tmp*"]) -> None:
         """Remove temporal files generated
@@ -53,7 +59,7 @@ class Analyzer:
         :type tmp_files: list, optional
         """
         for tmp in tmp_files:
-            os.system(f"rm {tmp}")
+            os.remove(tmp)
 
     def preprocess_data(self) -> pd.DataFrame:
         """Process data: filter, normalize and categorize
@@ -129,73 +135,28 @@ class Analyzer:
         else:
             raise TypeError
 
-    def __init__(self):
+    def __init__(self, args):
+        self.args = self.parse_arguments(args)
+        yaml_config = self.args.input[0]
         try:
-            self.args = self.parse_arguments()
-            self.yml_config = self.args.input
-            with open(self.yml_config, "r") as ymlfile:
-                cfg = yaml.load(ymlfile, Loader=yaml.FullLoader)
+            from yaml import CLoader as Loader
+        except ImportError:
+            from yaml import Loader
 
-            general_cfg = cfg[0]["kernel"]
-            self.debug = general_cfg["debug"] if "debug" in general_cfg else False
-            self.input_file = general_cfg["input"]
-            self.force_replacement = (
-                general_cfg["force_replacement"]
-                if "force_replacement" in general_cfg.keys()
-                else False
-            )
-            self.output_file = general_cfg["output"]
-            self.rm_temp_files = general_cfg["clean"]
-            self.print_debug = general_cfg["debug"]
+        try:
+            with open(yaml_config, "r") as ymlfile:
+                cfg = yaml.load(ymlfile, Loader=Loader)
+        except FileNotFoundError:
+            perror("Configuration file not found")
+        except Exception:
+            perror("Unknown error when opening configuration file.")
 
-            # prepare_data keys
-            prepdata_cfg = general_cfg["prepare_data"]
-            self.filter_cols = prepdata_cfg["cols"].split(" ")
-            self.filter_rows = (
-                prepdata_cfg["rows"] if "rows" in prepdata_cfg.keys() else ""
-            )
-            self.target = prepdata_cfg["target"]
-            self.norm = (
-                prepdata_cfg["norm"]["enabled"]
-                if "norm" in prepdata_cfg.keys()
-                else False
-            )
-            self.norm_type = prepdata_cfg["norm"]["type"] if self.norm else ""
-            self.ncats = int(prepdata_cfg["categories"]["num"])
-            if self.ncats < 1:
-                raise ValueError(
-                    "categories[num]", f"{self.ncats}", "value must be greater than one"
-                )
-            self.catscale = eval(prepdata_cfg["categories"]["scale_factor"])
-            self.cattype = prepdata_cfg["categories"]["type"]
-
-            # classification keys
-            classification_cfg = general_cfg["classification"]
-            self.class_type = classification_cfg["type"]
-            if self.class_type == "decisiontree":
-                self.dt_cfg = DecisionTree.DTConfig(classification_cfg["dt_settings"])
-            elif self.class_type == "randomforest":
-                # TODO: implement random forest classification
-                pass
-            else:
-                raise ValueError(
-                    "classification[type]",
-                    self.class_type,
-                    "unknown classification algorithm: try 'decisiontree' or 'randomforest'",
-                )
-
-            if self.rm_temp_files:
-                self.remove_files()
-        except KeyError as K:
-            perror(f"key {K} missing in configuration file")
-        except TypeError as T:
-            perror(f"key {T} wrong type")
-        except ValueError as V:
-            key, value, msg = V.args
-            perror(f"{key} = {value}, {msg}")
-        except SyntaxError as S:
-            perror(f"syntax error in {S}")
-        except NameError as N:
-            perror(f"{N}")
-        except Exception as E:
-            perror(f"something went wrong: {E}")
+        parsed_config = parse_options(cfg)
+        for key in parsed_config:
+            setattr(self, key, parsed_config[key])
+        try:
+            self.train_model()
+        except ValueError:
+            perror("Check your dimensions are numeric")
+        except Exception:
+            perror("Something went wrong")
