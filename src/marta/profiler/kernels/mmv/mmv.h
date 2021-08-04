@@ -1,3 +1,6 @@
+#ifndef _MMV_H
+#define _MMV_H
+
 #ifndef restrict
 #define restrict __restrict
 #endif
@@ -32,3 +35,5 @@
 
 void kernel_mmv(DATA_TYPE *restrict A, DATA_TYPE *restrict x,
                 DATA_TYPE *restrict y);
+
+#endif

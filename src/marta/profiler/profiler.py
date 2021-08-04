@@ -51,7 +51,7 @@ class Profiler:
     """
 
     @staticmethod
-    def parse_arguments(list_args):
+    def parse_arguments(args):
         """
         Parse CLI arguments
 
@@ -68,13 +68,13 @@ class Profiler:
         # If "version" or "dump" option, then positional is not needed
         required_input = 1
         if (
-            ("-v" in list_args)
-            or ("--version" in list_args)
-            or ("-dump" in list_args)
-            or ("--dump-config-file" in list_args)
-            or ("-h" in list_args)
-            or ("--help" in list_args)
-            or ("project" in list_args)
+            ("-v" in args)
+            or ("--version" in args)
+            or ("-dump" in args)
+            or ("--dump-config-file" in args)
+            or ("-h" in args)
+            or ("--help" in args)
+            or ("project" in args)
         ):
             required_input = "?"
 
@@ -156,7 +156,7 @@ class Profiler:
             default="marta_bench",
         )
 
-        return parser.parse_args(list_args)
+        return parser.parse_args(args)
 
     @staticmethod
     def eval_features(feature: dict) -> dict:
