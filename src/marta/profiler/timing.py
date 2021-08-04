@@ -18,7 +18,7 @@
 # Standard libraries
 from __future__ import annotations
 import subprocess
-from typing import Optional
+from typing import Optional, Tuple
 import datetime as dt
 import os
 import time
@@ -112,7 +112,7 @@ class Timing:
         bin_file="",
         bin_path="",
         tmp_file="",
-    ) -> tuple[Optional[dict], Optional[int]]:
+    ) -> Tuple[Optional[dict], Optional[int]]:
         """Execute and time given benchmark nexec times
 
         :param code: Name of the code
@@ -138,7 +138,7 @@ class Timing:
         :param tmp_file: Temporal file used, defaults to ""
         :type tmp_file: str, optional
         :return:  Set of values collected and the number of discarded values
-        :rtype: tuple[Union[None, dict], int]
+        :rtype: Tuple[Union[None, dict], int]
         """
 
         if nexec < 5:

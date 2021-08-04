@@ -14,9 +14,11 @@
 
 # -*- coding: utf-8 -*-
 
+# Third-party libraries
 import pyperf
 from pyperf._system import System
 
+# Local imports
 from marta.utils.marta_utilities import pwarning, pinfo, CaptureOutput
 
 # We are just interested in these capabilities for the moment.
@@ -41,12 +43,20 @@ class PyPerfArgs:
 
 
 class SystemConfig:
+    warning_no_ops = "pyperf does not allow any operations in this host machine..."
+
     def tune(self):
+        if self.disabled:
+            pwarning(SystemConfig.warning_no_ops)
+            return
         with CaptureOutput() as output:
             self.system.run_operations("tune")
         pinfo(f"{output[0]} using pyperf")
 
     def check_errors(self, val: str):
+        if self.disabled:
+            pwarning(SystemConfig.warning_no_ops)
+            return
         with CaptureOutput() as output:
             self.system.render_messages(val)
 
@@ -72,11 +82,22 @@ class SystemConfig:
             )
 
     def reset(self):
+        if self.disabled:
+            pwarning(SystemConfig.warning_no_ops)
+            return
         with CaptureOutput() as output:
             self.system.run_operations("reset")
         pinfo(f"{output[0]} using pyperf")
 
+    def is_disabled(self):
+        assert hasattr(self, "disabled")
+        return self.disabled
+
     def __init__(self, args):
         self.system = System()
-        self.system.init(PyPerfArgs(args))
+        try:
+            self.system.init(PyPerfArgs(args))
+            self.disabled = False
+        except SystemExit:
+            self.disabled = True
 

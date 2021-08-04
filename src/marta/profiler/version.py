@@ -14,6 +14,7 @@
 
 # -*- coding: utf-8 -*-
 
+# Standard libraries
 import pkg_resources
 
 

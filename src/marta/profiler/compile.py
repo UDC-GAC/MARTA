@@ -17,7 +17,7 @@
 # Standard library
 import subprocess
 import shutil
-from typing import Union, Any
+from typing import Union, Any, Tuple
 
 # Local imports
 from marta.utils.marta_utilities import pinfo, get_name_from_dir, perror
@@ -219,7 +219,7 @@ def get_dict_from_d_flags(params: str) -> dict:
     return d
 
 
-def get_suffix_and_flags(kconfig: str, params: Union[dict, str]) -> tuple[str, str]:
+def get_suffix_and_flags(kconfig: str, params: Union[dict, str]) -> Tuple[str, str]:
     custom_flags = ""
     suffix_file = ""
     custom_bin_name = None
