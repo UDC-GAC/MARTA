@@ -17,12 +17,10 @@
 # Standard library
 import subprocess
 import shutil
-
-# Third-party libraries
-import pandas as pd
+from typing import Union, Any
 
 # Local imports
-from marta.utils.marta_utilities import pinfo, get_name_from_dir
+from marta.utils.marta_utilities import pinfo, get_name_from_dir, perror
 
 
 class CompilationError(Exception):
@@ -32,15 +30,14 @@ class CompilationError(Exception):
 class CompilerAnalysis:
     columns = ["loops_vectorized"]
 
-    def analysis(lines: list) -> pd.DataFrame:
+    def analysis(lines: list) -> dict:
         pass
 
 
 class GCCAnalysis(CompilerAnalysis):
-    def analysis(lines: list) -> pd.DataFrame:
-        df = pd.DataFrame(
-            [0] * len(CompilerAnalysis.columns), columns=CompilerAnalysis.columns
-        )
+    def analysis(lines: list) -> dict:
+        d = dict(zip(CompilerAnalysis.columns, [0] * len(CompilerAnalysis.columns)))
+
         vect_already_visited = []
         for line in lines:
             if "polybench" in line or "marta" in line:
@@ -49,16 +46,14 @@ class GCCAnalysis(CompilerAnalysis):
                 file = line.split(" ")[0]
                 if file in vect_already_visited:
                     continue
-                df["loops_vectorized"] += 1
+                d["loops_vectorized"] += 1
 
-        return df
+        return d
 
 
 class ICCAnalysis(CompilerAnalysis):
-    def analysis(lines: list) -> pd.DataFrame:
-        df = pd.DataFrame(
-            [0] * len(CompilerAnalysis.columns), columns=CompilerAnalysis.columns
-        )
+    def analysis(lines: list) -> dict:
+        d = dict(zip(CompilerAnalysis.columns, [0] * len(CompilerAnalysis.columns)))
         active_loop = False
         for line in lines:
             if "polybench" in line or "marta" in line:
@@ -70,12 +65,12 @@ class ICCAnalysis(CompilerAnalysis):
                 active_loop = False
                 continue
             if active_loop and "LOOP WAS VECTORIZED" in line:
-                df["loops_vectorized"] += 1
+                d["loops_vectorized"] += 1
 
-        return df
+        return d
 
 
-def vector_report_analysis(file: str, compiler: str) -> pd.DataFrame:
+def vector_report_analysis(file: str, compiler: str) -> dict:
     with open(file) as f:
         if compiler == "gcc":
             return GCCAnalysis.analysis(f.readlines())
@@ -192,4 +187,81 @@ def compile_makefile(
             f"'make' exited with code '{str(exit_code)}' (signal '{exit_signal}') while compiling in {kpath}."
         )
     return cp.returncode == 0
+
+
+def get_asm_name(params: Union[dict, Any]) -> str:
+    if not type(params) is dict:
+        return ""
+    # Parsing parameters
+    for pname in params.keys():
+        try:
+            param_val_parsed = int(params[pname])
+        except ValueError:
+            # NOTE: for includes or other paths, \"string\" notation is
+            # needed, but this is not MARTA's responsibility.
+            param_val_parsed = '"' + params[pname] + '"'
+        # FIXME:
+        if pname == "ASM_NAME":
+            return f" {pname}={param_val_parsed}"
+    return ""
+
+
+def get_dict_from_d_flags(params: str) -> dict:
+    d = {}
+    for tok in params.strip().split(" "):
+        tmp = tok.split("=")
+        key = tmp[0].replace("-D", "")
+        if len(tmp) == 1:
+            value = 1
+        else:
+            value = tmp[1]
+        d.update({key: value})
+    return d
+
+
+def get_suffix_and_flags(kconfig: str, params: Union[dict, str]) -> tuple[str, str]:
+    custom_flags = ""
+    suffix_file = ""
+    custom_bin_name = None
+    # Parsing parameters
+    if type(params) is dict:
+        for pname in params.keys():
+            try:
+                param_val_parsed = int(params[pname])
+            except ValueError:
+                # NOTE: for includes or other paths, \"string\" notation is
+                # needed, but this is not MARTA's responsibility.
+                param_val_parsed = '"' + params[pname] + '"'
+            except TypeError:
+                print(params[pname])
+            if pname != "ASM_NAME":
+                custom_flags += f" -D{pname}={param_val_parsed}"
+            if pname == "BIN_NAME":
+                custom_bin_name = params[pname]
+            key = pname.replace("/", "_")
+            val = (
+                params[pname].replace("/", "_")
+                if type(params[pname]) == str
+                else params[pname]
+            )
+            suffix_file += f"_{key}{val}"
+        suffix_file = suffix_file.replace("/", "").replace(".c", "")
+    else:
+        custom_flags = params
+        for p in params.strip().replace("-", "").replace("D", "").split(" "):
+            suffix_file += f"_{p}"
+
+    # Parsing kconfig
+    for kparam in kconfig.strip().replace("-", "").split(" "):
+        if "BIN_NAME" in kparam:
+            custom_bin_name = kparam.split("=")[1]
+
+    # Avoid very long names
+    if custom_bin_name != None:
+        suffix_file = custom_bin_name
+    if len(suffix_file) > 256:
+        perror(
+            "Error: too long binary name. Try '-DBIN_NAME=<suffix>' for each compilation case instead"
+        )
+    return suffix_file, custom_flags
 

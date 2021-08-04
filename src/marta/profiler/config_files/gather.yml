@@ -113,13 +113,10 @@
           flops: "1"
       execution:
           enabled: True
-          papi_counters: [
-            "INSTRUCTIONS_RETIRED"
-            ]
-          time: True
-          tsc: True
+          time: False
+          tsc: False
           threshold_outliers: 3
-          mean_and_discard_outliers: False
+          mean_and_discard_outliers: True
           init_data: True
           intel_cache_flush: False
           check_dump: False

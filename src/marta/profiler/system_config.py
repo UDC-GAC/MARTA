@@ -51,6 +51,7 @@ class SystemConfig:
             self.system.render_messages(val)
 
         errors = False
+        n_errors = 0
         for line in output:
             if "Errors" in line:
                 errors = True
@@ -64,6 +65,11 @@ class SystemConfig:
             ):
                 continue
             pwarning(line)
+            n_errors += 1
+        if n_errors:
+            pwarning(
+                "Something went wrong when setting frequency and turbo. Check permissions."
+            )
 
     def reset(self):
         with CaptureOutput() as output:

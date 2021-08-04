@@ -147,8 +147,6 @@ class Timing:
 
         compiler_flags_suffix = compiler_flags.replace(" ", "_").replace("-", "")
 
-        # Save execution values in an array
-        suffix = f"{benchmark_type}" if type(benchmark_type) == str else "papi"
         if (
             bin_file != ""
             and not bin_file.startswith("./")
@@ -157,15 +155,13 @@ class Timing:
             bin_file = [f"./{bin_file}"]
         if bin_file == "":
             bin_file = [
-                f"./{bin_path}/{code}_{compiler}_{compiler_flags_suffix}_{suffix}.o",
+                f"./{bin_path}/{code}_{compiler}_{compiler_flags_suffix}_{benchmark_type}.o",
                 f"{nsteps}",
             ]
             if exec_opts != "":
                 bin_file = [exec_opts] + bin_file
         if tmp_file == "":
-            tmp_file = (
-                f"/tmp/____tmp_{code}_{compiler}_{compiler_flags_suffix}_{suffix}"
-            )
+            tmp_file = f"/tmp/____tmp_{code}_{compiler}_{compiler_flags_suffix}_{benchmark_type}"
 
         if os.path.exists(tmp_file):
             os.remove(tmp_file)
