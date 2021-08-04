@@ -74,9 +74,9 @@ def parse_options(config: dict) -> dict:
         cfg["processes"] = 1
     cfg["compiler_flags"] = config_comp.get("compiler_flags", {"gcc": [""]})
     cfg["common_flags"] = config_comp.get("common_flags", "")
-    cfg["kernel_compilation"] = config_comp.get("kernel_compilation_type", "infile")
     cfg["main_src"] = config_comp.get("main_src", False)
     cfg["inlined"] = config_comp.get("kernel_inlined", False)
+    cfg["kernel_compilation"] = not cfg["inlined"]
     cfg["comp_debug"] = config_comp.get("debug", False)
 
     # ASM analysis

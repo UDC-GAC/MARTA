@@ -315,14 +315,14 @@ class Kernel:
         if not self.inlined:
             other_flags.append("KERNEL_INLINED=true")
 
-        if self.kernel_compilation == "apart":
+        if self.kernel_compilation:
             other_flags.append("COMPILE_KERNEL=true")
 
         if self.asm_count or self.static_analysis != "":
-            if self.kernel_compilation == "infile":
-                other_flags.append("ASM_CODE_MAIN=true")
-            else:
+            if self.kernel_compilation:
                 other_flags.append("ASM_CODE_KERNEL=true")
+            else:
+                other_flags.append("ASM_CODE_MAIN=true")
 
         ret = compile_makefile(
             self.kernel,

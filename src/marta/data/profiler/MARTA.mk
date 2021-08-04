@@ -128,6 +128,8 @@ BASE_BIN_NAME?=$(BIN_DIR)$(KERNEL_NAME)
 BASE_ASM_NAME?=$(ASM_DIR)$(KERNEL_NAME)
 BASE_DUMP_NAME?=$(DUMP_DIR)$(KERNEL_NAME)
 
+KERNEL_BIN_NAME?=$(BIN_DIR)$(KERNEL_NAME)_kernel.o
+
 MAIN_RULES:= $(MACVETH_RULE) $(MAIN_FILE)
 
 ifeq ($(COMPILE_KERNEL),true)
@@ -136,7 +138,7 @@ ifeq ($(COMPILE_KERNEL),true)
 	else
 		MAIN_RULES+= kernel
 	endif
-	FLAGS_MAIN+= $(KERNEL_NAME).o
+	FLAGS_MAIN+= $(KERNEL_BIN_NAME)
 endif
 
 ifeq ($(ASM_CODE_KERNEL),true)
@@ -204,7 +206,7 @@ asm_code_custom:
 kernel:
 	$(V)cp $(TARGET).c $(TMP_SRC)
 	$(V)$(CC) -c $(FLAGS_KERN) $(TMP_SRC)
-	$(V)mv $(TMP_BIN) $(KERNEL_NAME).o
+	$(V)mv $(TMP_BIN) $(KERNEL_BIN_NAME)
 	$(V)rm $(TMP_SRC)
 
 # -DPOLYBENCH_TIME (clock time)
