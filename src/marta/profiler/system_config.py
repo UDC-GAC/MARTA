@@ -14,38 +14,63 @@
 
 # -*- coding: utf-8 -*-
 
-
 import pyperf
+from pyperf._system import System
 
+from marta.utils.marta_utilities import pwarning, pinfo, CaptureOutput
+
+# We are just interested in these capabilities for the moment.
 pyperf._system.OPERATIONS = [
-    # pyperf._system.PerfEvent,
-    # pyperf._system.ASLR,
-    # pyperf._system.LinuxScheduler,
-    pyperf._system.CPUFrequency,
-    pyperf._system.CPUGovernorIntelPstate,
-    pyperf._system.TurboBoostIntelPstate,
-    # pyperf._system.CheckNOHZFullIntelPstate,
-    pyperf._system.TurboBoostMSR,
+    pyperf._system.CPUFrequency,  # set to maximum frequency
+    pyperf._system.CPUGovernorIntelPstate,  # set CPU scaling governor of the intel_pstate driver.
+    pyperf._system.TurboBoostIntelPstate,  # Set Turbo Boost mode of Intel CPUs by reading from/writing into /sys/devices/system/cpu/intel_pstate/no_turbo of the intel_pstate driver.
+    # pyperf._system.TurboBoostMSR,  # Turbo Boost mode of Intel CPUs using /dev/cpu/N/msr.
 ]
+
+
+class PyPerfError(Exception):
+    pass
 
 
 class PyPerfArgs:
     def __init__(self, args):
         for arg in args:
             setattr(self, arg, args[arg])
+        if not hasattr(self, "affinity") or type(self.affinity) != list:
+            raise PyPerfError
 
 
 class SystemConfig:
     def tune(self):
-        self.system.run_operations("tune")
+        with CaptureOutput() as output:
+            self.system.run_operations("tune")
+        pinfo(f"{output[0]} using pyperf")
 
     def check_errors(self, val: str):
-        self.system.render_messages(val)
+        with CaptureOutput() as output:
+            self.system.render_messages(val)
+
+        errors = False
+        for line in output:
+            if "Errors" in line:
+                errors = True
+                continue
+            if (
+                "===" in line
+                or "" == line
+                or not errors
+                or "ERROR: At least one operation failed with permission error, retry as root"
+                in line
+            ):
+                continue
+            pwarning(line)
 
     def reset(self):
-        self.system.run_operations("reset")
+        with CaptureOutput() as output:
+            self.system.run_operations("reset")
+        pinfo(f"{output[0]} using pyperf")
 
     def __init__(self, args):
-        self.system = pyperf._system.System()
+        self.system = System()
         self.system.init(PyPerfArgs(args))
 

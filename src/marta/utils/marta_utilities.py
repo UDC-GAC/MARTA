@@ -19,6 +19,7 @@ import sys
 import os
 import shutil
 import filecmp
+from io import StringIO
 
 # Third-party libraries
 from colorama import Fore, Style
@@ -118,3 +119,16 @@ def check_marta_files(path: str):
 
 def get_name_from_dir(path_file):
     return path_file.split("/")[-1]
+
+
+class CaptureOutput(list):
+    def __enter__(self):
+        self._stdout = sys.stdout
+        sys.stdout = self._stringio = StringIO()
+        return self
+
+    def __exit__(self, *args):
+        self.extend(self._stringio.getvalue().splitlines())
+        del self._stringio  # free up some memory
+        sys.stdout = self._stdout
+

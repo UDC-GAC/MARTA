@@ -113,6 +113,12 @@ def parse_options(config: dict) -> dict:
     cfg["nexec"] = config_exec.get("nexec", 7)
     cfg["nsteps"] = config_exec.get("nsteps", 1000)
     cfg["cpu_affinity"] = config_exec.get("cpu_affinity", 0)
+    if cfg["cpu_affinity"] == 0:
+        pwarning(
+            "Consider using other CPU core than 0. Set in 'execution' under 'cpu_affinity'"
+        )
+    cfg["max_freq"] = config_exec.get("max_freq", "")
+    cfg["turbo"] = config_exec.get("turbo", "")
     cfg["papi_counters_path"] = config_exec.get("papi_counters_path")
     cfg["papi_counters"] = config_exec.get("papi_counters")
     if cfg["papi_counters"] != None:

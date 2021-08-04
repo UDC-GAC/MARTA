@@ -34,6 +34,7 @@ from marta.profiler.static_code_analyzer import StaticCodeAnalyzer
 from marta.profiler.config import parse_options
 from marta.utils.marta_utilities import perror
 from marta.profiler.config import parse_options
+from marta.profiler.system_config import SystemConfig
 
 
 class Kernel:
@@ -535,6 +536,11 @@ class Kernel:
             list_rows += [new_dict]
         return list_rows
 
+    def reset_system_config(self):
+        if self.max_freq != "" and self.turbo != "":
+            self.system.reset()
+            self.system.check_errors("reset")
+
     def get_kernel_path(self):
         return self.path_kernel
 
@@ -546,3 +552,8 @@ class Kernel:
         for key in parsed_config:
             setattr(self, key, parsed_config[key])
         self.define_papi_counters()
+        if self.max_freq != "" and self.turbo != "":
+            self.system = SystemConfig({"affinity": [self.cpu_affinity]})
+            self.system.tune()
+            self.system.check_errors("tune")
+

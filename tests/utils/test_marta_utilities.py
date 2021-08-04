@@ -15,7 +15,13 @@
 import pytest
 import os
 
-from marta.utils.marta_utilities import perror, pexcept, check_marta_files
+from marta.utils.marta_utilities import (
+    perror,
+    pexcept,
+    check_marta_files,
+    CaptureOutput,
+    get_name_from_dir,
+)
 
 
 def test_perror():
@@ -42,3 +48,32 @@ def test_check_marta_files_no_mod():
     assert os.path.isfile("/tmp/MARTA.mk") == False
     os.remove("/tmp/Makefile")
 
+
+def test_get_name_from_dir():
+    assert get_name_from_dir("hello/world") == "world"
+    assert get_name_from_dir("/hello/world") == "world"
+    assert get_name_from_dir("./hello/world") == "world"
+    assert get_name_from_dir("./hello//world") == "world"
+
+
+def test_capture_output():
+    with CaptureOutput() as output:
+        print("hello")
+        print("world")
+
+    assert output[0] == "hello"
+    assert output[1] == "world"
+
+    with CaptureOutput() as output:
+        print("hello\nworld")
+
+    assert output[0] == "hello"
+    assert output[1] == "world"
+
+    with CaptureOutput(output) as output:
+        print("hello\nworld")
+
+    assert output[0] == "hello"
+    assert output[1] == "world"
+    assert output[2] == "hello"
+    assert output[3] == "world"

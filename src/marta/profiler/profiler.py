@@ -437,7 +437,7 @@ class Profiler:
             df["overhead_instructions"] = 2
             df["overhead_loop"] = overhead_loop
         kernel.save_results(df, output_filename, output_format, generate_report)
-
+        kernel.reset_system_config()
         self.clean_files(cfg["kernel"].get("finalize"))
         return 0
 
