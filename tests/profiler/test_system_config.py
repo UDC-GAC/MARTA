@@ -30,7 +30,7 @@ def test_create_system_error():
 
 def test_create_system_ok():
     s = SystemConfig({"affinity": [2]})
-    assert s.system.cpus == tuple([2])
+    assert s.is_disabled() or s.system.cpus == tuple([2])
 
 
 def test_tune_ok(get_system):
