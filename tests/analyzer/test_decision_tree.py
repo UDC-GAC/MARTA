@@ -14,11 +14,10 @@
 
 import pytest
 
-from marta.analyzer.decision_tree import DecisionTree
-
+from marta.analyzer.config import DTConfig
 
 def test_decision_tree_config():
-    dtconfig = DecisionTree.DTConfig({})
+    dtconfig = DTConfig({})
     assert dtconfig.max_depth == 10
     assert dtconfig.max_leaves == 50
     assert dtconfig.criterion == "gini"

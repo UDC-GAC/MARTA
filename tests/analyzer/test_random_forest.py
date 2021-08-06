@@ -14,11 +14,11 @@
 
 import pytest
 
-from marta.analyzer.random_forest import RandomForest
+from marta.analyzer.feature_importance import RandomForest
+from marta.analyzer.config import RFConfig
 
 
 def test_decision_tree_config():
-    rfconfig = RandomForest.RFConfig({})
+    rfconfig = RFConfig({})
     assert rfconfig.max_depth == 10
-    assert rfconfig.max_leaves == 50
-    assert rfconfig.criterion == "gini"
+
