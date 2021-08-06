@@ -12,77 +12,98 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from marta.utils.marta_utilities import perror
-from marta.analyzer.decision_tree import DecisionTree
+import yaml
+import os
+
+from marta.utils.marta_utilities import perror, pwarning
+
+decision_tree_synonyms = ["decision tree", "decisiontree", "decision_tree"]
+random_forest_synonyms = ["random_forest", "random forest", "randomforest"]
+
+
+class RFConfig:
+    def __init__(self, config: dict) -> None:
+        self.n_estimators = config.get("n_estimators", 100)
+        self.criterion = config.get("criterion", "gini")
+        self.max_depth = config.get("max_depth", 10)
+        self.min_samples_split = config.get("min_samples_split", 2)
+        self.min_samples_leaf = config.get("min_samples_leaf", 1)
+        self.n_jobs = config.get("n_jobs", 1)
+        self.random_state = config.get("random_state", 0)
+        for key in config:
+            setattr(self, key, config[key])
+
+
+class DTConfig:
+    def __init__(self, config: dict) -> None:
+        self.max_depth = config.get("max_depth", 10)
+        self.max_leaves = config.get("max_leaves", 50)
+        self.criterion = config.get("criterion", "gini")
+        self.min_score = config.get("min_score", 0.5)
+        self.pruning_mccp_alpha = config.get("pruning_mccp_alpha", 0.0)
+        self.text_tree = config.get("text_tree", False)
+        self.graph_tree = config.get("graph_tree", False)
+        # False for vertical, True for horizontal
+        if "orientation" not in config:
+            self.orientation = False
+        else:
+            self.orientation = config["orientation"] == "horizontal"
+            if self.orientation:
+                pwarning("Horizontal Decision Tree printing disabled.")
+        for key in config:
+            setattr(self, key, config[key])
+
+
+def load_yaml_file(file: str) -> dict:
+    try:
+        from yaml import CLoader as Loader
+    except ImportError:
+        from yaml import Loader
+
+    try:
+        with open(file, "r") as ymlfile:
+            cfg = yaml.load(ymlfile, Loader=Loader)
+    except FileNotFoundError:
+        perror("Configuration file not found")
+    except Exception:
+        perror("Unknown error when opening configuration file.")
+    return cfg
 
 
 def parse_options(config: dict) -> dict:
     analyzer_cfg = {}
-    try:
-        general_cfg = config[0]["kernel"]
-        analyzer_cfg["debug"] = (
-            general_cfg["debug"] if "debug" in general_cfg else False
-        )
-        analyzer_cfg["input_file"] = general_cfg["input"]
-        analyzer_cfg["force_replacement"] = (
-            general_cfg["force_replacement"]
-            if "force_replacement" in general_cfg.keys()
-            else False
-        )
-        analyzer_cfg["output_file"] = general_cfg["output"]
-        analyzer_cfg["rm_temp_files"] = general_cfg["clean"]
-        analyzer_cfg["print_debug"] = general_cfg["debug"]
+    general_cfg = config[0]["kernel"]
+    analyzer_cfg["input_file"] = general_cfg["input"]
+    analyzer_cfg["output_file"] = general_cfg["output_path"]
+    if not os.path.isdir(analyzer_cfg["output_file"]):
+        perror("output_path specified is not a directory")
+    analyzer_cfg["debug"] = general_cfg.get("debug", False)
 
-        # prepare_data keys
-        prepdata_cfg = general_cfg["prepare_data"]
-        analyzer_cfg["filter_cols"] = prepdata_cfg["cols"].split(" ")
-        analyzer_cfg["filter_rows"] = (
-            prepdata_cfg["rows"] if "rows" in prepdata_cfg.keys() else ""
+    # prepare_data keys
+    prepdata_cfg = general_cfg["prepare_data"]
+    analyzer_cfg["filter_cols"] = prepdata_cfg["cols"].split(" ")
+    if len(analyzer_cfg["filter_cols"]) == 0:
+        perror("Need to choose dimensions (columns) to analyze")
+    analyzer_cfg["filter_rows"] = prepdata_cfg.get("rows", "")
+    analyzer_cfg["target"] = prepdata_cfg["target"]
+    analyzer_cfg["norm"] = prepdata_cfg.get("norm", None)
+    cat_cfg = prepdata_cfg["categories"]
+    analyzer_cfg["ncats"] = int(cat_cfg.get("num", 2))
+    if analyzer_cfg["ncats"] < 2:
+        raise ValueError(
+            "categories[num]",
+            f"{analyzer_cfg['ncats']}",
+            "value must be greater than two",
         )
-        analyzer_cfg["target"] = prepdata_cfg["target"]
-        analyzer_cfg["norm"] = (
-            prepdata_cfg["norm"]["enabled"] if "norm" in prepdata_cfg.keys() else False
-        )
-        analyzer_cfg["norm_type"] = (
-            prepdata_cfg["norm"]["type"] if analyzer_cfg["norm"] else ""
-        )
-        analyzer_cfg["ncats"] = int(prepdata_cfg["categories"]["num"])
-        if analyzer_cfg["ncats"] < 1:
-            raise ValueError(
-                "categories[num]",
-                f"{analyzer_cfg['ncats']}",
-                "value must be greater than one",
-            )
-        analyzer_cfg["catscale"] = eval(prepdata_cfg["categories"]["scale_factor"])
-        analyzer_cfg["cattype"] = prepdata_cfg["categories"]["type"]
+    analyzer_cfg["catscale"] = eval(cat_cfg.get("scaling_factor", "1"))
 
-        # classification keys
-        classification_cfg = general_cfg["classification"]
-        analyzer_cfg["class_type"] = classification_cfg["type"]
-        if analyzer_cfg["class_type"] == "decisiontree":
-            analyzer_cfg["dt_cfg"] = DecisionTree.DTConfig(
-                classification_cfg["dt_settings"]
-            )
-        elif analyzer_cfg["class_type"] == "randomforest":
-            # TODO: implement random forest classification
-            pass
-        else:
-            raise ValueError(
-                "classification[type]",
-                analyzer_cfg["class_type"],
-                "unknown classification algorithm: try 'decisiontree' or 'randomforest'",
-            )
-    except KeyError as K:
-        perror(f"key {K} missing in configuration file")
-    except TypeError as T:
-        perror(f"key {T} wrong type")
-    except ValueError as V:
-        key, value, msg = V.args
-        perror(f"{key} = {value}, {msg}")
-    except SyntaxError as S:
-        perror(f"syntax error in {S}")
-    except NameError as N:
-        perror(f"{N}")
-    except Exception as E:
-        perror(f"something went wrong: {E}")
+    # classification keys
+    classification_cfg = general_cfg["classification"]
+    analyzer_cfg["clf_type"] = classification_cfg["type"]
+    analyzer_cfg["clf_cfg"] = classification_cfg["config"]
+
+    # feature importance keys
+    feature_cfg = general_cfg["feature_importance"]
+    analyzer_cfg["feat_type"] = feature_cfg["type"]
+    analyzer_cfg["feat_cfg"] = feature_cfg["config"]
     return analyzer_cfg

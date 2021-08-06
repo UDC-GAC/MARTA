@@ -11,3 +11,4 @@ graphviz
 sklearn
 colorama
 pyperf
+matplotlib

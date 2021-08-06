@@ -1,6 +1,4 @@
-#!/usr/bin/env python3
-# Copyright 2019-2021 (c) Colorado State University
-# Copyright 2020-2021 (c) Universidade da Coruña
+# Copyright 2021 Marcos Horro
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,41 +14,39 @@
 
 # -*- coding: utf-8 -*-
 
+# Third-party libraries
 import graphviz
 import pandas as pd
 from sklearn import tree
 
+# Local imports
+from marta.analyzer.config import DTConfig, decision_tree_synonyms
+from marta.utils.marta_utilities import CaptureOutput
 
-class DecisionTree:
-    class DTConfig:
-        def __init__(self, config: dict) -> None:
-            for key in config:
-                setattr(self, key, config[key])
 
-            if "max_depth" not in config:
-                self.max_depth = 10
-            if "max_leaves" not in config:
-                self.max_leaves = 50
-            # "gini", "entropy"
-            if "criterion" not in config:
-                self.criterion = "gini"
-            if "min_score" not in config:
-                self.min_score = 0.5
-            if "pruning_mccp_alpha" not in config:
-                self.pruning_mccp_alpha = 0.0
-            if "text_tree" not in config:
-                self.text_tree = False
-            if "graph_tree" not in config:
-                self.graph_tree = False
-            if self.graph_tree:
-                self.graph_output_file = "marta_dt"
-            # False for vertical, True for horizontal
-            if "orientation" not in config:
-                self.orientation = False
-            else:
-                self.orientation = self.orientation == "horizontal"
+class Classification:
+    def get_summary(self):
+        pass
 
-    def export_graph_tree(self) -> None:
+    def perform_analysis(self):
+        pass
+
+    def predict_value(self, predict_value: str):
+        pass
+
+
+class ClassificationFactory:
+    @staticmethod
+    def get_class(type_clf: str, config: dict, *args) -> Classification:
+        if type_clf in decision_tree_synonyms:
+            dt_cfg = DTConfig(config)
+            return DecisionTree(dt_cfg, *args)
+        else:
+            raise ValueError(f"No classification class {type_clf}")
+
+
+class DecisionTree(Classification):
+    def export_graph_tree(self, output_path="") -> None:
         """Export the decision tree as a .pdf file.
         """
         dot_data = tree.export_graphviz(
@@ -62,11 +58,14 @@ class DecisionTree:
             leaves_parallel=True,
             impurity=False,
             class_names=self.labels,
-            rotate=self.config.orientation,
+            rotate=False,
             label="none",
         )
         graph = graphviz.Source(dot_data)
-        graph.render(self.config.graph_output_file)
+        graph_output_file = "marta_analyzer_dt"
+        if output_path != "":
+            graph_output_file = f"{output_path}/"
+        graph.render(graph_output_file)
 
     def export_text_tree(self) -> None:
         """Export the decision tree as text.
@@ -105,14 +104,36 @@ class DecisionTree:
         """Print a summary of the metrics in the decision tree.
         """
         score = self.clf.score(self.data.values, self.target_data.values)
-        TP, FP, TN, FN = self.perf_measure(self.data.values, self.target_data.values)
-        print(f"Mean accuracy (score): {score:6.2f}".format())
-        print(f"Number of leaves:      {self.clf.get_n_leaves():3d}".format())
-        print(f"Depth of tree:         {self.clf.get_depth():3d}".format())
-        print(f"True positives:        {TP:3d}".format())
-        print(f"True negatives:        {TN:3d}".format())
-        print(f"False positives:       {FP:3d}".format())
-        print(f"False negatives:       {FN:3d}".format())
+        print(f"Type:                  decision tree")
+        print(f"Number of leaves:      {self.clf.get_n_leaves():4d}".format())
+        print(f"Depth of tree:         {self.clf.get_depth():4d}".format())
+        print(f"Mean accuracy (score): {score:7.2f}".format())
+
+        # FIXME: this only has meaning if we are going to test our model
+        # TP, FP, TN, FN = self.perf_measure(self.data.values, self.target_data.values)
+        # print(f"True positives:        {TP:3d}".format())
+        # print(f"True negatives:        {TN:3d}".format())
+        # print(f"False positives:       {FP:3d}".format())
+        # print(f"False negatives:       {FN:3d}".format())
+
+    def perform_analysis(self, output_path=""):
+        print("Classification analysis:")
+        print("========================")
+        self.get_summary()
+        if self.config.text_tree:
+            print("* Decision tree generated:\n")
+            with CaptureOutput() as output:
+                self.export_text_tree()
+            if output_path == "":
+                for line in output:
+                    print(f"\t{line}")
+            else:
+                output_file = f"{output_path}/"
+                with open(output_file, "w") as f:
+                    f.writelines(output)
+        if self.config.graph_tree:
+            print(f"Saving graphic decision tree in file {output_path}\n")
+            self.export_graph_tree(output_path)
 
     def __init__(self, config: DTConfig, data: pd.DataFrame, target: pd.Series):
         self.config = config

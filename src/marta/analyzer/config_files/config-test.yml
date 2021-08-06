@@ -1,22 +1,15 @@
 - kernel:
       input: src/marta/analyzer/tmp/test.csv
-      output: src/marta/analyzer/tmp/test_output
-      force_replacement: True
-      clean: False
-      debug: False
+      output_path: src/marta/analyzer/tmp/
       prepare_data:
           cols: I0 STEP_I J0 STEP_J N M INSTRUCTIONS_RETIRED
           target: FLOPSs
-          norm:
-              enabled: False
-              type: None
+          norm: None
           categories:
-              num: 6
-              type: "linear"
-              scale_factor: 1e9
+              num: 3
       classification:
-          type: "decisiontree" # randomforest
-          dt_settings:
+          type: decision_tree
+          config:
               max_depth: 10
               max_leaves: 10
               criterion: "gini"
@@ -25,3 +18,13 @@
               text_tree: True
               graph_tree: True
               orientation: "horizontal"
+      feature_importance:
+          type: random_forest
+          config:
+              n_estimators: 10
+              criterion: "gini"
+              max_depth: 10
+              min_samples_split: 2
+              min_samples_leaf: 1
+              n_jobs: 1
+              random_state: 0
