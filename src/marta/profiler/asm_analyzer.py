@@ -83,7 +83,7 @@ class ASMParserATT(ASMParser):
             return "IMM"
         elif op.startswith("%"):
             return "GPR"
-        elif re.match("^[-0-9]*\(", op):
+        elif re.match(r"^[-0-9]*\(", op):
             return "MEM"
         elif op.startswith("."):
             return "LABEL"
@@ -166,9 +166,9 @@ class ASMParserIntel(ASMParser):
         op = op.strip().replace(" ", "")
         if (op.startswith("zmm")) or (op.startswith("ymm")) or (op.startswith("xmm")):
             return op[:-1].upper()
-        elif op.startswith("0x") or re.match("^[0-9]+", op):
+        elif op.startswith("0x") or re.match(r"^[0-9]+", op):
             return "IMM"
-        elif re.match("^[-0-9]*\[", op) or "word" in op:
+        elif re.match(r"^[-0-9]*\[", op) or "word" in op:
             return "MEM"
         elif op.startswith("."):
             return "LABEL"
