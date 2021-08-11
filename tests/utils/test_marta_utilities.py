@@ -31,14 +31,10 @@ def test_perror():
     assert pytest_wrapped_e.value.code == 1
 
 
-class TestExcept(Exception):
-    pass
-
-
 def test_pexcept():
-    with pytest.raises(TestExcept) as pytest_wrapped_e:
-        pexcept("Error", TestExcept)
-    assert pytest_wrapped_e.type == TestExcept
+    with pytest.raises(Exception) as pytest_wrapped_e:
+        pexcept("Error", Exception)
+    assert pytest_wrapped_e.type == Exception
 
 
 def test_check_marta_files_no_mod():
