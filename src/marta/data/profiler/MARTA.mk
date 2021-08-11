@@ -56,8 +56,8 @@ ifeq ($(COMP),icc)
 	ifeq ($(KERNEL_INLINED),true)
 		FLAGS_MAIN+= -ipo
 	endif
-else ifeq ($(COMP),gcc)
-	CC=gcc
+else ifeq ($(findstring gcc,$(COMP)),gcc)
+	CC=$(COMP)
 	CXX=g++
 	FLAGS_MAIN+= -fno-dce -fno-tree-dce -fno-tree-builtin-call-dce 
 	ifeq ($(AUTOVEC),true)
@@ -109,7 +109,7 @@ ifeq ($(COMP),icc)
 	FLAGS_KERN+= -qopt-report-file=/tmp/$(KERNEL_NAME).opt
 	FLAGS_MAIN+= -qopt-report-file=/tmp/$(KERNEL_NAME).opt
 	FLAGS_ASM+= -qopt-report-file=/tmp/$(KERNEL_NAME).opt
-else ifeq ($(COMP),gcc)
+else ifeq ($(findstring gcc,$(COMP)),gcc)
 	FLAGS_KERN+= -fopt-info-vec=/tmp/$(KERNEL_NAME).opt
 	FLAGS_MAIN+= -fopt-info-vec=/tmp/$(KERNEL_NAME).opt
 	FLAGS_ASM+= -fopt-info-vec=/tmp/$(KERNEL_NAME).opt

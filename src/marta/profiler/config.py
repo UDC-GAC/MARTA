@@ -86,7 +86,7 @@ def parse_options(config: dict) -> dict:
     cfg["static_analysis"] = asm_analysis.get("static_analysis", "")
 
     # Configuration
-    cfg["kernel_cfg"] = config_config.get("kernel_config", [""])
+    cfg["kernel_cfg"] = config_config.get("kernel_cfg", [""])
     cfg["d_features"] = config_config.get("d_features", [])
     cfg["d_flags"] = config_config.get("d_flags", [])
     cfg["flops"] = config_config.get("flops", 1)

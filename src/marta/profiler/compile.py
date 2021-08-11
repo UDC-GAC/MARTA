@@ -220,6 +220,7 @@ def get_dict_from_d_flags(params: str) -> dict:
 
 
 def get_suffix_and_flags(kconfig: str, params: Union[dict, str]) -> Tuple[str, str]:
+    # FIXME: to redo at some point...
     custom_flags = ""
     suffix_file = ""
     custom_bin_name = None
@@ -233,7 +234,7 @@ def get_suffix_and_flags(kconfig: str, params: Union[dict, str]) -> Tuple[str, s
                 # needed, but this is not MARTA's responsibility.
                 param_val_parsed = '"' + params[pname] + '"'
             except TypeError:
-                print(params[pname])
+                perror(f"Something went wrong when parsing files: {params[pname]}")
             if pname != "ASM_NAME":
                 custom_flags += f" -D{pname}={param_val_parsed}"
             if pname == "BIN_NAME":
@@ -255,6 +256,8 @@ def get_suffix_and_flags(kconfig: str, params: Union[dict, str]) -> Tuple[str, s
     for kparam in kconfig.strip().replace("-", "").split(" "):
         if "BIN_NAME" in kparam:
             custom_bin_name = kparam.split("=")[1]
+            continue
+        suffix_file += f"_{kparam}"
 
     # Avoid very long names
     if custom_bin_name != None:
