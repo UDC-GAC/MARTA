@@ -12,16 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pandas as pd
-import numpy as np
+# -*- coding: utf-8 -*-
+
+# Standard libraries
 from typing import Optional, Tuple
 
+# Third-party libraries
+import pandas as pd
+import numpy as np
+
+# Local imports
 from marta.utils.marta_utilities import perror
 
 
 def categorize_target_dimension(
     df: pd.DataFrame, target_value: str, ncat: int, catscale: float
 ) -> Tuple[pd.DataFrame, list]:
+    if ncat == None:
+        return df, getattr(df, target_value).values
+
     tmp_target_value = getattr(df, target_value)
     bins = np.linspace(
         min(getattr(df, target_value)), max(getattr(df, target_value)), ncat

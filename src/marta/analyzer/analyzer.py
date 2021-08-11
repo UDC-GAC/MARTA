@@ -30,6 +30,7 @@ from marta.analyzer.classification import ClassificationFactory
 from marta.analyzer.processing import normalize_data, categorize_target_dimension
 from marta.utils.marta_utilities import perror
 
+
 class Analyzer:
     def parse_arguments(self, args: list) -> argparse.Namespace:
         """Parse arguments
@@ -57,11 +58,13 @@ class Analyzer:
         :return: Data processed
         :rtype: pandas.DataFrame
         """
-        output_file = f"{self.output_file}/data_processed.csv"
+        output_file = f"{self.output_path}/data_processed.csv"
         df = pd.read_csv(self.input_file, comment="#", index_col=False)
         target_value = self.target
         df = normalize_data(df, self.norm, target_value)
-        df, labels = categorize_target_dimension(df, target_value, self.ncats, self.catscale)
+        df, labels = categorize_target_dimension(
+            df, target_value, self.ncats, self.catscale
+        )
         self.labels = labels
         for d in self.filter_rows:
             try:

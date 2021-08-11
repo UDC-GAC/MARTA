@@ -72,38 +72,47 @@ def load_yaml_file(file: str) -> dict:
 
 def parse_options(config: dict) -> dict:
     analyzer_cfg = {}
-    general_cfg = config[0]["kernel"]
-    analyzer_cfg["input_file"] = general_cfg["input"]
-    analyzer_cfg["output_file"] = general_cfg["output_path"]
-    if not os.path.isdir(analyzer_cfg["output_file"]):
+    try:
+        general_cfg = config[0]["kernel"]
+        analyzer_cfg["input_file"] = general_cfg["input"]
+        analyzer_cfg["output_path"] = general_cfg["output_path"]
+        # prepare_data keys
+        prepdata_cfg = general_cfg["prepare_data"]
+    except KeyError as K:
+        perror(f"{K} key missing in configuration file")
+    if not os.path.isdir(analyzer_cfg["output_path"]):
         perror("output_path specified is not a directory")
     analyzer_cfg["debug"] = general_cfg.get("debug", False)
 
-    # prepare_data keys
-    prepdata_cfg = general_cfg["prepare_data"]
     analyzer_cfg["filter_cols"] = prepdata_cfg["cols"].split(" ")
     if len(analyzer_cfg["filter_cols"]) == 0:
         perror("Need to choose dimensions (columns) to analyze")
     analyzer_cfg["filter_rows"] = prepdata_cfg.get("rows", "")
     analyzer_cfg["target"] = prepdata_cfg["target"]
     analyzer_cfg["norm"] = prepdata_cfg.get("norm", None)
-    cat_cfg = prepdata_cfg["categories"]
-    analyzer_cfg["ncats"] = int(cat_cfg.get("num", 2))
-    if analyzer_cfg["ncats"] < 2:
-        raise ValueError(
-            "categories[num]",
-            f"{analyzer_cfg['ncats']}",
-            "value must be greater than two",
-        )
-    analyzer_cfg["catscale"] = eval(cat_cfg.get("scaling_factor", "1"))
+    try:
+        cat_cfg = prepdata_cfg["categories"]
+        analyzer_cfg["ncats"] = int(cat_cfg.get("num", 2))
+        if analyzer_cfg["ncats"] < 2:
+            perror(
+                "categories[num]",
+                f"{analyzer_cfg['ncats']}",
+                "value must be greater than one",
+            )
+        analyzer_cfg["catscale"] = eval(cat_cfg.get("scaling_factor", "1"))
+    except KeyError:
+        analyzer_cfg["ncats"] = None
 
-    # classification keys
-    classification_cfg = general_cfg["classification"]
-    analyzer_cfg["clf_type"] = classification_cfg["type"]
-    analyzer_cfg["clf_cfg"] = classification_cfg["config"]
+    try:
+        # classification keys
+        classification_cfg = general_cfg["classification"]
+        analyzer_cfg["clf_type"] = classification_cfg["type"]
+        analyzer_cfg["clf_cfg"] = classification_cfg["config"]
 
-    # feature importance keys
-    feature_cfg = general_cfg["feature_importance"]
-    analyzer_cfg["feat_type"] = feature_cfg["type"]
-    analyzer_cfg["feat_cfg"] = feature_cfg["config"]
+        # feature importance keys
+        feature_cfg = general_cfg["feature_importance"]
+        analyzer_cfg["feat_type"] = feature_cfg["type"]
+        analyzer_cfg["feat_cfg"] = feature_cfg["config"]
+    except KeyError as K:
+        perror(f"{K} key missing in configuration file")
     return analyzer_cfg
