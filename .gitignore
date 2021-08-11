@@ -19,6 +19,8 @@ log/
 
 # benchmarks
 src/marta/profiler/kernels/*
+examples/*/src/*
+!examples/*/src/main.c
 
 # results
 old_files/

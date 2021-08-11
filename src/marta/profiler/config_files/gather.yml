@@ -2,7 +2,7 @@
       name: "gather"
       path: "src/marta/profiler/kernels/gather"
       description: "Setup for experiment gather"
-      debug: False
+      debug: True
       show_progress_bars: True
       #preamble:
       #    command: "rm -Rf bin asm_codes && sudo cpupower frequency-set -u
@@ -22,46 +22,17 @@
                 #"icc": [" -march=native -mtune=native -mavx2 -O3 "],
             }
           main_src: "main.c"
-          inlined_kernel: True
+          kernel_inlined: True
           asm_analysis:
                 syntax: "intel"
                 count_ins: True
                 static_analysis: ""
-          debug: False
+          debug: True
       configuration:
           kernel_cfg: [
           " ",
           ]
           d_features:
-                # IDX0:
-                #     evaluate: True
-                #     type: "static"
-                #     val_type: "numeric"
-                #     value: "range(8)"
-                #     #value: "[0,1,554]"
-                # IDX1:
-                #     evaluate: True
-                #     type: "static"
-                #     val_type: "numeric"
-                #     value: "range(8)"
-                #     #value: "[1,16,234]"
-                # IDX2:
-                #     evaluate: True
-                #     type: "static"
-                #     val_type: "numeric"
-                #     value: "range(8)"
-                #     #value: "[2,32,5]"
-                # IDX3:
-                #     evaluate: True
-                #     type: "static"
-                #     val_type: "numeric"
-                #     value: "range(8)"
-                #     #value: "[3,48,19]"
-                # IDX:
-                #     evaluate: True
-                #     type: "dynamic"
-                #     val_type: "numeric"
-                #     value: "it.product(list(range(8)),repeat=4)"
                 IDX0:
                     evaluate: True
                     type: "static"
@@ -126,8 +97,6 @@
           nexec: 7
           nsteps: 10000
           cpu_affinity: 11
-          max_freq: True
-          turbo: False
           prefix: ""
       output:
           name: "gather"

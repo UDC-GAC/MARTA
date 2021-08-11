@@ -335,6 +335,7 @@ class Profiler:
                     flags=[
                         "-O3",
                         "-DMARTA_RDTSC",
+                        f"-DMARTA_CPU_AFFINITY={kernel.cpu_affinity}",
                         f"-I{get_data('profiler/utilities/')}",
                         get_data("profiler/utilities/polybench.c"),
                     ]

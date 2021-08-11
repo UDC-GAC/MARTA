@@ -17,21 +17,16 @@
 # Standard libraries
 import pkg_resources
 
+from art import tprint
+
 
 def print_version() -> None:
     """
     Print version and copyright message (if not quiet execution)
     """
     __version__ = pkg_resources.require("marta")[0].version
-    s = """
- __  __    _    ____ _____  _
-|  \/  |  / \  |  _ |_   _|/ \ 
-| |\/| | / _ \ | |_) || | / _ \ 
-| |  | |/ ___ \|  _ < | |/ ___ \ 
-|_|  |_/_/   \_|_| \_\|_/_/   \_\\
-    """
+    tprint("MARTA")
     print(
-        f"{s}\n"
         f"Micro ARchitectural Toolkit Analysis (MARTA) - Profiler v{__version__}\n",
         end="",
     )

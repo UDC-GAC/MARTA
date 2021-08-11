@@ -12,3 +12,4 @@ sklearn
 colorama
 pyperf
 matplotlib
+art

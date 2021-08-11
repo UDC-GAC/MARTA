@@ -14,7 +14,6 @@
 
 # -*- coding: utf-8 -*-
 
-
 # Standard libraries
 from __future__ import annotations
 import subprocess
@@ -22,12 +21,15 @@ from typing import Optional, Tuple
 import datetime as dt
 import os
 import time
+import warnings
+
+warnings.filterwarnings("error")
 
 # Third-party libraries
 import numpy as np
 
 # Local imports
-from marta.utils.marta_utilities import pinfo, pwarning, create_dir_or_pass
+from marta.utils.marta_utilities import pinfo, pwarning, perror, create_dir_or_pass
 
 
 class TimingError(Exception):
@@ -180,6 +182,10 @@ class Timing:
                 line = " ".join([l for l in f if "FAILED" in l])
             Timing.show_error(line, benchmark_type)
             return None, None
+        except Exception as E:
+            perror(f"Something went wrong when executing: {E}")
+        except RuntimeWarning as R:
+            perror(f"Treating warnings as error: {R}")
 
         results /= nsteps
 
