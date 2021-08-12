@@ -20,7 +20,6 @@
 import argparse
 
 # Third-party libraries
-import numpy as np
 import pandas as pd
 
 # Local imports
@@ -32,7 +31,7 @@ from marta.analyzer.processing import (
     categorize_target_dimension,
     column_strings_to_int,
 )
-from marta.utils.marta_utilities import perror
+from marta.utils.marta_utilities import perror, pinfo
 
 
 class Analyzer:
@@ -62,7 +61,7 @@ class Analyzer:
         :return: Data processed
         :rtype: pandas.DataFrame
         """
-        output_file = f"{self.output_path}/data_processed.csv"
+        output_file = f"{self.output_path}/{self.input_file_name}_data_processed.csv"
         df = pd.read_csv(self.input_file, comment="#", index_col=False)
         target_value = self.target
         df = normalize_data(df, self.norm, target_value)
@@ -84,6 +83,7 @@ class Analyzer:
         df = column_strings_to_int(df, self.filter_cols)
         df = df[list(f_cols)]
         df.to_csv(output_file, index=False)
+        pinfo(f"Saving processed data in '{output_file}'")
         return df
 
     def perform_analysis(self) -> None:
@@ -102,7 +102,7 @@ class Analyzer:
             self.data_processed[self.filter_cols],
             getattr(self.data_processed, self.target),
         )
-        clf.perform_analysis()
+        clf.perform_analysis(output_path=self.output_path)
 
         # Feature importance analysis
         feat = FeatureImportanceFactory.get_class(
@@ -112,7 +112,7 @@ class Analyzer:
             getattr(self.data_processed, self.target),
             self.filter_cols,
         )
-        feat.perform_analysis()
+        feat.perform_analysis(output_path=self.output_path)
 
     def __init__(self, args):
         self.args = self.parse_arguments(args)

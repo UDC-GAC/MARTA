@@ -14,6 +14,9 @@
 
 # -*- coding: utf-8 -*-
 
+# Standard libraries
+import os
+
 # Third-party libraries
 import graphviz
 import pandas as pd
@@ -21,7 +24,7 @@ from sklearn import tree
 
 # Local imports
 from marta.analyzer.config import DTConfig, decision_tree_synonyms
-from marta.utils.marta_utilities import CaptureOutput
+from marta.utils.marta_utilities import CaptureOutput, pinfo
 
 
 class Classification:
@@ -62,10 +65,14 @@ class DecisionTree(Classification):
             label="none",
         )
         graph = graphviz.Source(dot_data)
-        graph_output_file = "marta_analyzer_dt"
+        graph_output_file = "graph_decision_tree"
         if output_path != "":
-            graph_output_file = f"{output_path}/"
+            graph_output_file = f"{output_path}/graph_decision_tree"
         graph.render(graph_output_file)
+        if output_path != "":
+            os.remove(f"{output_path}/graph_decision_tree")
+        else:
+            os.remove(f"graph_decision_tree")
 
     def export_text_tree(self) -> None:
         """Export the decision tree as text.
@@ -124,15 +131,18 @@ class DecisionTree(Classification):
             print("* Decision tree generated:\n")
             with CaptureOutput() as output:
                 self.export_text_tree()
-            if output_path == "":
-                for line in output:
-                    print(f"\t{line}")
-            else:
-                output_file = f"{output_path}/"
+            for line in output:
+                print(f"\t{line}")
+            if output_path != "":
+                pinfo(f"Saving text decision tree in directory {output_path}")
+                output_file = f"{output_path}/text_decision_tree"
                 with open(output_file, "w") as f:
-                    f.writelines(output)
+                    f.write("Decision tree generated:\n")
+                    f.write("========================\n")
+                    for line in output:
+                        f.write(f"{line}\n")
         if self.config.graph_tree:
-            print(f"Saving graphic decision tree in file {output_path}\n")
+            pinfo(f"Saving graphic decision tree in directory {output_path}\n")
             self.export_graph_tree(output_path)
 
     def __init__(self, config: DTConfig, data: pd.DataFrame, target: pd.Series):

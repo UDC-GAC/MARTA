@@ -75,7 +75,16 @@ def parse_options(config: dict) -> dict:
     try:
         general_cfg = config[0]["kernel"]
         analyzer_cfg["input_file"] = general_cfg["input"]
+        tmp = general_cfg["input"].split("/")[-1]
+        analyzer_cfg["input_file_name"] = tmp.split(".")[0]
         analyzer_cfg["output_path"] = general_cfg["output_path"]
+        if analyzer_cfg["output_path"][-1] == "/":
+            analyzer_cfg["output_path"] = analyzer_cfg["output_path"][:-1]
+        if not os.path.isdir(analyzer_cfg["output_path"]):
+            try:
+                os.mkdir(analyzer_cfg["output_path"])
+            except Exception:
+                perror("Output path not valid")
         # prepare_data keys
         prepdata_cfg = general_cfg["prepare_data"]
     except KeyError as K:

@@ -26,11 +26,11 @@ from marta.utils.marta_utilities import perror, pinfo
 
 
 def column_strings_to_int(df: pd.DataFrame, columns: list) -> pd.DataFrame:
-    """Given a DataFrame, it convert
+    """Given a DataFrame, it converts columns with object type to int
 
-    :param df: [description]
+    :param df: Original data.
     :type df: pd.DataFrame
-    :return: [description]
+    :return: Same as original but with converted types.
     :rtype: pd.DataFrame
     """
     for col in columns:
@@ -38,14 +38,30 @@ def column_strings_to_int(df: pd.DataFrame, columns: list) -> pd.DataFrame:
             l = np.unique(df[col])
             d = dict(zip(l, range(len(l))))
             df.loc[:, col] = df[col].apply(lambda x: d[x])
-            pinfo(f"Converting column '{col}' from object to int, values are:")
-            pinfo(f"\t{d}")
+            pinfo(
+                f"Converting column '{col}' from object to int values. New assigned values are:"
+            )
+            for key in d:
+                pinfo(f"{key} => {d[key]}")
     return df
 
 
 def categorize_target_dimension(
     df: pd.DataFrame, target_value: str, ncat: int, catscale: float
 ) -> Tuple[pd.DataFrame, list]:
+    """Create categories for a continuous dimension
+
+    :param df: Input data
+    :type df: pd.DataFrame
+    :param target_value: Target dimension
+    :type target_value: str
+    :param ncat: Number of categories to create
+    :type ncat: int
+    :param catscale: Scaling factor of the category
+    :type catscale: float
+    :return: Data processed with the list of labels assigned to continuous intervals
+    :rtype: Tuple[pd.DataFrame, list]
+    """
     if ncat == None:
         return df, getattr(df, target_value).values
 
@@ -76,6 +92,17 @@ def categorize_target_dimension(
 def normalize_data(
     df: pd.DataFrame, norm: Optional[str], target_value: str
 ) -> pd.DataFrame:
+    """Normalization of data according to the type
+
+    :param df: Input data
+    :type df: pd.DataFrame
+    :param norm: Type of normalization
+    :type norm: Optional[str]
+    :param target_value: Dimension to normalize
+    :type target_value: str
+    :return: Full data with target dimension normalized
+    :rtype: pd.DataFrame
+    """
     norm_min_max = norm in ["min_max", "minmax"]
     norm_z_score = norm in ["z_score", "zscore"]
     assert not (norm_min_max and norm_z_score)  # NAND
