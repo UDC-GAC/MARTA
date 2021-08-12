@@ -94,12 +94,14 @@ class RandomForest(FeatureImportance):
         print("============================")
         print(self.get_feature_importance_labeled())
         pinfo(
-            "Generating plot for feature importance based on mean decrease in impurity..."
+            f"Saving plot for feature importance based on mean decrease in impurity in '{output_path}/mean_decrease.png'"
         )
         fig = self.get_feat_importance_mean_decrease()
         file_mean_decrease = f"{output_path}/mean_decrease"
         fig.savefig(file_mean_decrease)
-        pinfo("Generating plot for feature importance based on feature permutation...")
+        pinfo(
+            f"Saving plot for feature importance based on feature permutation in '{output_path}/permutation.png'"
+        )
         fig = self.get_feat_importance_feat_permutation()
         file_perm = f"{output_path}/permutation"
         fig.savefig(file_perm)

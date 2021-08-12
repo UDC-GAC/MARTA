@@ -20,13 +20,13 @@ import pkg_resources
 from art import tprint
 
 
-def print_version() -> None:
+def print_version(component: str) -> None:
     """
     Print version and copyright message (if not quiet execution)
     """
     __version__ = pkg_resources.require("marta")[0].version
     tprint("MARTA")
     print(
-        f"Micro ARchitectural Toolkit Analysis (MARTA) - Profiler v{__version__}\n",
+        f"Micro ARchitectural Toolkit Analysis (MARTA) - {component} v{__version__}\n",
         end="",
     )

@@ -134,7 +134,7 @@ class DecisionTree(Classification):
             for line in output:
                 print(f"\t{line}")
             if output_path != "":
-                pinfo(f"Saving text decision tree in directory {output_path}")
+                pinfo(f"Saving text decision tree in directory '{output_path}'")
                 output_file = f"{output_path}/text_decision_tree"
                 with open(output_file, "w") as f:
                     f.write("Decision tree generated:\n")
@@ -142,8 +142,9 @@ class DecisionTree(Classification):
                     for line in output:
                         f.write(f"{line}\n")
         if self.config.graph_tree:
-            pinfo(f"Saving graphic decision tree in directory {output_path}\n")
+            pinfo(f"Saving graphic decision tree in directory '{output_path}'")
             self.export_graph_tree(output_path)
+        print("\n")
 
     def __init__(self, config: DTConfig, data: pd.DataFrame, target: pd.Series):
         self.config = config

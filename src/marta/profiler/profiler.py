@@ -37,12 +37,18 @@ from itertools import repeat
 
 # Local imports
 from marta import get_data
-from marta.utils.marta_utilities import perror, pwarning, pinfo, create_directories
+from marta.utils.marta_utilities import (
+    perror,
+    pwarning,
+    pinfo,
+    create_directories,
+    dump_config_file,
+)
 from marta.profiler.benchmark import Benchmark, BenchmarkError
 from marta.profiler.kernel import Kernel
 from marta.profiler.project import Project
 from marta.profiler.timing import Timing
-from marta.profiler.version import print_version
+from marta.version import print_version
 
 
 class Profiler:
@@ -457,7 +463,7 @@ class Profiler:
         self.args = Profiler.parse_arguments(list_args)
 
         if self.args.dump_config_file:
-            for line in Project.dump_config_file():
+            for line in dump_config_file("profiler/template.yml"):
                 print(line, end="")
             sys.exit(0)
 
@@ -469,7 +475,7 @@ class Profiler:
             sys.exit(0)
 
         if self.args.version:
-            print_version()
+            print_version("Profiler")
             sys.exit(0)
 
         kernel_setup = get_kernel_config(self.args.input[0])
@@ -486,7 +492,7 @@ class Profiler:
 
         if not self.args.quiet:
             # Print version if not quiet
-            print_version()
+            print_version("Profiler")
 
         # For each kernel configuration
         for cfg in kernel_setup:

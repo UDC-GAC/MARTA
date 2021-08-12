@@ -54,6 +54,35 @@ class DTConfig:
             setattr(self, key, config[key])
 
 
+class PlotCfg:
+    allowed_types = ["scatterplot", "lineplot", "relplot"]
+    allowed_formats = ["pdf", "eps", "png", "ps", "svg"]
+
+    def __init__(self, cfg: dict):
+        self.type = cfg.get("type", "scatterplot")
+        if self.type not in PlotCfg.allowed_types:
+            perror(
+                f"Wrong type for plot configuration, must be one of {PlotCfg.allowed_types}"
+            )
+        self.data = cfg.get("data", "raw")
+        self.format = cfg.get("format", "pdf")
+        if self.format not in PlotCfg.allowed_formats:
+            perror(
+                f"Wrong format for plot configuration, must be one of {PlotCfg.allowed_formats}"
+            )
+        self.hue = cfg.get("hue", None)
+        self.size = cfg.get("size", None)
+        self.col = cfg.get("col", None)
+        self.row = cfg.get("row", None)
+        self.x_label = cfg.get("x_label", None)
+        self.y_label = cfg.get("y_label", None)
+        try:
+            self.x_axis = cfg["x_axis"]
+            self.y_axis = cfg["y_axis"]
+        except KeyError as K:
+            perror(f"{K} needed in plot configuration")
+
+
 def load_yaml_file(file: str) -> dict:
     try:
         from yaml import CLoader as Loader
@@ -113,15 +142,37 @@ def parse_options(config: dict) -> dict:
         analyzer_cfg["ncats"] = None
 
     try:
+        # plot keys
+        analyzer_cfg["plot_cfg"] = PlotCfg(general_cfg["plot"])
+        analyzer_cfg["plot_enabled"] = general_cfg["plot"].get("enabled", True)
+    except KeyError:
+        analyzer_cfg["plot_cfg"] = False
+
+    if not analyzer_cfg["plot_enabled"]:
+        pwarning("Plotting disabled")
+
+    try:
         # classification keys
         classification_cfg = general_cfg["classification"]
         analyzer_cfg["clf_type"] = classification_cfg["type"]
         analyzer_cfg["clf_cfg"] = classification_cfg["config"]
+        analyzer_cfg["clf_enabled"] = classification_cfg.get("enabled", True)
+    except KeyError:
+        analyzer_cfg["clf_enabled"] = False
 
+    if not analyzer_cfg["clf_enabled"]:
+        pwarning("Classification analysis disabled")
+
+    try:
         # feature importance keys
         feature_cfg = general_cfg["feature_importance"]
         analyzer_cfg["feat_type"] = feature_cfg["type"]
         analyzer_cfg["feat_cfg"] = feature_cfg["config"]
+        analyzer_cfg["feat_enabled"] = feature_cfg.get("enabled", True)
     except KeyError as K:
-        perror(f"{K} key missing in configuration file")
+        analyzer_cfg["feat_enabled"] = False
+
+    if not analyzer_cfg["feat_enabled"]:
+        pwarning("Feature importance analysis disabled")
+
     return analyzer_cfg

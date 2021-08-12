@@ -29,27 +29,6 @@ from marta.utils.marta_utilities import perror
 
 class Project:
     @staticmethod
-    def dump_config_file() -> List[str]:
-        """
-        Read config template line by line
-
-        :return: List of strings with all lines
-        :rtype: list
-        """
-        config_file = get_data(f"profiler/template.yml")
-        try:
-            f = open(config_file)
-        except FileNotFoundError:
-            perror("Package corrupted: template.yml missing")
-        except IOError:
-            perror("I/O error...")
-        except Exception:
-            perror("Something went wrong when dumping file")
-        else:
-            with f:
-                return f.readlines()
-
-    @staticmethod
     def generate_new_project(name="marta_bench", type="bench") -> int:
         src = get_data(f"profiler/marta_{type}")
         dst = f"{os.getcwd()}/{name}"

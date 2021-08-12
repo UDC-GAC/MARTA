@@ -13,3 +13,4 @@ colorama
 pyperf
 matplotlib
 art
+seaborn
