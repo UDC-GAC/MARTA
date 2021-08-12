@@ -28,7 +28,7 @@ class CompilationError(Exception):
 
 
 class CompilerAnalysis:
-    columns = ["loops_vectorized"]
+    columns = ["loops_vectorized", "loop_interchange"]
 
     def analysis(lines: list) -> dict:
         pass
@@ -47,6 +47,11 @@ class GCCAnalysis(CompilerAnalysis):
                 if file in vect_already_visited:
                     continue
                 d["loops_vectorized"] += 1
+            if "optimized: loops interchanged in loop nest" in line:
+                file = line.split(" ")[0]
+                if file in vect_already_visited:
+                    continue
+                d["loop_interchange"] += 1
 
         return d
 
@@ -66,6 +71,8 @@ class ICCAnalysis(CompilerAnalysis):
                 continue
             if active_loop and "LOOP WAS VECTORIZED" in line:
                 d["loops_vectorized"] += 1
+            if active_loop and "Loopnest Interchanged" in line:
+                d["loop_interchange"] += 1
 
         return d
 

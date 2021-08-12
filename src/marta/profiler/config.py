@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from logging import exception
 import os
 import yaml
 import subprocess
@@ -232,7 +233,12 @@ def get_derived_all(variables: list, derived: str, expression: str, data: dict) 
 
     expression = expression.replace("SIZE", "len")
     expression = expression.replace("UNIQUE", "np.unique")
-    value = eval(expression)
+    try:
+        value = eval(expression)
+    except Exception:
+        perror(
+            "Expression not valid in derived arguments. Only SIZE and UNIQUE operations permitted, besides ALL_VAR variable"
+        )
 
     return {derived: value}
 

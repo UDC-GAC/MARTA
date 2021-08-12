@@ -46,7 +46,7 @@ ifeq ($(COMP),icc)
 	CC=icc
 	CXX=icpc
 #  report with the loops in your code that were vectorized
-	OPT_FLAGS:= -qopt-report=1 -qopt-report-phase=vec 
+	OPT_FLAGS:= -qopt-report=1 -qopt-report-phase=vec,loop 
 	ifeq ($(AUTOVEC),true)
 		FLAGS_KERN+= -vec-threshold0 
 	endif
@@ -110,9 +110,9 @@ ifeq ($(COMP),icc)
 	FLAGS_MAIN+= -qopt-report-file=/tmp/$(KERNEL_NAME).opt
 	FLAGS_ASM+= -qopt-report-file=/tmp/$(KERNEL_NAME).opt
 else ifeq ($(findstring gcc,$(COMP)),gcc)
-	FLAGS_KERN+= -fopt-info-vec=/tmp/$(KERNEL_NAME).opt
-	FLAGS_MAIN+= -fopt-info-vec=/tmp/$(KERNEL_NAME).opt
-	FLAGS_ASM+= -fopt-info-vec=/tmp/$(KERNEL_NAME).opt
+	FLAGS_KERN+= -fopt-info-all=/tmp/$(KERNEL_NAME).opt
+	FLAGS_MAIN+= -fopt-info-all=/tmp/$(KERNEL_NAME).opt
+	FLAGS_ASM+= -fopt-info-all=/tmp/$(KERNEL_NAME).opt
 else ifeq ($(COMP),clang)
 # TODO
 	FLAGS_KERN+= -Rpass=loop-vectorize 
