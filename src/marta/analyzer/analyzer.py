@@ -174,9 +174,10 @@ class Analyzer:
 
     def __init__(self, args):
         self.args = self.parse_arguments(args)
-        if self.args.version:
+        if not self.args.quiet or self.args.version:
             print_version("Analyzer")
-            sys.exit(0)
+            if self.args.version:
+                sys.exit(0)
 
         if self.args.dump_config_file:
             dump_config_file("analyzer/template.yml")
@@ -185,6 +186,4 @@ class Analyzer:
         parsed_config = parse_options(load_yaml_file(self.args.input[0]))
         for key in parsed_config:
             setattr(self, key, parsed_config[key])
-        if not self.args.quiet:
-            print_version("Analyzer")
         self.perform_analysis()
