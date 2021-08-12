@@ -12,10 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# -*- coding: utf-8 -*-
+
+# Third-party libraries
 import seaborn as sns
 import pandas as pd
 import matplotlib.pyplot as plt
 
+# Local imports
 from marta.analyzer.config import PlotCfg
 from marta.utils.marta_utilities import perror, pinfo
 

@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# -*- coding: utf-8 -*-
+
 from marta.analyzer.cli import cli
 
 cli()

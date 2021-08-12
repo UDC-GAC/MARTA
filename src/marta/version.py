@@ -17,16 +17,17 @@
 # Standard libraries
 import pkg_resources
 
+# Third-party libraries
 from art import tprint
 
 
 def print_version(component: str) -> None:
     """
-    Print version and copyright message (if not quiet execution)
+    Print version and copyright message
     """
     __version__ = pkg_resources.require("marta")[0].version
     tprint("MARTA")
     print(
-        f"Micro ARchitectural Toolkit Analysis (MARTA) - {component} v{__version__}\n",
+        f"Micro ARchitectural Toolkit for Analysis (MARTA) - {component} v{__version__}\n",
         end="",
     )

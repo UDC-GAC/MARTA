@@ -12,11 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# -*- coding: utf-8 -*-
+
+# Standard libraries
 import yaml
 import os
 
+# Local imports
 from marta.utils.marta_utilities import perror, pwarning
 
+# Globals
 decision_tree_synonyms = ["decision tree", "decisiontree", "decision_tree"]
 random_forest_synonyms = ["random_forest", "random forest", "randomforest"]
 
