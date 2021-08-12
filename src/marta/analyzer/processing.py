@@ -22,7 +22,25 @@ import pandas as pd
 import numpy as np
 
 # Local imports
-from marta.utils.marta_utilities import perror
+from marta.utils.marta_utilities import perror, pinfo
+
+
+def column_strings_to_int(df: pd.DataFrame, columns: list) -> pd.DataFrame:
+    """Given a DataFrame, it convert
+
+    :param df: [description]
+    :type df: pd.DataFrame
+    :return: [description]
+    :rtype: pd.DataFrame
+    """
+    for col in columns:
+        if df[col].values.dtype == np.dtype("object"):
+            l = np.unique(df[col])
+            d = dict(zip(l, range(len(l))))
+            df.loc[:, col] = df[col].apply(lambda x: d[x])
+            pinfo(f"Converting column '{col}' from object to int, values are:")
+            pinfo(f"\t{d}")
+    return df
 
 
 def categorize_target_dimension(

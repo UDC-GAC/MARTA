@@ -27,7 +27,11 @@ import pandas as pd
 from marta.analyzer.config import parse_options, load_yaml_file
 from marta.analyzer.feature_importance import FeatureImportanceFactory
 from marta.analyzer.classification import ClassificationFactory
-from marta.analyzer.processing import normalize_data, categorize_target_dimension
+from marta.analyzer.processing import (
+    normalize_data,
+    categorize_target_dimension,
+    column_strings_to_int,
+)
 from marta.utils.marta_utilities import perror
 
 
@@ -75,8 +79,9 @@ class Analyzer:
                 perror("check kernel[prepare_data[rows]], there is something wrong.")
             df = df[cond].copy()
         if df.count()[0] == 0:
-            perror("dataset empty, check constraints in data please!",)
+            perror("dataset empty, check constraints in data please!")
         f_cols = self.filter_cols + [target_value]
+        df = column_strings_to_int(df, self.filter_cols)
         df = df[list(f_cols)]
         df.to_csv(output_file, index=False)
         return df

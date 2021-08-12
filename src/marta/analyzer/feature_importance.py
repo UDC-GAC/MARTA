@@ -20,11 +20,13 @@ import matplotlib
 import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
-from sklearn import metrics
+
+# from sklearn import metrics
 from sklearn.inspection import permutation_importance
 
 # Local imports
 from marta.analyzer.config import RFConfig, random_forest_synonyms
+from marta.utils.marta_utilities import pinfo
 
 
 class FeatureImportance:
@@ -91,13 +93,13 @@ class RandomForest(FeatureImportance):
         print("Feature importance analysis:")
         print("============================")
         print(self.get_feature_importance_labeled())
-        print(
+        pinfo(
             "Generating plot for feature importance based on mean decrease in impurity..."
         )
         fig = self.get_feat_importance_mean_decrease()
         file_mean_decrease = f"{output_path}mean_decrease"
         fig.savefig(file_mean_decrease)
-        print("Generating plot for feature importance based on feature permutation...")
+        pinfo("Generating plot for feature importance based on feature permutation...")
         fig = self.get_feat_importance_feat_permutation()
         file_perm = f"{output_path}permutation"
         fig.savefig(file_perm)
