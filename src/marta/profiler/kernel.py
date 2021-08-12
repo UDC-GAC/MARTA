@@ -39,7 +39,7 @@ from marta.profiler.timing import Timing
 from marta.profiler.static_code_analyzer import StaticCodeAnalyzer
 from marta.profiler.config import parse_options
 from marta.utils.marta_utilities import perror, pwarning
-from marta.profiler.config import parse_options
+from marta.profiler.config import parse_options, get_metadata, get_derived
 from marta.profiler.system_config import SystemConfig
 
 
@@ -203,31 +203,6 @@ class Kernel:
             return (flops_eval) / avg_time
         else:
             return 0.0
-
-    def get_metadata(self, data: dict) -> dict:
-        # Getting meta-info if specified when updating the row
-        if self.meta_info_script != "":
-            # The script should return a dictionary
-            input_arg = (
-                data.get(self.meta_info_script_input, self.meta_info_script_input)
-                + self.meta_info_script_input_suffix
-            )
-            proc = subprocess.Popen(
-                ["python3", self.meta_info_script, input_arg],
-                stdout=subprocess.PIPE,
-                cwd=self.meta_info_path,
-            )
-            while True:
-                line = proc.stdout.readline()
-                try:
-                    if line.strip() == b"":
-                        break
-                    return eval(line.strip())
-                except Exception:
-                    perror(f"meta_info script does not return a dictionary: {line}!")
-                if not line:
-                    break
-        return {}
 
     def compile(
         self,
@@ -420,7 +395,11 @@ class Kernel:
             data.update({"CFG": kconfig})
         data.update({"compiler": compiler, "compiler_flags": compiler_flags})
 
-        data.update(self.get_metadata(data))
+        # Add metadata
+        data.update(get_metadata(self.meta_info, data))
+
+        # Add derived
+        data.update(get_derived(self.derived_columns, data))
 
         # Discard outliers
         if self.mean_and_discard_outliers:

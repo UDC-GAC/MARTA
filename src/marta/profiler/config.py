@@ -14,6 +14,7 @@
 
 import os
 import yaml
+import subprocess
 
 from marta.utils.marta_utilities import pwarning, pexcept, perror, check_marta_files
 
@@ -90,14 +91,18 @@ def parse_options(config: dict) -> dict:
     cfg["d_features"] = config_config.get("d_features", [])
     cfg["d_flags"] = config_config.get("d_flags", [])
     cfg["flops"] = config_config.get("flops", 1)
-    meta_info = config_config.get("meta_info", {})
-    cfg["meta_info_script"] = meta_info.get("script", "")
-    cfg["meta_info_path"] = meta_info.get("path", ".")
-    cfg["meta_info_script_input"] = meta_info.get("input", "")
-    cfg["meta_info_script_input_suffix"] = meta_info.get("suffix", "")
+    cfg["meta_info"] = config_config.get("meta_info", {})
+    # meta_info = config_config.get("meta_info", {})
+    # cfg["meta_info_script"] = meta_info.get("script", "")
+    # cfg["meta_info_path"] = meta_info.get("path", ".")
+    # cfg["meta_info_script_input"] = meta_info.get("input", "")
+    # cfg["meta_info_script_input_suffix"] = meta_info.get("suffix", "")
     cfg["macveth_path"] = config_config.get("macveth_path_buil", "''")
     cfg["macveth_flags"] = config_config.get("macveth_flags", "-misa=avx2")
     cfg["macveth_target"] = config_config.get("macveth_target", "")
+
+    # Derived columns
+    cfg["derived_columns"] = config_config.get("derived", None)
 
     # Execution arguments
     cfg["intel_cache_flush"] = config_exec.get("intel_cache_flush", False)
@@ -149,6 +154,35 @@ def check_correctness_file(config: list) -> bool:
     return True
 
 
+def get_metadata(meta_info: dict, data: dict,) -> dict:
+    meta_info_script = meta_info.get("script", "")
+    meta_info_script_input = meta_info.get("input", ".")
+    meta_info_script_input_suffix = meta_info.get("suffix", "")
+    meta_info_path = meta_info.get("path", ".")
+    if meta_info_script != "":
+        # The script should return a dictionary
+        input_arg = (
+            data.get(meta_info_script_input, meta_info_script_input)
+            + meta_info_script_input_suffix
+        )
+        proc = subprocess.Popen(
+            ["python3", meta_info_script, input_arg],
+            stdout=subprocess.PIPE,
+            cwd=meta_info_path,
+        )
+        while True:
+            line = proc.stdout.readline()
+            try:
+                if line.strip() == b"":
+                    break
+                return eval(line.strip())
+            except Exception:
+                perror(f"meta_info script does not return a dictionary: {line}!")
+            if not line:
+                break
+    return {}
+
+
 def get_kernel_config(input_file: str):
     try:
         from yaml import CLoader as Loader
@@ -165,3 +199,67 @@ def get_kernel_config(input_file: str):
         perror("Unknown error when opening configuration file.")
 
     return kernel_setup
+
+
+def get_derived_single(
+    variables: list, derived: str, expression: str, data: dict
+) -> dict:
+    derived_dict = {}
+    for var in variables:
+        new_key = f"{derived}{var}"
+        try:
+            value = eval(expression.replace("VAR", f"{str(data[var])}"))
+        except KeyError:
+            try:
+                value = eval(expression.replace("VAR", f"{str(derived_dict[var])}"))
+            except KeyError:
+                perror("Key does not exist in derived columns")
+            except Exception:
+                perror("Something went wrong when parsing derived values")
+        except Exception:
+            perror("Something went wrong when parsing derived values")
+        derived_dict.update({new_key: value})
+    return derived_dict
+
+
+def get_derived_all(variables: list, derived: str, expression: str, data: dict) -> dict:
+    new_expr = "["
+    for var in variables:
+        new_expr += f"{str(data[var])},"
+    new_expr = f"{new_expr[:-1]}]"
+    expression = expression.replace("ALL_VAR", new_expr)
+    import numpy as np
+
+    expression = expression.replace("SIZE", "len")
+    expression = expression.replace("UNIQUE", "np.unique")
+    value = eval(expression)
+
+    return {derived: value}
+
+
+def get_derived(derived_columns: dict, data: dict) -> dict:
+    if derived_columns != None:
+        derived_dict = {}
+        for derived in derived_columns:
+            variables = derived_columns[derived].get("variables")
+            if variables == None or type(variables) != list:
+                perror("Bad formatting derived")
+            expression = derived_columns[derived].get("expression")
+            if expression == None:
+                perror("Bad formatting derived")
+            expr_type = derived_columns[derived].get("type", "single")
+            if expr_type == "single":
+                derived_dict.update(
+                    get_derived_single(variables, derived, expression, data)
+                )
+            elif expr_type == "all":
+                tmp = data.copy()
+                tmp.update(derived_dict)
+                derived_dict.update(
+                    get_derived_all(variables, derived, expression, tmp)
+                )
+            else:
+                perror("Bad type for derived, only allowed: all, single")
+
+        return derived_dict
+    return {}
