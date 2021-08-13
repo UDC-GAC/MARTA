@@ -27,6 +27,12 @@ from marta.utils.marta_utilities import perror, pinfo
 def plot_data(data: pd.DataFrame, cfg: PlotCfg, output_file: str) -> None:
     pinfo(f"Saving custom plot in '{output_file}'")
     plot_type = getattr(sns, cfg.type)
+    if cfg.sort != None:
+        data = (
+            data.sort_values(cfg.sort, ascending=False)
+            .reset_index()
+            .drop("index", axis=1)
+        )
     fig, ax = plt.subplots()
     if cfg.x_axis == "index":
         cfg.x_axis = data.index
@@ -52,7 +58,6 @@ def plot_data(data: pd.DataFrame, cfg: PlotCfg, output_file: str) -> None:
     if cfg.y_label != None:
         ax.set_ylabel(cfg.y_label)
     fig.tight_layout()  # adjust padding
-    if cfg.format != "png" and not output_file.endswith(cfg.format):
-        output_file = f"{output_file.split('.')[0]}.{cfg.format}"
+    output_file = f"{output_file.split('.')[0]}.{cfg.format}"
     fig.savefig(output_file, format=cfg.format)
 

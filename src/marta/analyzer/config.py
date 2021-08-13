@@ -81,6 +81,7 @@ class PlotCfg:
         self.row = cfg.get("row", None)
         self.x_label = cfg.get("x_label", None)
         self.y_label = cfg.get("y_label", None)
+        self.sort = cfg.get("sort", None)
         try:
             self.x_axis = cfg["x_axis"]
             self.y_axis = cfg["y_axis"]
