@@ -373,11 +373,26 @@ class Kernel:
                 self.mean_and_discard_outliers,
                 bin_path=f"{self.get_kernel_path()}/marta_profiler_data/bin",
             )
-            d_avg_values[mtype] = avg_values
+            if mtype == "papi":
+                if len(self.papi_counters) == 1:
+                    d_avg_values[self.papi_counters[0]] = avg_values
+                else:
+                    for i in range(len(self.papi_counters)):
+                        d_avg_values[self.papi_counters[i]] = avg_values["papi"][i]
+            else:
+                d_avg_values[mtype] = avg_values
             if type(avg_values) == type(None):
                 return None
             if discarded_values != -1:
-                data.update(avg_values)
+                if mtype == "papi" and len(self.papi_counters) != 1:
+                    for i in range(len(self.papi_counters)):
+                        data.update({f"{self.papi_counters[i]}": avg_values["papi"][i]})
+                else:
+                    if mtype == "papi":
+                        data.update({f"{self.papi_counters[0]}": avg_values["papi"]})
+                    else:
+                        data.update(avg_values)
+
                 data.update({f"Discarded{mtype}Values": discarded_values})
 
         if len(d_avg_values) == 0:
