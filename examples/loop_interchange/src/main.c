@@ -19,8 +19,9 @@
 
 #define _UB_N POLYBENCH_LOOP_BOUND(N, n)
 
-static void kernel(int n, float **restrict A, float **restrict B,
-                   float **restrict C) {
+static void kernel(int n, float POLYBENCH_2D(A, N, N, n, n),
+                   float POLYBENCH_2D(B, N, N, n, n),
+                   float POLYBENCH_2D(C, N, N, n, n)) {
   for (int i = 0; i < _UB_N; i++)
     for (int j = 0; j < _UB_N; j++)
       for (int k = 0; k < _UB_N; k++)
