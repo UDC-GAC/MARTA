@@ -38,9 +38,9 @@ from marta.profiler.asm_analyzer import ASMParserFactory
 from marta.profiler.timing import Timing
 from marta.profiler.static_code_analyzer import StaticCodeAnalyzer
 from marta.profiler.config import parse_options
-from marta.utils.marta_utilities import perror, pwarning
 from marta.profiler.config import parse_options, get_metadata, get_derived
 from marta.profiler.system_config import SystemConfig
+from marta.utils.marta_utilities import perror, pwarning
 
 
 class Kernel:

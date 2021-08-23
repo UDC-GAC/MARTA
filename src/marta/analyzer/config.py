@@ -60,7 +60,7 @@ class DTConfig:
 
 
 class PlotCfg:
-    allowed_types = ["scatterplot", "lineplot", "relplot"]
+    allowed_types = ["scatterplot", "lineplot", "relplot", "kdeplot"]
     allowed_formats = ["pdf", "eps", "png", "ps", "svg"]
 
     def __init__(self, cfg: dict):
@@ -83,10 +83,10 @@ class PlotCfg:
         self.y_label = cfg.get("y_label", None)
         self.sort = cfg.get("sort", None)
         try:
-            self.x_axis = cfg["x_axis"]
-            self.y_axis = cfg["y_axis"]
+            self.x = cfg["x_axis"]
         except KeyError as K:
             perror(f"{K} needed in plot configuration")
+        self.y = cfg.get("y_axis")
 
 
 def load_yaml_file(file: str) -> dict:

@@ -68,7 +68,7 @@ class RandomForest(FeatureImportance):
             self.target_data.values,
             n_repeats=10,
             random_state=42,
-            n_jobs=2,
+            n_jobs=-1,
         )
         forest_importances = pd.Series(
             result.importances_mean, index=self.feature_names

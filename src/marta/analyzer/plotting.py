@@ -43,23 +43,28 @@ def plot_data(data: pd.DataFrame, cfg: PlotCfg, output_file: str) -> None:
             .drop("index", axis=1)
         )
     fig, ax = plt.subplots()
-    if cfg.x_axis == "index":
-        cfg.x_axis = data.index
+    if cfg.x == "index":
+        cfg.x = data.index
     if cfg.type == "relplot":
         fig = plot_type(
             data=data,
-            x=cfg.x_axis,
-            y=cfg.y_axis,
+            x=cfg.x,
+            y=cfg.y,
             hue=cfg.hue,
             size=cfg.size,
             col=cfg.col,
             row=cfg.row,
             palette="hls",
         )
+    elif cfg.type == "kdeplot":
+        kde_keys = ["x", "y", "hue"]
+        new_cfg = {k: getattr(cfg, k) for k in kde_keys if k in vars(cfg)}
+        plot_type(data=data, **new_cfg, multiple="stack", log_scale=True, alpha=0.5)
     else:
         plot_type(
-            data=data, x=cfg.x_axis, y=cfg.y_axis, hue=cfg.hue, size=cfg.size,
+            data=data, x=cfg.x, y=cfg.y, hue=cfg.hue, size=cfg.size,
         )
+        sns.rugplot(data=data, x=cfg.x, y=cfg.y, hue=cfg.hue)
     if output_file == "":
         perror("Wrong file to save plot")
     if cfg.x_label != None:

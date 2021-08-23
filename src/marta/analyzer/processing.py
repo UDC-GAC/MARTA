@@ -20,6 +20,10 @@ from typing import Optional, Tuple
 # Third-party libraries
 import pandas as pd
 import numpy as np
+from sklearn.neighbors import KernelDensity
+from sklearn.model_selection import GridSearchCV
+from scipy.signal import argrelextrema
+
 
 # Local imports
 from marta.utils.marta_utilities import perror, pinfo
@@ -49,35 +53,67 @@ def column_strings_to_int(df: pd.DataFrame, columns: list) -> pd.DataFrame:
 def categorize_target_dimension(
     df: pd.DataFrame, target_value: str, ncat: int, catscale: float
 ) -> Tuple[pd.DataFrame, list]:
-    """Create categories for a continuous dimension
+    """Create categories for a continuous dimension.
 
     :param df: Input data
     :type df: pd.DataFrame
-    :param target_value: Target dimension
+    :param target_value: Target dimension.
     :type target_value: str
-    :param ncat: Number of categories to create
+    :param ncat: Number of categories to create.
     :type ncat: int
-    :param catscale: Scaling factor of the category
+    :param catscale: Scaling factor of the category.
     :type catscale: float
-    :return: Data processed with the list of labels assigned to continuous intervals
+    :return: Data processed with the list of labels assigned to continuous intervals.
     :rtype: Tuple[pd.DataFrame, list]
     """
+    X = getattr(df, target_value).values[:, np.newaxis]
+    X /= catscale
     if ncat == None:
-        return df, getattr(df, target_value).values
+        return df, X
+
+    grid_search = False
+    if grid_search:
+        pinfo(
+            "Finding best bandwidth parameter for kernel density estimation (KDE). This might take a while..."
+        )
+        bw_space = np.linspace(0.001, 1.0, 30)
+        grid = GridSearchCV(
+            KernelDensity(),
+            {"bandwidth": bw_space},
+            cv=10,  # 10 cross validations
+            n_jobs=-1,  # all cores
+        )
+        grid.fit(X)
+        bw = grid.best_params_["bandwidth"]
+        pinfo(f"Best bandwidth parameter: {bw}")
+    else:
+        bw = 0.01
+    pinfo(
+        "KDE for getting the number of clusters to use, i.e. the number of categories"
+    )
+    kde = KernelDensity(bandwidth=bw).fit(X)
+    score_samples_space = np.linspace(min(X), max(X), 100).reshape(1, -1)[0]
+    e = kde.score_samples(score_samples_space.reshape(-1, 1))
+    mi = argrelextrema(e, np.less)[0]
+
+    P = [X[X < score_samples_space[mi][0]]]
+    for i in range(len(mi) - 1):
+        P.append(
+            X[(X >= score_samples_space[mi][i]) * (X <= score_samples_space[mi][i + 1])]
+        )
+    if len(mi) >= 1:
+        P.append(X[X >= score_samples_space[mi][-1]])
+
+    labels = []
+    for cat in P:
+        new_label = "P-{0}-{1}".format(
+            "{0:.3f}".format(min(cat)), "{0:.3f}".format(max(cat))
+        )
+        labels.append(new_label)
+        pinfo(f"    New category created = {new_label}")
 
     tmp_target_value = getattr(df, target_value)
-    bins = np.linspace(
-        min(getattr(df, target_value)), max(getattr(df, target_value)), ncat
-    )
 
-    step = bins[1] - bins[0]
-    labels = [
-        "P-{0}-{1}".format(
-            "{0:.3f}".format(float(i / catscale)),
-            "{0:.3f}".format(float((i + step) / catscale)),
-        )
-        for i in bins
-    ]
     if len(set(labels)) != len(labels):
         perror(
             "There might be duplicated labels when creating categories. "
@@ -85,7 +121,7 @@ def categorize_target_dimension(
             "Please revise the settings in the configuration file."
         )
 
-    setattr(df, target_value, pd.cut(tmp_target_value, ncat, labels=labels))
+    setattr(df, target_value, pd.cut(tmp_target_value, len(P), labels=labels))
     return df, labels
 
 

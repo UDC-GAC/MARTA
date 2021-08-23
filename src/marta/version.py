@@ -28,6 +28,5 @@ def print_version(component: str) -> None:
     __version__ = pkg_resources.require("marta")[0].version
     tprint("MARTA")
     print(
-        f"Micro ARchitectural Toolkit for Analysis (MARTA) - {component} v{__version__}\n",
-        end="",
+        f"Multi-configuration Assembly pRofiler and Toolkit for Analysis (MARTA) - {component} v{__version__}"
     )

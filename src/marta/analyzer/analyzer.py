@@ -100,11 +100,6 @@ class Analyzer:
         df = pd.read_csv(self.input_file, comment="#", index_col=False)
         self.raw_data = df.copy()
         target_value = self.target
-        df = normalize_data(df, self.norm, target_value)
-        df, labels = categorize_target_dimension(
-            df, target_value, self.ncats, self.catscale
-        )
-        self.labels = labels
         for d in self.filter_rows:
             try:
                 cond = getattr(df, d) == eval(self.filter_rows[d])
@@ -119,6 +114,11 @@ class Analyzer:
             df = df[cond].copy()
         if df.count()[0] == 0:
             perror("dataset empty, check constraints in data please!")
+        df = normalize_data(df, self.norm, target_value)
+        df, labels = categorize_target_dimension(
+            df, target_value, self.ncats, self.catscale
+        )
+        self.labels = labels
         f_cols = self.filter_cols + [target_value]
         df = column_strings_to_int(df, self.filter_cols)
         df = df[list(f_cols)]
@@ -143,6 +143,7 @@ class Analyzer:
                 self.data_processed[self.filter_cols],
                 getattr(self.data_processed, self.target),
             )
+            clf.labels = self.labels
             clf.perform_analysis(output_path=self.output_path)
         else:
             pwarning("Classification analysis disabled")

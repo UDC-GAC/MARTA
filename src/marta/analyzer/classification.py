@@ -61,7 +61,7 @@ class DecisionTree(Classification):
             leaves_parallel=True,
             impurity=False,
             class_names=self.labels,
-            rotate=False,
+            rotate=True,
             label="none",
         )
         graph = graphviz.Source(dot_data)
