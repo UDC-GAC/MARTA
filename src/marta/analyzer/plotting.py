@@ -25,6 +25,15 @@ from marta.utils.marta_utilities import perror, pinfo
 
 
 def plot_data(data: pd.DataFrame, cfg: PlotCfg, output_file: str) -> None:
+    """Just a simple wrapping function for plotting and saving figures.
+
+    :param data: Input data.
+    :type data: pd.DataFrame
+    :param cfg: Configuration with all parameters needed for plotting.
+    :type cfg: PlotCfg
+    :param output_file: File to output plot.
+    :type output_file: str
+    """
     pinfo(f"Saving custom plot in '{output_file}'")
     plot_type = getattr(sns, cfg.type)
     if cfg.sort != None:

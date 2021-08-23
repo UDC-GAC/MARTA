@@ -154,9 +154,6 @@ def parse_options(config: dict) -> dict:
     except KeyError:
         analyzer_cfg["plot_cfg"] = False
 
-    if not analyzer_cfg["plot_enabled"]:
-        pwarning("Plotting disabled")
-
     try:
         # classification keys
         classification_cfg = general_cfg["classification"]
@@ -165,10 +162,6 @@ def parse_options(config: dict) -> dict:
         analyzer_cfg["clf_enabled"] = classification_cfg.get("enabled", True)
     except KeyError:
         analyzer_cfg["clf_enabled"] = False
-
-    if not analyzer_cfg["clf_enabled"]:
-        pwarning("Classification analysis disabled")
-
     try:
         # feature importance keys
         feature_cfg = general_cfg["feature_importance"]
@@ -177,8 +170,5 @@ def parse_options(config: dict) -> dict:
         analyzer_cfg["feat_enabled"] = feature_cfg.get("enabled", True)
     except KeyError as K:
         analyzer_cfg["feat_enabled"] = False
-
-    if not analyzer_cfg["feat_enabled"]:
-        pwarning("Feature importance analysis disabled")
 
     return analyzer_cfg

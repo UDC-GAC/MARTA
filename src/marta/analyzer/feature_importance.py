@@ -80,16 +80,13 @@ class RandomForest(FeatureImportance):
         fig.tight_layout()
         return fig
 
-    # def get_metrics(self) -> float:
-    #    return metrics.accuracy_score(self.data.values, self.target_data.values)
-
-    def get_feature_importance(self):
+    def get_feature_importance(self) -> np.ndarray:
         return self.forest.feature_importances_
 
-    def get_feature_importance_labeled(self):
+    def get_feature_importance_labeled(self) -> pd.Series:
         return pd.Series(self.get_feature_importance(), index=self.feature_names)
 
-    def perform_analysis(self, output_path=""):
+    def perform_analysis(self, output_path="") -> None:
         print("Feature importance analysis:")
         print("============================")
         print(self.get_feature_importance_labeled())

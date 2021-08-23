@@ -123,7 +123,7 @@ class DecisionTree(Classification):
         # print(f"False positives:       {FP:3d}".format())
         # print(f"False negatives:       {FN:3d}".format())
 
-    def perform_analysis(self, output_path=""):
+    def perform_analysis(self, output_path="") -> None:
         print("Classification analysis:")
         print("========================")
         self.get_summary()

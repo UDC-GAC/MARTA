@@ -19,7 +19,6 @@
 # Standard library
 import argparse
 import sys
-from typing import List
 
 # Third-party libraries
 import pandas as pd
@@ -34,7 +33,7 @@ from marta.analyzer.processing import (
     categorize_target_dimension,
     column_strings_to_int,
 )
-from marta.utils.marta_utilities import perror, pinfo, dump_config_file
+from marta.utils.marta_utilities import perror, pinfo, dump_config_file, pwarning
 from marta.version import print_version
 
 
@@ -145,6 +144,8 @@ class Analyzer:
                 getattr(self.data_processed, self.target),
             )
             clf.perform_analysis(output_path=self.output_path)
+        else:
+            pwarning("Classification analysis disabled")
 
         # Feature importance analysis
         if self.feat_enabled:
@@ -156,6 +157,8 @@ class Analyzer:
                 self.filter_cols,
             )
             feat.perform_analysis(output_path=self.output_path)
+        else:
+            pwarning("Feature importance analysis disabled")
 
         # Plotting
         if self.plot_enabled:
@@ -171,6 +174,8 @@ class Analyzer:
                     self.plot_cfg,
                     f"{self.output_path}/plot_processed_data_{self.plot_cfg.type}",
                 )
+        else:
+            pwarning("Plotting disabled")
 
     def __init__(self, args):
         self.args = self.parse_arguments(args)
