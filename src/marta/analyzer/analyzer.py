@@ -116,7 +116,7 @@ class Analyzer:
             perror("dataset empty, check constraints in data please!")
         df = normalize_data(df, self.norm, target_value)
         df, labels = categorize_target_dimension(
-            df, target_value, self.ncats, self.catscale
+            df, target_value, self.ncats, self.catscale, self.grid_search
         )
         self.labels = labels
         f_cols = self.filter_cols + [target_value]

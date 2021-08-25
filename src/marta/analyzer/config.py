@@ -82,6 +82,7 @@ class PlotCfg:
         self.x_label = cfg.get("x_label", None)
         self.y_label = cfg.get("y_label", None)
         self.sort = cfg.get("sort", None)
+        self.log_scale = cfg.get("log_scale", None)
         try:
             self.x = cfg["x_axis"]
         except KeyError as K:
@@ -137,6 +138,7 @@ def parse_options(config: dict) -> dict:
     try:
         cat_cfg = prepdata_cfg["categories"]
         analyzer_cfg["ncats"] = int(cat_cfg.get("num", 2))
+        analyzer_cfg["grid_search"] = cat_cfg.get("grid_search", False)
         if analyzer_cfg["ncats"] < 2:
             perror(
                 "categories[num]",

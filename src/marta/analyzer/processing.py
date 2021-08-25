@@ -51,7 +51,7 @@ def column_strings_to_int(df: pd.DataFrame, columns: list) -> pd.DataFrame:
 
 
 def categorize_target_dimension(
-    df: pd.DataFrame, target_value: str, ncat: int, catscale: float
+    df: pd.DataFrame, target_value: str, ncat: int, catscale: float, grid_search=False
 ) -> Tuple[pd.DataFrame, list]:
     """Create categories for a continuous dimension.
 
@@ -71,7 +71,6 @@ def categorize_target_dimension(
     if ncat == None:
         return df, X
 
-    grid_search = False
     if grid_search:
         pinfo(
             "Finding best bandwidth parameter for kernel density estimation (KDE). This might take a while..."
@@ -87,7 +86,7 @@ def categorize_target_dimension(
         bw = grid.best_params_["bandwidth"]
         pinfo(f"Best bandwidth parameter: {bw}")
     else:
-        bw = 0.01
+        bw = 0.5
     pinfo(
         "KDE for getting the number of clusters to use, i.e. the number of categories"
     )
@@ -106,8 +105,8 @@ def categorize_target_dimension(
 
     labels = []
     for cat in P:
-        new_label = "P-{0}-{1}".format(
-            "{0:.3f}".format(min(cat)), "{0:.3f}".format(max(cat))
+        new_label = "{0}-{1}-{2}".format(
+            target_value, "{0:.3f}".format(min(cat)), "{0:.3f}".format(max(cat))
         )
         labels.append(new_label)
         pinfo(f"    New category created = {new_label}")

@@ -57,9 +57,9 @@ def plot_data(data: pd.DataFrame, cfg: PlotCfg, output_file: str) -> None:
             palette="hls",
         )
     elif cfg.type == "kdeplot":
-        kde_keys = ["x", "y", "hue"]
+        kde_keys = ["x", "y", "hue", "log_scale"]
         new_cfg = {k: getattr(cfg, k) for k in kde_keys if k in vars(cfg)}
-        plot_type(data=data, **new_cfg, multiple="stack", log_scale=True, alpha=0.5)
+        plot_type(data=data, **new_cfg, multiple="stack", alpha=0.5)
     else:
         plot_type(
             data=data, x=cfg.x, y=cfg.y, hue=cfg.hue, size=cfg.size,
