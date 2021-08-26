@@ -20,9 +20,9 @@ from typing import Optional, Tuple
 # Third-party libraries
 import pandas as pd
 import numpy as np
+from KDEpy import FFTKDE
 from sklearn.neighbors import KernelDensity
 from sklearn.model_selection import GridSearchCV
-from sklearn.model_selection import LeaveOneOut
 from scipy.signal import argrelextrema
 
 
@@ -51,13 +51,36 @@ def column_strings_to_int(df: pd.DataFrame, columns: list) -> pd.DataFrame:
     return df
 
 
+def grid_search(X: pd.Series) -> Tuple[float, str]:
+    bw_space = np.linspace(0.0, 1.0, 30)
+    kernels = [
+        "cosine",
+        "epanechnikov",
+        "exponential",
+        "gaussian",
+        "linear",
+        "tophat",
+    ]
+    grid = GridSearchCV(
+        KernelDensity(), {"bandwidth": bw_space, "kernel": kernels}, n_jobs=-1,
+    )
+    pinfo(
+        "Finding best bandwidth parameter for kernel density estimation (KDE). This might take a while..."
+    )
+    grid.fit(X)
+    return grid.best_params_["bandwidth"], grid.best_params_["kernel"]
+
+
 def categorize_target_dimension(
     df: pd.DataFrame,
     target_value: str,
     ncat: int,
     catscale: float,
+    mode="normal",
     grid_search=False,
+    custom_params=False,
     bandwidth=1.0,
+    bandwidth_type="silverman",
     kernel="linear",
 ) -> Tuple[pd.DataFrame, list]:
     """Create categories for a continuous dimension.
@@ -78,40 +101,20 @@ def categorize_target_dimension(
     if ncat == None:
         return df, X
 
-    if grid_search:
-        pinfo(
-            "Finding best bandwidth parameter for kernel density estimation (KDE). This might take a while..."
-        )
-        bw_space = np.linspace(0.0, 1.0, 30)
-        kernels = [
-            "cosine",
-            "epanechnikov",
-            "exponential",
-            "gaussian",
-            "linear",
-            "tophat",
-        ]
-        grid = GridSearchCV(
-            KernelDensity(),
-            {"bandwidth": bw_space, "kernel": kernels},
-            # cv=20,  # 20 cross validations
-            # cv=LeaveOneOut(),
-            n_jobs=-1,  # all cores
-        )
-        grid.fit(X)
-        bw = grid.best_params_["bandwidth"]
-        kern = grid.best_params_["kernel"]
-        pinfo(f"Best parameters for KDE: bandwidth = {bw}; kernel = {kern}")
+    score_samples_space = np.linspace(min(X), max(X), int(len(X))).reshape(1, -1)[0]
+    if mode != "normal":
+        if grid_search:
+            bw, kern = grid_search(X)
+            pinfo(f"Best parameters for KDE: bandwidth = {bw}; kernel = {kern}")
+            kde = KernelDensity(bandwidth=bw, kernel=kern).fit(X)
+            e = kde.score_samples(score_samples_space.reshape(-1, 1))
+        elif custom_params:
+            kde = KernelDensity(bandwidth=bandwidth, kernel=kernel).fit(X)
+            e = kde.score_samples(score_samples_space.reshape(-1, 1))
+        else:
+            _, e = FFTKDE(kernel="gaussian", bw=bandwidth_type).fit(X).evaluate(len(X))
     else:
-        bw = bandwidth
-        kern = kernel
-        pinfo(f"Parameters set for KDE: bandwidth = {bw}; kernel = {kern}")
-    pinfo(
-        "KDE for getting the number of clusters to use, i.e. the number of categories"
-    )
-    kde = KernelDensity(bandwidth=bw, kernel=kern).fit(X)
-    score_samples_space = np.linspace(min(X), max(X), int(len(X) / 2)).reshape(1, -1)[0]
-    e = kde.score_samples(score_samples_space.reshape(-1, 1))
+        _, e = FFTKDE(kernel="gaussian", bw="silverman").fit(X).evaluate(len(X))
     mi = argrelextrema(e, np.less)[0]
 
     P = [X[X < score_samples_space[mi][0]]]

@@ -69,16 +69,16 @@ def node_to_str_custom(self, tree, node_id, criterion):
     # Write node sample count
     # if labels:
     #     node_string += "samples = "
-    # if self.proportion:
-    #     percent = 100.0 * tree.n_node_samples[node_id] / float(tree.n_node_samples[0])
-    #     node_string += str(round(percent, 1)) + "%" + characters[4]
+    if self.proportion:
+        percent = 100.0 * tree.n_node_samples[node_id] / float(tree.n_node_samples[0])
+        node_string += str(round(percent, 1)) + "%" + characters[4]
     # else:
     #     node_string += str(tree.n_node_samples[node_id]) + characters[4]
 
     # Write node class distribution / regression value
-    if self.proportion and tree.n_classes[0] != 1:
-        # For classification this will show the proportion of samples
-        value = value / tree.weighted_n_node_samples[node_id]
+    # if self.proportion and tree.n_classes[0] != 1:
+    #     # For classification this will show the proportion of samples
+    #     value = value / tree.weighted_n_node_samples[node_id]
     # if labels:
     #     node_string += "value = "
     # if tree.n_classes[0] == 1:

@@ -21,11 +21,15 @@ import os
 import graphviz
 import pandas as pd
 from sklearn import tree
+from sklearn.model_selection import train_test_split
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+import matplotlib.pyplot as plt
 
 # Local imports
 import marta.analyzer._custom_decision_tree  # this is needed for overwritting a funtion in sklearn
 from marta.analyzer.config import DTConfig, decision_tree_synonyms
-from marta.utils.marta_utilities import CaptureOutput, pinfo
+from marta.utils.marta_utilities import CaptureOutput, pinfo, pwarning
 
 
 class Classification:
@@ -53,6 +57,7 @@ class DecisionTree(Classification):
     def export_graph_tree(self, output_path="") -> None:
         """Export the decision tree as a .pdf file.
         """
+
         dot_data = tree.export_graphviz(
             self.clf,
             out_file=None,
@@ -61,8 +66,9 @@ class DecisionTree(Classification):
             rounded=True,
             leaves_parallel=True,
             impurity=False,
+            proportion=self.config.proportion,
             class_names=self.labels,
-            rotate=True,
+            rotate=self.config.rotate,
             label="none",
         )
         graph = graphviz.Source(dot_data)
@@ -80,56 +86,47 @@ class DecisionTree(Classification):
         """
         print(tree.export_text(self.clf, feature_names=list(self.data.columns)))
 
-    def perf_measure(self, y_actual: pd.Series, y_hat: pd.Series):
-        """Get performance metrics: true positive, true negative, false
-        positive and false negative
-
-        :param y_actual: Real data
-        :type y_actual: pd.Series
-        :param y_hat: Data categorized
-        :type y_hat: pd.Series
-        :return: True positives, True negatives, false negatives, false positives
-        :rtype: tuple
-        """
-        TP = 0
-        FP = 0
-        TN = 0
-        FN = 0
-
-        for i in range(len(y_hat)):
-            if y_actual[i] == y_hat[i] == 1:
-                TP += 1
-            if y_hat[i] == 1 and y_actual[i] != y_hat[i]:
-                FP += 1
-            if y_actual[i] == y_hat[i] == 0:
-                TN += 1
-            if y_hat[i] == 0 and y_actual[i] != y_hat[i]:
-                FN += 1
-
-        return (TP, FP, TN, FN)
-
-    def get_summary(self) -> None:
+    def get_summary(self, output_path="") -> None:
         """Print a summary of the metrics in the decision tree.
         """
-        score = self.clf.score(self.data.values, self.target_data.values)
-        print(f"Type:                  decision tree")
-        print(f"Number of leaves:      {self.clf.get_n_leaves():4d}".format())
-        print(f"Depth of tree:         {self.clf.get_depth():4d}".format())
-        print(f"Mean accuracy (score): {score:7.2f}".format())
+        score_dt = self.clf.score(self.var_test, self.res_test)
+        score_kneigh = self.kneigh.score(self.var_test, self.res_test)
+        print(f"Type:                       decision tree and K-Neighbors")
+        print(f"Number of leaves:        {self.clf.get_n_leaves():4d}".format())
+        print(f"Depth of the tree:       {self.clf.get_depth():4d}".format())
+        print(f"Accuracy decision tree:  {score_dt:8.3f}".format())
+        print(f"Accuracy K-Neighbors:    {score_kneigh:8.3f}".format())
 
-        # FIXME: this only has meaning if we are going to test our model
-        # TP, FP, TN, FN = self.perf_measure(self.data.values, self.target_data.values)
-        # print(f"True positives:        {TP:3d}".format())
-        # print(f"True negatives:        {TN:3d}".format())
-        # print(f"False positives:       {FP:3d}".format())
-        # print(f"False negatives:       {FN:3d}".format())
+        predictions = self.clf.predict(self.data.values)
+        missclassified = 0
+        for prediction, label in zip(predictions, self.target_data.values):
+            if prediction != label:
+                missclassified += 1
+        if missclassified:
+            pwarning(
+                f"Missclassified data: {missclassified}/{len(self.data.values)} ({1-score_dt:.3f})".format()
+            )
+
+        print("Confusion matrix:")
+        print("=================")
+        cm = confusion_matrix(self.target_data.values, predictions, labels=self.labels)
+        print(cm)
+        print("Categories:")
+        print(self.labels)
+        disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=self.labels)
+        # plt.show()
+        file_conf_matrix = f"{output_path}/conf_matrix.pdf"
+        fig, ax = plt.subplots()
+        disp.plot(ax=ax, xticks_rotation="vertical")
+        fig.tight_layout()
+        fig.savefig(file_conf_matrix, format="pdf")
 
     def perform_analysis(self, output_path="") -> None:
         print("Classification analysis:")
         print("========================")
-        self.get_summary()
+        self.get_summary(output_path)
         if self.config.text_tree:
-            print("* Decision tree generated:\n")
+            print("\n-> Decision tree generated:\n")
             with CaptureOutput() as output:
                 self.export_text_tree()
             for line in output:
@@ -160,4 +157,10 @@ class DecisionTree(Classification):
         self.data = data
         self.target_data = target
         self.labels = target.values.unique().tolist()
-        self.clf = self.clf.fit(self.data.values, self.target_data.values)
+        self.var_train, self.var_test, self.res_train, self.res_test = train_test_split(
+            self.data.values, self.target_data.values, test_size=0.2
+        )
+        self.clf = self.clf.fit(self.var_train, self.res_train)
+        self.kneigh = KNeighborsClassifier(n_neighbors=250).fit(
+            self.var_train, self.res_train
+        )

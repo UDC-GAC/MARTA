@@ -120,8 +120,11 @@ class Analyzer:
             target_value,
             self.ncats,
             self.catscale,
+            self.mode,
             self.grid_search,
+            self.custom_params,
             self.bandwidth,
+            self.bandwidth_type,
             self.kernel,
         )
         self.labels = labels

@@ -14,3 +14,4 @@ pyperf
 matplotlib
 art
 seaborn
+KDEpy

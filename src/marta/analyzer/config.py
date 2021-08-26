@@ -50,13 +50,10 @@ class DTConfig:
         self.pruning_mccp_alpha = config.get("pruning_mccp_alpha", 0.0)
         self.text_tree = config.get("text_tree", False)
         self.graph_tree = config.get("graph_tree", False)
+        self.proportion = config.get("proportion", False)
         # False for vertical, True for horizontal
-        if "orientation" not in config:
-            self.orientation = False
-        else:
-            self.orientation = config["orientation"] == "horizontal"
-            if self.orientation:
-                pwarning("Horizontal Decision Tree printing disabled.")
+        self.orientation = config.get("orientation", "vertical")
+        self.rotate = self.orientation == "horizontal"
         for key in config:
             setattr(self, key, config[key])
 
@@ -140,9 +137,12 @@ def parse_options(config: dict) -> dict:
     try:
         cat_cfg = prepdata_cfg["categories"]
         analyzer_cfg["ncats"] = int(cat_cfg.get("num", 2))
-        analyzer_cfg["grid_search"] = cat_cfg.get("grid_search", False)
         analyzer_cfg["bandwidth"] = cat_cfg.get("bandwidth", 1.0)
-        analyzer_cfg["kernel"] = cat_cfg.get("kernel", "linear")
+        analyzer_cfg["bandwidth_type"] = cat_cfg.get("bandwidth_type", "silverman")
+        analyzer_cfg["grid_search"] = cat_cfg.get("grid_search", False)
+        analyzer_cfg["custom_params"] = cat_cfg.get("custom_params", False)
+        analyzer_cfg["kernel"] = cat_cfg.get("kernel", "gaussian")
+        analyzer_cfg["mode"] = cat_cfg.get("mode", "normal")
         if analyzer_cfg["ncats"] < 2:
             perror(
                 "categories[num]",

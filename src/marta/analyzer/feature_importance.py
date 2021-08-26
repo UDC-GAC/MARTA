@@ -20,6 +20,8 @@ import matplotlib
 import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+
 
 # from sklearn import metrics
 from sklearn.inspection import permutation_importance
@@ -64,8 +66,8 @@ class RandomForest(FeatureImportance):
     def get_feat_importance_feat_permutation(self) -> matplotlib.figure.Figure:
         result = permutation_importance(
             self.forest,
-            self.data.values,
-            self.target_data.values,
+            self.var_test,
+            self.res_test,
             n_repeats=10,
             random_state=42,
             n_jobs=-1,
@@ -90,6 +92,11 @@ class RandomForest(FeatureImportance):
         print("Feature importance analysis:")
         print("============================")
         print(self.get_feature_importance_labeled())
+
+        print(
+            f"\nAccuracy: {self.forest.score(self.var_test, self.res_test):7.3f}\n".format()
+        )
+
         pinfo(
             f"Saving plot for feature importance based on mean decrease in impurity in '{output_path}/mean_decrease.png'"
         )
@@ -124,4 +131,7 @@ class RandomForest(FeatureImportance):
         self.data = data
         self.target_data = target
         self.labels = target.values.unique().tolist()
-        self.forest = self.forest.fit(self.data.values, self.target_data.values)
+        self.var_train, self.var_test, self.res_train, self.res_test = train_test_split(
+            self.data.values, self.target_data.values, test_size=0.2
+        )
+        self.forest = self.forest.fit(self.var_train, self.res_train)
