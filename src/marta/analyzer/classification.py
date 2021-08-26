@@ -23,6 +23,7 @@ import pandas as pd
 from sklearn import tree
 
 # Local imports
+import marta.analyzer._custom_decision_tree  # this is needed for overwritting a funtion in sklearn
 from marta.analyzer.config import DTConfig, decision_tree_synonyms
 from marta.utils.marta_utilities import CaptureOutput, pinfo
 
@@ -149,9 +150,10 @@ class DecisionTree(Classification):
     def __init__(self, config: DTConfig, data: pd.DataFrame, target: pd.Series):
         self.config = config
         self.clf = tree.DecisionTreeClassifier(
-            random_state=0,
-            max_depth=config.max_depth,
+            random_state=config.random_state,
+            splitter=config.splitter,
             criterion=config.criterion,
+            max_depth=config.max_depth,
             max_leaf_nodes=config.max_leaves,
             ccp_alpha=config.pruning_mccp_alpha,
         )

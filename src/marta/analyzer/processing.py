@@ -22,6 +22,7 @@ import pandas as pd
 import numpy as np
 from sklearn.neighbors import KernelDensity
 from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import LeaveOneOut
 from scipy.signal import argrelextrema
 
 
@@ -51,7 +52,13 @@ def column_strings_to_int(df: pd.DataFrame, columns: list) -> pd.DataFrame:
 
 
 def categorize_target_dimension(
-    df: pd.DataFrame, target_value: str, ncat: int, catscale: float, grid_search=False
+    df: pd.DataFrame,
+    target_value: str,
+    ncat: int,
+    catscale: float,
+    grid_search=False,
+    bandwidth=1.0,
+    kernel="linear",
 ) -> Tuple[pd.DataFrame, list]:
     """Create categories for a continuous dimension.
 
@@ -75,31 +82,45 @@ def categorize_target_dimension(
         pinfo(
             "Finding best bandwidth parameter for kernel density estimation (KDE). This might take a while..."
         )
-        bw_space = np.linspace(0.001, 1.0, 30)
+        bw_space = np.linspace(0.0, 1.0, 30)
+        kernels = [
+            "cosine",
+            "epanechnikov",
+            "exponential",
+            "gaussian",
+            "linear",
+            "tophat",
+        ]
         grid = GridSearchCV(
             KernelDensity(),
-            {"bandwidth": bw_space},
-            cv=10,  # 10 cross validations
+            {"bandwidth": bw_space, "kernel": kernels},
+            # cv=20,  # 20 cross validations
+            # cv=LeaveOneOut(),
             n_jobs=-1,  # all cores
         )
         grid.fit(X)
         bw = grid.best_params_["bandwidth"]
-        pinfo(f"Best bandwidth parameter: {bw}")
+        kern = grid.best_params_["kernel"]
+        pinfo(f"Best parameters for KDE: bandwidth = {bw}; kernel = {kern}")
     else:
-        bw = 0.5
+        bw = bandwidth
+        kern = kernel
+        pinfo(f"Parameters set for KDE: bandwidth = {bw}; kernel = {kern}")
     pinfo(
         "KDE for getting the number of clusters to use, i.e. the number of categories"
     )
-    kde = KernelDensity(bandwidth=bw).fit(X)
-    score_samples_space = np.linspace(min(X), max(X), 100).reshape(1, -1)[0]
+    kde = KernelDensity(bandwidth=bw, kernel=kern).fit(X)
+    score_samples_space = np.linspace(min(X), max(X), int(len(X) / 2)).reshape(1, -1)[0]
     e = kde.score_samples(score_samples_space.reshape(-1, 1))
     mi = argrelextrema(e, np.less)[0]
 
     P = [X[X < score_samples_space[mi][0]]]
     for i in range(len(mi) - 1):
-        P.append(
-            X[(X >= score_samples_space[mi][i]) * (X <= score_samples_space[mi][i + 1])]
-        )
+        new_interval = X[
+            (X >= score_samples_space[mi][i]) * (X <= score_samples_space[mi][i + 1])
+        ]
+        if len(new_interval) >= 2:
+            P.append(new_interval)
     if len(mi) >= 1:
         P.append(X[X >= score_samples_space[mi][-1]])
 

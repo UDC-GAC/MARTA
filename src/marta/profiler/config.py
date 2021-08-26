@@ -123,8 +123,8 @@ def parse_options(config: dict) -> dict:
         pwarning(
             "Consider using other CPU core than 0. Set in 'execution' under 'cpu_affinity'"
         )
+    cfg["turbo"] = config_exec.get("intel_turbo", "")
     cfg["max_freq"] = config_exec.get("max_freq", "")
-    cfg["turbo"] = config_exec.get("turbo", "")
     cfg["papi_counters_path"] = config_exec.get("papi_counters_path")
     cfg["papi_counters"] = config_exec.get("papi_counters")
     if cfg["papi_counters"] != None:

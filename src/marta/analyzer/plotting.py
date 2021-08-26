@@ -50,7 +50,7 @@ def plot_data(data: pd.DataFrame, cfg: PlotCfg, output_file: str) -> None:
             data=data,
             x=cfg.x,
             y=cfg.y,
-            hue=cfg.hue,
+            hue=data[cfg.hue].values,
             size=cfg.size,
             col=cfg.col,
             row=cfg.row,

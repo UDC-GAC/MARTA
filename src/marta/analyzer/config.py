@@ -41,9 +41,11 @@ class RFConfig:
 
 class DTConfig:
     def __init__(self, config: dict) -> None:
+        self.random_state = config.get("random_state")
         self.max_depth = config.get("max_depth", 10)
         self.max_leaves = config.get("max_leaves", 50)
         self.criterion = config.get("criterion", "gini")
+        self.splitter = config.get("splitter", "best")
         self.min_score = config.get("min_score", 0.5)
         self.pruning_mccp_alpha = config.get("pruning_mccp_alpha", 0.0)
         self.text_tree = config.get("text_tree", False)
@@ -139,6 +141,8 @@ def parse_options(config: dict) -> dict:
         cat_cfg = prepdata_cfg["categories"]
         analyzer_cfg["ncats"] = int(cat_cfg.get("num", 2))
         analyzer_cfg["grid_search"] = cat_cfg.get("grid_search", False)
+        analyzer_cfg["bandwidth"] = cat_cfg.get("bandwidth", 1.0)
+        analyzer_cfg["kernel"] = cat_cfg.get("kernel", "linear")
         if analyzer_cfg["ncats"] < 2:
             perror(
                 "categories[num]",
@@ -154,7 +158,7 @@ def parse_options(config: dict) -> dict:
         analyzer_cfg["plot_cfg"] = PlotCfg(general_cfg["plot"])
         analyzer_cfg["plot_enabled"] = general_cfg["plot"].get("enabled", True)
     except KeyError:
-        analyzer_cfg["plot_cfg"] = False
+        analyzer_cfg["plot_enabled"] = False
 
     try:
         # classification keys
