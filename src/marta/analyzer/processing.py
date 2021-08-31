@@ -24,13 +24,14 @@ from KDEpy import FFTKDE
 from sklearn.neighbors import KernelDensity
 from sklearn.model_selection import GridSearchCV
 from scipy.signal import argrelextrema
+from sklearn.preprocessing import LabelEncoder
 
 
 # Local imports
 from marta.utils.marta_utilities import perror, pinfo
 
 
-def column_strings_to_int(df: pd.DataFrame, columns: list) -> pd.DataFrame:
+def column_strings_to_int(df: pd.DataFrame, columns: list) -> Tuple[pd.DataFrame, dict]:
     """Given a DataFrame, it converts columns with object type to int
 
     :param df: Original data.
@@ -38,17 +39,18 @@ def column_strings_to_int(df: pd.DataFrame, columns: list) -> pd.DataFrame:
     :return: Same as original but with converted types.
     :rtype: pd.DataFrame
     """
+    encoders = {}
     for col in columns:
         if df[col].values.dtype == np.dtype("object"):
-            l = np.unique(df[col])
-            d = dict(zip(l, range(len(l))))
-            df.loc[:, col] = df[col].apply(lambda x: d[x])
+            labelencoder = LabelEncoder()
+            df[col] = labelencoder.fit_transform(df[col])
             pinfo(
                 f"Converting column '{col}' from object to int values. New assigned values are:"
             )
-            for key in d:
-                pinfo(f"{key} => {d[key]}")
-    return df
+            for i in range(len(labelencoder.classes_)):
+                pinfo(f"{labelencoder.inverse_transform([i])[0]} => {i}")
+            encoders[col] = labelencoder
+    return df, encoders
 
 
 def grid_search(X: pd.Series) -> Tuple[float, str]:
@@ -129,9 +131,7 @@ def categorize_target_dimension(
 
     labels = []
     for cat in P:
-        new_label = "{0}-{1}-{2}".format(
-            target_value, "{0:.3f}".format(min(cat)), "{0:.3f}".format(max(cat))
-        )
+        new_label = f"{target_value}-{min(cat):06.3f}-{max(cat):06.3f}"
         labels.append(new_label)
         pinfo(f"    New category created = {new_label}")
 
@@ -144,7 +144,7 @@ def categorize_target_dimension(
             "Please revise the settings in the configuration file."
         )
 
-    setattr(df, target_value, pd.cut(tmp_target_value, len(P), labels=labels))
+    df[f"{target_value}_cat"] = pd.cut(tmp_target_value, len(P), labels=labels)
     return df, labels
 
 

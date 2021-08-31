@@ -20,11 +20,9 @@ import matplotlib
 import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split
-
-
-# from sklearn import metrics
 from sklearn.inspection import permutation_importance
+from sklearn.model_selection import train_test_split
+import numpy as np
 
 # Local imports
 from marta.analyzer.config import RFConfig, random_forest_synonyms
@@ -101,14 +99,14 @@ class RandomForest(FeatureImportance):
             f"Saving plot for feature importance based on mean decrease in impurity in '{output_path}/mean_decrease.png'"
         )
         fig = self.get_feat_importance_mean_decrease()
-        file_mean_decrease = f"{output_path}/mean_decrease"
-        fig.savefig(file_mean_decrease)
+        file_mean_decrease = f"{output_path}/mean_decrease.pdf"
+        fig.savefig(file_mean_decrease, format="pdf")
         pinfo(
             f"Saving plot for feature importance based on feature permutation in '{output_path}/permutation.png'"
         )
         fig = self.get_feat_importance_feat_permutation()
-        file_perm = f"{output_path}/permutation"
-        fig.savefig(file_perm)
+        file_perm = f"{output_path}/permutation.pdf"
+        fig.savefig(file_perm, format="pdf")
 
     def __init__(
         self,
@@ -130,7 +128,7 @@ class RandomForest(FeatureImportance):
         self.feature_names = feature_names
         self.data = data
         self.target_data = target
-        self.labels = target.values.unique().tolist()
+        self.labels = np.unique(target.values).tolist()
         self.var_train, self.var_test, self.res_train, self.res_test = train_test_split(
             self.data.values, self.target_data.values, test_size=0.2
         )

@@ -354,6 +354,8 @@ class Profiler:
                 else:
                     pwarning(f"{msg} Skipping.")
 
+        os.system("rm /tmp/*.opt")
+
         pinfo(f"Compiling with {kernel.processes} processes")
         for compiler in kernel.compiler_flags:
             for compiler_flags in list(kernel.compiler_flags[compiler]):

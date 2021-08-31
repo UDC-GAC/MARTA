@@ -38,7 +38,7 @@ ASM_SYNTAX?=intel
 
 # Adding all flags
 FLAGS:= $(COMMON_FLAGS) $(KERNEL_CONFIG)
-FLAGS_MAIN:= $(FLAGS)
+FLAGS_MAIN:= $(FLAGS) -ffixed-ecx
 FLAGS_KERN:= $(FLAGS)
 FLAGS_ASM:= $(FLAGS)
 

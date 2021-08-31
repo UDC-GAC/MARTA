@@ -42,13 +42,13 @@ class GCCAnalysis(CompilerAnalysis):
         for line in lines:
             if "polybench" in line or "marta" in line:
                 continue
+            file = line.split(" ")[0]
             if "optimized: loop vectorized" in line:
-                file = line.split(" ")[0]
                 if file in vect_already_visited:
                     continue
                 d["loops_vectorized"] += 1
+                vect_already_visited.append(file)
             if "optimized: loops interchanged in loop nest" in line:
-                file = line.split(" ")[0]
                 if file in vect_already_visited:
                     continue
                 d["loop_interchange"] += 1
@@ -60,14 +60,19 @@ class ICCAnalysis(CompilerAnalysis):
     def analysis(lines: list) -> dict:
         d = dict(zip(CompilerAnalysis.columns, [0] * len(CompilerAnalysis.columns)))
         active_loop = False
+        current_loop = ""
+        already_visited = []
         for line in lines:
             if "polybench" in line or "marta" in line:
                 continue
-            if "LOOP BEGIN" in line:
+            pos = line.split("at ")[-1].strip().split(" ")[0].strip()
+            if "LOOP BEGIN" in line and not (pos in already_visited):
                 active_loop = True
+                current_loop = pos
                 continue
-            if "LOOP END" in line:
+            if "LOOP END" in line and active_loop:
                 active_loop = False
+                already_visited.append(current_loop)
                 continue
             if active_loop and "LOOP WAS VECTORIZED" in line:
                 d["loops_vectorized"] += 1
@@ -79,7 +84,7 @@ class ICCAnalysis(CompilerAnalysis):
 
 def vector_report_analysis(file: str, compiler: str) -> dict:
     with open(file) as f:
-        if compiler == "gcc":
+        if compiler == "gcc" or compiler.startswith("gcc"):
             return GCCAnalysis.analysis(f.readlines())
         if compiler == "icc":
             return ICCAnalysis.analysis(f.readlines())

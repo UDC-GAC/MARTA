@@ -104,13 +104,13 @@ def node_to_str_custom(self, tree, node_id, criterion):
     # Write node majority class
     if self.class_names is not None and tree.n_classes[0] != 1 and tree.n_outputs == 1:
         # Only done for single-output classification trees
-        if labels:
-            node_string += "class = "
+        # if labels:
+        #    node_string += "category = "
         if self.class_names is not True:
             class_name = self.class_names[np.argmax(value)]
         else:
             class_name = "y%s%s%s" % (characters[1], np.argmax(value), characters[2],)
-        node_string += class_name
+        node_string += str(class_name)
 
     # Clean up any trailing newlines
     if node_string.endswith(characters[4]):

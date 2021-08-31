@@ -114,22 +114,34 @@ class Analyzer:
             df = df[cond].copy()
         if df.count()[0] == 0:
             perror("dataset empty, check constraints in data please!")
+
+        if target_value.lower() == "tsc":
+            if "overhead_loop" in df.columns:
+                df[target_value] -= df["overhead_loop"]
+
         df = normalize_data(df, self.norm, target_value)
-        df, labels = categorize_target_dimension(
-            df,
-            target_value,
-            self.ncats,
-            self.catscale,
-            self.mode,
-            self.grid_search,
-            self.custom_params,
-            self.bandwidth,
-            self.bandwidth_type,
-            self.kernel,
-        )
+        new_cat = []
+        if self.categories_enabled:
+            df, labels = categorize_target_dimension(
+                df,
+                target_value,
+                self.ncats,
+                self.catscale,
+                self.mode,
+                self.grid_search,
+                self.custom_params,
+                self.bandwidth,
+                self.bandwidth_type,
+                self.kernel,
+            )
+            new_cat = [f"{target_value}_cat"]
+        else:
+            import numpy as np
+
+            labels = np.unique(df[target_value].values)
         self.labels = labels
-        f_cols = self.filter_cols + [target_value]
-        df = column_strings_to_int(df, self.filter_cols)
+        f_cols = self.filter_cols + [target_value] + new_cat
+        df, self.encoders = column_strings_to_int(df, self.filter_cols)
         df = df[list(f_cols)]
         df.to_csv(output_file, index=False)
         pinfo(f"Saving processed data in '{output_file}'")
@@ -149,8 +161,10 @@ class Analyzer:
             clf = ClassificationFactory.get_class(
                 self.clf_type,
                 self.clf_cfg,
-                self.data_processed[self.filter_cols],
-                getattr(self.data_processed, self.target),
+                self.data_processed,
+                self.filter_cols,
+                self.target,
+                self.encoders,
             )
             clf.labels = self.labels
             clf.perform_analysis(output_path=self.output_path)
@@ -158,12 +172,12 @@ class Analyzer:
             pwarning("Classification analysis disabled")
 
         # Feature importance analysis
-        if self.feat_enabled:
+        if self.feat_enabled and not clf.continuous:
             feat = FeatureImportanceFactory.get_class(
                 self.feat_type,
                 self.feat_cfg,
                 self.data_processed[self.filter_cols],
-                getattr(self.data_processed, self.target),
+                self.data_processed[self.target],
                 self.filter_cols,
             )
             feat.perform_analysis(output_path=self.output_path)

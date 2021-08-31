@@ -15,3 +15,4 @@ matplotlib
 art
 seaborn
 KDEpy
+dtreeviz

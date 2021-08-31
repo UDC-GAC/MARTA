@@ -22,6 +22,8 @@ import datetime as dt
 import os
 import time
 import warnings
+from tqdm.auto import trange
+
 
 warnings.filterwarnings("error")
 
@@ -169,7 +171,7 @@ class Timing:
             os.remove(tmp_file)
 
         with open(tmp_file, "a") as f:
-            for _ in range(nexec):
+            for _ in trange(nexec, leave=False, desc="Executions"):
                 p = subprocess.Popen(bin_file, stdout=f)
                 p.wait()
                 f.flush()

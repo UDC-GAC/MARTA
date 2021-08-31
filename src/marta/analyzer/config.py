@@ -47,6 +47,7 @@ class DTConfig:
         self.criterion = config.get("criterion", "gini")
         self.splitter = config.get("splitter", "best")
         self.min_score = config.get("min_score", 0.5)
+        self.precision = config.get("precision", 3)
         self.pruning_mccp_alpha = config.get("pruning_mccp_alpha", 0.0)
         self.text_tree = config.get("text_tree", False)
         self.graph_tree = config.get("graph_tree", False)
@@ -54,6 +55,7 @@ class DTConfig:
         # False for vertical, True for horizontal
         self.orientation = config.get("orientation", "vertical")
         self.rotate = self.orientation == "horizontal"
+        self.labels = config.get("labels", [])
         for key in config:
             setattr(self, key, config[key])
 
@@ -150,7 +152,9 @@ def parse_options(config: dict) -> dict:
                 "value must be greater than one",
             )
         analyzer_cfg["catscale"] = eval(cat_cfg.get("scaling_factor", "1"))
+        analyzer_cfg["categories_enabled"] = cat_cfg.get("enabled", True)
     except KeyError:
+        analyzer_cfg["categories_enabled"] = False
         analyzer_cfg["ncats"] = None
 
     try:

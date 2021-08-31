@@ -46,11 +46,15 @@ def plot_data(data: pd.DataFrame, cfg: PlotCfg, output_file: str) -> None:
     if cfg.x == "index":
         cfg.x = data.index
     if cfg.type == "relplot":
+        try:
+            hue = data[cfg.hue].values
+        except Exception:
+            hue = None
         fig = plot_type(
             data=data,
             x=cfg.x,
             y=cfg.y,
-            hue=data[cfg.hue].values,
+            hue=hue,
             size=cfg.size,
             col=cfg.col,
             row=cfg.row,
