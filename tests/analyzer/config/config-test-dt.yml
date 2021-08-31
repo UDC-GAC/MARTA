@@ -1,0 +1,26 @@
+- kernel:
+      input: tests/analyzer/inputs/test.csv
+      output: tests/analyzer/outputs/test_output
+      force_replacement: True
+      clean: False
+      debug: False
+      prepare_data:
+          cols: I0 STEP_I J0 STEP_J N M INSTRUCTIONS_RETIRED
+          target: FLOPSs
+          norm:
+              enabled: True
+              type: None
+          categories:
+              num: 3
+              type: "linear"
+              scale_factor: 1e9
+      classification:
+          decision_tree_settings:
+              max_depth: 10
+              max_leaves: 10
+              criterion: "gini"
+              min_score: 0.8
+              pruning_mccp_alpha: 0.0
+              text_tree: True
+              graph_tree: True
+              orientation: "horizontal"

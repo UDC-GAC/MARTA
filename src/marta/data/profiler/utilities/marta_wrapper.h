@@ -120,24 +120,20 @@ void intel_clflush(volatile void *p, unsigned int allocation_size) {
   __asm volatile("rdtsc" : "=a"(__cycles_lo), "=d"(__cycles_hi));              \
   t = (marta_cycles_t)__cycles_hi << 32 | __cycles_lo;
 
-#define PRE_LOOP                                                               \
-  __asm volatile("mov $" TO_STRING(TSTEPS) ", %%ecx" : : : "ecx");
+#define MARTA_LOOP_ASM 0x1
+#define MARTA_LOOP_C 0x2
 
-#define BEGIN_LOOP                                                             \
-  __asm volatile("begin_loop:");                                               \
-  __asm volatile("# LLVM-MCA-BEGIN kernel");                                   \
-  __asm volatile("" :::);
+#ifdef MARTA_LOOP_TYPE_ASM
+#define MARTA_LOOP_TYPE MARTA_LOOP_ASM
+#else
+#define MARTA_LOOP_TYPE MARTA_LOOP_C
+#endif
 
+#if MARTA_LOOP_TYPE == LOOP_ASM
 #define INIT_BEGIN_LOOP(TSTEPS)                                                \
-  PRE_LOOP;                                                                    \
-  BEGIN_LOOP;
-
-#define INIT_BEGIN_CYCLES_LOOP(TSTEPS)                                         \
-  polybench_prepare_instruments();                                             \
-  marta_cycles_t t0;                                                           \
-  RDTSC(t0);                                                                   \
-  PRE_LOOP;                                                                    \
-  BEGIN_LOOP;
+  __asm volatile("mov $" TO_STRING(TSTEPS) ", %%ecx" : : : "ecx");             \
+  __asm volatile("begin_loop:\n");                                             \
+  __asm volatile("# LLVM-MCA-BEGIN kernel");
 
 // According to Intel's optimization guide it is better to avoid dec in benefit
 // of sub/add/cmp when using loops
@@ -145,9 +141,8 @@ void intel_clflush(volatile void *p, unsigned int allocation_size) {
 // https://software.intel.com/content/dam/develop/external/us/en/documents-tps/64-ia-32-architectures-optimization-manual.pdf
 #define END_LOOP                                                               \
   __asm volatile("# LLVM-MCA-END kernel");                                     \
-  __asm volatile("" :::);                                                      \
   __asm volatile("sub $1, %%ecx\n\t"                                           \
-                 "jne begin_loop"                                              \
+                 "jne begin_loop\n"                                            \
                  :                                                             \
                  :                                                             \
                  :);
@@ -157,12 +152,33 @@ void intel_clflush(volatile void *p, unsigned int allocation_size) {
 #define END_LOOP                                                               \
   __asm volatile("# LLVM-MCA-END kernel");                                     \
   __asm volatile("" :::);                                                      \
-  __asm volatile("dec %%eax\n\t"                                               \
+  __asm volatile("dec %%ecx\n\t"                                               \
                  "jne begin_loop"                                              \
                  :                                                             \
                  :                                                             \
                  :);
 #endif
+#elif MARTA_LOOP_TYPE == MARTA_LOOP_C
+#define INIT_BEGIN_LOOP(TSTEPS)                                                \
+  _Pragma("nounroll_and_jam");                                                 \
+  for (int __marta_tsteps = 0; __marta_tsteps < TSTEPS; ++__marta_tsteps) {    \
+    __asm volatile("# LLVM-MCA-BEGIN kernel");
+
+// According to Intel's optimization guide it is better to avoid dec in benefit
+// of sub/add/cmp when using loops
+// Intel® 64 and IA-32 Architectures Optimization Reference Manual
+// https://software.intel.com/content/dam/develop/external/us/en/documents-tps/64-ia-32-architectures-optimization-manual.pdf
+#define END_LOOP                                                               \
+  __asm volatile("# LLVM-MCA-END kernel");                                     \
+  }
+
+#endif
+
+#define INIT_BEGIN_CYCLES_LOOP(TSTEPS)                                         \
+  polybench_prepare_instruments();                                             \
+  marta_cycles_t t0;                                                           \
+  RDTSC(t0);                                                                   \
+  INIT_BEGIN_LOOP(TSTEPS);
 
 /**
  * CLOBBER_MEMORY - Acts as a read/write memory barrier.
@@ -185,25 +201,18 @@ void intel_clflush(volatile void *p, unsigned int allocation_size) {
  *  "m": memory allowed as input
  */
 
-#define DO_NOT_TOUCH_XMM(var)                                                  \
+/* This should only work for V4FSMODE (typically xmm registers, but it seems to
+   materizalize properly ymm and zmm registers too). */
+#define DO_NOT_TOUCH_V4FSMODE(var)                                             \
   __asm volatile(""                                                            \
                  : "+x"(var)                                                   \
                  : /* no inputs */                                             \
                  : /* no clobbering */);
-#define DO_NOT_TOUCH_YMM(var)                                                  \
-  __asm volatile(""                                                            \
-                 : "+t"(var)                                                   \
-                 : /* no inputs */                                             \
-                 : /* no clobbering */);
-#define DO_NOT_TOUCH_ZMM(var)                                                  \
-  __asm volatile(""                                                            \
-                 : "+g"(var)                                                   \
-                 : /* no inputs */                                             \
-                 : /* no clobbering */);
+
 #define DO_NOT_TOUCH_IO(var) __asm volatile("" : "+"(var)::);
 #define DO_NOT_TOUCH_WRITE(var) __asm volatile("" : : "rm"(var) : "memory")
 #define DO_NOT_TOUCH_READ(var) __asm volatile("" : "+r,m"(var))
-#define DO_NOT_TOUCH(var) DO_NOT_TOUCH_XMM(var)
+#define DO_NOT_TOUCH(var) DO_NOT_TOUCH_V4FSMODE(var)
 
 #define PROFILE_FUNCTION_NO_LOOP(X)                                            \
   {                                                                            \
@@ -247,6 +256,11 @@ void intel_clflush(volatile void *p, unsigned int allocation_size) {
 #undef PROFILE_FUNCTION_LOOP
 #define PROFILE_FUNCTION_LOOP(X, TSTEPS) PROFILE_FUNCTION_CYCLES_LOOP(X, TSTEPS)
 #define PROFILE_FUNCTION_NO_LOOP(X) PROFILE_FUNCTION_CYCLES_NO_LOOP(X)
+#endif
+
+#if TSTEPS < 2
+#undef PROFILE_FUNCTION_LOOP
+#define PROFILE_FUNCTION_LOOP(X, TSTEPS) PROFILE_FUNCTION_NO_LOOP(X)
 #endif
 
 #define PROFILE_FUNCTION_SINGLE_VAL_DCE(STEPS, X, Y)                           \

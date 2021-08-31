@@ -14,20 +14,103 @@
 
 # -*- coding: utf-8 -*-
 
-
+# Standard library
 import subprocess
 import shutil
+from typing import Union, Any, Tuple
 
-from marta.utils.marta_utilities import pinfo, get_name_from_dir
+# Local imports
+from marta.utils.marta_utilities import pinfo, get_name_from_dir, perror
 
 
 class CompilationError(Exception):
     pass
 
 
+class CompilerAnalysis:
+    columns = ["loops_vectorized", "loop_interchange"]
+
+    def analysis(lines: list) -> dict:
+        pass
+
+
+class GCCAnalysis(CompilerAnalysis):
+    def analysis(lines: list) -> dict:
+        d = dict(zip(CompilerAnalysis.columns, [0] * len(CompilerAnalysis.columns)))
+
+        vect_already_visited = []
+        loop_interchange_visited = []
+        for line in lines:
+            if "polybench" in line or "marta" in line:
+                continue
+            file = line.split(" ")[0]
+            if "optimized: loop vectorized" in line:
+                if file in vect_already_visited:
+                    continue
+                d["loops_vectorized"] += 1
+                vect_already_visited.append(file)
+            if "optimized: loops interchanged in loop nest" in line:
+                if file in loop_interchange_visited:
+                    continue
+                d["loop_interchange"] += 1
+                loop_interchange_visited.append(file)
+
+        return d
+
+
+class ICCAnalysis(CompilerAnalysis):
+    def analysis(lines: list) -> dict:
+        d = dict(zip(CompilerAnalysis.columns, [0] * len(CompilerAnalysis.columns)))
+        active_loop = False
+        current_loop = ""
+        already_visited = []
+        for line in lines:
+            if "polybench" in line or "marta" in line:
+                continue
+            pos = line.split("at ")[-1].strip().split(" ")[0].strip()
+            if "LOOP BEGIN" in line and not (pos in already_visited):
+                active_loop = True
+                current_loop = pos
+                continue
+            if "LOOP END" in line and active_loop:
+                active_loop = False
+                already_visited.append(current_loop)
+                continue
+            if active_loop and "LOOP WAS VECTORIZED" in line:
+                d["loops_vectorized"] += 1
+            if active_loop and "Loopnest Interchanged" in line:
+                d["loop_interchange"] += 1
+
+        return d
+
+
+def vector_report_analysis(file: str, compiler: str) -> dict:
+    with open(file) as f:
+        if compiler == "gcc" or compiler.startswith("gcc"):
+            return GCCAnalysis.analysis(f.readlines())
+        if compiler == "icc":
+            return ICCAnalysis.analysis(f.readlines())
+    # clang not supported yet...
+    return {}
+
+
 def compile_file(
-    src_file, output="", compiler="gcc", flags=["-O3"], temp=False
+    src_file: str, output="", compiler="gcc", flags=["-O3"], temp=False
 ) -> None:
+    """Just compile a C file.
+
+    :param src_file: Source file
+    :type src_file: str
+    :param output: Output file, defaults to ""
+    :type output: str, optional
+    :param compiler: Compiler, defaults to "gcc"
+    :type compiler: str, optional
+    :param flags: List of flags, defaults to ["-O3"]
+    :type flags: list, optional
+    :param temp: Temporal file, defaults to False
+    :type temp: bool, optional
+    :raises CompilationError: If compilation does not succeeds
+    """
     if output == "":
         output = f"/tmp/a.out"
     input_file = f"{src_file}"
@@ -45,8 +128,10 @@ def compile_file(
 
 
 def compile_makefile(
+    target: str,
+    main_src: str,
     kpath: str,
-    comp: str,
+    compiler: str,
     compiler_flags: str,
     common_flags: str,
     kconfig: str,
@@ -88,7 +173,10 @@ def compile_makefile(
         "-B",
         "-C",
         kpath,
-        f"COMP={comp}",
+        f"TARGET={target}",
+        f"BINARY_NAME={target}",
+        f"MAIN_FILE={main_src}",
+        f"COMP={compiler}",
         f"COMP_FLAGS={compiler_flags_suffix}",
         f"KERNEL_CONFIG={kconfig}",
         f"COMMON_FLAGS={common_flags}",
@@ -96,21 +184,12 @@ def compile_makefile(
         *other_flags,
     ]
 
-    if stdout != subprocess.STDOUT:
-        stdout = open(stdout, "a")
-
-    if stderr != subprocess.STDOUT:
-        stderr = open(stderr, "a")
-
-    cp = subprocess.run(cmd, stdout=stdout, stderr=stderr)
-
-    if stdout != subprocess.STDOUT:
-        stdout.flush()
-        stdout.close()
-
-    if stderr != subprocess.STDOUT:
-        stderr.flush()
-        stderr.close()
+    if type(stdout) != type(subprocess.STDOUT):
+        with open(stdout, "a") as fstdout:
+            with open(stderr, "a") as fstderr:
+                cp = subprocess.run(cmd, stdout=fstdout, stderr=fstderr)
+    else:
+        cp = subprocess.run(cmd)
 
     if cp.returncode != 0:
         # returns a 16-bit value:
@@ -122,4 +201,84 @@ def compile_makefile(
             f"'make' exited with code '{str(exit_code)}' (signal '{exit_signal}') while compiling in {kpath}."
         )
     return cp.returncode == 0
+
+
+def get_asm_name(params: Union[dict, Any]) -> str:
+    if not type(params) is dict:
+        return ""
+    # Parsing parameters
+    for pname in params.keys():
+        try:
+            param_val_parsed = int(params[pname])
+        except ValueError:
+            # NOTE: for includes or other paths, \"string\" notation is
+            # needed, but this is not MARTA's responsibility.
+            param_val_parsed = '"' + params[pname] + '"'
+        # FIXME:
+        if pname == "ASM_NAME":
+            return f" {pname}={param_val_parsed}"
+    return ""
+
+
+def get_dict_from_d_flags(params: str) -> dict:
+    d = {}
+    for tok in params.strip().split(" "):
+        tmp = tok.split("=")
+        key = tmp[0].replace("-D", "")
+        if len(tmp) == 1:
+            value = 1
+        else:
+            value = tmp[1]
+        d.update({key: value})
+    return d
+
+
+def get_suffix_and_flags(kconfig: str, params: Union[dict, str]) -> Tuple[str, str]:
+    # FIXME: to redo at some point...
+    custom_flags = ""
+    suffix_file = ""
+    custom_bin_name = None
+    # Parsing parameters
+    if type(params) is dict:
+        for pname in params.keys():
+            try:
+                param_val_parsed = int(params[pname])
+            except ValueError:
+                # NOTE: for includes or other paths, \"string\" notation is
+                # needed, but this is not MARTA's responsibility.
+                param_val_parsed = '"' + params[pname] + '"'
+            except TypeError:
+                perror(f"Something went wrong when parsing files: {params[pname]}")
+            if pname != "ASM_NAME":
+                custom_flags += f" -D{pname}={param_val_parsed}"
+            if pname == "BIN_NAME":
+                custom_bin_name = params[pname]
+            key = pname.replace("/", "_")
+            val = (
+                params[pname].replace("/", "_")
+                if type(params[pname]) == str
+                else params[pname]
+            )
+            suffix_file += f"_{key}{val}"
+        suffix_file = suffix_file.replace("/", "").replace(".c", "")
+    else:
+        custom_flags = params
+        for p in params.strip().replace("-", "").replace("D", "").split(" "):
+            suffix_file += f"_{p}"
+
+    # Parsing kconfig
+    for kparam in kconfig.strip().replace("-", "").split(" "):
+        if "BIN_NAME" in kparam:
+            custom_bin_name = kparam.split("=")[1]
+            continue
+        suffix_file += f"_{kparam}"
+
+    # Avoid very long names
+    if custom_bin_name != None:
+        suffix_file = custom_bin_name
+    if len(suffix_file) > 256:
+        perror(
+            "Error: too long binary name. Try '-DBIN_NAME=<suffix>' for each compilation case instead"
+        )
+    return suffix_file, custom_flags
 

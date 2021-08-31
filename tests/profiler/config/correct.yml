@@ -1,6 +1,6 @@
 - kernel:
       name: "correct"
-      path: "path/kernel"
+      path: "tests/"
       description: "Setup for experiment gather"
       preamble:
           command: "echo 'hello_world'"

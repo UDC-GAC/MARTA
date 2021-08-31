@@ -8,6 +8,6 @@
 #define X_VALUE 42
 #endif
 
-void kern(float *A, float *B, float *C);
+void kernel(float *restrict A, float *restrict B, float *restrict C);
 
 #endif /* !KERN_H */

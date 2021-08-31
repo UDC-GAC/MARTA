@@ -1,1 +1,2 @@
 include src/marta/__version__
+recursive-include src/marta/data/profiler/ *

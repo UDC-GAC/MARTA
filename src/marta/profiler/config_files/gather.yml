@@ -2,11 +2,11 @@
       name: "gather"
       path: "src/marta/profiler/kernels/gather"
       description: "Setup for experiment gather"
-      debug: False
+      debug: True
       show_progress_bars: True
-      preamble:
-          command: "rm -Rf bin asm_codes && sudo cpupower frequency-set -u
-          2.1GHz  > /dev/null && sudo cpupower frequency-set -d 2.1GHz > /dev/null"
+      #preamble:
+      #    command: "rm -Rf bin asm_codes && sudo cpupower frequency-set -u
+      #    2.1GHz  > /dev/null && sudo cpupower frequency-set -d 2.1GHz > /dev/null"
       finalize:
           clean_tmp_files: False
           clean_asm_files: False
@@ -19,47 +19,20 @@
           compiler_flags: 
             { 
                 "gcc": [" -march=native -mtune=native -mavx2 -O3 "],
+                #"icc": [" -march=native -mtune=native -mavx2 -O3 "],
             }
-          inlined_kernel: True
+          main_src: "main.c"
+          kernel_inlined: True
           asm_analysis:
                 syntax: "intel"
                 count_ins: True
                 static_analysis: ""
-          debug: False
+          debug: True
       configuration:
           kernel_cfg: [
           " ",
           ]
           d_features:
-                # IDX0:
-                #     evaluate: True
-                #     type: "static"
-                #     val_type: "numeric"
-                #     value: "range(8)"
-                #     #value: "[0,1,554]"
-                # IDX1:
-                #     evaluate: True
-                #     type: "static"
-                #     val_type: "numeric"
-                #     value: "range(8)"
-                #     #value: "[1,16,234]"
-                # IDX2:
-                #     evaluate: True
-                #     type: "static"
-                #     val_type: "numeric"
-                #     value: "range(8)"
-                #     #value: "[2,32,5]"
-                # IDX3:
-                #     evaluate: True
-                #     type: "static"
-                #     val_type: "numeric"
-                #     value: "range(8)"
-                #     #value: "[3,48,19]"
-                # IDX:
-                #     evaluate: True
-                #     type: "dynamic"
-                #     val_type: "numeric"
-                #     value: "it.product(list(range(8)),repeat=4)"
                 IDX0:
                     evaluate: True
                     type: "static"
@@ -112,12 +85,12 @@
       execution:
           enabled: True
           papi_counters: [
-            "INSTRUCTIONS_RETIRED"
+            "INSTRUCTIONS_RETIRED",
             ]
           time: True
           tsc: True
           threshold_outliers: 3
-          mean_and_discard_outliers: False
+          mean_and_discard_outliers: True
           init_data: True
           intel_cache_flush: False
           check_dump: False
@@ -126,7 +99,7 @@
           cpu_affinity: 11
           prefix: ""
       output:
-          name: "default"
+          name: "gather"
           columns: "all"
           report: True
           verbose: True

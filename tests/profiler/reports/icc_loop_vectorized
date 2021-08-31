@@ -1,0 +1,27 @@
+Intel(R) Advisor can now assist with vectorization and show optimization
+  report messages with your source code.
+See "https://software.intel.com/en-us/intel-advisor-xe" for details.
+
+
+Begin optimization report for: main(int, char **)
+
+    Report from: Vector optimizations [vec]
+
+
+LOOP BEGIN at ../utilities/marta_wrapper.h(295,3) inlined into ___tmp_gather__IDX00_IDX116_IDX232_IDX348_IDX464_IDX580_IDX696_IDX7112_icc__march=native_mtune=native_mavx2_O3_.c(52,1)
+<Peeled loop for vectorization>
+LOOP END
+
+LOOP BEGIN at ___tmp_gather__IDX00_IDX116_IDX232_IDX348_IDX464_IDX580_IDX696_IDX7112_icc__march=native_mtune=native_mavx2_O3_.c(52,1)
+   remark #15300: LOOP WAS VECTORIZED
+LOOP END
+
+LOOP BEGIN at ../utilities/marta_wrapper.h(295,3) inlined into ___tmp_gather__IDX00_IDX116_IDX232_IDX348_IDX464_IDX580_IDX696_IDX7112_icc__march=native_mtune=native_mavx2_O3_.c(52,1)
+<Remainder loop for vectorization>
+   remark #15301: REMAINDER LOOP WAS VECTORIZED
+LOOP END
+
+LOOP BEGIN at ../utilities/marta_wrapper.h(295,3) inlined into ___tmp_gather__IDX00_IDX116_IDX232_IDX348_IDX464_IDX580_IDX696_IDX7112_icc__march=native_mtune=native_mavx2_O3_.c(52,1)
+<Remainder loop for vectorization>
+LOOP END
+===========================================================================

@@ -12,19 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# -*- coding: utf-8 -*-
+
 # Standard libraries
 from __future__ import annotations
 import subprocess
-from typing import Optional
+from typing import Optional, Tuple
 import datetime as dt
 import os
 import time
+import warnings
+from tqdm.auto import trange
+
+
+warnings.filterwarnings("error")
 
 # Third-party libraries
 import numpy as np
 
 # Local imports
-from marta.utils.marta_utilities import pinfo, pwarning, create_dir_or_pass
+from marta.utils.marta_utilities import pinfo, pwarning, perror, create_dir_or_pass
 
 
 class TimingError(Exception):
@@ -88,7 +95,9 @@ class Timing:
         create_dir_or_pass("dumps")
         # Save execution values in an array
         suffix = f"dump"
-        bin_file = f"{exec_opts} ./bin/{code}_{compiler}_{suffix}.o 1"
+        bin_file = (
+            f"{exec_opts} ./marta_profiler_data/bin/{code}_{compiler}_{suffix}.o 1"
+        )
         dump_file = f"/tmp/dumps____tmp_{code}_{compiler}_{suffix}"
         with open(dump_file, "w") as f:
             subprocess.Popen([f"{bin_file}"], stdout=f)
@@ -105,8 +114,9 @@ class Timing:
         threshold_outliers=3,
         mean_and_discard_outliers=True,
         bin_file="",
+        bin_path="",
         tmp_file="",
-    ) -> tuple[Optional[dict], Optional[int]]:
+    ) -> Tuple[Optional[dict], Optional[int]]:
         """Execute and time given benchmark nexec times
 
         :param code: Name of the code
@@ -132,10 +142,8 @@ class Timing:
         :param tmp_file: Temporal file used, defaults to ""
         :type tmp_file: str, optional
         :return:  Set of values collected and the number of discarded values
-        :rtype: tuple[Union[None, dict], int]
+        :rtype: Tuple[Union[None, dict], int]
         """
-
-        create_dir_or_pass("tmp")
 
         if nexec < 5:
             pinfo("Minimum number of executions is 5")
@@ -143,8 +151,6 @@ class Timing:
 
         compiler_flags_suffix = compiler_flags.replace(" ", "_").replace("-", "")
 
-        # Save execution values in an array
-        suffix = f"{benchmark_type}" if type(benchmark_type) == str else "papi"
         if (
             bin_file != ""
             and not bin_file.startswith("./")
@@ -153,19 +159,19 @@ class Timing:
             bin_file = [f"./{bin_file}"]
         if bin_file == "":
             bin_file = [
-                f"./bin/{code}_{compiler}_{compiler_flags_suffix}_{suffix}.o",
+                f"./{bin_path}/{code}_{compiler}_{compiler_flags_suffix}_{benchmark_type}.o",
                 f"{nsteps}",
             ]
             if exec_opts != "":
                 bin_file = [exec_opts] + bin_file
         if tmp_file == "":
-            tmp_file = f"/tmp/____tmp_{code}_{compiler}_{suffix}"
+            tmp_file = f"/tmp/____tmp_{code}_{compiler}_{compiler_flags_suffix}_{benchmark_type}"
 
         if os.path.exists(tmp_file):
             os.remove(tmp_file)
 
         with open(tmp_file, "a") as f:
-            for _ in range(nexec):
+            for _ in trange(nexec, leave=False, desc="Executions"):
                 p = subprocess.Popen(bin_file, stdout=f)
                 p.wait()
                 f.flush()
@@ -178,6 +184,10 @@ class Timing:
                 line = " ".join([l for l in f if "FAILED" in l])
             Timing.show_error(line, benchmark_type)
             return None, None
+        except Exception as E:
+            perror(f"Something went wrong when executing: {E}")
+        except RuntimeWarning as R:
+            perror(f"Treating warnings as error: {R}")
 
         results /= nsteps
 

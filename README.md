@@ -43,7 +43,7 @@ compilers for a vast set of different combinations of parameters and flags.
 
 ## Getting started
 
-This project has two big and independent components:
+This project has two large and independent components:
 
 - `profiler`: in charge of compiling, executing and gathering performance
   metrics such as cycles, time and FLOPS/s for a concrete kernel with regard to
@@ -73,9 +73,12 @@ python -m pip install <marta-wheel>
 ```
 
 This will install a module named `marta`, and two console scripts:
-`marta_profiler` and `marta_analyzer`.
+`marta_profiler` and `marta_analyzer`. **NOTE**: to run these commands it is needed
+to specify in `PATH` variable the path where your Python version install
+applications, e.g. `export PATH=$PATH:$HOME/.local/bin` if your Python
+distribution install packages in `$HOME/.local/bin`.
 
-#### From sources
+#### Use from the sources
 
 If you just want to use MARTA as a module this can be done easily by just:
 
@@ -85,6 +88,11 @@ python -m profiler ...
 # or
 python -m analyzer ...
 ``` 
+
+### Examples: cases of study
+
+Under the [examples](examples/) directory there are available examples to
+better understand how the tool works.
 
 ## License, copyright and authors
 

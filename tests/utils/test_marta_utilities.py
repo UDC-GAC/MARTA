@@ -13,8 +13,15 @@
 # limitations under the License.
 
 import pytest
+import os
 
-from marta.utils.marta_utilities import perror
+from marta.utils.marta_utilities import (
+    perror,
+    pexcept,
+    check_marta_files,
+    CaptureOutput,
+    get_name_from_dir,
+)
 
 
 def test_perror():
@@ -22,3 +29,47 @@ def test_perror():
         perror("Error", 1)
     assert pytest_wrapped_e.type == SystemExit
     assert pytest_wrapped_e.value.code == 1
+
+
+def test_pexcept():
+    with pytest.raises(Exception) as pytest_wrapped_e:
+        pexcept("Error", Exception)
+    assert pytest_wrapped_e.type == Exception
+
+
+def test_check_marta_files_no_mod():
+    check_marta_files("/tmp/")
+    assert os.path.isfile("/tmp/Makefile")
+    check_marta_files("/tmp/")
+    assert os.path.isfile("/tmp/MARTA.mk") == False
+    os.remove("/tmp/Makefile")
+
+
+def test_get_name_from_dir():
+    assert get_name_from_dir("hello/world") == "world"
+    assert get_name_from_dir("/hello/world") == "world"
+    assert get_name_from_dir("./hello/world") == "world"
+    assert get_name_from_dir("./hello//world") == "world"
+
+
+def test_capture_output():
+    with CaptureOutput() as output:
+        print("hello")
+        print("world")
+
+    assert output[0] == "hello"
+    assert output[1] == "world"
+
+    with CaptureOutput() as output:
+        print("hello\nworld")
+
+    assert output[0] == "hello"
+    assert output[1] == "world"
+
+    with CaptureOutput(output) as output:
+        print("hello\nworld")
+
+    assert output[0] == "hello"
+    assert output[1] == "world"
+    assert output[2] == "hello"
+    assert output[3] == "world"

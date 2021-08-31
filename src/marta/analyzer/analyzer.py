@@ -18,20 +18,27 @@
 
 # Standard library
 import argparse
-import os
+import sys
 
 # Third-party libraries
-import numpy as np
 import pandas as pd
-import yaml
 
 # Local imports
-from marta.analyzer.decision_tree import DecisionTree
-from marta.utils.marta_utilities import perror
+from marta.analyzer.config import parse_options, load_yaml_file
+from marta.analyzer.feature_importance import FeatureImportanceFactory
+from marta.analyzer.classification import ClassificationFactory
+from marta.analyzer.plotting import plot_data
+from marta.analyzer.processing import (
+    normalize_data,
+    categorize_target_dimension,
+    column_strings_to_int,
+)
+from marta.utils.marta_utilities import perror, pinfo, dump_config_file, pwarning
+from marta.version import print_version
 
 
 class Analyzer:
-    def parse_arguments(self) -> argparse.Namespace:
+    def parse_arguments(self, args: list) -> argparse.Namespace:
         """Parse arguments
 
         :return: list of arguments (sys.argv)
@@ -40,20 +47,48 @@ class Analyzer:
         parser = argparse.ArgumentParser(
             description="wrapper for analyzing data given a csv"
         )
+        required_input = 1
+        if (
+            ("-v" in args)
+            or ("--version" in args)
+            or ("-dump" in args)
+            or ("--dump-config-file" in args)
+            or ("-h" in args)
+            or ("--help" in args)
+        ):
+            required_input = "?"
         required_named = parser.add_argument_group("required named arguments")
         required_named.add_argument(
-            "-i", "--input", help="input file name", required=True
+            "input",
+            metavar="input",
+            type=str,
+            nargs=required_input,
+            help="input configuration file",
         )
-        return parser.parse_args()
 
-    def remove_files(self, tmp_files=["___tmp*"]) -> None:
-        """Remove temporal files generated
+        # Optional arguments
+        optional_named = parser.add_argument_group("optional named arguments")
+        optional_named.add_argument(
+            "-q", "--quiet", action="store_true", help="quiet execution", required=False
+        )
 
-        :param tmp_files: name or names of temporal files to remove, defaults to ["___tmp*"]
-        :type tmp_files: list, optional
-        """
-        for tmp in tmp_files:
-            os.system(f"rm {tmp}")
+        optional_named.add_argument(
+            "-v",
+            "--version",
+            action="store_true",
+            help="display version and quit",
+            required=False,
+        )
+
+        optional_named.add_argument(
+            "-dump",
+            "--dump-config-file",
+            action="store_true",
+            help="dump a sample configuration file with all needed files for analyzer to work properly",
+            required=False,
+        )
+
+        return parser.parse_args(args)
 
     def preprocess_data(self) -> pd.DataFrame:
         """Process data: filter, normalize and categorize
@@ -61,141 +96,123 @@ class Analyzer:
         :return: Data processed
         :rtype: pandas.DataFrame
         """
-        output_file = f"processed_{self.input_file.split('/')[-1]}"
+        output_file = f"{self.output_path}/{self.input_file_name}_data_processed.csv"
         df = pd.read_csv(self.input_file, comment="#", index_col=False)
-        norm_min_max = self.norm_type in ["min_max", "minmax"]
-        norm_z_score = self.norm_type in ["z_score", "zscore"]
-        ncat = self.ncats
-        cat = self.target
-        catscale = self.catscale
-        if norm_min_max:
-            setattr(df, cat, getattr(df, cat) - min(getattr(df, cat)))
-            setattr(df, cat, getattr(df, cat) / max(getattr(df, cat)))
-        elif norm_z_score:
-            # z-score
-            setattr(df, cat, np.log(getattr(df, cat)))
-            setattr(
-                df,
-                cat,
-                (getattr(df, cat) - np.mean(getattr(df, cat)))
-                / np.std(getattr(df, cat)),
-            )
-        tmp_cat = getattr(df, cat)
-        bins = np.linspace(min(getattr(df, cat)), max(getattr(df, cat)), ncat)
-        step = bins[1] - bins[0]
-        labels = [
-            "P-{0}-{1}".format(
-                "{0:.3f}".format(float(i / catscale)),
-                "{0:.3f}".format(float((i + step) / catscale)),
-            )
-            for i in bins
-        ]
-        setattr(df, cat, pd.cut(tmp_cat, ncat, labels=labels))
-        self.labels = labels
+        self.raw_data = df.copy()
+        target_value = self.target
         for d in self.filter_rows:
             try:
                 cond = getattr(df, d) == eval(self.filter_rows[d])
+            except NameError:
+                cond = getattr(df, d) == self.filter_rows[d]
             except TypeError:
                 cond = getattr(df, d) == self.filter_rows[d]
-            except Exception:
-                perror("check kernel[prepare_data[rows]]")
+            except Exception as E:
+                perror(
+                    f"check kernel[prepare_data[rows]], there is something wrong: {E}"
+                )
             df = df[cond].copy()
         if df.count()[0] == 0:
-            perror("dataset empty, check constraints in data please!",)
-        f_cols = self.filter_cols + [cat]
+            perror("dataset empty, check constraints in data please!")
+
+        if target_value.lower() == "tsc":
+            if "overhead_loop" in df.columns:
+                df[target_value] -= df["overhead_loop"]
+
+        df = normalize_data(df, self.norm, target_value)
+        new_cat = []
+        if self.categories_enabled:
+            df, labels = categorize_target_dimension(
+                df,
+                target_value,
+                self.ncats,
+                self.catscale,
+                self.mode,
+                self.grid_search,
+                self.custom_params,
+                self.bandwidth,
+                self.bandwidth_type,
+                self.kernel,
+            )
+            new_cat = [f"{target_value}_cat"]
+        else:
+            import numpy as np
+
+            labels = np.unique(df[target_value].values)
+        self.labels = labels
+        f_cols = self.filter_cols + [target_value] + new_cat
+        df, self.encoders = column_strings_to_int(df, self.filter_cols)
         df = df[list(f_cols)]
         df.to_csv(output_file, index=False)
+        pinfo(f"Saving processed data in '{output_file}'")
         return df
 
-    def train_model(self) -> None:
+    def perform_analysis(self) -> None:
         """
         Train model according to the type of classification algorithm chosen in
         the configuration file.
         """
+
+        # Ad-hoc preprocessing data
         self.data_processed = self.preprocess_data()
-        if self.class_type == "decisiontree":
-            dt = DecisionTree(
-                self.dt_cfg,
-                self.data_processed[self.filter_cols],
-                getattr(self.data_processed, self.target),
+
+        # Classification
+        if self.clf_enabled:
+            clf = ClassificationFactory.get_class(
+                self.clf_type,
+                self.clf_cfg,
+                self.data_processed,
+                self.filter_cols,
+                self.target,
+                self.encoders,
             )
-            if self.dt_cfg.text_tree:
-                dt.export_text_tree()
-            if self.dt_cfg.graph_tree:
-                dt.export_graph_tree()
-            dt.get_summary()
-        elif self.class_type == "randomforest":
-            raise TypeError
+            clf.labels = self.labels
+            clf.perform_analysis(output_path=self.output_path)
         else:
-            raise TypeError
+            pwarning("Classification analysis disabled")
 
-    def __init__(self):
-        try:
-            self.args = self.parse_arguments()
-            self.yml_config = self.args.input
-            with open(self.yml_config, "r") as ymlfile:
-                cfg = yaml.load(ymlfile, Loader=yaml.FullLoader)
+        # Feature importance analysis
+        if self.feat_enabled and not clf.continuous:
+            feat = FeatureImportanceFactory.get_class(
+                self.feat_type,
+                self.feat_cfg,
+                self.data_processed[self.filter_cols],
+                self.data_processed[self.target],
+                self.filter_cols,
+            )
+            feat.perform_analysis(output_path=self.output_path)
+        else:
+            pwarning("Feature importance analysis disabled")
 
-            general_cfg = cfg[0]["kernel"]
-            self.debug = general_cfg["debug"] if "debug" in general_cfg else False
-            self.input_file = general_cfg["input"]
-            self.force_replacement = (
-                general_cfg["force_replacement"]
-                if "force_replacement" in general_cfg.keys()
-                else False
-            )
-            self.output_file = general_cfg["output"]
-            self.rm_temp_files = general_cfg["clean"]
-            self.print_debug = general_cfg["debug"]
-
-            # prepare_data keys
-            prepdata_cfg = general_cfg["prepare_data"]
-            self.filter_cols = prepdata_cfg["cols"].split(" ")
-            self.filter_rows = (
-                prepdata_cfg["rows"] if "rows" in prepdata_cfg.keys() else ""
-            )
-            self.target = prepdata_cfg["target"]
-            self.norm = (
-                prepdata_cfg["norm"]["enabled"]
-                if "norm" in prepdata_cfg.keys()
-                else False
-            )
-            self.norm_type = prepdata_cfg["norm"]["type"] if self.norm else ""
-            self.ncats = int(prepdata_cfg["categories"]["num"])
-            if self.ncats < 1:
-                raise ValueError(
-                    "categories[num]", f"{self.ncats}", "value must be greater than one"
+        # Plotting
+        if self.plot_enabled:
+            if self.plot_cfg.data == "raw":
+                plot_data(
+                    self.raw_data,
+                    self.plot_cfg,
+                    f"{self.output_path}/plot_raw_data_{self.plot_cfg.type}",
                 )
-            self.catscale = eval(prepdata_cfg["categories"]["scale_factor"])
-            self.cattype = prepdata_cfg["categories"]["type"]
-
-            # classification keys
-            classification_cfg = general_cfg["classification"]
-            self.class_type = classification_cfg["type"]
-            if self.class_type == "decisiontree":
-                self.dt_cfg = DecisionTree.DTConfig(classification_cfg["dt_settings"])
-            elif self.class_type == "randomforest":
-                # TODO: implement random forest classification
-                pass
             else:
-                raise ValueError(
-                    "classification[type]",
-                    self.class_type,
-                    "unknown classification algorithm: try 'decisiontree' or 'randomforest'",
+                plot_data(
+                    self.data_processed,
+                    self.plot_cfg,
+                    f"{self.output_path}/plot_processed_data_{self.plot_cfg.type}",
                 )
+        else:
+            pwarning("Plotting disabled")
 
-            if self.rm_temp_files:
-                self.remove_files()
-        except KeyError as K:
-            perror(f"key {K} missing in configuration file")
-        except TypeError as T:
-            perror(f"key {T} wrong type")
-        except ValueError as V:
-            key, value, msg = V.args
-            perror(f"{key} = {value}, {msg}")
-        except SyntaxError as S:
-            perror(f"syntax error in {S}")
-        except NameError as N:
-            perror(f"{N}")
-        except Exception as E:
-            perror(f"something went wrong: {E}")
+    def __init__(self, args):
+        self.args = self.parse_arguments(args)
+        if not self.args.quiet or self.args.version:
+            print_version("Analyzer")
+            if self.args.version:
+                sys.exit(0)
+
+        if self.args.dump_config_file:
+            dump_config_file("analyzer/template.yml")
+            sys.exit(0)
+
+        parsed_config = parse_options(load_yaml_file(self.args.input[0]))
+        for key in parsed_config:
+            setattr(self, key, parsed_config[key])
+        self.perform_analysis()

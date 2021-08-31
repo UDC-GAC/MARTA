@@ -1,6 +1,6 @@
 - kernel:
-      input: "test.csv"
-      output: "test_output"
+      input: tmp/marta.csv
+      output: test_output
       force_replacement: True
       clean: False
       debug: False

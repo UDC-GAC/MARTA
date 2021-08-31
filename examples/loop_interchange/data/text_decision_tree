@@ -1,0 +1,25 @@
+Decision tree generated:
+========================
+|--- compiler <= 0.50
+|   |--- CFG <= 1.50
+|   |   |--- ARRAY_DIM <= 1.50
+|   |   |   |--- class: 0.0
+|   |   |--- ARRAY_DIM >  1.50
+|   |   |   |--- class: 0.0
+|   |--- CFG >  1.50
+|   |   |--- ARRAY_DIM <= 1.50
+|   |   |   |--- class: 0.0
+|   |   |--- ARRAY_DIM >  1.50
+|   |   |   |--- class: 0.0
+|--- compiler >  0.50
+|   |--- CFG <= 0.50
+|   |   |--- class: 0.0
+|   |--- CFG >  0.50
+|   |   |--- ARRAY_DIM <= 1.50
+|   |   |   |--- class: 1.0
+|   |   |--- ARRAY_DIM >  1.50
+|   |   |   |--- class: 1.0
+
+Classes for 'CFG':['-DLOOP_2D  -DPOLYBENCH_STACK_ARRAYS'
+ '-DLOOP_3D  -DPOLYBENCH_STACK_ARRAYS'
+ '-DREDUCTION  -DPOLYBENCH_STACK_ARRAYS']Classes for 'compiler':['gcc-11' 'icc']

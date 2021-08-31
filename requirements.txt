@@ -11,3 +11,8 @@ graphviz
 sklearn
 colorama
 pyperf
+matplotlib
+art
+seaborn
+KDEpy
+dtreeviz

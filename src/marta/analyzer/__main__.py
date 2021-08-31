@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from . import entry_point
+# -*- coding: utf-8 -*-
 
-entry_point()
+from marta.analyzer.cli import cli
+
+cli()

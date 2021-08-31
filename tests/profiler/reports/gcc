@@ -1,0 +1,190 @@
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/marta_wrapper.h:295:3: optimized: loop vectorized using 32 byte vectors
+___tmp_gather__IDX00_IDX116_IDX232_IDX348_IDX464_IDX580_IDX696_IDX7112_gcc__march=native_mtune=native_mavx2_O3_.c:53:1: optimized: basic block part vectorized using 16 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/marta_wrapper.h:295:3: optimized: loop vectorized using 32 byte vectors
+main.c:53:1: optimized: basic block part vectorized using 16 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/marta_wrapper.h:295:3: optimized: loop vectorized using 32 byte vectors
+main.c:53:1: optimized: basic block part vectorized using 16 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/marta_wrapper.h:295:3: optimized: loop vectorized using 32 byte vectors
+main.c:53:1: optimized: basic block part vectorized using 16 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/marta_wrapper.h:295:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:349:3: optimized: basic block part vectorized using 16 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/marta_wrapper.h:295:3: optimized: loop vectorized using 32 byte vectors
+main.c:53:1: optimized: basic block part vectorized using 16 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/marta_wrapper.h:295:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:349:3: optimized: basic block part vectorized using 16 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/marta_wrapper.h:295:3: optimized: loop vectorized using 32 byte vectors
+___tmp_gather__IDX00_IDX116_IDX232_IDX348_IDX464_IDX580_IDX696_IDX7112_gcc__march=native_mtune=native_mavx2_O3_.c:53:1: optimized: basic block part vectorized using 16 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/marta_wrapper.h:295:3: optimized: loop vectorized using 32 byte vectors
+main.c:53:1: optimized: basic block part vectorized using 16 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/marta_wrapper.h:295:3: optimized: loop vectorized using 32 byte vectors
+main.c:53:1: optimized: basic block part vectorized using 16 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/marta_wrapper.h:295:3: optimized: loop vectorized using 32 byte vectors
+main.c:53:1: optimized: basic block part vectorized using 16 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/marta_wrapper.h:295:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:349:3: optimized: basic block part vectorized using 16 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/marta_wrapper.h:295:3: optimized: loop vectorized using 32 byte vectors
+main.c:53:1: optimized: basic block part vectorized using 16 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/marta_wrapper.h:295:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:349:3: optimized: basic block part vectorized using 16 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/marta_wrapper.h:295:3: optimized: loop vectorized using 32 byte vectors
+___tmp_gather__IDX00_IDX116_IDX232_IDX348_IDX464_IDX580_IDX696_IDX7112_gcc__march=native_mtune=native_mavx2_O3_.c:53:1: optimized: basic block part vectorized using 16 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/marta_wrapper.h:295:3: optimized: loop vectorized using 32 byte vectors
+main.c:53:1: optimized: basic block part vectorized using 16 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/marta_wrapper.h:295:3: optimized: loop vectorized using 32 byte vectors
+main.c:53:1: optimized: basic block part vectorized using 16 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/marta_wrapper.h:295:3: optimized: loop vectorized using 32 byte vectors
+main.c:53:1: optimized: basic block part vectorized using 16 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/marta_wrapper.h:295:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:349:3: optimized: basic block part vectorized using 16 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/marta_wrapper.h:295:3: optimized: loop vectorized using 32 byte vectors
+main.c:53:1: optimized: basic block part vectorized using 16 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/marta_wrapper.h:295:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:349:3: optimized: basic block part vectorized using 16 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/marta_wrapper.h:295:3: optimized: loop vectorized using 32 byte vectors
+___tmp_gather__IDX00_IDX116_IDX232_IDX348_IDX464_IDX580_IDX696_IDX7112_gcc__march=native_mtune=native_mavx2_O3_.c:53:1: optimized: basic block part vectorized using 16 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/marta_wrapper.h:295:3: optimized: loop vectorized using 32 byte vectors
+main.c:53:1: optimized: basic block part vectorized using 16 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/marta_wrapper.h:295:3: optimized: loop vectorized using 32 byte vectors
+main.c:53:1: optimized: basic block part vectorized using 16 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/marta_wrapper.h:295:3: optimized: loop vectorized using 32 byte vectors
+main.c:53:1: optimized: basic block part vectorized using 16 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/marta_wrapper.h:295:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:349:3: optimized: basic block part vectorized using 16 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/marta_wrapper.h:295:3: optimized: loop vectorized using 32 byte vectors
+main.c:53:1: optimized: basic block part vectorized using 16 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/marta_wrapper.h:295:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:349:3: optimized: basic block part vectorized using 16 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/marta_wrapper.h:295:3: optimized: loop vectorized using 32 byte vectors
+___tmp_gather__IDX00_IDX116_IDX232_IDX348_IDX464_IDX580_IDX696_IDX7112_gcc__march=native_mtune=native_mavx2_O3_.c:53:1: optimized: basic block part vectorized using 16 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/marta_wrapper.h:295:3: optimized: loop vectorized using 32 byte vectors
+main.c:53:1: optimized: basic block part vectorized using 16 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/marta_wrapper.h:295:3: optimized: loop vectorized using 32 byte vectors
+main.c:53:1: optimized: basic block part vectorized using 16 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/marta_wrapper.h:295:3: optimized: loop vectorized using 32 byte vectors
+main.c:53:1: optimized: basic block part vectorized using 16 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/marta_wrapper.h:295:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:349:3: optimized: basic block part vectorized using 16 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/marta_wrapper.h:295:3: optimized: loop vectorized using 32 byte vectors
+main.c:53:1: optimized: basic block part vectorized using 16 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:116:3: optimized: loop vectorized using 32 byte vectors
+../utilities/marta_wrapper.h:295:3: optimized: loop vectorized using 32 byte vectors
+../utilities/polybench.c:349:3: optimized: basic block part vectorized using 16 byte vectors

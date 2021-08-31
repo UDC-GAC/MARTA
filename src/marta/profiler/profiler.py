@@ -20,9 +20,8 @@ import os
 import copy
 import subprocess
 import sys
-import yaml
+from marta.profiler.config import check_correctness_file, get_kernel_config
 import argparse
-import pkg_resources
 import pickle
 import itertools as it
 import multiprocessing as mp
@@ -38,12 +37,18 @@ from itertools import repeat
 
 # Local imports
 from marta import get_data
-from marta.utils.marta_utilities import perror, pwarning, pinfo, create_dir_or_pass
+from marta.utils.marta_utilities import (
+    perror,
+    pwarning,
+    pinfo,
+    create_directories,
+    dump_config_file,
+)
 from marta.profiler.benchmark import Benchmark, BenchmarkError
 from marta.profiler.kernel import Kernel
 from marta.profiler.project import Project
-from marta.profiler.utils import custom_mp
 from marta.profiler.timing import Timing
+from marta.version import print_version
 
 
 class Profiler:
@@ -52,7 +57,7 @@ class Profiler:
     """
 
     @staticmethod
-    def parse_arguments(list_args):
+    def parse_arguments(args):
         """
         Parse CLI arguments
 
@@ -69,14 +74,13 @@ class Profiler:
         # If "version" or "dump" option, then positional is not needed
         required_input = 1
         if (
-            ("-v" in list_args)
-            or ("--version" in list_args)
-            or ("-dump" in list_args)
-            or ("--dump-config-file" in list_args)
-            or ("--generate-project" in list_args)
-            or ("-h" in list_args)
-            or ("--help" in list_args)
-            or ("project" in list_args)
+            ("-v" in args)
+            or ("--version" in args)
+            or ("-dump" in args)
+            or ("--dump-config-file" in args)
+            or ("-h" in args)
+            or ("--help" in args)
+            or ("project" in args)
         ):
             required_input = "?"
 
@@ -100,6 +104,7 @@ class Profiler:
         optional_named.add_argument(
             "-r",
             "--report",
+            action="store_true",
             help="output report file name, with data regarding the machine, compilation flags, warnings, and errors",
             required=False,
         )
@@ -113,6 +118,14 @@ class Profiler:
             "--no-quit-on-error",
             action="store_true",
             help="quit if there is an error during compilation or execution of the kernel",
+            required=False,
+        )
+
+        optional_named.add_argument(
+            "-c",
+            "--check-config-file",
+            action="store_true",
+            help="quit if there is an error checking the configuration file",
             required=False,
         )
 
@@ -149,7 +162,7 @@ class Profiler:
             default="marta_bench",
         )
 
-        return parser.parse_args(list_args)
+        return parser.parse_args(args)
 
     @staticmethod
     def eval_features(feature: dict) -> dict:
@@ -179,8 +192,7 @@ class Profiler:
                     else:
                         params_values = feature[f]["value"]
                 except NameError:
-                    print(f"Evaluation of expression for {f} went wrong!")
-                    sys.exit(1)
+                    perror(f"Evaluation of expression for {f} went wrong!")
             else:
                 params_values = [feature[f]]
             # This is useful for iterators, such as permutations, combinations...
@@ -215,18 +227,6 @@ class Profiler:
             return len(list(it.product(*params_values_copy)))
 
     @staticmethod
-    def print_version() -> None:
-        """
-        Print version and copyright message (if not quiet execution)
-        """
-        __version__ = pkg_resources.require("marta")[0].version
-
-        print(
-            f"Micro ARchitectural Toolkit Analysis (MARTA) - Profiler v{__version__}\n",
-            end="",
-        )
-
-    @staticmethod
     def dict_product(dicts: dict, kernel_cfg: list) -> bytes:
         """
         Generate the product of different dictionaries in a serializable
@@ -240,20 +240,6 @@ class Profiler:
         """
         dicts.update({"KERNEL_CFG": kernel_cfg})
         return (pickle.dumps(dict(zip(dicts, x))) for x in it.product(*dicts.values()))
-
-    def create_directories(
-        self, asm_dir="asm_codes", bin_dir="bin", tmp_dir="tmp", log_dir="log"
-    ) -> None:
-        create_dir_or_pass(asm_dir)
-        create_dir_or_pass(bin_dir)
-        create_dir_or_pass(tmp_dir)
-        if not os.path.exists(log_dir):
-            os.mkdir(log_dir)
-        else:
-            if os.path.exists(f"{log_dir}/___tmp.stdout"):
-                os.remove(f"{log_dir}/___tmp.stdout")
-            if os.path.exists(f"{log_dir}/___tmp.stderr"):
-                os.remove(f"{log_dir}/___tmp.stderr")
 
     def clean_files(self, finalize_actions: dict) -> None:
         if finalize_actions != None:
@@ -291,7 +277,7 @@ class Profiler:
         config_output = cfg["kernel"].get("output", {})
         output_format = config_output.get("format", "csv")
         output_cols = config_output.get("columns", "all")
-        generate_report = config_output.get("report", False)
+        generate_report = config_output.get("report", False) | self.args.report
         if self.args.output is None:
             fname = config_output.get("name", kernel.kernel)
             tstamp = dt.now().strftime("%d_%m_%y___%H_%M_%S")
@@ -328,13 +314,10 @@ class Profiler:
         # Silent compilation or not
         make_stdout = subprocess.STDOUT
         make_stderr = subprocess.STDOUT
+
         if not kernel.comp_debug:
             make_stdout = "/tmp/___marta_stdout.log"
             make_stderr = "/tmp/___marta_stderr.log"
-
-        if not self.args.quiet:
-            # Print version if not quiet
-            Profiler.print_version()
 
         # Execute command preceding compilation and execution process
         preamble = cfg["kernel"].get("preamble")
@@ -343,9 +326,8 @@ class Profiler:
                 os.system(f'{preamble.get("command")}')
             except Exception:
                 perror("Preamble command went wrong...")
-                sys.exit(1)
 
-        self.create_directories()
+        create_directories(root=f"{kernel.get_kernel_path()}/marta_profiler_data/")
 
         exit_on_error = not self.args.no_quit_on_error
 
@@ -359,6 +341,7 @@ class Profiler:
                     flags=[
                         "-O3",
                         "-DMARTA_RDTSC",
+                        f"-DMARTA_CPU_AFFINITY={kernel.cpu_affinity}",
                         f"-I{get_data('profiler/utilities/')}",
                         get_data("profiler/utilities/polybench.c"),
                     ]
@@ -370,6 +353,8 @@ class Profiler:
                     perror(f"{msg} Quitting.")
                 else:
                     pwarning(f"{msg} Skipping.")
+
+        os.system("rm /tmp/*.opt")
 
         pinfo(f"Compiling with {kernel.processes} processes")
         for compiler in kernel.compiler_flags:
@@ -412,9 +397,8 @@ class Profiler:
                             pinfo("Compiling...")
                             output = pool.starmap(Kernel.compile, iterable)
                             if not output:
-                                perror("Compilation failed")
                                 pool.terminate()
-                                sys.exit(1)
+                                perror("Compilation failed")
                     Timing.accm_timer("compilation")
                 else:
                     pwarning("Compilation process disabled!")
@@ -462,7 +446,7 @@ class Profiler:
             df["overhead_instructions"] = 2
             df["overhead_loop"] = overhead_loop
         kernel.save_results(df, output_filename, output_format, generate_report)
-
+        kernel.reset_system_config()
         self.clean_files(cfg["kernel"].get("finalize"))
         return 0
 
@@ -481,7 +465,7 @@ class Profiler:
         self.args = Profiler.parse_arguments(list_args)
 
         if self.args.dump_config_file:
-            for line in Project.dump_config_file():
+            for line in dump_config_file("profiler/template.yml"):
                 print(line, end="")
             sys.exit(0)
 
@@ -493,22 +477,24 @@ class Profiler:
             sys.exit(0)
 
         if self.args.version:
-            self.print_version()
+            print_version("Profiler")
             sys.exit(0)
 
-        try:
-            from yaml import CLoader as Loader
-        except ImportError:
-            from yaml import Loader
+        kernel_setup = get_kernel_config(self.args.input[0])
 
-        yml_config = self.args.input[0]
-        try:
-            with open(yml_config, "r") as ymlfile:
-                kernel_setup = yaml.load(ymlfile, Loader=Loader)
-        except FileNotFoundError:
-            perror("Configuration file not found")
-        except Exception:
-            perror("Unknown error when opening configuration file.")
+        # Sanity-checks
+        if self.args.check_config_file:
+            if not check_correctness_file(kernel_setup):
+                perror("Configuration file is not correct")
+            else:
+                pinfo(
+                    "Configuration file structure is correct (compilation files might be wrong)"
+                )
+                sys.exit(0)
+
+        if not self.args.quiet:
+            # Print version if not quiet
+            print_version("Profiler")
 
         # For each kernel configuration
         for cfg in kernel_setup:

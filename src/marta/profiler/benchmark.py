@@ -14,7 +14,7 @@
 
 # Local imports
 from marta.profiler.timing import Timing
-from marta.profiler.compile import CompilationError, compile_file
+from marta.profiler.compile import compile_file
 from marta.utils.marta_utilities import perror
 
 

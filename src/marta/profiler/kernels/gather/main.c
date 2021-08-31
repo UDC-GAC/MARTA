@@ -44,40 +44,11 @@ void static gather(DATA_TYPE *restrict A) {
       _mm256_set_epi32(IDX7, IDX6, IDX5, IDX4, IDX3, IDX2, IDX1, IDX0);
   __m256 tmp256 = _mm256_i32gather_ps(&A[0], idx_gather, 4);
   DO_NOT_TOUCH(idx_gather);
-  DO_NOT_TOUCH_XMM(tmp256);
+  DO_NOT_TOUCH(tmp256);
 }
 
 MARTA_BENCHMARK_BEGIN(MARTA_NO_HEADER);
-
-#ifdef MARTA_PARAMETRIC_LOOP
-if (argc > 1) {
-  TSTEPS = atoi(argv[1]);
-}
-#endif
-
-int n = N;
-
-// Initialization section
-POLYBENCH_1D_ARRAY_DECL(A, DATA_TYPE, N, n);
-
-init_1darray(n, POLYBENCH_ARRAY(A));
-
-// __m256 tmp256, __tmp1, __tmp17;
-
-// polybench_start_instruments;
-// INIT_BEGIN_LOOP(TSTEPS);
-
-// END_LOOP;
-// polybench_stop_instruments;
-// polybench_print_instruments;
-
+POLYBENCH_1D_ARRAY_DECL(A, DATA_TYPE, N, N);
+init_1darray(N, POLYBENCH_ARRAY(A));
 PROFILE_FUNCTION_LOOP(gather(POLYBENCH_ARRAY(A)), TSTEPS);
-
-// if (argc >= 42) {
-//   printf("tmp %f", tmp256[2]);
-// }
-
-// Avoid DCE section
-// polybench_prevent_dce(print_array1d(4, POLYBENCH_ARRAY(A)));
-
 MARTA_BENCHMARK_END;

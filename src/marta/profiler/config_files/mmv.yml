@@ -1,6 +1,6 @@
 - kernel:
       name: "mmv"
-      path: "kernels/mmv"
+      path: "src/marta/profiler/kernels/mmv"
       description: "Setup for experiment mmv"
       debug: False
       show_progress_bars: True
@@ -17,13 +17,15 @@
           language: "C"
           compiler_flags: 
             { 
-                "gcc": " -march=native ",
-                "icc": " -march=native ",
+                "gcc": [" -march=native -mtune=native -mavx2 -O3 "],
+                "icc": [" -march=native -mtune=native -mavx2 -O3 "],
             }
-          common_flags: " -O3 "
+          main_src: "main.c"
           inlined_kernel: False
-          asm_syntax: "att"
-          asm_analysis: False
+          asm_analysis:
+                syntax: "intel"
+                count_ins: True
+                static_analysis: ""
           debug: False
       configuration:
           kernel_cfg: [
@@ -64,8 +66,7 @@
       execution:
           enabled: True
           papi_counters: [
-            "PAPI_L1_DCM",
-            "PAPI_TOT_INS",
+            "INSTRUCTIONS_RETIRED",
             ]
           time: True
           tsc: True
@@ -74,12 +75,12 @@
           init_data: True
           intel_cache_flush: False
           check_dump: False
-          nexec: 20
+          nexec: 7
           nsteps: 1
           cpu_affinity: 11
           prefix: ""
       output:
-          name: "default"
+          name: "mmv"
           columns: "all"
           report: True
           verbose: True

@@ -2,7 +2,7 @@
 #include "marta_bench.h"
 #endif
 
-void kern(float *A, float *B, float *C) {
+void kernel(float *restrict A, float *restrict B, float *restrict C) {
   for (int i = 0; i < N; ++i) {
     A[i] += B[i] * C[i];
   }
