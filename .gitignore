@@ -52,6 +52,9 @@ polybench*/
 *.txt
 time_*
 cyc_*
+tests/Makefile
+tests/MARTA.mk
+tests/utilities
 
 # LaTeX
 *.bbl
