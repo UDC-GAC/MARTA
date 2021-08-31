@@ -39,6 +39,7 @@ class GCCAnalysis(CompilerAnalysis):
         d = dict(zip(CompilerAnalysis.columns, [0] * len(CompilerAnalysis.columns)))
 
         vect_already_visited = []
+        loop_interchange_visited = []
         for line in lines:
             if "polybench" in line or "marta" in line:
                 continue
@@ -49,9 +50,10 @@ class GCCAnalysis(CompilerAnalysis):
                 d["loops_vectorized"] += 1
                 vect_already_visited.append(file)
             if "optimized: loops interchanged in loop nest" in line:
-                if file in vect_already_visited:
+                if file in loop_interchange_visited:
                     continue
                 d["loop_interchange"] += 1
+                loop_interchange_visited.append(file)
 
         return d
 

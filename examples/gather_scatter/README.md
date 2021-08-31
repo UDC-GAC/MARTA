@@ -45,7 +45,7 @@ a first step, we explore data using a relational plot (see [configuration file](
 ![alt text](data/relplot.png)
 
 Gather performance seems pretty steady, regardless some outliers, but scatter
-performance seems to be more volatile. 
+performance seems to be more volatile, requiring further inspection.
 
 ## Experimental configuration:
 

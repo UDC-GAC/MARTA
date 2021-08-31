@@ -13,41 +13,65 @@
           command: "echo 'done!'"
       compilation:
           enabled: True
-          processes: 32
+          processes: 64
           language: "C"
           compiler_flags: 
             { 
-                "gcc-11": [" -march=native -mtune=native -O3 ", " -march=native -mtune=native -Ofast "],
+                "gcc-11": [
+                    " -march=native -mtune=native -O3 -floop-interchange", 
+                    " -march=native -mtune=native -Ofast -floop-interchange"
+                ],
                 "icc": [" -march=native -mtune=native -O3 ", " -march=native -mtune=native -Ofast "],
             }
           main_src: "main.c"
           kernel_inlined: True
           asm_analysis:
                 syntax: "intel"
-                count_ins: True
+                count_ins: False
                 static_analysis: ""
           debug: False
       configuration:
           kernel_cfg: [
-          "",
-          "-DPOLYBENCH_USE_SCALAR_LB"
+          "-DLOOP_2D  -DPOLYBENCH_STACK_ARRAYS",
+          "-DLOOP_3D  -DPOLYBENCH_STACK_ARRAYS",
+          "-DREDUCTION  -DPOLYBENCH_STACK_ARRAYS"
           ]
           d_features:
                 N:
                     evaluate: True
                     type: "static"
                     val_type: "numeric"
-                    value: "[3]"
+                    value: "[8,16,32]"
+                M:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[8,16,32]"
+                L:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[8,16,32]"
+                LOOP_BOUND_PARAMETRIC:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[0,1]"
+                ARRAY_DIM:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[1,2]"
           flops: "1"
       execution:
           enabled: True
-          papi_counters: ["INSTRUCTIONS_RETIRED"]
+          papi_counters: ["PAPI_L1_DCM"]
           time: True
           tsc: True
           threshold_outliers: 3
           mean_and_discard_outliers: True
           nexec: 7
-          nsteps: 10000
+          nsteps: 1000
           cpu_affinity: 11
           prefix: ""
       output:

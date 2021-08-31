@@ -23,7 +23,6 @@
 #endif
 
 #include "polybench.h"
-
 #include "polybench_definitions.h"
 
 #include <assert.h>
@@ -140,8 +139,8 @@ void intel_clflush(volatile void *p, unsigned int allocation_size) {
   BEGIN_LOOP;
 
 // According to Intel's optimization guide it is better to avoid dec in benefit
-// of sub/add/cmp when using loops
-// Intel® 64 and IA-32 Architectures Optimization Reference Manual
+// of sub/add/cmp when using loops Intel® 64 and IA-32 Architectures
+// Optimization Reference Manual
 // https://software.intel.com/content/dam/develop/external/us/en/documents-tps/64-ia-32-architectures-optimization-manual.pdf
 #define END_LOOP                                                               \
   __asm volatile("# LLVM-MCA-END kernel");                                     \
@@ -298,9 +297,9 @@ static void init_1darray(int n, DATA_TYPE POLYBENCH_1D(x, N, n)) {
 }
 
 /* Array initialization: 2-dimensional */
-static void init_2darray(int n, DATA_TYPE POLYBENCH_2D(A, N, N, n, n)) {
+static void init_2darray(int n, int m, DATA_TYPE POLYBENCH_2D(A, N, M, n, m)) {
   for (int i = 0; i < n; i++) {
-    for (int j = 0; j < n; j++) {
+    for (int j = 0; j < m; j++) {
       A[i][j] = 42;
     }
   }

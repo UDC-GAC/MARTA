@@ -1,0 +1,23 @@
+Decision tree generated:
+========================
+|--- N <= 6.50
+|   |--- LOOP_BOUND_PARAMETRIC <= 0.50
+|   |   |--- N <= 3.50
+|   |   |   |--- class: 0.0
+|   |   |--- N >  3.50
+|   |   |   |--- class: 0.0
+|   |--- LOOP_BOUND_PARAMETRIC >  0.50
+|   |   |--- compiler <= 1.50
+|   |   |   |--- class: 1.0
+|   |   |--- compiler >  1.50
+|   |   |   |--- class: 0.0
+|--- N >  6.50
+|   |--- N <= 12.00
+|   |   |--- compiler <= 1.50
+|   |   |   |--- class: 1.0
+|   |   |--- compiler >  1.50
+|   |   |   |--- class: 0.0
+|   |--- N >  12.00
+|   |   |--- class: 1.0
+
+Classes for 'CFG':['-DLOOP' '-DLOOP_PARTIAL_SLP' '-DLOOP_SLP']Classes for 'compiler':['gcc' 'gcc-11' 'icc']

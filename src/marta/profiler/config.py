@@ -78,6 +78,7 @@ def parse_options(config: dict) -> dict:
     cfg["common_flags"] = config_comp.get("common_flags", "")
     cfg["main_src"] = config_comp.get("main_src", False)
     cfg["inlined"] = config_comp.get("kernel_inlined", False)
+    cfg["loop_type"] = config_comp.get("loop_type", "C")
     cfg["kernel_compilation"] = not cfg["inlined"]
     cfg["comp_debug"] = config_comp.get("debug", False)
 

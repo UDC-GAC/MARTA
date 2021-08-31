@@ -14,35 +14,55 @@
  * limitations under the License.
  */
 
+#if LOOP_BOUND_PARAMETRIC == 0
+#define POLYBENCH_USE_SCALAR_LB
+#endif
+
+#define DATA_TYPE_IS_FLOAT
+
 #include "marta_wrapper.h"
 #include <immintrin.h>
 
-#ifndef _UB_N
-#define _UB_N POLYBENCH_LOOP_BOUND(N, n)
+#ifndef N
+#define N 1
 #endif
 
-float kernel_reduction(int n, float *restrict A) {
-  float sum = 0.0;
-  for (int i = 0; i < _UB_N; ++i)
-    for (int j = 0; j < _UB_N; ++j)
-      sum += A[i * _UB_N + j];
-  return sum;
-}
+#define _UB_N POLYBENCH_LOOP_BOUND(N, n)
 
-static void autovect(int n, float *restrict x) {
+#if defined(LOOP_PARTIAL_SLP)
+void KERNEL(int n, float POLYBENCH_1D(x, N, n)) {
   float sum = 0;
-  for (int i = 0; i < _UB_N; ++i) {
-    sum += x[i] * 42.0;
+  sum += x[0] * 42.0f;
+  for (int i = 1; i < _UB_N; ++i) {
+    sum += x[i] * 42.0f;
   }
   DO_NOT_TOUCH(sum);
 }
-
-#ifndef kernel
-#define kernel autovect
+#elif defined(LOOP_SLP)
+void KERNEL(int n, float POLYBENCH_1D(x, N, n)) {
+  float sum = 0;
+  sum += x[0] * 42.0f;
+  for (int i = 1; i < _UB_N; ++i) {
+    sum += x[i] * 42.0f;
+  }
+  sum += x[_UB_N - 1] * 42.0f;
+  DO_NOT_TOUCH(sum);
+}
+#else
+void KERNEL(int n, float POLYBENCH_1D(x, N, n)) {
+  float sum = 0;
+  for (int i = 0; i < _UB_N; ++i) {
+    sum += x[i] * 42.0f;
+  }
+  DO_NOT_TOUCH(sum);
+}
 #endif
 
 MARTA_BENCHMARK_BEGIN(MARTA_NO_HEADER);
 int n = N;
 POLYBENCH_1D_ARRAY_DECL(x, DATA_TYPE, N, n);
-PROFILE_FUNCTION_LOOP(kernel(n, x), TSTEPS);
+
+init_1darray(n, POLYBENCH_ARRAY(x));
+
+PROFILE_FUNCTION_LOOP(KERNEL(n, POLYBENCH_ARRAY(x)), TSTEPS);
 MARTA_BENCHMARK_END;

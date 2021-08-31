@@ -38,9 +38,15 @@ ASM_SYNTAX?=intel
 
 # Adding all flags
 FLAGS:= $(COMMON_FLAGS) $(KERNEL_CONFIG)
-FLAGS_MAIN:= $(FLAGS) -ffixed-ecx
+FLAGS_MAIN:= $(FLAGS) 
 FLAGS_KERN:= $(FLAGS)
 FLAGS_ASM:= $(FLAGS)
+
+ifeq ($(LOOP_TYPE),asm)
+	FLAGS_MAIN+= -ffixed-ecx -DMARTA_LOOP_TYPE_ASM 
+else
+	FLAGS_MAIN+= -DMARTA_LOOP_TYPE_C 
+endif
 
 ifeq ($(COMP),icc)
 	CC=icc

@@ -1,23 +1,20 @@
 - kernel:
-      input: examples/gather_scatter/data/intel_xeon_silver_4216.csv
-      output_path: examples/gather_scatter/data/
+      input: examples/loop_interchange/data/intel_xeon_silver_4216.csv
+      output_path: examples/loop_interchange/data/
       prepare_data:
-          cols: N_CL N_SETS
-          rows: { "CFG": "-DSCATTER" }
-          target: FLOPSs
+          cols: CFG LOOP_BOUND_PARAMETRIC ARRAY_DIM compiler
+          target: loop_interchange
           norm: None
           categories:
-              num: 2
-              scaling_factor: 1e9
+              enabled: False
       plot:
-          sort: FLOPSs
           type: relplot
-          format: png
+          format: pdf
           data: raw
-          x_axis: index
-          y_axis: FLOPSs
-          # hue: N_CL
-          col: CFG
+          x_axis: CFG
+          y_axis: loop_interchange
+          hue: compiler_flags
+          col: compiler
       classification:
           type: decision_tree
           config:
@@ -29,6 +26,8 @@
               text_tree: True
               graph_tree: True
               orientation: "vertical"
+              labels: ["No inter.", "Inter."]
+              style: scikit
       feature_importance:
           type: random_forest
           config:

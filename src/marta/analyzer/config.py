@@ -56,6 +56,7 @@ class DTConfig:
         self.orientation = config.get("orientation", "vertical")
         self.rotate = self.orientation == "horizontal"
         self.labels = config.get("labels", [])
+        self.style = config.get("style", "scikit")
         for key in config:
             setattr(self, key, config[key])
 

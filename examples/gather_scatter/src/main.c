@@ -52,7 +52,6 @@ void gather_scatter(float *restrict x) {
 #else
 #error "Need to define -DGATHER or -DSCATTER"
 #endif
-  // DO_NOT_TOUCH(index);
 }
 
 MARTA_BENCHMARK_BEGIN(MARTA_NO_HEADER);

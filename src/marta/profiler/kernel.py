@@ -275,6 +275,8 @@ class Kernel:
         # ASM syntax flags
         other_flags.append(f"ASM_SYNTAX={self.asm_syntax}")
 
+        other_flags.append(f"LOOP_TYPE={self.loop_type}")
+
         if self.measure_time:
             other_flags.append("TIME=true")
 

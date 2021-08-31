@@ -60,29 +60,31 @@ class DecisionTree(Classification):
         """Export the decision tree as a .pdf file.
         """
 
-        # dot_data = tree.export_graphviz(
-        #     self.clf,
-        #     out_file=None,
-        #     feature_names=list(self.data.columns),
-        #     filled=True,
-        #     rounded=True,
-        #     leaves_parallel=True,
-        #     impurity=False,
-        #     proportion=self.config.proportion,
-        #     class_names=self.config.labels,
-        #     rotate=self.config.rotate,
-        #     precision=self.config.precision,
-        #     label="none",
-        # )
-        # graph = graphviz.Source(dot_data)
-        # graph_output_file = "graph_decision_tree"
-        # if output_path != "":
-        #     graph_output_file = f"{output_path}/graph_decision_tree"
-        # graph.render(graph_output_file)
-        # if output_path != "":
-        #     os.remove(f"{output_path}/graph_decision_tree")
-        # else:
-        #     os.remove(f"graph_decision_tree")
+        if self.config.style == "scikit":
+            dot_data = tree.export_graphviz(
+                self.clf,
+                out_file=None,
+                feature_names=list(self.data.columns),
+                filled=True,
+                rounded=True,
+                leaves_parallel=True,
+                impurity=False,
+                proportion=self.config.proportion,
+                class_names=self.config.labels,
+                rotate=self.config.rotate,
+                precision=self.config.precision,
+                label="none",
+            )
+            graph = graphviz.Source(dot_data)
+            graph_output_file = "graph_decision_tree"
+            if output_path != "":
+                graph_output_file = f"{output_path}/graph_decision_tree"
+            graph.render(graph_output_file)
+            if output_path != "":
+                os.remove(f"{output_path}/graph_decision_tree")
+            else:
+                os.remove(f"graph_decision_tree")
+            return
 
         if self.config.labels == []:
             class_names = self.labels
@@ -102,7 +104,6 @@ class DecisionTree(Classification):
             label_fontsize=16,
             class_names=class_names,
         )
-
         viz.save(f"{output_path}/graph_decision_tree.svg")
 
     def export_text_tree(self) -> None:
@@ -206,7 +207,6 @@ class DecisionTree(Classification):
             self.target_data = data[target]
             if self.target_data.dtype == np.dtype("float64"):
                 self.target_data = data[target].apply(lambda x: round(x, 2))
-                print(self.target_data)
         if config.labels == []:
             self.labels = np.unique(self.target_data).tolist()
         else:

@@ -120,23 +120,20 @@ void intel_clflush(volatile void *p, unsigned int allocation_size) {
   __asm volatile("rdtsc" : "=a"(__cycles_lo), "=d"(__cycles_hi));              \
   t = (marta_cycles_t)__cycles_hi << 32 | __cycles_lo;
 
-#define PRE_LOOP                                                               \
-  __asm volatile("mov $" TO_STRING(TSTEPS) ", %%ecx" : : : "ecx");
+#define MARTA_LOOP_ASM 0x1
+#define MARTA_LOOP_C 0x2
 
-#define BEGIN_LOOP                                                             \
+#ifdef MARTA_LOOP_TYPE_ASM
+#define MARTA_LOOP_TYPE MARTA_LOOP_ASM
+#else
+#define MARTA_LOOP_TYPE MARTA_LOOP_C
+#endif
+
+#if MARTA_LOOP_TYPE == LOOP_ASM
+#define INIT_BEGIN_LOOP(TSTEPS)                                                \
+  __asm volatile("mov $" TO_STRING(TSTEPS) ", %%ecx" : : : "ecx");             \
   __asm volatile("begin_loop:\n");                                             \
   __asm volatile("# LLVM-MCA-BEGIN kernel");
-
-#define INIT_BEGIN_LOOP(TSTEPS)                                                \
-  PRE_LOOP;                                                                    \
-  BEGIN_LOOP;
-
-#define INIT_BEGIN_CYCLES_LOOP(TSTEPS)                                         \
-  polybench_prepare_instruments();                                             \
-  marta_cycles_t t0;                                                           \
-  RDTSC(t0);                                                                   \
-  PRE_LOOP;                                                                    \
-  BEGIN_LOOP;
 
 // According to Intel's optimization guide it is better to avoid dec in benefit
 // of sub/add/cmp when using loops
@@ -161,6 +158,27 @@ void intel_clflush(volatile void *p, unsigned int allocation_size) {
                  :                                                             \
                  :);
 #endif
+#elif MARTA_LOOP_TYPE == MARTA_LOOP_C
+#define INIT_BEGIN_LOOP(TSTEPS)                                                \
+  _Pragma("nounroll_and_jam");                                                 \
+  for (int __marta_tsteps = 0; __marta_tsteps < TSTEPS; ++__marta_tsteps) {    \
+    __asm volatile("# LLVM-MCA-BEGIN kernel");
+
+// According to Intel's optimization guide it is better to avoid dec in benefit
+// of sub/add/cmp when using loops
+// Intel® 64 and IA-32 Architectures Optimization Reference Manual
+// https://software.intel.com/content/dam/develop/external/us/en/documents-tps/64-ia-32-architectures-optimization-manual.pdf
+#define END_LOOP                                                               \
+  __asm volatile("# LLVM-MCA-END kernel");                                     \
+  }
+
+#endif
+
+#define INIT_BEGIN_CYCLES_LOOP(TSTEPS)                                         \
+  polybench_prepare_instruments();                                             \
+  marta_cycles_t t0;                                                           \
+  RDTSC(t0);                                                                   \
+  INIT_BEGIN_LOOP(TSTEPS);
 
 /**
  * CLOBBER_MEMORY - Acts as a read/write memory barrier.
