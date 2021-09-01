@@ -1,4 +1,5 @@
-# Copyright 2021 Marcos Horro
+# Copyright (c) Colorado State University. 2019-2021
+# Copyright (c) Universidade da Coruña. 2019-2021
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,13 +12,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+#
+# Author: Marcos Horro <marcos.horro@udc.es>
+#
 # -*- coding: utf-8 -*-
-
 
 # Standard libraries
 import os
-from typing import List
 
 # Third-party libraries
 import shutil
