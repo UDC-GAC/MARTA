@@ -1,4 +1,4 @@
-# MARTA - Micro ARchitectural Toolkit for Analysis
+# MARTA: Multi-configuration Assembly pRofiler Toolkit for performance Analysis
 
 [![Python
 package](https://github.com/markoshorro/MARTA/actions/workflows/python-package.yml/badge.svg)](https://github.com/markoshorro/MARTA/actions/workflows/python-package.yml)
