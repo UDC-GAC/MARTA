@@ -66,12 +66,19 @@ def plot_data(data: pd.DataFrame, cfg: PlotCfg, output_file: str) -> None:
     elif cfg.type == "kdeplot":
         kde_keys = ["x", "y", "hue", "log_scale"]
         new_cfg = {k: getattr(cfg, k) for k in kde_keys if k in vars(cfg)}
-        plot_type(data=data, **new_cfg, multiple="stack", alpha=0.5)
+        p = plot_type(data=data, **new_cfg, multiple="stack", alpha=0.5)
     else:
-        plot_type(
-            data=data, x=cfg.x, y=cfg.y, hue=cfg.hue, size=cfg.size,
-        )
+        p = plot_type(data=data, x=cfg.x, y=cfg.y, hue=cfg.hue, size=cfg.size,)
         sns.rugplot(data=data, x=cfg.x, y=cfg.y, hue=cfg.hue)
+    if hasattr(p, "patches"):
+        # Define some hatches
+        hatches = ["-", "+", "x", "\\", "*", "o"]
+
+        # Loop over the bars
+        for i, thisbar in enumerate(p.patches):
+            # Set a different hatch for each bar
+            thisbar.set_hatch(hatches[i])
+
     if output_file == "":
         perror("Wrong file to save plot")
     if cfg.x_label != None:

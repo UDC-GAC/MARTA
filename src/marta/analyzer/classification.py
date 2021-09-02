@@ -63,6 +63,9 @@ class DecisionTree(Classification):
         """
 
         if self.config.style == "scikit":
+            class_names = self.config.labels
+            if class_names == []:
+                class_names = self.labels
             dot_data = tree.export_graphviz(
                 self.clf,
                 out_file=None,
@@ -72,7 +75,7 @@ class DecisionTree(Classification):
                 leaves_parallel=True,
                 impurity=False,
                 proportion=self.config.proportion,
-                class_names=self.config.labels,
+                class_names=class_names,
                 rotate=self.config.rotate,
                 precision=self.config.precision,
                 label="none",

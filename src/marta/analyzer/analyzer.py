@@ -177,9 +177,9 @@ class Analyzer:
             feat = FeatureImportanceFactory.get_class(
                 self.feat_type,
                 self.feat_cfg,
-                self.data_processed[self.filter_cols],
-                self.data_processed[self.target],
+                self.data_processed,
                 self.filter_cols,
+                self.target,
             )
             feat.perform_analysis(output_path=self.output_path)
         else:
