@@ -95,6 +95,8 @@ def parse_options(config: dict) -> dict:
 
     # Configuration
     cfg["kernel_cfg"] = config_config.get("kernel_cfg", [""])
+    if len(cfg["kernel_cfg"]) == 0:
+        cfg["kernel_cfg"] = [""]
     cfg["d_features"] = config_config.get("d_features", [])
     cfg["d_flags"] = config_config.get("d_flags", [])
     cfg["flops"] = config_config.get("flops", 1)
@@ -211,6 +213,23 @@ def get_kernel_config(input_file: str):
 def get_derived_single(
     variables: list, derived: str, expression: str, data: dict
 ) -> dict:
+    var_index = 0
+    new_expression = expression
+    for var in variables:
+        new_expression = new_expression.replace(f"VAR_{var_index}", f"{str(data[var])}")
+        var_index += 1
+    try:
+        value = eval(new_expression)
+    except KeyError as k:
+        perror(f"Key {k} does not exist in derived columns")
+    except Exception as e:
+        perror(f"Something went wrong when parsing derived values: {e}")
+    return {derived: value}
+
+
+def get_derived_multi(
+    variables: list, derived: str, expression: str, data: dict
+) -> dict:
     derived_dict = {}
     for var in variables:
         new_key = f"{derived}{var}"
@@ -263,6 +282,10 @@ def get_derived(derived_columns: dict, data: dict) -> dict:
             if expr_type == "single":
                 derived_dict.update(
                     get_derived_single(variables, derived, expression, data)
+                )
+            elif expr_type == "multi":
+                derived_dict.update(
+                    get_derived_multi(variables, derived, expression, data)
                 )
             elif expr_type == "all":
                 tmp = data.copy()

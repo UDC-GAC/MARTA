@@ -405,7 +405,9 @@ class Kernel:
         # Updating parameters
         if type(params_dict) is not list:
             data.update(params_dict)
-            for key in params_dict:
+            # sort them by length
+            keys = sorted(params_dict.keys(), key=len, reverse=True)
+            for key in keys:
                 self.flops = self.flops.replace(key, str(params_dict[key]))
         d = get_dict_from_d_flags(kconfig)
         if len(d.keys()) > 0:
