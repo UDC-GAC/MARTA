@@ -129,7 +129,7 @@ void intel_clflush(volatile void *p, unsigned int allocation_size) {
 #define MARTA_LOOP_TYPE MARTA_LOOP_C
 #endif
 
-#if MARTA_LOOP_TYPE == LOOP_ASM
+#if MARTA_LOOP_TYPE == MARTA_LOOP_ASM
 #define INIT_BEGIN_LOOP(TSTEPS)                                                \
   __asm volatile("mov $" TO_STRING(TSTEPS) ", %%ecx" : : : "ecx");             \
   __asm volatile("begin_loop:\n");                                             \

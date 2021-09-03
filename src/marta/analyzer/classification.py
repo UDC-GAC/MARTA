@@ -73,7 +73,7 @@ class DecisionTree(Classification):
                 filled=True,
                 rounded=True,
                 leaves_parallel=True,
-                impurity=False,
+                impurity=self.config.impurity,
                 proportion=self.config.proportion,
                 class_names=class_names,
                 rotate=self.config.rotate,
@@ -105,9 +105,13 @@ class DecisionTree(Classification):
             y_data=self.target_data,
             feature_names=self.data.columns.tolist(),
             orientation=orientation,
-            ticks_fontsize=14,
-            label_fontsize=16,
+            ticks_fontsize=20,
+            label_fontsize=20,
+            title_fontsize=20,
+            # histtype="b",
             class_names=class_names,
+            scale=self.config.scale,
+            fontname=["DejaVu Sans"],
         )
         viz.save(f"{output_path}/graph_decision_tree.svg")
 
@@ -166,7 +170,6 @@ class DecisionTree(Classification):
     def perform_analysis(self, output_path="") -> None:
         print("Classification analysis:")
         print("========================")
-        self.get_summary(output_path)
         if self.config.text_tree:
             print("\n-> Decision tree generated:\n")
             with CaptureOutput() as output:
@@ -187,7 +190,7 @@ class DecisionTree(Classification):
                     for key in self.encoders:
                         f.write(f"Classes for '{key}':")
                         f.write(f"{self.encoders[key].classes_}")
-
+        self.get_summary(output_path)
         if self.config.graph_tree:
             pinfo(f"Saving graphic decision tree in directory '{output_path}'")
             self.export_graph_tree(output_path)

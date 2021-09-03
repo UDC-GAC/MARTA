@@ -24,7 +24,7 @@ import matplotlib.pyplot as plt
 
 # Local imports
 from marta.analyzer.config import PlotCfg
-from marta.utils.marta_utilities import perror, pinfo
+from marta.utils.marta_utilities import perror, pinfo, pwarning
 
 
 def plot_data(data: pd.DataFrame, cfg: PlotCfg, output_file: str) -> None:
@@ -66,18 +66,14 @@ def plot_data(data: pd.DataFrame, cfg: PlotCfg, output_file: str) -> None:
     elif cfg.type == "kdeplot":
         kde_keys = ["x", "y", "hue", "log_scale"]
         new_cfg = {k: getattr(cfg, k) for k in kde_keys if k in vars(cfg)}
-        p = plot_type(data=data, **new_cfg, multiple="stack", alpha=0.5)
+        plot_type(data=data, **new_cfg, multiple="stack", alpha=0.5)
+    elif cfg.type == "catplot":
+        fig = plot_type(x=cfg.x, hue=cfg.hue, kind=cfg.kind, data=data, col=cfg.col)
     else:
-        p = plot_type(data=data, x=cfg.x, y=cfg.y, hue=cfg.hue, size=cfg.size,)
+        plot_type(
+            data=data, x=cfg.x, y=cfg.y, hue=cfg.hue, size=cfg.size,
+        )
         sns.rugplot(data=data, x=cfg.x, y=cfg.y, hue=cfg.hue)
-    if hasattr(p, "patches"):
-        # Define some hatches
-        hatches = ["-", "+", "x", "\\", "*", "o"]
-
-        # Loop over the bars
-        for i, thisbar in enumerate(p.patches):
-            # Set a different hatch for each bar
-            thisbar.set_hatch(hatches[i])
 
     if output_file == "":
         perror("Wrong file to save plot")
@@ -85,6 +81,14 @@ def plot_data(data: pd.DataFrame, cfg: PlotCfg, output_file: str) -> None:
         ax.set_xlabel(cfg.x_label)
     if cfg.y_label != None:
         ax.set_ylabel(cfg.y_label)
+
+    if cfg.hatches and cfg.type not in ["catplot", "relplot"]:
+        hatches = ["*", "+", "x", "\\", "-", "_" "*", "o"]
+        for leg, hatch in zip(ax.legend_.legendHandles, hatches):
+            leg.set_hatch(hatch)
+        for collection, hatch in zip(ax.collections[::-1], hatches):
+            collection.set_hatch(hatch)
+
     fig.tight_layout()  # adjust padding
     output_file = f"{output_file.split('.')[0]}.{cfg.format}"
     fig.savefig(output_file, format=cfg.format)

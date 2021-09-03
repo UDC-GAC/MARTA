@@ -55,17 +55,19 @@ class DTConfig:
         self.text_tree = config.get("text_tree", False)
         self.graph_tree = config.get("graph_tree", False)
         self.proportion = config.get("proportion", False)
+        self.impurity = config.get("impurity", False)
         # False for vertical, True for horizontal
         self.orientation = config.get("orientation", "vertical")
         self.rotate = self.orientation == "horizontal"
         self.labels = config.get("labels", [])
         self.style = config.get("style", "scikit")
+        self.scale = config.get("scale", 1.0)
         for key in config:
             setattr(self, key, config[key])
 
 
 class PlotCfg:
-    allowed_types = ["scatterplot", "lineplot", "relplot", "kdeplot"]
+    allowed_types = ["scatterplot", "lineplot", "relplot", "kdeplot", "catplot"]
     allowed_formats = ["pdf", "eps", "png", "ps", "svg"]
 
     def __init__(self, cfg: dict):
@@ -88,6 +90,9 @@ class PlotCfg:
         self.y_label = cfg.get("y_label", None)
         self.sort = cfg.get("sort", None)
         self.log_scale = cfg.get("log_scale", None)
+        self.kind = cfg.get("kind", None)
+        self.hatches = cfg.get("hatches", False)
+        self.palette = cfg.get("palette", "pastel")
         try:
             self.x = cfg["x_axis"]
         except KeyError as K:
