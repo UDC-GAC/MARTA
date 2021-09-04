@@ -74,11 +74,11 @@
                     value: "[7,128,8192]"
           derived:
             SET_:
-                type: single
+                type: multi
                 variables: ["IDX0", "IDX1", "IDX2", "IDX3", "IDX4", "IDX5", "IDX6", "IDX7"]
                 expression: int(VAR/16) % 16
             CL_:
-                type: single
+                type: multi
                 variables: ["IDX0", "IDX1", "IDX2", "IDX3", "IDX4", "IDX5", "IDX6", "IDX7"]
                 expression: int(VAR / 16)
             N_CL:

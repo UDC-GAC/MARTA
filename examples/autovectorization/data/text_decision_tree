@@ -1,23 +1,50 @@
 Decision tree generated:
 ========================
-|--- N <= 6.50
-|   |--- LOOP_BOUND_PARAMETRIC <= 0.50
-|   |   |--- N <= 3.50
-|   |   |   |--- class: 0.0
-|   |   |--- N >  3.50
-|   |   |   |--- class: 0.0
-|   |--- LOOP_BOUND_PARAMETRIC >  0.50
-|   |   |--- compiler <= 1.50
-|   |   |   |--- class: 1.0
-|   |   |--- compiler >  1.50
-|   |   |   |--- class: 0.0
-|--- N >  6.50
-|   |--- N <= 12.00
-|   |   |--- compiler <= 1.50
-|   |   |   |--- class: 1.0
-|   |   |--- compiler >  1.50
-|   |   |   |--- class: 0.0
-|   |--- N >  12.00
-|   |   |--- class: 1.0
+|--- N_ITER <= 12.50
+|   |--- N_ITER <= 7.50
+|   |   |--- ACC_STRIDE <= 1.50
+|   |   |   |--- N_ITER <= 3.50
+|   |   |   |   |--- class: 0.0
+|   |   |   |--- N_ITER >  3.50
+|   |   |   |   |--- class: 0.0
+|   |   |--- ACC_STRIDE >  1.50
+|   |   |   |--- N_ITER <= 4.50
+|   |   |   |   |--- class: 0.0
+|   |   |   |--- N_ITER >  4.50
+|   |   |   |   |--- class: 0.0
+|   |--- N_ITER >  7.50
+|   |   |--- ACC_STRIDE <= 3.50
+|   |   |   |--- LS_PARAM <= 0.50
+|   |   |   |   |--- class: 0.0
+|   |   |   |--- LS_PARAM >  0.50
+|   |   |   |   |--- class: 1.0
+|   |   |--- ACC_STRIDE >  3.50
+|   |   |   |--- N_ITER <= 11.50
+|   |   |   |   |--- class: 0.0
+|   |   |   |--- N_ITER >  11.50
+|   |   |   |   |--- class: 0.0
+|--- N_ITER >  12.50
+|   |--- ACC_STRIDE <= 7.50
+|   |   |--- N_ITER <= 16.50
+|   |   |   |--- compiler <= 0.50
+|   |   |   |   |--- class: 0.0
+|   |   |   |--- compiler >  0.50
+|   |   |   |   |--- class: 1.0
+|   |   |--- N_ITER >  16.50
+|   |   |   |--- ACC_STRIDE <= 3.50
+|   |   |   |   |--- class: 1.0
+|   |   |   |--- ACC_STRIDE >  3.50
+|   |   |   |   |--- class: 1.0
+|   |--- ACC_STRIDE >  7.50
+|   |   |--- LS_PARAM <= 0.50
+|   |   |   |--- N_ITER <= 16.50
+|   |   |   |   |--- class: 1.0
+|   |   |   |--- N_ITER >  16.50
+|   |   |   |   |--- class: 1.0
+|   |   |--- LS_PARAM >  0.50
+|   |   |   |--- N_ITER <= 124.00
+|   |   |   |   |--- class: 0.0
+|   |   |   |--- N_ITER >  124.00
+|   |   |   |   |--- class: 0.0
 
-Classes for 'CFG':['-DLOOP' '-DLOOP_PARTIAL_SLP' '-DLOOP_SLP']Classes for 'compiler':['gcc' 'gcc-11' 'icc']
+Classes for 'compiler':['gcc-11' 'icc']

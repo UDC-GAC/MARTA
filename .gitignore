@@ -65,6 +65,7 @@ tests/utilities
 *.synctex*
 *.out
 *.pdf
+*.png
 
 # Just commit those kernels which are significant
 marta/profiler/kernels/*

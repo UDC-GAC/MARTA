@@ -7,32 +7,31 @@
           target: tsc
           norm: None
           categories:
-              enabled: False
+              enabled: True
               scaling_factor: "1"
               mode: multimodal
       plot:
+          enabled: False
           type: kdeplot
           format: pdf
           data: raw
           x_axis: tsc
           log_scale: False
           hue: CFG
+          hatches: True
       classification:
           type: decision_tree
           enabled: True
           config:
-              max_depth: 3
-              random_state: 1
-              criterion: "gini"
-              splitter: "best"
+              max_depth: 4
+              max_leaves: 10000
               proportion: True
-              max_leaves: 100
               text_tree: True
               graph_tree: True
               orientation: "horizontal"
       feature_importance:
           type: random_forest
-          enabled: True
+          enabled: False
           config:
               n_estimators: 50
               criterion: "gini"
