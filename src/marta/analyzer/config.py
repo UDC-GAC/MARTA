@@ -93,6 +93,9 @@ class PlotCfg:
         self.kind = cfg.get("kind", None)
         self.hatches = cfg.get("hatches", False)
         self.palette = cfg.get("palette", "pastel")
+        self.mark_centroids = cfg.get("mark_centroids", False)
+        self.labels_catplot = cfg.get("labels_catplot", None)
+        self.font_scale = cfg.get("font_scale", 1.0)
         try:
             self.x = cfg["x_axis"]
         except KeyError as K:

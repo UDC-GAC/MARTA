@@ -21,10 +21,12 @@
 import seaborn as sns
 import pandas as pd
 import matplotlib.pyplot as plt
+from scipy.signal import find_peaks
+import numpy as np
 
 # Local imports
 from marta.analyzer.config import PlotCfg
-from marta.utils.marta_utilities import perror, pinfo, pwarning
+from marta.utils.marta_utilities import perror, pinfo
 
 
 def plot_data(data: pd.DataFrame, cfg: PlotCfg, output_file: str) -> None:
@@ -37,7 +39,7 @@ def plot_data(data: pd.DataFrame, cfg: PlotCfg, output_file: str) -> None:
     :param output_file: File to output plot.
     :type output_file: str
     """
-    pinfo(f"Saving custom plot in '{output_file}'")
+    pinfo(f"Saving {cfg.type} plot in '{output_file}.{cfg.format}'")
     plot_type = getattr(sns, cfg.type)
     if cfg.sort != None:
         data = (
@@ -64,11 +66,72 @@ def plot_data(data: pd.DataFrame, cfg: PlotCfg, output_file: str) -> None:
             palette="hls",
         )
     elif cfg.type == "kdeplot":
-        kde_keys = ["x", "y", "hue", "log_scale"]
+        kde_keys = ["x", "hue", "y", "log_scale"]
         new_cfg = {k: getattr(cfg, k) for k in kde_keys if k in vars(cfg)}
-        plot_type(data=data, **new_cfg, multiple="stack", alpha=0.5)
+        p = sns.kdeplot(data=data, **new_cfg)
+        lines_set = p.get_lines()
+        ax.cla()
+        ax.relim()
+        n_colors = len(np.unique(data[cfg.hue].values))
+        p = sns.kdeplot(
+            data=data,
+            **new_cfg,
+            palette=sns.light_palette("crimson", n_colors=n_colors),
+            multiple="stack",
+        )
+        if cfg.mark_centroids:
+            for line in lines_set:
+                x, y = line.get_data()
+                peaks = find_peaks(y, distance=1, width=9)[0]
+                for peak in peaks:
+                    plt.axvline(x[peak], color="red", linestyle="dotted")
+                    ticks = ax.get_xticks()
+                    labels = ax.get_xticklabels()
+                    idx = ticks.searchsorted(x[peak])
+                    ticks = np.concatenate(
+                        (ticks[:idx], [round(x[peak], 2)], ticks[idx:])
+                    )
+                    ax.set_xticks(ticks)
+                    # Is this genius or stupid?
+                    labels = [""] * len(ticks)
+                    max_diff = max(ticks) - min(ticks)
+                    for i in range(len(ticks) - 1):
+                        diff = ticks[i + 1] - ticks[i]
+                        if diff < 0.03 * max_diff:
+                            labels[i] = ""
+                        else:
+                            labels[i] = ticks[i]
+                    ax.set_xticklabels(labels, rotation=45, ha="right")
+        ax.yaxis.tick_left()
+        ax.xaxis.tick_bottom()
+        ax.autoscale()
+
     elif cfg.type == "catplot":
-        fig = plot_type(x=cfg.x, hue=cfg.hue, kind=cfg.kind, data=data, col=cfg.col)
+        sns.set(font_scale=cfg.font_scale)
+        sns.set_style("whitegrid", {"axes.grid": False})
+        n_colors = len(np.unique(data[cfg.hue].values))
+        fig = plot_type(
+            x=cfg.x,
+            hue=cfg.hue,
+            kind=cfg.kind,
+            data=data,
+            col=cfg.col,
+            palette=sns.light_palette("crimson", n_colors=n_colors),
+            edgecolor=".1",
+        )
+        if cfg.labels_catplot != None:
+            fig.set_axis_labels("", "Count")
+            fig.set_xticklabels(cfg.labels_catplot)
+
+        sns.move_legend(
+            fig,
+            "lower center",
+            bbox_to_anchor=(0.5, 1),
+            ncol=3,
+            title=None,
+            frameon=False,
+        )
+
     else:
         plot_type(
             data=data, x=cfg.x, y=cfg.y, hue=cfg.hue, size=cfg.size,
@@ -83,7 +146,7 @@ def plot_data(data: pd.DataFrame, cfg: PlotCfg, output_file: str) -> None:
         ax.set_ylabel(cfg.y_label)
 
     if cfg.hatches and cfg.type not in ["catplot", "relplot"]:
-        hatches = ["*", "+", "x", "\\", "-", "_" "*", "o"]
+        hatches = ["", "/", "\\", "|", "-", "+", "x", "o", "O", ".", "*"]
         for leg, hatch in zip(ax.legend_.legendHandles, hatches):
             leg.set_hatch(hatch)
         for collection, hatch in zip(ax.collections[::-1], hatches):

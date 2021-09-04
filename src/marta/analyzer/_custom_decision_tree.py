@@ -77,6 +77,9 @@ def node_to_str_custom(self, tree, node_id, criterion):
     if self.proportion:
         percent = 100.0 * tree.n_node_samples[node_id] / float(tree.n_node_samples[0])
         node_string += str(round(percent, 1)) + "%" + characters[4]
+        node_string += "impur. " + (
+            str(round(tree.impurity[node_id], 2)) + characters[4]
+        )
     # else:
     #     node_string += str(tree.n_node_samples[node_id]) + characters[4]
 
