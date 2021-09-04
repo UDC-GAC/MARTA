@@ -1,4 +1,5 @@
-# Copyright 2021 Marcos Horro
+# Copyright (c) Colorado State University. 2019-2021
+# Copyright (c) Universidade da Coruña. 2019-2021
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,9 +12,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+#
+# Author: Marcos Horro <marcos.horro@udc.es>
+#
 # -*- coding: utf-8 -*-
-
 # Standard libraries
 import os
 
@@ -61,6 +63,9 @@ class DecisionTree(Classification):
         """
 
         if self.config.style == "scikit":
+            class_names = self.config.labels
+            if class_names == []:
+                class_names = self.labels
             dot_data = tree.export_graphviz(
                 self.clf,
                 out_file=None,
@@ -68,9 +73,9 @@ class DecisionTree(Classification):
                 filled=True,
                 rounded=True,
                 leaves_parallel=True,
-                impurity=False,
+                impurity=self.config.impurity,
                 proportion=self.config.proportion,
-                class_names=self.config.labels,
+                class_names=class_names,
                 rotate=self.config.rotate,
                 precision=self.config.precision,
                 label="none",
@@ -100,9 +105,13 @@ class DecisionTree(Classification):
             y_data=self.target_data,
             feature_names=self.data.columns.tolist(),
             orientation=orientation,
-            ticks_fontsize=14,
-            label_fontsize=16,
+            ticks_fontsize=20,
+            label_fontsize=20,
+            title_fontsize=20,
+            # histtype="b",
             class_names=class_names,
+            scale=self.config.scale,
+            fontname=["DejaVu Sans"],
         )
         viz.save(f"{output_path}/graph_decision_tree.svg")
 
@@ -161,7 +170,6 @@ class DecisionTree(Classification):
     def perform_analysis(self, output_path="") -> None:
         print("Classification analysis:")
         print("========================")
-        self.get_summary(output_path)
         if self.config.text_tree:
             print("\n-> Decision tree generated:\n")
             with CaptureOutput() as output:
@@ -182,7 +190,7 @@ class DecisionTree(Classification):
                     for key in self.encoders:
                         f.write(f"Classes for '{key}':")
                         f.write(f"{self.encoders[key].classes_}")
-
+        self.get_summary(output_path)
         if self.config.graph_tree:
             pinfo(f"Saving graphic decision tree in directory '{output_path}'")
             self.export_graph_tree(output_path)

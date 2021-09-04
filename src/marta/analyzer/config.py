@@ -1,4 +1,5 @@
-# Copyright 2021 Marcos Horro
+# Copyright (c) Colorado State University. 2019-2021
+# Copyright (c) Universidade da Coruña. 2019-2021
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,7 +12,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+#
+# Author: Marcos Horro <marcos.horro@udc.es>
+#
 # -*- coding: utf-8 -*-
 
 # Standard libraries
@@ -52,17 +55,19 @@ class DTConfig:
         self.text_tree = config.get("text_tree", False)
         self.graph_tree = config.get("graph_tree", False)
         self.proportion = config.get("proportion", False)
+        self.impurity = config.get("impurity", False)
         # False for vertical, True for horizontal
         self.orientation = config.get("orientation", "vertical")
         self.rotate = self.orientation == "horizontal"
         self.labels = config.get("labels", [])
         self.style = config.get("style", "scikit")
+        self.scale = config.get("scale", 1.0)
         for key in config:
             setattr(self, key, config[key])
 
 
 class PlotCfg:
-    allowed_types = ["scatterplot", "lineplot", "relplot", "kdeplot"]
+    allowed_types = ["scatterplot", "lineplot", "relplot", "kdeplot", "catplot"]
     allowed_formats = ["pdf", "eps", "png", "ps", "svg"]
 
     def __init__(self, cfg: dict):
@@ -85,6 +90,12 @@ class PlotCfg:
         self.y_label = cfg.get("y_label", None)
         self.sort = cfg.get("sort", None)
         self.log_scale = cfg.get("log_scale", None)
+        self.kind = cfg.get("kind", None)
+        self.hatches = cfg.get("hatches", False)
+        self.palette = cfg.get("palette", "pastel")
+        self.mark_centroids = cfg.get("mark_centroids", False)
+        self.labels_catplot = cfg.get("labels_catplot", None)
+        self.font_scale = cfg.get("font_scale", 1.0)
         try:
             self.x = cfg["x_axis"]
         except KeyError as K:

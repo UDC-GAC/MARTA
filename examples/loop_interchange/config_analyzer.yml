@@ -1,35 +1,43 @@
 - kernel:
-      input: examples/loop_interchange/data/intel_xeon_silver_4216.csv
+      input: examples/loop_interchange/data/intel_xeon_silver_4216_new.csv
       output_path: examples/loop_interchange/data/
       prepare_data:
-          cols: CFG LOOP_BOUND_PARAMETRIC ARRAY_DIM compiler
+          cols: CFG LOOP_BOUND_PARAMETRIC ARRAY_DIM compiler N M L compiler_flags
+          rows: { "CFG": "-DREDUCTION" }
           target: loop_interchange
           norm: None
           categories:
               enabled: False
       plot:
-          type: relplot
+          enabled: True
+          type: catplot
           format: pdf
           data: raw
-          x_axis: CFG
-          y_axis: loop_interchange
-          hue: compiler_flags
+          labels_catplot: ["No permutation", "Permutation"]
+          x_axis: loop_interchange
+          palette: "who"
+          kind: count
+          hue: CFG
           col: compiler
+          font_scale: 1.5
       classification:
           type: decision_tree
+          enabled: False
           config:
-              max_depth: 3
+              max_depth: 4
               max_leaves: 10
               criterion: "gini"
               min_score: 0.8
               pruning_mccp_alpha: 0.0
               text_tree: True
               graph_tree: True
-              orientation: "vertical"
-              labels: ["No inter.", "Inter."]
-              style: scikit
+              orientation: "horizontal"
+              labels: ["No perm.", "Perm."]
+              scale: 1.5
+              style: dtreeviz
       feature_importance:
           type: random_forest
+          enabled: False
           config:
               n_estimators: 10
               criterion: "gini"

@@ -1,4 +1,5 @@
-# Copyright 2021 Marcos Horro
+# Copyright (c) Colorado State University. 2019-2021
+# Copyright (c) Universidade da Coruña. 2019-2021
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,9 +12,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+#
+# Author: Marcos Horro <marcos.horro@udc.es>
+#
 # -*- coding: utf-8 -*-
-
 # Third-party libraries
 import numpy as np
 import matplotlib
@@ -109,11 +111,7 @@ class RandomForest(FeatureImportance):
         fig.savefig(file_perm, format="pdf")
 
     def __init__(
-        self,
-        config: RFConfig,
-        data: pd.DataFrame,
-        target: pd.Series,
-        feature_names: list,
+        self, config: RFConfig, data: pd.DataFrame, cols: list, target: str,
     ):
         self.config = config
         self.forest = RandomForestClassifier(
@@ -125,10 +123,17 @@ class RandomForest(FeatureImportance):
             n_jobs=self.config.n_jobs,
             random_state=self.config.random_state,
         )
-        self.feature_names = feature_names
-        self.data = data
-        self.target_data = target
-        self.labels = np.unique(target.values).tolist()
+        self.feature_names = cols
+        self.raw_data = data
+        self.data = data[cols]
+        self.target_dimension = target
+        try:
+            self.target_data = data[f"{target}_cat"]
+        except KeyError:
+            self.target_data = data[target]
+            if self.target_data.dtype == np.dtype("float64"):
+                self.target_data = data[target].apply(lambda x: round(x, 2))
+        self.labels = np.unique(self.target_data).tolist()
         self.var_train, self.var_test, self.res_train, self.res_test = train_test_split(
             self.data.values, self.target_data.values, test_size=0.2
         )

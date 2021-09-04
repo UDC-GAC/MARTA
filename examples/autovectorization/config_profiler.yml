@@ -14,44 +14,71 @@
       compilation:
           debug: False
           enabled: True
-          processes: 32
+          processes: 64
           language: "C"
           compiler_flags: 
             { 
                 "gcc-11": [" -march=native -mtune=native -Ofast "],
-                "gcc": [" -march=native -mtune=native -Ofast "],
                 "icc": [" -march=native -mtune=native -Ofast "],
             }
           main_src: "main.c"
+          loop_type: C
           kernel_inlined: True
           asm_analysis:
                 syntax: "intel"
                 count_ins: False
                 static_analysis: ""
       configuration:
-          kernel_cfg: [
-          "-DLOOP",
-          "-DLOOP_PARTIAL_SLP",
-          "-DLOOP_SLP",
-        # "-DLOOP_NESTED",
-        #   "-DLOOP_NESTED_DOUBLE"
-          ]
           d_features:
                 N:
                     evaluate: True
                     type: "static"
                     val_type: "numeric"
-                    value: "[2,3,4,5,8,16,25,32,48,70,128,200,256,512]"
+                    value: "list(np.concatenate((np.arange(1,8),np.arange(8,32,4),np.arange(32,129,8))))"
+                INIT_VAL:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[1,2,3,7]"
+                LOOP_STEP:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[1,2,3,5]"
+                INDEX_FACTOR:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[1,2,5,10]"
                 LOOP_BOUND_PARAMETRIC:
                     evaluate: True
                     type: "static"
                     val_type: "numeric"
                     value: "[0,1]"
-          flops: "1*N"
+                INIT_VAL_PARAMETRIC:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[0,1]"
+                LOOP_STEP_PARAMETRIC:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[0,1]"
+                INDEX_FACTOR_PARAMETRIC:
+                    evaluate: True
+                    type: "static"
+                    val_type: "numeric"
+                    value: "[0,1]"
+          derived:
+                N_ITER:
+                    type: single
+                    variables: ["N", "LOOP_STEP"]
+                    expression: "max(int(VAR_0/VAR_1),0)"
+          flops: "1*(N-INIT_VAL)/LOOP_STEP"
       execution:
           enabled: True
-          papi_counters: ["INSTRUCTIONS_RETIRED"]
-          time: True
+          time: False
           tsc: True
           threshold_outliers: 3
           mean_and_discard_outliers: True

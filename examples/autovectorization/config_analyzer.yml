@@ -1,29 +1,30 @@
 - kernel:
-      input: examples/autovectorization/data/intel_xeon_silver_4216.csv
+      input: examples/autovectorization/data/intel_xeon_silver_4216_fulldata.csv
       output_path: examples/autovectorization/data/
       prepare_data:
-          cols: N LOOP_BOUND_PARAMETRIC CFG compiler
+          cols: compiler N_ITER INIT_VAL ACC_STRIDE LOOP_STEP LOOP_BOUND_PARAMETRIC INDEX_FACTOR_PARAMETRIC LS_PARAM INIT_VAL_PARAMETRIC
           target: loops_vectorized
       plot:
-          type: relplot
-          format: png
+          type: kdeplot
+          format: pdf
           data: raw
-          x_axis: index
-          y_axis: loops_vectorized
-          hue: N
-          col: CFG
+          x_axis: N_ITER
+          hue: loops_vectorized
+          hatches: True
       classification:
           type: decision_tree
           config:
-              max_depth: 3
-              max_leaves: 10
+              style: "scikit"
+              max_depth: 4
+              max_leaves: 100
               criterion: "gini"
               min_score: 0.8
-              precision: 1
+              precision: 3
               pruning_mccp_alpha: 0.0
               text_tree: True
               graph_tree: True
-              orientation: "vertical"
+              proportion: True
+              orientation: "horizontal"
               labels: ["No vect.", "Vect."]
       feature_importance:
           type: random_forest

@@ -14,10 +14,6 @@
  * limitations under the License.
  */
 
-#if LOOP_BOUND_PARAMETRIC == 0
-#define POLYBENCH_USE_SCALAR_LB
-#endif
-
 #define DATA_TYPE_IS_FLOAT
 
 #include "marta_wrapper.h"
@@ -27,42 +23,82 @@
 #define N 1
 #endif
 
-#define _UB_N POLYBENCH_LOOP_BOUND(N, n)
-
-#if defined(LOOP_PARTIAL_SLP)
-void KERNEL(int n, float POLYBENCH_1D(x, N, n)) {
-  float sum = 0;
-  sum += x[0] * 42.0f;
-  for (int i = 1; i < _UB_N; ++i) {
-    sum += x[i] * 42.0f;
-  }
-  DO_NOT_TOUCH(sum);
-}
-#elif defined(LOOP_SLP)
-void KERNEL(int n, float POLYBENCH_1D(x, N, n)) {
-  float sum = 0;
-  sum += x[0] * 42.0f;
-  for (int i = 1; i < _UB_N; ++i) {
-    sum += x[i] * 42.0f;
-  }
-  sum += x[_UB_N - 1] * 42.0f;
-  DO_NOT_TOUCH(sum);
-}
-#else
-void KERNEL(int n, float POLYBENCH_1D(x, N, n)) {
-  float sum = 0;
-  for (int i = 0; i < _UB_N; ++i) {
-    sum += x[i] * 42.0f;
-  }
-  DO_NOT_TOUCH(sum);
-}
+#ifndef INIT_VAL
+#define INIT_VAL 0
 #endif
+
+#ifndef LOOP_STEP
+#define LOOP_STEP 1
+#endif
+
+#ifndef INDEX_FACTOR
+#define INDEX_FACTOR 1
+#endif
+
+#ifndef LOOP_BOUND_PARAMETRIC
+#define LOOP_BOUND_PARAMETRIC 0
+#endif
+
+#ifndef INIT_VAL_PARAMETRIC
+#define INIT_VAL_PARAMETRIC 0
+#endif
+
+#ifndef LOOP_STEP_PARAMETRIC
+#define LOOP_STEP_PARAMETRIC 0
+#endif
+
+#ifndef INDEX_FACTOR_PARAMETRIC
+#define INDEX_FACTOR_PARAMETRIC 0
+#endif
+
+#if LOOP_BOUND_PARAMETRIC == 1
+#define _UB_N n
+#else
+#define _UB_N N
+#endif
+
+#if INIT_VAL_PARAMETRIC == 1
+#define _UB_INIT_VAL init_val
+#else
+#define _UB_INIT_VAL INIT_VAL
+#endif
+
+#if LOOP_STEP_PARAMETRIC == 1
+#define _UB_LOOP_STEP loop_step
+#else
+#define _UB_LOOP_STEP LOOP_STEP
+#endif
+
+#if INDEX_FACTOR_PARAMETRIC == 1
+#define _UB_INDEX_FACTOR index_factor
+#else
+#define _UB_INDEX_FACTOR INDEX_FACTOR
+#endif
+
+static void
+KERNEL(int n, int init_val, int loop_step, int index_factor, DATA_TYPE *y,
+       DATA_TYPE POLYBENCH_1D(x, INDEX_FACTOR *N, index_factor *n)) {
+  DATA_TYPE sum = 0;
+  for (int i = _UB_INIT_VAL; i < _UB_N + _UB_INIT_VAL; i += _UB_LOOP_STEP) {
+    sum += x[_UB_INDEX_FACTOR * i] * 42.0f;
+  }
+  *y = sum;
+}
 
 MARTA_BENCHMARK_BEGIN(MARTA_NO_HEADER);
 int n = N;
-POLYBENCH_1D_ARRAY_DECL(x, DATA_TYPE, N, n);
-
-init_1darray(n, POLYBENCH_ARRAY(x));
-
-PROFILE_FUNCTION_LOOP(KERNEL(n, POLYBENCH_ARRAY(x)), TSTEPS);
+int init_val = INIT_VAL;
+int loop_step = INDEX_FACTOR;
+int index_factor = INDEX_FACTOR;
+DATA_TYPE y = 0.0f;
+POLYBENCH_1D_ARRAY_DECL(x, DATA_TYPE, 32 * INDEX_FACTOR * N,
+                        32 * index_factor * n);
+init_1darray(32 * index_factor * n, POLYBENCH_ARRAY(x));
+PROFILE_FUNCTION_LOOP(KERNEL(n, init_val, loop_step, index_factor, &y,
+                             POLYBENCH_ARRAY(x)),
+                      TSTEPS);
+if (argc > 42) {
+  printf("%f\n", y);
+}
+POLYBENCH_FREE_ARRAY(x);
 MARTA_BENCHMARK_END;

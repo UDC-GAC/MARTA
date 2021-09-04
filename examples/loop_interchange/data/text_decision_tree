@@ -1,25 +1,21 @@
 Decision tree generated:
 ========================
 |--- compiler <= 0.50
-|   |--- CFG <= 1.50
-|   |   |--- ARRAY_DIM <= 1.50
-|   |   |   |--- class: 0.0
-|   |   |--- ARRAY_DIM >  1.50
-|   |   |   |--- class: 0.0
-|   |--- CFG >  1.50
-|   |   |--- ARRAY_DIM <= 1.50
-|   |   |   |--- class: 0.0
-|   |   |--- ARRAY_DIM >  1.50
-|   |   |   |--- class: 0.0
-|--- compiler >  0.50
-|   |--- CFG <= 0.50
+|   |--- N <= 24.00
 |   |   |--- class: 0.0
-|   |--- CFG >  0.50
-|   |   |--- ARRAY_DIM <= 1.50
+|   |--- N >  24.00
+|   |   |--- compiler_flags <= 0.50
+|   |   |   |--- class: 0.0
+|   |   |--- compiler_flags >  0.50
 |   |   |   |--- class: 1.0
+|--- compiler >  0.50
+|   |--- N <= 12.00
+|   |   |--- ARRAY_DIM <= 1.50
+|   |   |   |--- class: 0.0
 |   |   |--- ARRAY_DIM >  1.50
 |   |   |   |--- class: 1.0
+|   |--- N >  12.00
+|   |   |--- class: 1.0
 
-Classes for 'CFG':['-DLOOP_2D  -DPOLYBENCH_STACK_ARRAYS'
- '-DLOOP_3D  -DPOLYBENCH_STACK_ARRAYS'
- '-DREDUCTION  -DPOLYBENCH_STACK_ARRAYS']Classes for 'compiler':['gcc-11' 'icc']
+Classes for 'CFG':['-DREDUCTION']Classes for 'compiler':['gcc-11' 'icc']Classes for 'compiler_flags':[' -march=native -mtune=native -O3 -DPOLYBENCH_STACK_ARRAYS'
+ ' -march=native -mtune=native -Ofast -DPOLYBENCH_STACK_ARRAYS']

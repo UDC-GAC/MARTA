@@ -52,6 +52,9 @@ polybench*/
 *.txt
 time_*
 cyc_*
+tests/Makefile
+tests/MARTA.mk
+tests/utilities
 
 # LaTeX
 *.bbl
@@ -62,6 +65,7 @@ cyc_*
 *.synctex*
 *.out
 *.pdf
+*.png
 
 # Just commit those kernels which are significant
 marta/profiler/kernels/*

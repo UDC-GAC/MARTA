@@ -1,5 +1,5 @@
-#!/bin/python3
-# Copyright 2021 Marcos Horro
+# Copyright (c) Colorado State University. 2019-2021
+# Copyright (c) Universidade da Coruña. 2019-2021
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,7 +12,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+#
+# Author: Marcos Horro <marcos.horro@udc.es>
+#
 # -*- coding: utf-8 -*-
 
 # Standard library
@@ -403,7 +405,9 @@ class Kernel:
         # Updating parameters
         if type(params_dict) is not list:
             data.update(params_dict)
-            for key in params_dict:
+            # sort them by length
+            keys = sorted(params_dict.keys(), key=len, reverse=True)
+            for key in keys:
                 self.flops = self.flops.replace(key, str(params_dict[key]))
         d = get_dict_from_d_flags(kconfig)
         if len(d.keys()) > 0:

@@ -1,7 +1,9 @@
-# MARTA - Micro ARchitectural Toolkit for Analysis
+# MARTA: Multi-configuration Assembly pRofiler Toolkit for performance Analysis
 
 [![Python
 package](https://github.com/markoshorro/MARTA/actions/workflows/python-package.yml/badge.svg)](https://github.com/markoshorro/MARTA/actions/workflows/python-package.yml)
+[![Version](https://img.shields.io/badge/version-v0.0.1a0-008080)](https://github.com/markoshorro/MARTA)
+[![Python versions](https://img.shields.io/badge/python-3.7%20%7C%203.8%20%7C%203.9-cf362b)](https://www.python.org/download/releases/3.0/)
 [![Code Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
@@ -23,9 +25,10 @@ for (int i = INIT_VAL; i < UPPER_BOUND; i += STEP) {
 
 It could be interesting to analyze the deviation in performance of same code
 but varying `INIT_VAL`, `UPPER_BOUND` and `STEP`. Just given that little code
-and those variables or parameters, MARTA extracts information in form of decision tree
-regarding performance. Decision tree categorizes the performance of the kernel
-according to the dimensions of interest specified.
+and those variables or parameters, MARTA extracts information in the form of a
+decision tree regarding performance. Decision trees categorize the performance
+of the kernel (or other target column of the domain) according to the dimensions of
+interest specified.
 
 MARTA is also a very low intrusive profiler, even though it requires recompiling.
 Just with a header and two directives indicating the start and end of the
@@ -49,10 +52,10 @@ This project has two large and independent components:
   metrics such as cycles, time and FLOPS/s for a concrete kernel with regard to
   a input file specifying all parameters.
 - `analyzer`: given an input in table form (e.g. CSV) and some parameters,
-  using [scikit-learn](https://scikit-learn.org/stable/index.html)
-  generates a classification system in order to **categorize** performance,
-  as well as detecting false positives/negatives. Typically, this system is
-  either a decision tree or a random forest algorithm.
+  using [scikit-learn](https://scikit-learn.org/stable/index.html) generates a
+  classification system in order to **categorize** performance (or other
+  dimension of interest), and reporting the accuracy of the system. Typically,
+  this system is either a decision tree or a random forest classifier/regressor.
 
 ### Installation
 
@@ -94,6 +97,16 @@ python -m analyzer ...
 Under the [examples](examples/) directory there are available examples to
 better understand how the tool works.
 
+### Testing
+
+This library uses `pytest` for unit and integration tests. All tests are
+located under [tests](tests/) directory. For more information refer to
+[tests/README.md](tests/README.md).
+
 ## License, copyright and authors
 
 See [LICENSE](LICENSE), [COPYRIGHT](COPYRIGHT) and [AUTHORS](AUTHORS) files, respectively, for further information.
+
+## Citation
+
+TBD.

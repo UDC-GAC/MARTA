@@ -1,4 +1,5 @@
-# Copyright 2021 Marcos Horro
+# Copyright (c) Colorado State University. 2019-2021
+# Copyright (c) Universidade da Coruña. 2019-2021
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,6 +12,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
+# Author: Marcos Horro <marcos.horro@udc.es>
+#
+# -*- coding: utf-8 -*-
 
 from sklearn.tree import _tree
 from sklearn.tree import _criterion
@@ -72,6 +77,9 @@ def node_to_str_custom(self, tree, node_id, criterion):
     if self.proportion:
         percent = 100.0 * tree.n_node_samples[node_id] / float(tree.n_node_samples[0])
         node_string += str(round(percent, 1)) + "%" + characters[4]
+        node_string += "impur. " + (
+            str(round(tree.impurity[node_id], 2)) + characters[4]
+        )
     # else:
     #     node_string += str(tree.n_node_samples[node_id]) + characters[4]
 
