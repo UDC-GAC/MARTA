@@ -207,7 +207,7 @@ def compile_makefile(
 
 
 def get_asm_name(params: Union[dict, Any]) -> str:
-    if not type(params) is dict:
+    if not isinstance(params, dict):
         return ""
     # Parsing parameters
     for pname in params.keys():
@@ -242,7 +242,7 @@ def get_suffix_and_flags(kconfig: str, params: Union[dict, str]) -> Tuple[str, s
     suffix_file = ""
     custom_bin_name = None
     # Parsing parameters
-    if type(params) is dict:
+    if isinstance(params, dict):
         for pname in params.keys():
             try:
                 param_val_parsed = int(params[pname])
@@ -259,7 +259,7 @@ def get_suffix_and_flags(kconfig: str, params: Union[dict, str]) -> Tuple[str, s
             key = pname.replace("/", "_")
             val = (
                 params[pname].replace("/", "_")
-                if type(params[pname]) == str
+                if isinstance(params[pname], str)
                 else params[pname]
             )
             suffix_file += f"_{key}{val}"

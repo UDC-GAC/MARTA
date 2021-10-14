@@ -23,5 +23,5 @@ from marta.profiler.report import Report
 
 def test_get_machine_info():
     # dumb check to test it does not raise an exception
-    assert type(Report.get_machine_info()) == str
+    assert isinstance(Report.get_machine_info(), str)
 

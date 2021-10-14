@@ -209,9 +209,9 @@ class Timing:
         discarded_values = float(mask.sum()) / results.size
 
         # Return mean values in a dictionary fashion
-        if type(benchmark_type) is list and len(benchmark_type) > 1:
+        if isinstance(benchmark_type, list) and len(benchmark_type) > 1:
             return dict(zip(benchmark_type, mean_results)), discarded_values
         else:
-            if type(benchmark_type) is list:
+            if isinstance(benchmark_type,list):
                 benchmark_type = benchmark_type[0]
             return {benchmark_type: mean_results}, discarded_values

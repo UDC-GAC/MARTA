@@ -41,7 +41,7 @@ class PyPerfArgs:
     def __init__(self, args):
         for arg in args:
             setattr(self, arg, args[arg])
-        if not hasattr(self, "affinity") or type(self.affinity) != list:
+        if not hasattr(self, "affinity") or isinstance(self.affinity, list):
             raise PyPerfError
 
 

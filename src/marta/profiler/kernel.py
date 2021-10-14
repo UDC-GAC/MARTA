@@ -164,7 +164,7 @@ class Kernel:
         """
         if self.papi_counters == None:
             return
-        assert type(self.papi_counters) == list
+        assert isinstance(self.papi_counters, list)
         papi_counter_file = f"{self.get_kernel_path()}/utilities/papi_counters.list"
         if len(set(self.papi_counters)) != len(self.papi_counters):
             pwarning("Duplicated counters in PAPI list, skipping them...")
@@ -362,7 +362,7 @@ class Kernel:
         d_avg_values = {}
         for mtype in measurements:
             if measurements[mtype] == None or (
-                type(measurements[mtype]) == bool and not measurements[mtype]
+                isinstance(measurements[mtype], bool) and not measurements[mtype]
             ):
                 continue
             avg_values, discarded_values = Timing.measure_benchmark(
@@ -385,7 +385,7 @@ class Kernel:
                         d_avg_values[self.papi_counters[i]] = avg_values["papi"][i]
             else:
                 d_avg_values[mtype] = avg_values
-            if type(avg_values) == type(None):
+            if avg_values is None:
                 return None
             if discarded_values != -1:
                 if mtype == "papi" and len(self.papi_counters) != 1:
@@ -403,7 +403,7 @@ class Kernel:
             pwarning("Nothing executed: set 'time', 'tsc' or at least one PAPI counter")
 
         # Updating parameters
-        if type(params_dict) is not list:
+        if not isinstance(params_dict, list):
             data.update(params_dict)
             # sort them by length
             keys = sorted(params_dict.keys(), key=len, reverse=True)
@@ -471,7 +471,7 @@ class Kernel:
         pass
 
     def __init__(self, cfg: dict) -> None:
-        assert type(cfg) == dict
+        assert isinstance(cfg, dict)
         parsed_config = parse_options(cfg)
         for key in parsed_config:
             setattr(self, key, parsed_config[key])

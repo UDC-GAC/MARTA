@@ -187,7 +187,7 @@ class Profiler:
             type_feature = feature[f]["type"]
             evaluate = feature[f].get("evaluate", True)
             params_values = []
-            if type(feature[f]["value"]) is str:
+            if isinstance(feature[f]["value"], str):
                 try:
                     if evaluate:
                         params_values = eval(feature[f]["value"])
@@ -220,7 +220,7 @@ class Profiler:
     @staticmethod
     def comp_nvals(params_values: Union[list, Iterable]) -> int:
         # Compute number of iterations
-        if type(params_values) is list:
+        if isinstance(params_values, list):
             return len(params_values)
         params_values_copy = copy.deepcopy(params_values)
         try:
@@ -287,13 +287,13 @@ class Profiler:
         else:
             output_filename = self.args.output
 
-        if type(output_cols) == str and output_cols == "all":
-            if type(params_kernel) is dict:
+        if isinstance(output_cols, str) and output_cols == "all":
+            if isinstance(params_kernel, dict):
                 output_cols = list(params_kernel.keys())
             else:
                 output_cols = []
 
-        if type(output_cols) != list:
+        if isinstance(output_cols, list):
             perror("'output_cols' parameter must be a list or 'all'")
 
         output_cols += ["compiler"]
@@ -301,7 +301,7 @@ class Profiler:
             output_cols += kernel.papi_counters
 
         niterations = 1
-        if type(params_kernel) is dict:
+        if isinstance(params_kernel, dict):
             niterations = np.prod(
                 [Profiler.comp_nvals(params_kernel[k]) for k in params_kernel]
             )
@@ -333,28 +333,28 @@ class Profiler:
 
         exit_on_error = not self.args.no_quit_on_error
 
-        overhead_loop = 0
-        if kernel.nsteps > 1:
-            try:
-                loop_benchmark = Benchmark(
-                    get_data("profiler/src/loop_overhead.c"), temp=True
-                )
-                overhead_loop = loop_benchmark.compile_run_benchmark(
-                    flags=[
-                        "-O3",
-                        "-DMARTA_RDTSC",
-                        f"-DMARTA_CPU_AFFINITY={kernel.cpu_affinity}",
-                        f"-I{get_data('profiler/utilities/')}",
-                        get_data("profiler/utilities/polybench.c"),
-                    ]
-                )
-                pinfo(f"Loop overhead: {overhead_loop} cycles")
-            except BenchmarkError:
-                msg = "Loop overhead could not be computed."
-                if exit_on_error:
-                    perror(f"{msg} Quitting.")
-                else:
-                    pwarning(f"{msg} Skipping.")
+        overhead_loop_tsc = 0
+        try:
+            loop_benchmark = Benchmark(
+                get_data("profiler/src/loop_overhead.c"), temp=True
+            )
+            overhead_loop_tsc = loop_benchmark.compile_run_benchmark(
+                flags=[
+                    "-O3",
+                    "-DMARTA_RDTSC",
+                    f"-DMARTA_CPU_AFFINITY={kernel.cpu_affinity}",
+                    f"-I{get_data('profiler/utilities/')}",
+                    get_data("profiler/utilities/polybench.c"),
+                ],
+                nsteps=kernel.nsteps,
+            )
+            pinfo(f"Loop overhead: {overhead_loop_tsc} cycles")
+        except BenchmarkError:
+            msg = "Loop overhead could not be computed."
+            if exit_on_error:
+                perror(f"{msg} Quitting.")
+            else:
+                pwarning(f"{msg} Skipping.")
 
         os.system("rm /tmp/*.opt")
 
@@ -362,7 +362,7 @@ class Profiler:
         for compiler in kernel.compiler_flags:
             for compiler_flags in list(kernel.compiler_flags[compiler]):
                 pinfo(f"Compiler and flags: {compiler} {compiler_flags}")
-                if type(params_kernel) is dict:
+                if isinstance(params_kernel, dict):
                     product = Profiler.dict_product(params_kernel, kernel.kernel_cfg)
                 else:
                     product = params_kernel
@@ -412,7 +412,7 @@ class Profiler:
                 # cache sensitive or not. Thus, for simplicity, this is
                 # still not parallel at all.
                 # Moreover: I think this should not EVER be parallel
-                if type(params_kernel) is dict:
+                if isinstance(params_kernel, dict):
                     product = Profiler.dict_product(params_kernel, kernel.kernel_cfg)
                 else:
                     product = params_kernel
@@ -434,7 +434,7 @@ class Profiler:
                             )
                             perror("Execution failed, partial results saved")
                             return None
-                        if type(kern_exec) == list:
+                        if isinstance(kern_exec, list):
                             for exec in kern_exec:
                                 df = df.append(exec, ignore_index=True)
                         else:
@@ -444,9 +444,8 @@ class Profiler:
                     pwarning("Execution process disabled!")
         # Storing results and generating report file
         Timing.save_total_time()
-        if kernel.nsteps > 1:
-            df["overhead_instructions"] = 2
-            df["overhead_loop"] = overhead_loop
+        df["overhead_instructions"] = 2
+        df["overhead_loop"] = overhead_loop_tsc
         kernel.save_results(df, output_filename, output_format, generate_report)
         kernel.reset_system_config()
         self.clean_files(cfg["kernel"].get("finalize"))
