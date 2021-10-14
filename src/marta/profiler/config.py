@@ -136,7 +136,7 @@ def parse_options(config: dict) -> dict:
     cfg["papi_counters_path"] = config_exec.get("papi_counters_path")
     cfg["papi_counters"] = config_exec.get("papi_counters")
     if cfg["papi_counters"] != None:
-        if isinstance(cfg["papi_counters"], list):
+        if not isinstance(cfg["papi_counters"], list):
             pexcept(
                 "'papi_counters' must be a list of hardware events!", MARTAConfigError
             )
@@ -154,7 +154,7 @@ def check_correctness_kernel(config: dict) -> bool:
 
 def check_correctness_file(config: list) -> bool:
     try:
-        if isinstance(config, list):
+        if not isinstance(config, list):
             raise Exception
         for cfg in config:
             parse_options(cfg)
@@ -273,7 +273,7 @@ def get_derived(derived_columns: dict, data: dict) -> dict:
         derived_dict = {}
         for derived in derived_columns:
             variables = derived_columns[derived].get("variables")
-            if variables == None or isinstance(variables, list):
+            if variables == None or not isinstance(variables, list):
                 perror("Bad formatting derived")
             expression = derived_columns[derived].get("expression")
             if expression == None:

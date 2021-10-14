@@ -293,7 +293,7 @@ class Profiler:
             else:
                 output_cols = []
 
-        if isinstance(output_cols, list):
+        if not isinstance(output_cols, list):
             perror("'output_cols' parameter must be a list or 'all'")
 
         output_cols += ["compiler"]
