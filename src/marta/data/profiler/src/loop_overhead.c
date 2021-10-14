@@ -16,8 +16,8 @@
 
 #include "marta_wrapper.h"
 
-void foo() {}
+// static inline void foo() { asm volatile("nop" :::); }
 
 MARTA_BENCHMARK_BEGIN(0);
-PROFILE_FUNCTION_LOOP(foo(), 10000);
+PROFILE_FUNCTION_LOOP(asm volatile("" :::), TSTEPS);
 MARTA_BENCHMARK_END;

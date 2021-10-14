@@ -340,8 +340,9 @@ class Profiler:
             )
             overhead_loop_tsc = loop_benchmark.compile_run_benchmark(
                 flags=[
-                    "-O3",
+                    "-Ofast",
                     "-DMARTA_RDTSC",
+                    f"-DTSTEPS={kernel.nsteps}",
                     f"-DMARTA_CPU_AFFINITY={kernel.cpu_affinity}",
                     f"-I{get_data('profiler/utilities/')}",
                     get_data("profiler/utilities/polybench.c"),

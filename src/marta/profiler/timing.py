@@ -197,13 +197,20 @@ class Timing:
         if not mean_and_discard_outliers:
             return results, -1
 
+        res_mean = results.mean(axis=0)
+        res_dev = results.std(axis=0)
+        print(results)
+        # print(f"{benchmark_type}, {results}, {res_mean}, {res_dev}")
+        if (avg_dev := (100.0 * res_dev / res_mean)) > 5.0:
+            pwarning(
+                f"  Deviation of {avg_dev:2.1f}% (mean {res_mean:.2f}, dev {res_dev:.2f})"
+            )
         # Filter values
-        mask = ~(
-            abs(results - results.mean(axis=0))
-            <= threshold_outliers * results.std(axis=0)
-        )
+        mask = ~(abs(results - res_mean) <= threshold_outliers * res_dev)
         filtered_results = np.where(mask, np.nan, results)
         mean_results = np.nanmean(filtered_results, axis=0)
+
+        pinfo(f"Mean values after removing outliers: {mean_results}")
 
         # Retrieve percentage of discarded values
         discarded_values = float(mask.sum()) / results.size
@@ -212,6 +219,6 @@ class Timing:
         if isinstance(benchmark_type, list) and len(benchmark_type) > 1:
             return dict(zip(benchmark_type, mean_results)), discarded_values
         else:
-            if isinstance(benchmark_type,list):
+            if isinstance(benchmark_type, list):
                 benchmark_type = benchmark_type[0]
             return {benchmark_type: mean_results}, discarded_values
