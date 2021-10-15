@@ -33,6 +33,23 @@ class LLVMMCAError(Exception):
 
 class StaticCodeAnalyzer:
     @staticmethod
+    def clean_comments(json_file: str = "perf.json") -> None:
+        lines = []
+        with open(json_file, "r") as f:
+            for line in f:
+                if (
+                    "#NO_APP" in line
+                    or "#APP" in line
+                    or line.startswith("# ")
+                    or line == "\n"
+                ) and not "LLVM" in line:
+                    continue
+                lines.append(line)
+
+        with open(json_file, "w") as f:
+            f.writelines(lines)
+
+    @staticmethod
     def fix_json(json_file: str = "perf.json") -> str:
         """This method is needed if LLVM-MCA version is previous to 13.0.0
 
@@ -84,6 +101,7 @@ class StaticCodeAnalyzer:
         :rtype: dict
         """
         json_file = f"/tmp/{name_bench.replace('.s','')}_perf.json"
+        stderr_file = f"/tmp/{name_bench.replace('.s','')}_perf.stderr"
 
         path_json_file = json_file.rsplit("/", 1)[0]
         if path_json_file != "/tmp":
@@ -91,6 +109,8 @@ class StaticCodeAnalyzer:
 
         if os.path.exists(json_file):
             os.remove(json_file)
+
+        self.clean_comments(name_bench)
 
         cmd = [
             f"{self.binary}",
@@ -102,10 +122,14 @@ class StaticCodeAnalyzer:
             "-o",
             f"{json_file}",
         ]
-        ret = subprocess.run(cmd, stderr=stderr)
+        with open(stderr_file, "w") as fstderr:
+            ret = subprocess.run(cmd, stderr=fstderr)
+        # ret = subprocess.run(cmd, stderr=stderr)
+
         if ret and not os.path.exists(json_file):
             raise LLVMMCAError
 
+        print(json_file)
         with open(f"{json_file}") as f:
             try:
                 dom = json.loads(f.read())
@@ -136,6 +160,7 @@ class StaticCodeAnalyzer:
             }
         )
         llvm_mca_results.update({"llvm-mca_uOpsPerCycle": summary["uOpsPerCycle"]})
+        print(llvm_mca_results)
         return llvm_mca_results
 
     def __init__(

@@ -149,9 +149,9 @@ class Timing:
         :rtype: Tuple[Union[None, dict], int]
         """
 
-        if nexec < 5:
-            pinfo("Minimum number of executions is 5")
-            nexec = 5
+        if nexec < 3:
+            pinfo("Minimum number of executions is 3")
+            nexec = 3
 
         compiler_flags_suffix = compiler_flags.replace(" ", "_").replace("-", "")
 
@@ -199,7 +199,6 @@ class Timing:
             return None, None
 
         results /= nsteps
-
         if not mean_and_discard_outliers:
             return results, -1
 
