@@ -259,6 +259,33 @@ class Profiler:
                 except Exception:
                     perror(f"Finalize command went wrong for the kernel")
 
+    def get_loop_overhead(self, kernel: Kernel, exit_on_error: bool) -> int:
+        if not kernel.execution_enabled:
+            return 0
+        try:
+            loop_benchmark = Benchmark(
+                get_data("profiler/src/loop_overhead.c"), temp=True
+            )
+            overhead_loop_tsc = loop_benchmark.compile_run_benchmark(
+                flags=[
+                    "-Ofast",
+                    "-DMARTA_RDTSC",
+                    f"-DTSTEPS={kernel.nsteps}",
+                    f"-DMARTA_CPU_AFFINITY={kernel.cpu_affinity}",
+                    f"-I{get_data('profiler/utilities/')}",
+                    get_data("profiler/utilities/polybench.c"),
+                ],
+                nsteps=kernel.nsteps,
+            )
+            pinfo(f"Loop overhead: {overhead_loop_tsc} cycles")
+        except BenchmarkError:
+            msg = "Loop overhead could not be computed."
+            if exit_on_error:
+                perror(f"{msg} Quitting.")
+            else:
+                pwarning(f"{msg} Skipping.")
+        return overhead_loop_tsc
+
     def profiling_kernels(self, cfg: dict) -> int:
         """
         Configuration file must have at least one kernel for performing profling
@@ -333,29 +360,7 @@ class Profiler:
 
         exit_on_error = not self.args.no_quit_on_error
 
-        overhead_loop_tsc = 0
-        try:
-            loop_benchmark = Benchmark(
-                get_data("profiler/src/loop_overhead.c"), temp=True
-            )
-            overhead_loop_tsc = loop_benchmark.compile_run_benchmark(
-                flags=[
-                    "-Ofast",
-                    "-DMARTA_RDTSC",
-                    f"-DTSTEPS={kernel.nsteps}",
-                    f"-DMARTA_CPU_AFFINITY={kernel.cpu_affinity}",
-                    f"-I{get_data('profiler/utilities/')}",
-                    get_data("profiler/utilities/polybench.c"),
-                ],
-                nsteps=kernel.nsteps,
-            )
-            pinfo(f"Loop overhead: {overhead_loop_tsc} cycles")
-        except BenchmarkError:
-            msg = "Loop overhead could not be computed."
-            if exit_on_error:
-                perror(f"{msg} Quitting.")
-            else:
-                pwarning(f"{msg} Skipping.")
+        overhead_loop_tsc = self.get_loop_overhead(kernel, exit_on_error)
 
         os.system("rm /tmp/*.opt")
 

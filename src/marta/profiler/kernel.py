@@ -339,6 +339,7 @@ class Kernel:
             )
             data.update(asm_dict)
         if self.static_analysis != "":
+            # TODO
             # FIXME: host architecture for LLVM-MCA
             S = StaticCodeAnalyzer("cascadelake", self.static_analysis)
             data.update(

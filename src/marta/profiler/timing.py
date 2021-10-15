@@ -165,8 +165,9 @@ class Timing:
                 f"./{bin_path}/{code}_{compiler}_{compiler_flags_suffix}_{benchmark_type}.o",
                 f"{nsteps}",
             ]
-            if exec_opts != "":
-                bin_file = [exec_opts] + bin_file
+            if exec_opts != "" and isinstance(exec_opts, str):
+                exec_opts_list = exec_opts.split(" ")
+                bin_file = [*exec_opts_list] + bin_file
         if tmp_file == "":
             tmp_file = f"/tmp/____tmp_{code}_{compiler}_{compiler_flags_suffix}_{benchmark_type}"
 
@@ -199,8 +200,6 @@ class Timing:
 
         res_mean = results.mean(axis=0)
         res_dev = results.std(axis=0)
-        print(results)
-        # print(f"{benchmark_type}, {results}, {res_mean}, {res_dev}")
         if (avg_dev := (100.0 * res_dev / res_mean)) > 5.0:
             pwarning(
                 f"  Deviation of {avg_dev:2.1f}% (mean {res_mean:.2f}, dev {res_dev:.2f})"
