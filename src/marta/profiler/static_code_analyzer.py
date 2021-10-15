@@ -70,7 +70,7 @@ class StaticCodeAnalyzer:
         name_bench: str,
         iterations: int = 1,
         region: str = "kernel",
-        stderr: int = subprocess.STDOUT,
+        stderr: int = None,
     ) -> dict:
         """Get the performance metrics reported by the tool. Currently only LLVM-MCA.
 
