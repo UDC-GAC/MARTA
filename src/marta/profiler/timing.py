@@ -205,17 +205,13 @@ class Timing:
 
         res_mean = results.mean(axis=0)
         res_dev = results.std(axis=0)
-        if sys.version_info[1] < 8:
-            avg_dev = 100.0 * res_dev / res_mean
-            if avg_dev > 5.0:
-                pwarning(
-                    f"  Deviation of {avg_dev:2.1f}% (mean {res_mean:.2f}, dev {res_dev:.2f})"
-                )
-        else:
-            if (avg_dev := (100.0 * res_dev / res_mean)) > 5.0:
-                pwarning(
-                    f"  Deviation of {avg_dev:2.1f}% (mean {res_mean:.2f}, dev {res_dev:.2f})"
-                )
+        # This could be done using walrus operator for Python >=3.8
+        avg_dev = 100.0 * res_dev / res_mean
+        if avg_dev > 5.0:
+            pwarning(
+                f"  Deviation of {avg_dev:2.1f}% (mean {res_mean:.2f}, dev {res_dev:.2f})"
+            )
+
         # Filter values
         mask = ~(abs(results - res_mean) <= threshold_outliers * res_dev)
         filtered_results = np.where(mask, np.nan, results)
