@@ -205,7 +205,7 @@ class Timing:
 
         res_mean = results.mean(axis=0)
         res_dev = results.std(axis=0)
-        if sys.version_info[2] < 8:
+        if sys.version_info[1] < 8:
             avg_dev = 100.0 * res_dev / res_mean
             if avg_dev > 5.0:
                 pwarning(
