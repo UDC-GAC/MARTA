@@ -72,10 +72,26 @@
 #define MARTA_INTEL_FLUSH_DATA 0
 #endif
 
+#define MARTA_PREPARE_INSTRUMENTS polybench_prepare_instruments()
+#define MARTA_START_INSTRUMENTS polybench_start_instruments
+#define MARTA_STOP_INSTRUMENTS polybench_stop_instruments
+#define MARTA_PRINT_INSTRUMENTS polybench_print_instruments
+
+#if defined(MARTA_MULTITHREAD) && defined(POLYBENCH_PAPI)
+#undef MARTA_START_INSTRUMENTS
+#undef MARTA_STOP_INSTRUMENTS
+#undef MARTA_PRINT_INSTRUMENTS
+#include "papi_wrapper.h"
+#define MARTA_PREPARE_INSTRUMENTS pw_init_instruments
+#define MARTA_START_INSTRUMENTS pw_init_start_instruments
+#define MARTA_STOP_INSTRUMENTS pw_stop_instruments
+#define MARTA_PRINT_INSTRUMENTS pw_print_instruments
+#endif
+
 #define EXPAND_STRING(s) #s
 #define TO_STRING(s) EXPAND_STRING(s)
 
-typedef unsigned long long int marta_cycles_t;
+typedef unsigned long long int _marta_cycles_t;
 
 /**
  * Flush cache using clflush instruction.
@@ -107,18 +123,21 @@ void intel_clflush(volatile void *p, unsigned int allocation_size) {
  */
 #define PROFILE_FUNCTION_SINGLE_VAL(STEPS, X)                                  \
   {                                                                            \
-    polybench_start_instruments;                                               \
+    MARTA_START_INSTRUMENTS;                                                   \
     _Pragma("nounroll_and_jam");                                               \
     for (int t = 0; t < STEPS; ++t) {                                          \
       X;                                                                       \
     }                                                                          \
-    polybench_stop_instruments;                                                \
-    polybench_print_instruments;                                               \
+    MARTA_STOP_INSTRUMENTS;                                                    \
+    MARTA_PRINT_INSTRUMENTS;                                                   \
   }
 
 #define RDTSC(t)                                                               \
-  __asm volatile("rdtsc" : "=a"(__cycles_lo), "=d"(__cycles_hi));              \
-  t = (marta_cycles_t)__cycles_hi << 32 | __cycles_lo;
+  __asm volatile("sfence\n\t"                                                  \
+                 "lfence\n\t"                                                  \
+                 "rdtsc\n\t"                                                   \
+                 : "=a"(__cycles_lo), "=d"(__cycles_hi));                      \
+  t = (_marta_cycles_t)__cycles_hi << 32 | __cycles_lo;
 
 #define MARTA_LOOP_ASM 0x1
 #define MARTA_LOOP_C 0x2
@@ -135,9 +154,9 @@ void intel_clflush(volatile void *p, unsigned int allocation_size) {
   __asm volatile("begin_loop:\n");                                             \
   __asm volatile("# LLVM-MCA-BEGIN kernel");
 
-// According to Intel's optimization guide it is better to avoid dec in benefit
-// of sub/add/cmp when using loops
-// Intel® 64 and IA-32 Architectures Optimization Reference Manual
+// According to Intel's optimization guide it is better to
+// avoid dec in benefit of sub/add/cmp when using loops Intel®
+// 64 and IA-32 Architectures Optimization Reference Manual
 // https://software.intel.com/content/dam/develop/external/us/en/documents-tps/64-ia-32-architectures-optimization-manual.pdf
 #define END_LOOP                                                               \
   __asm volatile("# LLVM-MCA-END kernel");                                     \
@@ -164,9 +183,9 @@ void intel_clflush(volatile void *p, unsigned int allocation_size) {
   for (int __marta_tsteps = 0; __marta_tsteps < TSTEPS; ++__marta_tsteps) {    \
     __asm volatile("# LLVM-MCA-BEGIN kernel");
 
-// According to Intel's optimization guide it is better to avoid dec in benefit
-// of sub/add/cmp when using loops
-// Intel® 64 and IA-32 Architectures Optimization Reference Manual
+// According to Intel's optimization guide it is better to
+// avoid dec in benefit of sub/add/cmp when using loops Intel®
+// 64 and IA-32 Architectures Optimization Reference Manual
 // https://software.intel.com/content/dam/develop/external/us/en/documents-tps/64-ia-32-architectures-optimization-manual.pdf
 #define END_LOOP                                                               \
   __asm volatile("# LLVM-MCA-END kernel");                                     \
@@ -175,8 +194,8 @@ void intel_clflush(volatile void *p, unsigned int allocation_size) {
 #endif
 
 #define INIT_BEGIN_CYCLES_LOOP(TSTEPS)                                         \
-  polybench_prepare_instruments();                                             \
-  marta_cycles_t t0;                                                           \
+  MARTA_PREPARE_INSTRUMENTS;                                                   \
+  _marta_cycles_t t0;                                                          \
   RDTSC(t0);                                                                   \
   INIT_BEGIN_LOOP(TSTEPS);
 
@@ -186,22 +205,20 @@ void intel_clflush(volatile void *p, unsigned int allocation_size) {
 #define CLOBBER_MEMORY __asm volatile("" : : : "memory")
 
 /**
- * DO_NOT_TOUCH[_WRITE|_READ|...](x) - Avoid compiler optimizations
- * Output   : none
- * Input    : x
- * Clobber  : "memory"
- *      The "memory" clobber tells the compiler that the assembly
- *      code performs memory reads or writes to items other than those
- *      listed in the input and output operands (for example, accessing
- *      the memory pointed to by one of the input parameters). To ensure
- *      memory contains correct values, GCC may need to flush specific
- *      register values to memory before executing the asm.
- * Constraints for output parameters:
- *  "r": register allowed as input
- *  "m": memory allowed as input
+ * DO_NOT_TOUCH[_WRITE|_READ|...](x) - Avoid compiler
+ * optimizations Output   : none Input    : x Clobber  :
+ * "memory" The "memory" clobber tells the compiler that the
+ * assembly code performs memory reads or writes to items other
+ * than those listed in the input and output operands (for
+ * example, accessing the memory pointed to by one of the input
+ * parameters). To ensure memory contains correct values, GCC
+ * may need to flush specific register values to memory before
+ * executing the asm. Constraints for output parameters: "r":
+ * register allowed as input "m": memory allowed as input
  */
 
-/* This should only work for V4FSMODE (typically xmm registers, but it seems to
+/* This should only work for V4FSMODE (typically xmm registers,
+   but it seems to
    materizalize properly ymm and zmm registers too). */
 #define DO_NOT_TOUCH_V4FSMODE(var)                                             \
   __asm volatile(""                                                            \
@@ -216,20 +233,20 @@ void intel_clflush(volatile void *p, unsigned int allocation_size) {
 
 #define PROFILE_FUNCTION_NO_LOOP(X)                                            \
   {                                                                            \
-    polybench_start_instruments;                                               \
+    MARTA_START_INSTRUMENTS;                                                   \
     X;                                                                         \
-    polybench_stop_instruments;                                                \
-    polybench_print_instruments;                                               \
+    MARTA_STOP_INSTRUMENTS;                                                    \
+    MARTA_PRINT_INSTRUMENTS;                                                   \
   }
 
 #define PROFILE_FUNCTION_LOOP(X, TSTEPS)                                       \
   {                                                                            \
-    polybench_start_instruments;                                               \
+    MARTA_START_INSTRUMENTS;                                                   \
     INIT_BEGIN_LOOP(TSTEPS);                                                   \
     X;                                                                         \
     END_LOOP;                                                                  \
-    polybench_stop_instruments;                                                \
-    polybench_print_instruments;                                               \
+    MARTA_STOP_INSTRUMENTS;                                                    \
+    MARTA_PRINT_INSTRUMENTS;                                                   \
   }
 
 #define PROFILE_FUNCTION_CYCLES_LOOP(X, TSTEPS)                                \
@@ -237,18 +254,26 @@ void intel_clflush(volatile void *p, unsigned int allocation_size) {
     INIT_BEGIN_CYCLES_LOOP(TSTEPS)                                             \
     X;                                                                         \
     END_LOOP;                                                                  \
-    __asm volatile("rdtsc" : "=a"(__cycles_lo), "=d"(__cycles_hi));            \
-    marta_cycles_t t1 = ((marta_cycles_t)__cycles_hi << 32 | __cycles_lo);     \
+    __asm volatile("sfence\n\t"                                                \
+                   "lfence\n\t"                                                \
+                   "rdtsc\n\t"                                                 \
+                   "lfence\n\t"                                                \
+                   : "=a"(__cycles_lo), "=d"(__cycles_hi));                    \
+    _marta_cycles_t t1 = ((_marta_cycles_t)__cycles_hi << 32 | __cycles_lo);   \
     printf("%Ld\n", (t1 - t0));                                                \
   }
 
 #define PROFILE_FUNCTION_CYCLES_NO_LOOP(X)                                     \
   {                                                                            \
-    marta_cycles_t t0;                                                         \
+    _marta_cycles_t t0;                                                        \
     RDTSC(t0);                                                                 \
     X;                                                                         \
-    __asm volatile("rdtsc" : "=a"(__cycles_lo), "=d"(__cycles_hi));            \
-    printf("%Ld\n", ((marta_cycles_t)__cycles_hi << 32 | __cycles_lo) - t0);   \
+    __asm volatile("sfence\n\t"                                                \
+                   "lfence\n\t"                                                \
+                   "rdtsc\n\t"                                                 \
+                   "lfence\n\t"                                                \
+                   : "=a"(__cycles_lo), "=d"(__cycles_hi));                    \
+    printf("%Ld\n", ((_marta_cycles_t)__cycles_hi << 32 | __cycles_lo) - t0);  \
   }
 
 #ifdef MARTA_RDTSC
@@ -265,7 +290,7 @@ void intel_clflush(volatile void *p, unsigned int allocation_size) {
 
 #define PROFILE_FUNCTION_SINGLE_VAL_DCE(STEPS, X, Y)                           \
   {                                                                            \
-    polybench_start_instruments;                                               \
+    MARTA_START_INSTRUMENTS;                                                   \
     _Pragma("nounroll_and_jam");                                               \
     for (int t = 0; t < STEPS; ++t) {                                          \
       DO_NOT_TOUCH(X);                                                         \
@@ -273,8 +298,8 @@ void intel_clflush(volatile void *p, unsigned int allocation_size) {
       Y = X;                                                                   \
       CLOBBER_MEMORY;                                                          \
     }                                                                          \
-    polybench_stop_instruments;                                                \
-    polybench_print_instruments;                                               \
+    MARTA_STOP_INSTRUMENTS;                                                    \
+    MARTA_PRINT_INSTRUMENTS;                                                   \
   }
 
 /* DCE code. Must scan the entire live-out data.

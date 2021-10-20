@@ -176,7 +176,7 @@ class Timing:
             os.remove(tmp_file)
 
         with open(tmp_file, "a") as f:
-            for _ in trange(nexec, leave=False, desc="Executions"):
+            for _ in trange(nexec, leave=False, desc="Executions", position=1):
                 p = subprocess.Popen(bin_file, stdout=f)
                 p.wait()
                 f.flush()
@@ -198,21 +198,23 @@ class Timing:
         if len(results) == 0:
             return None, None
 
-        results /= nsteps
+        results = np.divide(results, nsteps)
         if not mean_and_discard_outliers:
             return results, -1
 
-        res_mean = results.mean(axis=0)
-        res_dev = results.std(axis=0)
+        res_mean = np.mean(results)
+        res_dev = np.std(results)
         # This could be done using walrus operator for Python >=3.8
-        avg_dev = 100.0 * res_dev / res_mean
-        if avg_dev > 5.0:
-            pwarning(
-                f"  Deviation of {avg_dev:2.1f}% (mean {res_mean:.2f}, dev {res_dev:.2f})"
-            )
+        avg_dev = np.divide(
+            100.0 * res_dev, res_mean, out=np.zeros(res_mean.size), where=res_mean != 0
+        )
+
+        for val in range(avg_dev.size):
+            if avg_dev[val] > 5.0:
+                pwarning(f"  Deviation of {avg_dev[val]:2.1f}%")
 
         # Filter values
-        mask = ~(abs(results - res_mean) <= threshold_outliers * res_dev)
+        mask = ~(np.abs(results - res_mean) <= threshold_outliers * res_dev)
         filtered_results = np.where(mask, np.nan, results)
         mean_results = np.nanmean(filtered_results, axis=0)
 

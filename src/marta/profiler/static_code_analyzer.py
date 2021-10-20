@@ -129,7 +129,6 @@ class StaticCodeAnalyzer:
         if ret and not os.path.exists(json_file):
             raise LLVMMCAError
 
-        print(json_file)
         with open(f"{json_file}") as f:
             try:
                 dom = json.loads(f.read())
@@ -160,7 +159,6 @@ class StaticCodeAnalyzer:
             }
         )
         llvm_mca_results.update({"llvm-mca_uOpsPerCycle": summary["uOpsPerCycle"]})
-        print(llvm_mca_results)
         return llvm_mca_results
 
     def __init__(

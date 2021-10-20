@@ -393,6 +393,7 @@ class Profiler:
                                 pool.istarmap(Kernel.compile, iterable),
                                 total=niterations,
                                 desc="Compiling",
+                                position=0,
                             )
                             for output in pbar:
                                 if not output:
@@ -425,7 +426,11 @@ class Profiler:
                 if kernel.execution_enabled:
                     if kernel.show_progress_bars:
                         loop_iterator = tqdm(
-                            product, desc="Executing", total=niterations
+                            product,
+                            desc="Benchmark",
+                            total=niterations,
+                            position=0,
+                            leave=True,
                         )
                     else:
                         loop_iterator = product

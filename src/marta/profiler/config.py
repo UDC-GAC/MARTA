@@ -115,6 +115,7 @@ def parse_options(config: dict) -> dict:
 
     # Execution arguments
     cfg["intel_cache_flush"] = config_exec.get("intel_cache_flush", False)
+    cfg["multithread"] = config_exec.get("multithread", False)
     cfg["init_data"] = config_exec.get("init_data", False)
     cfg["check_dump"] = config_exec.get("check_dump", False)
     cfg["execution_enabled"] = config_exec.get("enabled", True)

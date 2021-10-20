@@ -285,6 +285,9 @@ class Kernel:
         if self.measure_tsc:
             other_flags.append("TSC=true")
 
+        if self.multithread:
+            other_flags.append("MULTITHREAD=true")
+
         if self.check_dump:
             other_flags.append("DUMP=true")
 
@@ -339,9 +342,7 @@ class Kernel:
             )
             data.update(asm_dict)
         if self.static_analysis != "":
-            # TODO
-            # FIXME: host architecture for LLVM-MCA
-            S = StaticCodeAnalyzer("cascadelake", self.static_analysis)
+            S = StaticCodeAnalyzer("native", self.static_analysis)
             data.update(
                 S.compute_performance(
                     f"{self.get_kernel_path()}/marta_profiler_data/asm_codes/{base_filename}.s",
