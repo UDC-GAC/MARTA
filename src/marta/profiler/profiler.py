@@ -466,7 +466,7 @@ class Profiler:
         df["overhead_instructions"] = 2
         df["overhead_loop"] = overhead_loop_tsc
         kernel.save_results(df, output_filename, output_format, generate_report)
-        if self.args.summary != []:
+        if self.args.summary != None and self.args.summary != []:
             kernel.print_summary(df, self.args.summary)
         kernel.reset_system_config()
         self.clean_files(cfg["kernel"].get("finalize"))
