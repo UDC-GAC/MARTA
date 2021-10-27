@@ -17,7 +17,6 @@
 #
 # -*- coding: utf-8 -*-
 
-from logging import exception
 import os
 import yaml
 import subprocess

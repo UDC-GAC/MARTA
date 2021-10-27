@@ -23,6 +23,7 @@ import os
 import subprocess
 import pickle
 from typing import Union
+from math import ceil, floor
 
 # Third-party libraries
 import pandas as pd
@@ -105,6 +106,57 @@ class Kernel:
             content += "stderr was redirected manually.\n"
 
         return content
+
+    def print_summary(self, df: pd.DataFrame, dimensions: list = []):
+        print("\n--------------")
+        print("MARTA summary\n")
+        line = ""
+        headers = ""
+
+        d = []
+        for i in range(len(dimensions)):
+            if dimensions[i] not in df.columns:
+                d.append(i)
+        for i in d:
+            del dimensions[i]
+        del d
+
+        results = df[dimensions].values
+        max_size = df[dimensions].applymap(lambda x: len(str(x))).max()
+
+        for i in range(len(dimensions)):
+            max_size[i] = max(max_size[i], len(dimensions[i]))
+            d = (max_size[i] - len(dimensions[i])) / 2
+            lspace = max(floor(d), 0)
+            rspace = max(ceil(d), 0)
+            headers += f"|  {' '*lspace}{dimensions[i].upper()}{' '*rspace}  "
+            line += f"+--{'-'*max_size[i]}--"
+        line += "+"
+        headers += "|"
+        print(line)
+        print(headers)
+        print(line)
+
+        for val in results:
+            display_val = ""
+            for i in range(len(val)):
+                sval = val[i]
+                l = len(dimensions[i])
+                if isinstance(sval, str):
+                    sval = val[i][:l]
+                elif isinstance(sval, int):
+                    sval = f"{sval:{l}d}"
+                elif isinstance(sval, float):
+                    sval = f"{sval:{l-5}.5f}"
+                d = (max_size[i] - len(sval)) / 2
+                lspace = max(floor(d), 0)
+                rspace = max(ceil(d), 0)
+                display_val += f"|  {' '*lspace}{sval}{' '*rspace}  "
+            print(f"{display_val}|")
+            print(line)
+
+        print(f"\ntotal time elapsed: {Timing.to_seconds(Timing.execution_time)}\n")
+        print("--- END summary")
 
     def save_results(
         self,

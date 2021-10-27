@@ -144,6 +144,14 @@ class Profiler:
         )
 
         optional_named.add_argument(
+            "-s",
+            "--summary",
+            nargs="*",
+            help="print a summary at the end with the given dimensions if interest",
+            required=False,
+        )
+
+        optional_named.add_argument(
             "-dump",
             "--dump-config-file",
             action="store_true",
@@ -458,6 +466,8 @@ class Profiler:
         df["overhead_instructions"] = 2
         df["overhead_loop"] = overhead_loop_tsc
         kernel.save_results(df, output_filename, output_format, generate_report)
+        if self.args.summary != []:
+            kernel.print_summary(df, self.args.summary)
         kernel.reset_system_config()
         self.clean_files(cfg["kernel"].get("finalize"))
         return 0

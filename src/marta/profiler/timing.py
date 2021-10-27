@@ -29,7 +29,7 @@ import sys
 from tqdm.auto import trange
 
 
-warnings.filterwarnings("error")
+# warnings.filterwarnings("error")
 
 # Third-party libraries
 import numpy as np
@@ -210,15 +210,20 @@ class Timing:
         )
 
         for val in range(avg_dev.size):
-            if avg_dev[val] > 5.0:
-                pwarning(f"  Deviation of {avg_dev[val]:2.1f}%")
+            if avg_dev[val] > threshold_outliers:
+                pwarning(
+                    f"Deviation exceeding threshold: {avg_dev[val]:2.1f}% ({threshold_outliers}%, {benchmark_type.upper()} benchmark)"
+                )
 
         # Filter values
         mask = ~(np.abs(results - res_mean) <= threshold_outliers * res_dev)
         filtered_results = np.where(mask, np.nan, results)
         mean_results = np.nanmean(filtered_results, axis=0)
 
-        pinfo(f"Mean values after removing outliers: {mean_results}")
+        if isinstance(mean_results, np.ndarray):
+            pinfo(
+                f"Mean values after removing outliers: {' '.join(map(lambda x: f'{x:.2f}', mean_results))}"
+            )
 
         # Retrieve percentage of discarded values
         discarded_values = float(mask.sum()) / results.size
