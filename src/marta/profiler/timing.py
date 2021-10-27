@@ -24,11 +24,11 @@ from typing import Optional, Tuple
 import datetime as dt
 import os
 import time
-import warnings
 import sys
 from tqdm.auto import trange
 
 
+# import warnings
 # warnings.filterwarnings("error")
 
 # Third-party libraries
@@ -209,8 +209,10 @@ class Timing:
             100.0 * res_dev, res_mean, out=np.zeros(res_mean.size), where=res_mean != 0
         )
 
+        outliers = False
         for val in range(avg_dev.size):
             if avg_dev[val] > threshold_outliers:
+                outliers = True
                 pwarning(
                     f"Deviation exceeding threshold: {avg_dev[val]:2.1f}% ({threshold_outliers}%, {benchmark_type.upper()} benchmark)"
                 )
@@ -220,7 +222,7 @@ class Timing:
         filtered_results = np.where(mask, np.nan, results)
         mean_results = np.nanmean(filtered_results, axis=0)
 
-        if isinstance(mean_results, np.ndarray):
+        if outliers and isinstance(mean_results, np.ndarray):
             pinfo(
                 f"Mean values after removing outliers: {' '.join(map(lambda x: f'{x:.2f}', mean_results))}"
             )

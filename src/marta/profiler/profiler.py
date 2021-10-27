@@ -463,6 +463,7 @@ class Profiler:
                     pwarning("Execution process disabled!")
         # Storing results and generating report file
         Timing.save_total_time()
+        # FIXME:
         df["overhead_instructions"] = 2
         df["overhead_loop"] = overhead_loop_tsc
         kernel.save_results(df, output_filename, output_format, generate_report)

@@ -20,16 +20,21 @@
 # Standard libraries
 import pkg_resources
 
-# Third-party libraries
-from art import tprint
-
 
 def print_version(component: str) -> None:
     """
     Print version and copyright message
     """
     __version__ = pkg_resources.require("marta")[0].version
-    tprint("MARTA")
+    header = """
+    __  ___ ___     ____  ______ ___ 
+   /  |/  //   |   / __ \/_  __//   |
+  / /|_/ // /| |  / /_/ / / /  / /| |
+ / /  / // ___ | / _, _/ / /  / ___ |
+/_/  /_//_/  |_|/_/ |_| /_/  /_/  |_|
+                                     
+    """
+    print(header)
     print(
         f"Multi-configuration Assembly pRofiler and Toolkit for performance Analysis (MARTA) - {component} v{__version__}"
     )
