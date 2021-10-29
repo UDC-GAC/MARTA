@@ -28,7 +28,7 @@ class MARTAConfigError(Exception):
     pass
 
 
-def parse_options(config: dict) -> dict:
+def parse_kernel_options(config: dict) -> dict:
     cfg = {}
     try:
         cfg["kernel"] = config["kernel"]["name"]
@@ -49,6 +49,8 @@ def parse_options(config: dict) -> dict:
         perror("Something went wrong when checking path")
     cfg["show_progress_bars"] = config["kernel"].get("show_progress_bars", True)
     cfg["debug"] = config["kernel"].get("debug", False)
+    cfg["preamble"] = config["kernel"].get("preamble")
+    cfg["finalize"] = config["kernel"].get("finalize")
 
     try:
         config_config = config["kernel"]["configuration"]
@@ -141,12 +143,13 @@ def parse_options(config: dict) -> dict:
                 "'papi_counters' must be a list of hardware events!", MARTAConfigError
             )
     cfg["exec_args"] = config_exec.get("prefix", "")
+    cfg["output"] = config_exec.get("output", {})
     return cfg
 
 
 def check_correctness_kernel(config: dict) -> bool:
     try:
-        parse_options(config)
+        parse_kernel_options(config)
     except Exception:
         return False
     return True
@@ -157,7 +160,7 @@ def check_correctness_file(config: list) -> bool:
         if not isinstance(config, list):
             raise Exception
         for cfg in config:
-            parse_options(cfg)
+            parse_kernel_options(cfg)
     except Exception:
         return False
     return True

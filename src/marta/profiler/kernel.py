@@ -24,9 +24,12 @@ import subprocess
 import pickle
 from typing import Union
 from math import ceil, floor
+from datetime import datetime as dt
 
 # Third-party libraries
 import pandas as pd
+from yaspin import yaspin
+
 
 # Local imports
 from marta.profiler.compile import (
@@ -40,8 +43,7 @@ from marta.profiler.report import Report
 from marta.profiler.asm_analyzer import ASMParserFactory
 from marta.profiler.timing import Timing
 from marta.profiler.static_code_analyzer import StaticCodeAnalyzer
-from marta.profiler.config import parse_options
-from marta.profiler.config import parse_options, get_metadata, get_derived
+from marta.profiler.config import parse_kernel_options, get_metadata, get_derived
 from marta.profiler.system_config import SystemConfig
 from marta.utils.marta_utilities import perror, pwarning
 
@@ -114,11 +116,17 @@ class Kernel:
         headers = ""
 
         d = []
+        if "PAPI_COUNTERS" in dimensions:
+            idx = dimensions.index("PAPI_COUNTERS")
+            if self.papi_counters != None and isinstance(self.papi_counters, list):
+                dimensions.extend(self.papi_counters)
+            del dimensions[idx]
         for i in range(len(dimensions)):
             if dimensions[i] not in df.columns:
                 d.append(i)
         for i in d:
             del dimensions[i]
+
         del d
 
         results = df[dimensions].values
@@ -159,11 +167,7 @@ class Kernel:
         print("--- END summary")
 
     def save_results(
-        self,
-        df: pd.DataFrame,
-        filename: str,
-        output_format="csv",
-        generate_report=False,
+        self, df: pd.DataFrame, filename: str, generate_report=False,
     ) -> None:
         """
         Save data as a pandas.DataFrame
@@ -182,6 +186,7 @@ class Kernel:
         :type filename: str
         """
         # storing results with metadata, but cleaning first, just in case
+        output_format = self.output.get("format", "csv")
         try:
             df.drop([""], axis=1, inplace=True)
         except KeyError:
@@ -394,13 +399,15 @@ class Kernel:
             )
             data.update(asm_dict)
         if self.static_analysis != "":
-            S = StaticCodeAnalyzer("native", self.static_analysis)
-            data.update(
-                S.compute_performance(
-                    f"{self.get_kernel_path()}/marta_profiler_data/asm_codes/{base_filename}.s",
-                    self.nsteps,
+            with yaspin(text="Static analysis with LLVM-MCA") as sp:
+                S = StaticCodeAnalyzer("native", self.static_analysis)
+                data.update(
+                    S.compute_performance(
+                        f"{self.get_kernel_path()}/marta_profiler_data/asm_codes/{base_filename}.s",
+                        self.nsteps,
+                    )
                 )
-            )
+                sp.hidden()
 
         data.update(vector_report_analysis(f"/tmp/{base_filename}.opt", compiler))
 
@@ -511,6 +518,38 @@ class Kernel:
             list_rows += [new_dict]
         return list_rows
 
+    def finalize_actions(self):
+        self.reset_system_config()
+        if self.finalize != None:
+            # Cleaning directories
+            if self.finalize.get("clean_tmp_files", False):
+                os.system(f"rm -Rf tmp/")
+                os.system(f"rm -Rf log/")
+            if self.finalize.get("clean_bin_files", False):
+                os.system(f"rm -Rf bin/")
+            if self.finalize.get("clean_asm_files", False):
+                os.system(f"rm -Rf asm_codes/")
+            if self.finalize.get("command") != None:
+                try:
+                    os.system(f'{self.finalize.get("command")}')
+                except Exception:
+                    perror(f"Finalize command went wrong for the kernel")
+
+    def get_output_filename(self):
+        fname = self.output.get("name", self.kernel)
+        tstamp = dt.now().strftime("%d_%m_%y___%H_%M_%S")
+        output_filename = (
+            f"{fname}_marta_profiler_{tstamp}.{self.output.get('format', 'csv')}"
+        )
+        return output_filename
+
+    def execute_preamble(self):
+        if self.preamble != None and self.preamble.get("command") != None:
+            try:
+                os.system(f'{self.preamble.get("command")}')
+            except Exception:
+                perror("Preamble command went wrong...")
+
     def reset_system_config(self):
         assert hasattr(self, "max_freq") and hasattr(self, "turbo")
         if self.max_freq != "" and self.turbo != "":
@@ -521,12 +560,18 @@ class Kernel:
         assert hasattr(self, "path_kernel")
         return self.path_kernel
 
+    def get_output_columns(self):
+        return self.output.get("columns", "all")
+
+    def emit_report(self):
+        return self.output.get("report", False)
+
     def __init__(self) -> None:
         pass
 
     def __init__(self, cfg: dict) -> None:
         assert isinstance(cfg, dict)
-        parsed_config = parse_options(cfg)
+        parsed_config = parse_kernel_options(cfg)
         for key in parsed_config:
             setattr(self, key, parsed_config[key])
         self.define_papi_counters()
@@ -534,4 +579,5 @@ class Kernel:
             self.system = SystemConfig({"affinity": [self.cpu_affinity]})
             self.system.tune()
             self.system.check_errors("tune")
+        self.execute_preamble()
 

@@ -28,7 +28,6 @@ import pickle
 import itertools as it
 import multiprocessing as mp
 from typing import Iterable, Union
-from datetime import datetime as dt
 
 # Third-party libraries
 import pandas as pd
@@ -227,7 +226,14 @@ class Profiler:
 
     @staticmethod
     def comp_nvals(params_values: Union[list, Iterable]) -> int:
-        # Compute number of iterations
+        """Computer the number of iterations of some iterables. This is for the
+        tqdm progress bar
+
+        :param params_values: Any type of iterable
+        :type params_values: Union[list, Iterable]
+        :return: Number of elements
+        :rtype: int
+        """
         if isinstance(params_values, list):
             return len(params_values)
         params_values_copy = copy.deepcopy(params_values)
@@ -251,24 +257,17 @@ class Profiler:
         dicts.update({"KERNEL_CFG": kernel_cfg})
         return (pickle.dumps(dict(zip(dicts, x))) for x in it.product(*dicts.values()))
 
-    def clean_files(self, finalize_actions: dict) -> None:
-        if finalize_actions != None:
-            # Cleaning directories
-            if finalize_actions.get("clean_tmp_files", False):
-                os.system(f"rm -Rf tmp/")
-                os.system(f"rm -Rf log/")
-            if finalize_actions.get("clean_bin_files", False):
-                os.system(f"rm -Rf bin/")
-            if finalize_actions.get("clean_asm_files", False):
-                os.system(f"rm -Rf asm_codes/")
-            if finalize_actions.get("command") != None:
-                try:
-                    os.system(f'{finalize_actions.get("command")}')
-                except Exception:
-                    perror(f"Finalize command went wrong for the kernel")
+    def get_loop_overhead(self, kernel: Kernel, exit_on_error: bool) -> float:
+        """Auxiliar function for getting the overhead of measuring in a loop.
 
-    def get_loop_overhead(self, kernel: Kernel, exit_on_error: bool) -> int:
-        if not kernel.execution_enabled:
+        :param kernel: Kernel for getting values
+        :type kernel: Kernel
+        :param exit_on_error: Boolean value to exit if error found
+        :type exit_on_error: bool
+        :return: Overhead produced by the loop itself
+        :rtype: float
+        """
+        if not kernel.execution_enabled or kernel.nsteps == 1:
             return 0
         try:
             loop_benchmark = Benchmark(
@@ -285,7 +284,7 @@ class Profiler:
                 ],
                 nsteps=kernel.nsteps,
             )
-            pinfo(f"Loop overhead: {overhead_loop_tsc} cycles")
+            pinfo(f"Loop overhead: {overhead_loop_tsc} cycles (TSC)")
         except BenchmarkError:
             msg = "Loop overhead could not be computed."
             if exit_on_error:
@@ -293,6 +292,15 @@ class Profiler:
             else:
                 pwarning(f"{msg} Skipping.")
         return overhead_loop_tsc
+
+    @staticmethod
+    def clean_previous_files() -> None:
+        import glob
+
+        list_opt = glob.glob("/tmp/*.opt")
+        if list_opt != []:
+            for elem in list_opt:
+                os.system(f"rm {elem}")
 
     def profiling_kernels(self, cfg: dict) -> int:
         """
@@ -311,16 +319,13 @@ class Profiler:
             params_kernel = kernel.d_flags
 
         # Output configuration: default values
-        config_output = cfg["kernel"].get("output", {})
-        output_format = config_output.get("format", "csv")
-        output_cols = config_output.get("columns", "all")
-        generate_report = config_output.get("report", False) | self.args.report
-        if self.args.output is None:
-            fname = config_output.get("name", kernel.kernel)
-            tstamp = dt.now().strftime("%d_%m_%y___%H_%M_%S")
-            output_filename = f"{fname}_marta_profiler_{tstamp}.{output_format}"
-        else:
-            output_filename = self.args.output
+        output_cols = kernel.get_output_columns()
+        generate_report = kernel.emit_report() | self.args.report
+        output_filename = (
+            kernel.get_output_filename()
+            if self.args.output is None
+            else self.args.output
+        )
 
         if isinstance(output_cols, str) and output_cols == "all":
             if isinstance(params_kernel, dict):
@@ -356,21 +361,10 @@ class Profiler:
             make_stdout = "/tmp/___marta_stdout.log"
             make_stderr = "/tmp/___marta_stderr.log"
 
-        # Execute command preceding compilation and execution process
-        preamble = cfg["kernel"].get("preamble")
-        if preamble != None and preamble.get("command") != None:
-            try:
-                os.system(f'{preamble.get("command")}')
-            except Exception:
-                perror("Preamble command went wrong...")
-
         create_directories(root=f"{kernel.get_kernel_path()}/marta_profiler_data/")
-
         exit_on_error = not self.args.no_quit_on_error
-
         overhead_loop_tsc = self.get_loop_overhead(kernel, exit_on_error)
-
-        os.system("rm /tmp/*.opt")
+        Profiler.clean_previous_files()
 
         pinfo(f"Compiling with {kernel.processes} processes")
         for compiler in kernel.compiler_flags:
@@ -434,11 +428,7 @@ class Profiler:
                 if kernel.execution_enabled:
                     if kernel.show_progress_bars:
                         loop_iterator = tqdm(
-                            product,
-                            desc="Benchmark",
-                            total=niterations,
-                            position=0,
-                            leave=True,
+                            product, desc="Benchmark", total=niterations, leave=True,
                         )
                     else:
                         loop_iterator = product
@@ -448,9 +438,7 @@ class Profiler:
                         kern_exec = kernel.run(params_val, compiler, compiler_flags)
                         # There was an error, exit on error, save data first
                         if kern_exec == None:
-                            kernel.save_results(
-                                df, output_filename, output_format, generate_report
-                            )
+                            kernel.save_results(df, output_filename, generate_report)
                             perror("Execution failed, partial results saved")
                             return None
                         if isinstance(kern_exec, list):
@@ -463,14 +451,13 @@ class Profiler:
                     pwarning("Execution process disabled!")
         # Storing results and generating report file
         Timing.save_total_time()
-        # FIXME:
+        # FIXME: this should not be like this...
         df["overhead_instructions"] = 2
         df["overhead_loop"] = overhead_loop_tsc
-        kernel.save_results(df, output_filename, output_format, generate_report)
+        kernel.save_results(df, output_filename, generate_report)
         if self.args.summary != None and self.args.summary != []:
             kernel.print_summary(df, self.args.summary)
-        kernel.reset_system_config()
-        self.clean_files(cfg["kernel"].get("finalize"))
+        kernel.finalize_actions()
         return 0
 
     def __init__(self, list_args):

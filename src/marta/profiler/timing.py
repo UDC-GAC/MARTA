@@ -176,7 +176,7 @@ class Timing:
             os.remove(tmp_file)
 
         with open(tmp_file, "a") as f:
-            for _ in trange(nexec, leave=False, desc="Executions", position=1):
+            for _ in trange(nexec, leave=False, desc="Executions"):
                 p = subprocess.Popen(bin_file, stdout=f)
                 p.wait()
                 f.flush()
