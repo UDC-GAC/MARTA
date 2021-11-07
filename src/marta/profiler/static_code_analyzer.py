@@ -22,9 +22,10 @@ import os
 import json
 import subprocess
 import pathlib
+import yaspin
 
 # Local imports
-from marta.utils.marta_utilities import pwarning
+from marta.utils.marta_utilities import pwarning, perror
 
 
 class LLVMMCAError(Exception):
@@ -82,6 +83,17 @@ class StaticCodeAnalyzer:
         os.remove(f"{json_file}")
         return json_file_fixed
 
+    def get_llvm_mca_version(self) -> int:
+        lines = os.popen(f"{self.binary} --version").read()
+        try:
+            for line in lines:
+                if "version" in line:
+                    major_version = int(line.split(" ")[-1].split(".")[0])
+                    return major_version
+        except Exception:
+            pass
+        return -1
+
     def compute_performance(
         self,
         name_bench: str,
@@ -127,7 +139,7 @@ class StaticCodeAnalyzer:
         # ret = subprocess.run(cmd, stderr=stderr)
 
         if ret and not os.path.exists(json_file):
-            raise LLVMMCAError
+            raise LLVMMCAError("Path does not exist")
 
         with open(f"{json_file}") as f:
             try:
@@ -150,6 +162,11 @@ class StaticCodeAnalyzer:
         except KeyError:
             pwarning("llvm-mca data could not be parsed")
             return llvm_mca_results
+        except TypeError:
+            pwarning(
+                "\nBad format in llvm-mca json output:\n\tyou need to update your version to LLVM >= 13.x.x."
+            )
+            return llvm_mca_results
 
         llvm_mca_results.update({"llvm-mca_IPC": summary["IPC"]})
         llvm_mca_results.update(
@@ -161,9 +178,25 @@ class StaticCodeAnalyzer:
         llvm_mca_results.update({"llvm-mca_uOpsPerCycle": summary["uOpsPerCycle"]})
         return llvm_mca_results
 
+    def get_data(self):
+        if not hasattr(self, "data"):
+            self.data = {}
+        return self.data
+
     def __init__(
-        self, cpu: str, binary: str = "llvm-mca", arch: str = "x86-64"
+        self,
+        cpu: str,
+        binary: str = "llvm-mca",
+        arch: str = "x86-64",
+        path: str = "",
+        nsteps: int = 100,
     ) -> None:
         self.binary = binary
         self.cpu = cpu
         self.arch = arch
+        if self.get_llvm_mca_version() < 13:
+            pwarning("You need to update your version to LLVM >= 13.x.x.")
+            return
+        with yaspin(text="Static analysis with LLVM-MCA") as sp:
+            self.data = self.compute_performance(path, nsteps,)
+            sp.hidden()

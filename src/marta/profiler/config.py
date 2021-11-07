@@ -77,7 +77,9 @@ def parse_kernel_options(config: dict) -> dict:
                 f"Be careful with high degree of processes for compilation ({cfg['processes']} processes set)"
             )
     except ValueError:
-        pexcept("processes must be an integer greater or equal to '1'")
+        pexcept(
+            "processes must be an integer greater or equal to '1'", MARTAConfigError
+        )
     except KeyError:
         cfg["processes"] = 1
     cfg["compiler_flags"] = config_comp.get("compiler_flags", {"gcc": [""]})
@@ -90,9 +92,12 @@ def parse_kernel_options(config: dict) -> dict:
 
     # ASM analysis
     asm_analysis = config_comp.get("asm_analysis", {})
-    cfg["asm_count"] = asm_analysis.get("count_ins", False)
-    cfg["asm_syntax"] = asm_analysis.get("syntax", "att")
-    cfg["static_analysis"] = asm_analysis.get("static_analysis", "")
+    if isinstance(asm_analysis, dict):
+        cfg["asm_count"] = asm_analysis.get("count_ins", False)
+        cfg["asm_syntax"] = asm_analysis.get("syntax", "att")
+        cfg["static_analysis"] = asm_analysis.get("static_analysis", "")
+    else:
+        pexcept("'asm_analysis' must be a dict", MARTAConfigError)
 
     # Configuration
     cfg["kernel_cfg"] = config_config.get("kernel_cfg", [""])
@@ -123,9 +128,8 @@ def parse_kernel_options(config: dict) -> dict:
     cfg["measure_time"] = config_exec.get("time", False)
     cfg["measure_tsc"] = config_exec.get("tsc", False)
     cfg["threshold_outliers"] = config_exec.get("threshold_outliers", 3)
-    cfg["mean_and_discard_outliers"] = config_exec.get(
-        "mean_and_discard_outliers", False
-    )
+    cfg["discard_outliers"] = config_exec.get("discard_outliers", False)
+    cfg["compute_avg"] = config_exec.get("compute_avg", True)
     cfg["nexec"] = config_exec.get("nexec", 7)
     cfg["nsteps"] = config_exec.get("nsteps", 1000)
     cfg["cpu_affinity"] = config_exec.get("cpu_affinity", 0)
@@ -207,6 +211,13 @@ def get_kernel_config(input_file: str):
             kernel_setup = yaml.load(ymlfile, Loader=Loader)
     except FileNotFoundError:
         perror("Configuration file not found")
+    except yaml.YAMLError as exc:
+        if hasattr(exc, "problem_mark"):
+            mark = exc.problem_mark
+            perror(
+                f"Error position in configuration file: row {mark.line+1}, column {mark.column+1})"
+            )
+        perror(f"Error in configuration file: {exc}")
     except Exception:
         perror("Unknown error when opening configuration file.")
 

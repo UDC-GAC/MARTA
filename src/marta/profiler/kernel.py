@@ -111,7 +111,9 @@ class Kernel:
 
     def print_summary(self, df: pd.DataFrame, dimensions: list = []):
         print("\n--------------")
-        print("MARTA summary\n")
+        print(
+            f"MARTA summary [no. executions = {self.nexec}, tsteps = {self.nsteps}]\n"
+        )
         line = ""
         headers = ""
 
@@ -124,7 +126,7 @@ class Kernel:
         for i in range(len(dimensions)):
             if dimensions[i] not in df.columns:
                 d.append(i)
-        for i in d:
+        for i in d[::-1]:
             del dimensions[i]
 
         del d
@@ -149,7 +151,7 @@ class Kernel:
             display_val = ""
             for i in range(len(val)):
                 sval = val[i]
-                l = len(dimensions[i])
+                l = max_size[i]
                 if isinstance(sval, str):
                     sval = val[i][:l]
                 elif isinstance(sval, int):
@@ -399,15 +401,12 @@ class Kernel:
             )
             data.update(asm_dict)
         if self.static_analysis != "":
-            with yaspin(text="Static analysis with LLVM-MCA") as sp:
-                S = StaticCodeAnalyzer("native", self.static_analysis)
-                data.update(
-                    S.compute_performance(
-                        f"{self.get_kernel_path()}/marta_profiler_data/asm_codes/{base_filename}.s",
-                        self.nsteps,
-                    )
-                )
-                sp.hidden()
+            S = StaticCodeAnalyzer(
+                "native",
+                self.static_analysis,
+                path=f"{self.get_kernel_path()}/marta_profiler_data/asm_codes/{base_filename}.s",
+            )
+            data.update(S.get_data())
 
         data.update(vector_report_analysis(f"/tmp/{base_filename}.opt", compiler))
 
@@ -435,7 +434,8 @@ class Kernel:
                 self.nexec,
                 self.nsteps,
                 self.threshold_outliers,
-                self.mean_and_discard_outliers,
+                self.discard_outliers,
+                self.compute_avg,
                 bin_path=f"{self.get_kernel_path()}/marta_profiler_data/bin",
             )
             if mtype == "papi":
@@ -484,7 +484,7 @@ class Kernel:
         data.update(get_derived(self.derived_columns, data))
 
         # Discard outliers
-        if self.mean_and_discard_outliers:
+        if self.discard_outliers:
             if self.measure_time:
                 data.update(
                     {

@@ -116,7 +116,8 @@ class Timing:
         nexec=10,
         nsteps=10000,
         threshold_outliers=3,
-        mean_and_discard_outliers=True,
+        discard_outliers=True,
+        compute_avg=True,
         bin_file="",
         bin_path="",
         tmp_file="",
@@ -139,8 +140,8 @@ class Timing:
         :type nsteps: int, optional
         :param threshold_outliers: Threshold used for discarding outliers, defaults to 3
         :type threshold_outliers: int, optional
-        :param mean_and_discard_outliers: Compute mean and discard outliers, defaults to True
-        :type mean_and_discard_outliers: bool, optional
+        :param discard_outliers: Compute mean and discard outliers, defaults to True
+        :type discard_outliers: bool, optional
         :param bin_file: Binary file name, defaults to ""
         :type bin_file: str, optional
         :param tmp_file: Temporal file used, defaults to ""
@@ -176,7 +177,9 @@ class Timing:
             os.remove(tmp_file)
 
         with open(tmp_file, "a") as f:
-            for _ in trange(nexec, leave=False, desc="Executions"):
+            for _ in trange(
+                nexec, leave=False, desc=f"{benchmark_type.upper()} executions"
+            ):
                 p = subprocess.Popen(bin_file, stdout=f)
                 p.wait()
                 f.flush()
@@ -198,8 +201,9 @@ class Timing:
         if len(results) == 0:
             return None, None
 
-        results = np.divide(results, nsteps)
-        if not mean_and_discard_outliers:
+        if compute_avg:
+            results = np.divide(results, nsteps)
+        if not discard_outliers:
             return results, -1
 
         res_mean = np.mean(results)
