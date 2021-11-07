@@ -78,6 +78,7 @@ class Profiler:
             ("-v" in args)
             or ("--version" in args)
             or ("-dump" in args)
+            or ("--dump" in args)
             or ("--dump-config-file" in args)
             or ("-h" in args)
             or ("--help" in args)
@@ -167,7 +168,7 @@ class Profiler:
             "-n",
             "--name",
             help="name of the new project",
-            required=False,
+            required=True,
             default="marta_bench",
         )
 
@@ -474,7 +475,7 @@ class Profiler:
             perror("MARTA must run with Python >=3.7")
         self.args = Profiler.parse_arguments(list_args)
 
-        if self.args.dump_config_file:
+        if self.args.dump_config_file or self.args.dump:
             for line in dump_config_file("profiler/template.yml"):
                 print(line, end="")
             sys.exit(0)
@@ -483,7 +484,9 @@ class Profiler:
             code = Project.generate_new_project(self.args.name)
             if code != 0:
                 perror("Something went wrong...", code)
-            pinfo(f"Project generated in folder '{self.args.name}'!")
+            pinfo(
+                f"Project generated in folder '{self.args.name}'. Configuration template in current file as '{self.args.name}_template.yml'"
+            )
             sys.exit(0)
 
         if self.args.version:
