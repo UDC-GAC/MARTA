@@ -28,6 +28,7 @@ import pickle
 import itertools as it
 import multiprocessing as mp
 from typing import Iterable, Union
+import glob
 
 # Third-party libraries
 import pandas as pd
@@ -475,7 +476,9 @@ class Profiler:
             perror("MARTA must run with Python >=3.7")
         self.args = Profiler.parse_arguments(list_args)
 
-        if self.args.dump_config_file or self.args.dump:
+        if self.args.dump_config_file or (
+            hasattr(self.args, "dump") and self.args.dump
+        ):
             for line in dump_config_file("profiler/template.yml"):
                 print(line, end="")
             sys.exit(0)
