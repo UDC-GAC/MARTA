@@ -202,7 +202,6 @@ class Profiler:
                         params_values = eval(feature[f]["value"])
                     else:
                         params_values = feature[f]["value"]
-                    
                 except NameError:
                     perror(f"Evaluation of expression for {f} went wrong!")
             else:
@@ -367,7 +366,9 @@ class Profiler:
         overhead_loop_tsc = self.get_loop_overhead(kernel, exit_on_error)
         Profiler.clean_previous_files()
 
-        pinfo(f"Compiling with {kernel.processes} processes")
+        pinfo(
+            f"Compilation using {kernel.processes} processes. Number of executions = {kernel.nexec}, number of iterations (TSTEPS) = {kernel.nsteps}"
+        )
         for compiler in kernel.compiler_flags:
             for compiler_flags in list(kernel.compiler_flags[compiler]):
                 pinfo(f"Compiler and flags: {compiler} {compiler_flags}")

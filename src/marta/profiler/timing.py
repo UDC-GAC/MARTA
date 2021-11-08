@@ -20,13 +20,14 @@
 # Standard libraries
 from __future__ import annotations
 import subprocess
-from typing import Optional, Tuple
+from typing import ContextManager, Optional, Tuple
 import datetime as dt
 import os
 import time
 from pathlib import Path
 import sys
 from tqdm.auto import trange
+from contextlib import contextmanager, redirect_stdout
 
 
 # import warnings
@@ -107,6 +108,11 @@ class Timing:
         with open(dump_file, "w") as f:
             subprocess.Popen([f"{bin_file}"], stdout=f)
 
+    @contextmanager
+    @staticmethod
+    def redirect_output():
+        pass
+
     @staticmethod
     def measure_benchmark(
         code: str,
@@ -122,6 +128,7 @@ class Timing:
         bin_file="",
         bin_path="",
         tmp_file="",
+        redirect_stdout=False,
     ) -> Tuple[Optional[dict], Optional[int]]:
         """Execute and time given benchmark nexec times
 
@@ -173,19 +180,24 @@ class Timing:
                 bin_file = [*exec_opts_list] + bin_file
         if tmp_file == "":
             tmp_file = f"/tmp/___marta_results.txt"
-        os.remove(tmp_file)
-        Path(tmp_file).touch()
 
         if os.path.exists(tmp_file):
             os.remove(tmp_file)
+        Path(tmp_file).touch()
 
-        with open(tmp_file, "a") as f:
+        def measure(file=None, f=lambda: None):
             for _ in trange(
-                nexec, leave=False, desc=f"{benchmark_type.upper()} executions"
+                nexec, leave=False, desc=f"{benchmark_type.upper():4} exec."
             ):
-                p = subprocess.Popen(bin_file)
+                p = subprocess.Popen(bin_file, stdout=file)
                 p.wait()
-                f.flush()
+                f
+
+        if isinstance(redirect_stdout, str):
+            with open(redirect_stdout, "w") as f:
+                measure(f, f.flush())
+        else:
+            measure()
 
         try:
             results = np.loadtxt(tmp_file, delimiter=",")
@@ -211,7 +223,6 @@ class Timing:
 
         res_mean = np.mean(results)
         res_dev = np.std(results)
-        # This could be done using walrus operator for Python >=3.8
         avg_dev = np.divide(
             100.0 * res_dev, res_mean, out=np.zeros(res_mean.size), where=res_mean != 0
         )

@@ -132,7 +132,13 @@ class Kernel:
         del d
 
         results = df[dimensions].values
-        max_size = df[dimensions].applymap(lambda x: len(str(x))).max()
+        max_size = (
+            df[dimensions]
+            .applymap(
+                lambda x: len(f"{x:.5f}") if isinstance(x, float) else len(str(x))
+            )
+            .max()
+        )
 
         for i in range(len(dimensions)):
             max_size[i] = max(max_size[i], len(dimensions[i]))
@@ -437,6 +443,7 @@ class Kernel:
                 self.discard_outliers,
                 self.compute_avg,
                 bin_path=f"{self.get_kernel_path()}/marta_profiler_data/bin",
+                redirect_stdout=self.stdout_redirect,
             )
             if mtype == "papi":
                 if len(self.papi_counters) == 1:
@@ -511,7 +518,7 @@ class Kernel:
             if "tsc" in d_avg_values:
                 if self.measure_tsc:
                     new_dict.update({"tsc": d_avg_values["tsc"][execution]})
-            if "tsc" in d_avg_values:
+            if "papi" in d_avg_values:
                 new_dict.update(
                     dict(zip(self.papi_counters, [d_avg_values["papi"][execution]]))
                 )

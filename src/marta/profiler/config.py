@@ -72,10 +72,6 @@ def parse_kernel_options(config: dict) -> dict:
         cfg["processes"] = int(config_comp["processes"])
         if cfg["processes"] < 1:
             raise ValueError
-        if cfg["processes"] > 32:
-            pwarning(
-                f"Be careful with high degree of processes for compilation ({cfg['processes']} processes set)"
-            )
     except ValueError:
         pexcept(
             "processes must be an integer greater or equal to '1'", MARTAConfigError
@@ -105,7 +101,7 @@ def parse_kernel_options(config: dict) -> dict:
         cfg["kernel_cfg"] = [""]
     cfg["d_features"] = config_config.get("d_features", [])
     cfg["d_flags"] = config_config.get("d_flags", [])
-    cfg["flops"] = config_config.get("flops", 1)
+    cfg["flops"] = config_config.get("flops", "1")
     cfg["meta_info"] = config_config.get("meta_info", {})
     # meta_info = config_config.get("meta_info", {})
     # cfg["meta_info_script"] = meta_info.get("script", "")
@@ -121,6 +117,7 @@ def parse_kernel_options(config: dict) -> dict:
 
     # Execution arguments
     cfg["intel_cache_flush"] = config_exec.get("intel_cache_flush", False)
+    cfg["stdout_redirect"] = config_exec.get("stdout_redirect", False)
     cfg["multithread"] = config_exec.get("multithread", False)
     cfg["init_data"] = config_exec.get("init_data", False)
     cfg["check_dump"] = config_exec.get("check_dump", False)

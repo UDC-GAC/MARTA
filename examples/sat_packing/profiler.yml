@@ -1,0 +1,51 @@
+- kernel:
+      name: "sat_packing"
+      type: "regular"
+      path: "examples/sat_packing/src/"
+      description: "TBD"
+      debug: False
+      show_progress_bars: True
+      preamble:
+          command: "sudo cpupower frequency-set -u 2.1GHz  > /dev/null && sudo cpupower frequency-set -d 2.1GHz > /dev/null"
+      compilation:
+          enabled: True
+          processes: 16
+          language: "C"
+          compiler_flags:
+              { "gcc-11": [" -Ofast -march=native -mtune=native -mavx2 "] }
+          main_src: "main.c"
+          kernel_inlined: True
+          asm_analysis:
+              syntax: "att"
+              count_ins: False
+              static_analysis: "llvm-mca"
+          debug: False
+      configuration:
+          d_features:
+              PACKING_TEMPLATE:
+                  evaluate: True
+                  type: "static"
+                  val_type: "string"
+                  #value: '[f"codes/rvp_float_4elems_4nnz_{i}_{j}_{k}_0.c" for
+                  #i,j,k in it.product([0,1],[0,1],[0,1])]'
+                  value: '[f"codes/rvp_float_4elems_4nnz_1_1_1_0.c"]'
+                  #value: "glob.glob('examples/sat_packing/src/codes/*.c')"
+          flops: "1"
+      execution:
+          enabled: True
+          papi_counters: ["UNHALTED_CORE_CYCLES", "INSTRUCTIONS_RETIRED"]
+          time: False
+          tsc: True
+          threshold_outliers: 3
+          discard_outliers: True
+          compute_avg: True
+          nexec: 7
+          nsteps: 100000
+          cpu_affinity: 10
+          prefix: "numactl -p 0 taskset -c 10"
+      output:
+          name: "intel_xeon_silver"
+          format: "csv" # csv, html, json
+          columns: "all"
+          report: True
+          verbose: True
