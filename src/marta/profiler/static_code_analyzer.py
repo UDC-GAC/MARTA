@@ -94,6 +94,11 @@ class StaticCodeAnalyzer:
             pass
         return -1
 
+    def check_if_compatible_version(self):
+        if self.get_llvm_mca_version() < 13:
+            return False
+        return True
+
     def compute_performance(
         self,
         name_bench: str,
@@ -183,20 +188,15 @@ class StaticCodeAnalyzer:
             self.data = {}
         return self.data
 
+    def perform_analysis(self, path, nsteps):
+        with yaspin(text="Static analysis with LLVM-MCA") as sp:
+            self.data = self.compute_performance(path, nsteps)
+            sp.hidden()
+
     def __init__(
-        self,
-        cpu: str,
-        binary: str = "llvm-mca",
-        arch: str = "x86-64",
-        path: str = "",
-        nsteps: int = 100,
+        self, cpu: str, binary: str = "llvm-mca", arch: str = "x86-64",
     ) -> None:
         self.binary = binary
         self.cpu = cpu
         self.arch = arch
-        if self.get_llvm_mca_version() < 13:
-            pwarning("You need to update your version to LLVM >= 13.x.x.")
-            return
-        with yaspin(text="Static analysis with LLVM-MCA") as sp:
-            self.data = self.compute_performance(path, nsteps,)
-            sp.hidden()
+

@@ -57,5 +57,10 @@ __asm volatile("sfence;rdtsc\n\t"
 //_mm_lfence();
 start = ((uint64_t)cycles_high << 32) | cycles_low;
 end = ((uint64_t)cycles_high1 << 32) | cycles_low1;
-printf("%llu\n", end - start);
+FILE *fp;
+fp = fopen("/tmp/___marta_results.txt", "w");
+if (fp == NULL)
+  exit(-1);
+fprintf(fp, "%llu\n", end - start);
+fclose(fp);
 MARTA_BENCHMARK_END;

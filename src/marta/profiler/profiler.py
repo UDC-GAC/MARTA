@@ -202,6 +202,7 @@ class Profiler:
                         params_values = eval(feature[f]["value"])
                     else:
                         params_values = feature[f]["value"]
+                    
                 except NameError:
                     perror(f"Evaluation of expression for {f} went wrong!")
             else:
@@ -297,8 +298,6 @@ class Profiler:
 
     @staticmethod
     def clean_previous_files() -> None:
-        import glob
-
         list_opt = glob.glob("/tmp/*.opt")
         if list_opt != []:
             for elem in list_opt:

@@ -400,13 +400,13 @@ class Kernel:
                 f"{self.get_kernel_path()}/marta_profiler_data/asm_codes/{base_filename}.s",
             )
             data.update(asm_dict)
-        if self.static_analysis != "":
-            S = StaticCodeAnalyzer(
-                "native",
-                self.static_analysis,
-                path=f"{self.get_kernel_path()}/marta_profiler_data/asm_codes/{base_filename}.s",
+
+        if self.static_analysis:
+            self.S.perform_analysis(
+                f"{self.get_kernel_path()}/marta_profiler_data/asm_codes/{base_filename}.s",
+                self.nsteps,
             )
-            data.update(S.get_data())
+            data.update(self.S.get_data())
 
         data.update(vector_report_analysis(f"/tmp/{base_filename}.opt", compiler))
 
@@ -580,4 +580,13 @@ class Kernel:
             self.system.tune()
             self.system.check_errors("tune")
         self.execute_preamble()
+        if self.static_analysis != "":
+            self.S = StaticCodeAnalyzer("native", self.static_analysis,)
+            if not self.S.check_if_compatible_version():
+                self.static_analysis = False
+                pwarning(
+                    "You need to update your version to LLVM >= 13.x.x. for static analysis"
+                )
+            else:
+                self.static_analysis = True
 

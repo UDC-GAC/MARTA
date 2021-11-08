@@ -72,10 +72,51 @@
 #define MARTA_INTEL_FLUSH_DATA 0
 #endif
 
+#define MARTA_TMP_FILE "/tmp/___marta_results.txt"
+
+#define MARTA_OPEN_RESULTS_FILE                                                \
+  FILE *fp;                                                                    \
+  fp = fopen(MARTA_TMP_FILE, "a");                                             \
+  if (fp == NULL)                                                              \
+    exit(-1);
+
+#define MARTA_CLOSE_RESULTS_FILE fclose(fp);
+
+void marta_print_to_file(const char *format, ...) {
+  MARTA_OPEN_RESULTS_FILE;
+  va_list args;
+  va_start(args, format);
+  vfprintf(fp, format, args);
+  va_end(args);
+  MARTA_CLOSE_RESULTS_FILE;
+}
+
 #define MARTA_PREPARE_INSTRUMENTS polybench_prepare_instruments()
 #define MARTA_START_INSTRUMENTS polybench_start_instruments
 #define MARTA_STOP_INSTRUMENTS polybench_stop_instruments
-#define MARTA_PRINT_INSTRUMENTS polybench_print_instruments
+#define MARTA_PRINT_INSTRUMENTS marta_print_to_file
+
+#ifdef POLYBENCH_PAPI
+extern const unsigned int polybench_papi_eventlist[];
+extern const long long polybench_papi_values[];
+
+void marta_print_papi_to_file() {
+  MARTA_OPEN_RESULTS_FILE;
+  int evid;
+  for (evid = 0; polybench_papi_eventlist[evid] != 0; ++evid) {
+    if (polybench_papi_eventlist[evid + 1] == 0) {
+      fprintf(fp, "%llu", polybench_papi_values[evid]);
+    } else {
+      fprintf(fp, "%llu,", polybench_papi_values[evid]);
+    }
+  }
+  fprintf(fp, "\n");
+  MARTA_CLOSE_RESULTS_FILE;
+}
+
+#undef MARTA_PRINT_INSTRUMENTS
+#define MARTA_PRINT_INSTRUMENTS marta_print_papi_to_file();
+#endif
 
 #if defined(MARTA_MULTITHREAD) && !defined(_OPENMP)
 #error "Compile with -fopenmp!"
@@ -168,14 +209,14 @@ static inline void _marta_finish_rdtsc() {
 #define END_RDTSC _marta_finish_rdtsc();
 #define PRINT_RDTSC                                                            \
   for (int __th = 0; __th < __nthreads; ++__th) {                              \
-    printf("%d,%Ld\n", __th, (__marta_rdtsc[__th]));                           \
+    MARTA_PRINT_INSTRUMENTS("%d,%.1F\n", __th, (double)(__marta_rdtsc[__th]));   \
   }                                                                            \
   free(__marta_rdtsc);
 
 #else
 #define START_RDTSC _marta_cycles_t __marta_t0 = _marta_rdtsc_start();
-#define END_RDTSC _marta_cycles_t __marta_t1 = _marta_rdtsc_stop();
-#define PRINT_RDTSC printf("%Ld\n", (__marta_t1 - __marta_t0));
+#define END_RDTSC _marta_cycles_t __marta_t1 = _marta_rdtsc_stop() - __marta_t0;
+#define PRINT_RDTSC MARTA_PRINT_INSTRUMENTS("%.1F\n", (double)(__marta_t1));
 #endif
 
 #define MARTA_LOOP_ASM 0x1

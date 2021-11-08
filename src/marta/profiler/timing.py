@@ -24,6 +24,7 @@ from typing import Optional, Tuple
 import datetime as dt
 import os
 import time
+from pathlib import Path
 import sys
 from tqdm.auto import trange
 
@@ -171,7 +172,9 @@ class Timing:
                 exec_opts_list = exec_opts.split(" ")
                 bin_file = [*exec_opts_list] + bin_file
         if tmp_file == "":
-            tmp_file = f"/tmp/____tmp_{code}_{compiler}_{compiler_flags_suffix}_{benchmark_type}"
+            tmp_file = f"/tmp/___marta_results.txt"
+        os.remove(tmp_file)
+        Path(tmp_file).touch()
 
         if os.path.exists(tmp_file):
             os.remove(tmp_file)
@@ -180,7 +183,7 @@ class Timing:
             for _ in trange(
                 nexec, leave=False, desc=f"{benchmark_type.upper()} executions"
             ):
-                p = subprocess.Popen(bin_file, stdout=f)
+                p = subprocess.Popen(bin_file)
                 p.wait()
                 f.flush()
 
@@ -198,7 +201,7 @@ class Timing:
             perror(f"Treating warnings as error: {R}")
 
         # Empty files...
-        if len(results) == 0:
+        if not isinstance(results, np.ndarray):
             return None, None
 
         if compute_avg:
@@ -225,7 +228,6 @@ class Timing:
         mask = ~(np.abs(results - res_mean) <= threshold_outliers * res_dev)
         filtered_results = np.where(mask, np.nan, results)
         mean_results = np.nanmean(filtered_results, axis=0)
-
         if outliers and isinstance(mean_results, np.ndarray):
             pinfo(
                 f"Mean values after removing outliers: {' '.join(map(lambda x: f'{x:.2f}', mean_results))}"

@@ -37,7 +37,7 @@ class Benchmark:
         compiler: str = "gcc",
         flags: List[str] = ["-O3"],
         bin_file: str = "/tmp/a.out",
-        tmp_file: str = "/tmp/___tmp.txt",
+        tmp_file: str = "/tmp/___marta_results.txt",
         nsteps: int = 10000,
     ) -> float:
         try:
