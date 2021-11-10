@@ -102,15 +102,6 @@ V =
 
 BASENAME:=$(TARGET)
 
-# Experimental compatibility with MACVETH compiler
-MACVETH_RULE=
-ifeq ($(MACVETH),true)
-	MACVETH_RULE:=macveth
-	OLD_TARGET:=$(MACVETH_TARGET)
-	TARGET:=$(TARGET)_macveth
-	MACVETH_DB:=$(COMMON_FLAGS)
-endif
-
 .PHONY: all clean
 
 KERNEL_NAME?=$(BASENAME)_$(SUFFIX_ASM)_$(COMP)_$(COMP_FLAGS)
@@ -139,6 +130,18 @@ BASE_ASM_NAME?=$(ASM_DIR)$(KERNEL_NAME)
 BASE_DUMP_NAME?=$(DUMP_DIR)$(KERNEL_NAME)
 
 KERNEL_BIN_NAME?=$(BIN_DIR)$(KERNEL_NAME)_kernel.o
+
+
+# Experimental compatibility with MACVETH compiler
+MACVETH_RULE=
+ifeq ($(MACVETH),true)
+	MACVETH_RULE:=macveth
+	BINARY_NAME:=$(BINARY_NAME)_macveth
+	OLD_TARGET:=$(MACVETH_TARGET)
+	TARGET:=$(TARGET)_macveth
+	MACVETH_DB:=$(COMMON_FLAGS)
+	KERNEL_BIN_NAME?=$(BIN_DIR)$(KERNEL_NAME)_kernel_macveth.o
+endif
 
 MAIN_RULES:= $(MACVETH_RULE) $(MAIN_FILE)
 
@@ -190,12 +193,13 @@ all: $(TARGETS)
 
 # EXPERIMENTAL - Compatibility with MACVETH
 macveth:
-	$(V)$(MVPATH)macveth $(MACVETH_FLAGS) $(OLD_TARGET)$(MACVETH_SUFFIX).c -o $(TMP_SRC) -- $(MACVETH_DB) 2> ___$(SUFFIX_ASM).log
+	$(V)$(MACVETH_PATH)macveth $(MACVETH_FLAGS) $(OLD_TARGET)$(MACVETH_SUFFIX).c -o $(TMP_SRC) -- $(MACVETH_DB) 
 
 # EXPERIMENTAL - Compatibility with MACVETH
 kernel_macveth: macveth
 	$(V)$(CC) -c $(FLAGS_KERN) $(TMP_SRC)
-	$(V)mv $(TMP_BIN) $(KERNEL_NAME).o
+	$(V)mv $(TMP_BIN) $(KERNEL_BIN_NAME)
+	$(V)rm $(TMP_SRC)
 
 # Compile kernel to assembly code
 asm_code:

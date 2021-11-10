@@ -15,86 +15,80 @@
           enabled: True
           processes: 34
           language: "C"
-          compiler_flags: 
-            { 
-                "gcc": " -march=cascadelake ",
-                #"icc": " -march=cascadelake ",
-            }
+          compiler_flags: { "gcc": " -march=cascadelake " }
+          #"icc": " -march=cascadelake ",
           common_flags: " -mfma -mavx512f -mavx512vl "
           inlined_kernel: False
           asm_syntax: "att"
           asm_analysis: False
           debug: False
       configuration:
-          kernel_cfg: [
-          " AUTOVEC=true ",
-          " MACVETH ",
-          ]
-          d_features:   
-                MATRIX:
-                    evaluate: True
-                    type: "static"
-                    val_type: "string"
-                    #value: "[f\"test-codes/football.spf.c\"]"
-                    # value: "[\"test-codes/bibd_15_3.spf.c\",
-                    #  \"test-codes/football.spf.c\",
-                    #  \"test-codes/pde900.spf.c\",
-                    #  \"test-codes/lp_gfrd_pnc.spf.c\",
-                    #  \"test-codes/spaceStation_3.spf.c\",
-                    #  \"test-codes/N_biocarta.spf.c\",
-                    #  \"test-codes/celegans_metabolic.spf.c\" # FIXME:
-                    # \"test-codes/cep1.spf.c\",
-                    # \"test-codes/Pd.spf.c\",
-                    # \"test-codes/spaceShuttleEntry_2.spf.c\",
-                    # \"test-codes/adder_dcop_06.spf.c\",
-                    # \"test-codes/bcsstk34.spf.c\",
-                    # \"test-codes/circuit_2.spf.c\",
-                    # \"test-codes/power.spf.c\",
-                    # \"test-codes/rajat13.spf.c\",
-                    # \"test-codes/deter8.spf.c\",
-                    # \"test-codes/3elt_dual.spf.c\",
-                    # \"test-codes/bips98_1142.spf.c\",
-                    # \"test-codes/fe_sphere.spf.c\",
-                    # \"test-codes/G3.spf.c\",
-                    # \"test-codes/cat_ears_3_4.spf.c\",
-                    # \"test-codes/vsp_c-30_data_data.spf.c\",
-                    # \"test-codes/memplus.spf.c\",
-                    # \"test-codes/raefsky2.spf.c\",
-                    # \"test-codes/rlfdual.spf.c\",
-                    #  ]"
-                    #value: "[\"test-codes/G3.spf.c\",]"
-                    value: "[\"test-codes/bibd_15_3.spf.c\",
-                         \"test-codes/football.spf.c\",
-                          \"test-codes/spaceStation_3.spf.c\",
-                          \"test-codes/adder_dcop_06.spf.c\",
-                         \"test-codes/N_biocarta.spf.c\",
-                          \"test-codes/celegans_metabolic.spf.c\",
-                        \"test-codes/Pd.spf.c\",
-                        \"test-codes/3elt_dual.spf.c\",
-                        \"test-codes/G3.spf.c\",
-                        \"test-codes/cat_ears_3_4.spf.c\",
-                        \"test-codes/cep1.spf.c\",
-                        \"test-codes/circuit_2.spf.c\",
-                       \"test-codes/deter8.spf.c\",
-                        \"test-codes/l9.spf.c\",
-                        \"test-codes/rajat13.spf.c\",
-                        \"test-codes/power.spf.c\",
-                        ]"
-                    # value: "[
-                    #     \"test-codes/memplus.spf.c\",
-                    #     \"test-codes/raefsky2.spf.c\",
-                    #     \"test-codes/rlfdual.spf.c\",
-                    #     \"test-codes/wiki-Vote.spf.c\",
-                    #     \"test-codes/juba40k.spf.c\",
-                    #     \"test-codes/gridgena.spf.c\",
-                    #     \"test-codes/fe_ocean.spf.c\",
-                    #     \"test-codes/chipcool0.spf.c\",
-                    #     \"test-codes/Maragal_6.spf.c\",
-                    #     \"test-codes/nemsemm1.spf.c\",
-                    #     \"test-codes/olesnik0.spf.c\",
-                    #     \"test-codes/patents_main.spf.c\",
-                    #     \"test-codes/web-NotreDame.spf.c\",
-                    # ]"
+          kernel_cfg: [" AUTOVEC=true ", " MACVETH "]
+          d_features:
+              MATRIX:
+                  evaluate: True
+                  type: "static"
+                  val_type: "string"
+                  #value: "[f\"test-codes/football.spf.c\"]"
+                  # value: "[\"test-codes/bibd_15_3.spf.c\",
+                  #  \"test-codes/football.spf.c\",
+                  #  \"test-codes/pde900.spf.c\",
+                  #  \"test-codes/lp_gfrd_pnc.spf.c\",
+                  #  \"test-codes/spaceStation_3.spf.c\",
+                  #  \"test-codes/N_biocarta.spf.c\",
+                  #  \"test-codes/celegans_metabolic.spf.c\" # FIXME:
+                  # \"test-codes/cep1.spf.c\",
+                  # \"test-codes/Pd.spf.c\",
+                  # \"test-codes/spaceShuttleEntry_2.spf.c\",
+                  # \"test-codes/adder_dcop_06.spf.c\",
+                  # \"test-codes/bcsstk34.spf.c\",
+                  # \"test-codes/circuit_2.spf.c\",
+                  # \"test-codes/power.spf.c\",
+                  # \"test-codes/rajat13.spf.c\",
+                  # \"test-codes/deter8.spf.c\",
+                  # \"test-codes/3elt_dual.spf.c\",
+                  # \"test-codes/bips98_1142.spf.c\",
+                  # \"test-codes/fe_sphere.spf.c\",
+                  # \"test-codes/G3.spf.c\",
+                  # \"test-codes/cat_ears_3_4.spf.c\",
+                  # \"test-codes/vsp_c-30_data_data.spf.c\",
+                  # \"test-codes/memplus.spf.c\",
+                  # \"test-codes/raefsky2.spf.c\",
+                  # \"test-codes/rlfdual.spf.c\",
+                  #  ]"
+                  #value: "[\"test-codes/G3.spf.c\",]"
+                  value: '["test-codes/bibd_15_3.spf.c",
+                      "test-codes/football.spf.c",
+                      "test-codes/spaceStation_3.spf.c",
+                      "test-codes/adder_dcop_06.spf.c",
+                      "test-codes/N_biocarta.spf.c",
+                      "test-codes/celegans_metabolic.spf.c",
+                      "test-codes/Pd.spf.c",
+                      "test-codes/3elt_dual.spf.c",
+                      "test-codes/G3.spf.c",
+                      "test-codes/cat_ears_3_4.spf.c",
+                      "test-codes/cep1.spf.c",
+                      "test-codes/circuit_2.spf.c",
+                      "test-codes/deter8.spf.c",
+                      "test-codes/l9.spf.c",
+                      "test-codes/rajat13.spf.c",
+                      "test-codes/power.spf.c",
+                      ]'
+                  # value: "[
+                  #     \"test-codes/memplus.spf.c\",
+                  #     \"test-codes/raefsky2.spf.c\",
+                  #     \"test-codes/rlfdual.spf.c\",
+                  #     \"test-codes/wiki-Vote.spf.c\",
+                  #     \"test-codes/juba40k.spf.c\",
+                  #     \"test-codes/gridgena.spf.c\",
+                  #     \"test-codes/fe_ocean.spf.c\",
+                  #     \"test-codes/chipcool0.spf.c\",
+                  #     \"test-codes/Maragal_6.spf.c\",
+                  #     \"test-codes/nemsemm1.spf.c\",
+                  #     \"test-codes/olesnik0.spf.c\",
+                  #     \"test-codes/patents_main.spf.c\",
+                  #     \"test-codes/web-NotreDame.spf.c\",
+                  # ]"
           flops: "0"
           macveth_target: "MATRIX"
           macveth_flags: " -misa=avx2 --scatter "
@@ -102,32 +96,32 @@
           enabled: True
           #papi_counters: []
           papi_counters: [
-            "CPU_CLK_THREAD_UNHALTED:THREAD_P",
-            "INST_RETIRED:ANY_P",
-            "UOPS_RETIRED:ALL",
-            "UOPS_ISSUED:ALL",
-            #"UOPS_EXECUTED:THREAD",            
-            #"UOPS_RETIRED:STALL_CYCLES",
-            #"UOPS_ISSUED:STALL_CYCLES",
-            "UOPS_EXECUTED:STALL_CYCLES",
-            #"CPU_CLK_UNHALTED",
-            #"ix86arch::UNHALTED_REFERENCE_CYCLES",
-            #"UNHALTED_REFERENCE_CYCLES",
-            #"UOPS_EXECUTED:CORE_CYCLES_NONE",
-            #"UOPS_ISSUED:STALL_CYCLES",
-            #"INST_RETIRED:ANY_P",
-            #"UOPS_ISSUED:ALL",
-            #"UOPS_RETIRED:ALL",
-            #"FP_ARITH:SCALAR_DOUBLE",
-            #"FP_ARITH:128B_PACKED_DOUBLE",
-            #"FP_ARITH:256B_PACKED_DOUBLE",
-            #"FP_ARITH:512B_PACKED_DOUBLE",
-            #"PAPI_BR_TKN",
-            #"PAPI_BR_MSP",
-            #"MEM_LOAD_UOPS_RETIRED:L1_HIT",
-            #"MEM_LOAD_UOPS_RETIRED:L1_MISS",
-            #"ICACHE_64B:IFTAG_HIT",
-            ]
+                  "CPU_CLK_THREAD_UNHALTED:THREAD_P",
+                  "INST_RETIRED:ANY_P",
+                  "UOPS_RETIRED:ALL",
+                  "UOPS_ISSUED:ALL",
+                  #"UOPS_EXECUTED:THREAD",
+                  #"UOPS_RETIRED:STALL_CYCLES",
+                  #"UOPS_ISSUED:STALL_CYCLES",
+                  "UOPS_EXECUTED:STALL_CYCLES",
+              ]
+          #"CPU_CLK_UNHALTED",
+          #"ix86arch::UNHALTED_REFERENCE_CYCLES",
+          #"UNHALTED_REFERENCE_CYCLES",
+          #"UOPS_EXECUTED:CORE_CYCLES_NONE",
+          #"UOPS_ISSUED:STALL_CYCLES",
+          #"INST_RETIRED:ANY_P",
+          #"UOPS_ISSUED:ALL",
+          #"UOPS_RETIRED:ALL",
+          #"FP_ARITH:SCALAR_DOUBLE",
+          #"FP_ARITH:128B_PACKED_DOUBLE",
+          #"FP_ARITH:256B_PACKED_DOUBLE",
+          #"FP_ARITH:512B_PACKED_DOUBLE",
+          #"PAPI_BR_TKN",
+          #"PAPI_BR_MSP",
+          #"MEM_LOAD_UOPS_RETIRED:L1_HIT",
+          #"MEM_LOAD_UOPS_RETIRED:L1_MISS",
+          #"ICACHE_64B:IFTAG_HIT",
           time: False
           tsc: False
           threshold_outliers: 3

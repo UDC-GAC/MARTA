@@ -326,8 +326,8 @@ class Kernel:
             kconfig = kconfig.replace("MACVETH", "")
             local_common_flags += " -DMACVETH=1 "
             other_flags.append("MACVETH=true")
-            other_flags.append("MVPATH=" + self.mvpath)
-            other_flags.append("MACVETH_FLAGS='" + self.macveth_flags + "'")
+            other_flags.append(f"MACVETH_PATH={self.macveth_path}")
+            other_flags.append(f"MACVETH_FLAGS='{self.macveth_flags}'")
             if self.macveth_target != "":
                 try:
                     macveth_target = (

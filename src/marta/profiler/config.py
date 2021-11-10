@@ -108,7 +108,10 @@ def parse_kernel_options(config: dict) -> dict:
     # cfg["meta_info_path"] = meta_info.get("path", ".")
     # cfg["meta_info_script_input"] = meta_info.get("input", "")
     # cfg["meta_info_script_input_suffix"] = meta_info.get("suffix", "")
-    cfg["macveth_path"] = config_config.get("macveth_path_buil", "''")
+    cfg["macveth"] = config_config.get("macveth", False)
+    if cfg["macveth"]:
+        cfg["kernel_cfg"].append("MACVETH")
+    cfg["macveth_path"] = config_config.get("macveth_path", "")
     cfg["macveth_flags"] = config_config.get("macveth_flags", "-misa=avx2")
     cfg["macveth_target"] = config_config.get("macveth_target", "")
 

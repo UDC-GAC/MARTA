@@ -176,7 +176,7 @@ class Profiler:
         return parser.parse_args(args)
 
     @staticmethod
-    def eval_features(feature: dict) -> dict:
+    def eval_features(feature: dict, path: str) -> dict:
         """
         Evaluate features from configuration file
 
@@ -195,13 +195,26 @@ class Profiler:
         for f in feature.keys():
             type_feature = feature[f]["type"]
             evaluate = feature[f].get("evaluate", True)
+            is_path = feature[f].get("path", False)
             params_values = []
             if isinstance(feature[f]["value"], str):
                 try:
+                    to_eval = feature[f]["value"]
+                    if is_path:
+                        if isinstance(to_eval, list):
+                            new_list = []
+                            for val in to_eval:
+                                new_list.append(
+                                    val.replace("[PATH]", f"{os.getcwd()}/{path}")
+                                )
+                            to_eval = new_list
+                        elif isinstance(to_eval, str):
+                            to_eval = to_eval.replace("[PATH]", f"{os.getcwd()}/{path}")
                     if evaluate:
-                        params_values = eval(feature[f]["value"])
+                        params_values = eval(to_eval)
                     else:
-                        params_values = feature[f]["value"]
+                        params_values = to_eval
+
                 except NameError:
                     perror(f"Evaluation of expression for {f} went wrong!")
             else:
@@ -314,7 +327,9 @@ class Profiler:
 
         kernel = Kernel(cfg)
         if len(kernel.d_features) > 0:
-            params_kernel = Profiler.eval_features(kernel.d_features)
+            params_kernel = Profiler.eval_features(
+                kernel.d_features, kernel.get_kernel_path()
+            )
         else:
             params_kernel = kernel.d_flags
 
@@ -357,7 +372,8 @@ class Profiler:
         make_stdout = subprocess.STDOUT
         make_stderr = subprocess.STDOUT
 
-        if not kernel.comp_debug:
+        # if not kernel.comp_debug and not self.args.debug:
+        if not kernel.comp_debug or not (self.args.debug):
             make_stdout = "/tmp/___marta_stdout.log"
             make_stderr = "/tmp/___marta_stderr.log"
 
@@ -476,9 +492,7 @@ class Profiler:
             perror("MARTA must run with Python >=3.7")
         self.args = Profiler.parse_arguments(list_args)
 
-        if self.args.dump_config_file or (
-            hasattr(self.args, "dump") and self.args.dump
-        ):
+        if self.args.dump_config_file:
             for line in dump_config_file("profiler/template.yml"):
                 print(line, end="")
             sys.exit(0)
