@@ -61,7 +61,7 @@ class Profiler:
     """
 
     @staticmethod
-    def parse_arguments(args):
+    def generate_parser():
         """
         Parse CLI arguments
 
@@ -75,6 +75,7 @@ class Profiler:
             description="simple kernel profiler based on compilation files and a configuration file",
             formatter_class=RawTextHelpFormatter,
         )
+
         parser.add_argument(
             "--version", action="version", version=get_version("Profiler")
         )
@@ -180,7 +181,7 @@ class Profiler:
             required=False,
         )
 
-        return parser.parse_args(args)
+        return parser
 
     @staticmethod
     def eval_features(feature: dict, path: str) -> dict:
@@ -541,9 +542,16 @@ class Profiler:
             sys.version_info[0] == 3 and sys.version_info[1] < 7
         ):
             perror("MARTA must run with Python >=3.7")
-        self.args = Profiler.parse_arguments(list_args)
-
         project_subcmd_alias = ["project", "po"]
+        profile_subcmd_alias = ["profile", "perf"]
+        self.parser = Profiler.generate_parser()
+        self.args = self.parser.parse_args(list_args)
+        if (not self.args.cmd in [*profile_subcmd_alias, *project_subcmd_alias]) or (
+            len(sys.argv) == 1 or len(list_args) == 0
+        ):
+            self.parser.print_help(sys.stderr)
+            sys.exit(1)
+
         if self.args.cmd in project_subcmd_alias:
             self.process_project_args()
             sys.exit(0)
