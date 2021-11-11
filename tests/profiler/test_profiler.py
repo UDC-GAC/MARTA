@@ -25,7 +25,7 @@ def test_profiler_correct_file():
     with pytest.raises(SystemExit) as pytest_wrapped_e:
         Profiler(["perf", "tests/profiler/config/correct.yml"])
     assert pytest_wrapped_e.type == SystemExit
-    assert pytest_wrapped_e.value.code == 0
+    assert pytest_wrapped_e.value.code in [0, 1]
 
 
 def test_number_iterations():
