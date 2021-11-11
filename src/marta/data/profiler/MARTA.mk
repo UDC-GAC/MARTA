@@ -199,7 +199,7 @@ macveth:
 kernel_macveth: macveth
 	$(V)$(CC) -c $(FLAGS_KERN) $(TMP_SRC)
 	$(V)mv $(TMP_BIN) $(KERNEL_BIN_NAME)
-	$(V)rm $(TMP_SRC)
+	$(V)mv $(TMP_SRC) $(BIN_DIR)
 
 # Compile kernel to assembly code
 asm_code:

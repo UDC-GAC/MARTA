@@ -186,8 +186,6 @@ class Kernel:
         :type common_flags: str
         :param exec_args: List of arguments to pass when executing benchmark
         :type exec_args: str
-        :param nruns: Number of times to execute the kernel
-        :type nruns: int
         :param nexec: Number of time to execute whole experiment
         :type nexec: int
         :param filename: Name of the output file
@@ -252,8 +250,6 @@ class Kernel:
 
         :param flops: Expression provided by user, e.g. "X/42", where "X" is a parameter
         :type flops: str
-        :param nruns: Number of times to execute the kernel
-        :type nruns: int
         :param avg_time: Average time to execute the kernel
         :type avg_time: float
         :return: Dynamic number of FLOPS
@@ -305,7 +301,7 @@ class Kernel:
 
         custom_flags += compiler_flags
         local_common_flags = self.common_flags + custom_flags
-        local_common_flags += f" -DNRUNS={self.nsteps} "
+        local_common_flags += f" -DTSTEPS={self.nsteps} "
         if self.cpu_affinity != -1:
             local_common_flags += f" -DMARTA_CPU_AFFINITY={self.cpu_affinity} "
 
@@ -327,7 +323,8 @@ class Kernel:
             local_common_flags += " -DMACVETH=1 "
             other_flags.append("MACVETH=true")
             other_flags.append(f"MACVETH_PATH={self.macveth_path}")
-            other_flags.append(f"MACVETH_FLAGS='{self.macveth_flags}'")
+            # other_flags.append(f"MACVETH_FLAGS='{self.macveth_flags}'")
+            other_flags.append(f"MACVETH_FLAGS='-misa=avx2'")
             if self.macveth_target != "":
                 try:
                     macveth_target = (

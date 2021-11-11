@@ -48,12 +48,8 @@
 #define MARTA_CPU_AFFINITY 3
 #endif
 
-#ifndef NRUNS
-#define NRUNS 10000
-#endif
-
 #ifndef TSTEPS
-#define TSTEPS NRUNS
+#define TSTEPS 10000
 #endif
 
 #ifndef MARTA_NO_HEADER
@@ -209,7 +205,7 @@ static inline void _marta_finish_rdtsc() {
 #define END_RDTSC _marta_finish_rdtsc();
 #define PRINT_RDTSC                                                            \
   for (int __th = 0; __th < __nthreads; ++__th) {                              \
-    MARTA_PRINT_INSTRUMENTS("%d,%.1F\n", __th, (double)(__marta_rdtsc[__th]));   \
+    MARTA_PRINT_INSTRUMENTS("%d,%.1F\n", __th, (double)(__marta_rdtsc[__th])); \
   }                                                                            \
   free(__marta_rdtsc);
 
@@ -229,7 +225,7 @@ static inline void _marta_finish_rdtsc() {
 #endif
 
 #if MARTA_LOOP_TYPE == MARTA_LOOP_ASM
-#define INIT_BEGIN_LOOP(TSTEPS)                                                \
+#define INIT_BEGIN_LOOP                                                        \
   __asm volatile("mov $" TO_STRING(TSTEPS) ", %%ecx" : : : "ecx");             \
   __asm volatile("begin_loop:\n");                                             \
   __asm volatile("# LLVM-MCA-BEGIN kernel");
@@ -258,7 +254,7 @@ static inline void _marta_finish_rdtsc() {
                  :);
 #endif
 #elif MARTA_LOOP_TYPE == MARTA_LOOP_C
-#define INIT_BEGIN_LOOP(TSTEPS)                                                \
+#define INIT_BEGIN_LOOP                                                        \
   _Pragma("nounroll_and_jam");                                                 \
   for (int __marta_tsteps = 0; __marta_tsteps < TSTEPS; ++__marta_tsteps) {    \
     __asm volatile("# LLVM-MCA-BEGIN kernel");
@@ -273,10 +269,10 @@ static inline void _marta_finish_rdtsc() {
 
 #endif
 
-#define INIT_BEGIN_CYCLES_LOOP(TSTEPS)                                         \
+#define INIT_BEGIN_CYCLES_LOOP                                         \
   MARTA_PREPARE_INSTRUMENTS;                                                   \
   START_RDTSC;                                                                 \
-  INIT_BEGIN_LOOP(TSTEPS);
+  INIT_BEGIN_LOOP;
 
 /**
  * CLOBBER_MEMORY - Acts as a read/write memory barrier.
@@ -348,19 +344,30 @@ static inline void _marta_finish_rdtsc() {
     MARTA_PRINT_INSTRUMENTS;                                                   \
   }
 
-#define PROFILE_FUNCTION_LOOP(X, TSTEPS)                                       \
+#define PROFILE_FUNCTION_LOOP(X)                                               \
   {                                                                            \
     MARTA_START_INSTRUMENTS;                                                   \
-    INIT_BEGIN_LOOP(TSTEPS);                                                   \
+    INIT_BEGIN_LOOP;                                                           \
     X;                                                                         \
     END_LOOP;                                                                  \
     MARTA_STOP_INSTRUMENTS;                                                    \
     MARTA_PRINT_INSTRUMENTS;                                                   \
   }
 
-#define PROFILE_FUNCTION_CYCLES_LOOP(X, TSTEPS)                                \
+#define PROFILE_FUNCTION_COLD_CACHE(F,P,P_OFFSET,...)                          \
+{                                                                              \
+    MARTA_START_INSTRUMENTS;                                                   \
+    INIT_BEGIN_LOOP;                                                           \
+    P = P + P_OFFSET;                                                          \
+    F(P,__VA_ARGS__);                                                          \
+    END_LOOP;                                                                  \
+    MARTA_STOP_INSTRUMENTS;                                                    \
+    MARTA_PRINT_INSTRUMENTS;                                                   \
+}
+
+ #define PROFILE_FUNCTION_CYCLES_LOOP(X)                                       \
   {                                                                            \
-    INIT_BEGIN_CYCLES_LOOP(TSTEPS)                                             \
+    INIT_BEGIN_CYCLES_LOOP;                                                    \
     X;                                                                         \
     END_LOOP;                                                                  \
     END_RDTSC;                                                                 \
@@ -379,13 +386,13 @@ static inline void _marta_finish_rdtsc() {
 #undef PROFILE_FUNCTION_NO_LOOP
 #undef PROFILE_FUNCTION_LOOP
 #undef PROFILE_FUNCTION
-#define PROFILE_FUNCTION_LOOP(X, TSTEPS) PROFILE_FUNCTION_CYCLES_LOOP(X, TSTEPS)
+#define PROFILE_FUNCTION_LOOP(X) PROFILE_FUNCTION_CYCLES_LOOP(X)
 #define PROFILE_FUNCTION_NO_LOOP(X) PROFILE_FUNCTION_CYCLES_NO_LOOP(X)
 #endif
 
 #if TSTEPS == 1
 #undef PROFILE_FUNCTION_LOOP
-#define PROFILE_FUNCTION_LOOP(X, TSTEPS) PROFILE_FUNCTION_NO_LOOP(X)
+#define PROFILE_FUNCTION_LOOP(X) PROFILE_FUNCTION_NO_LOOP(X)
 #define PROFILE_FUNCTION(X) PROFILE_FUNCTION_NO_LOOP(X)
 #else
 #define PROFILE_FUNCTION(X) PROFILE_FUNCTION_LOOP(X)

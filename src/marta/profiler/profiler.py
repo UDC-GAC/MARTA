@@ -24,6 +24,7 @@ import subprocess
 import sys
 from marta.profiler.config import check_correctness_file, get_kernel_config
 import argparse
+from argparse import RawTextHelpFormatter
 import pickle
 import itertools as it
 import multiprocessing as mp
@@ -50,7 +51,8 @@ from marta.profiler.benchmark import Benchmark, BenchmarkError
 from marta.profiler.kernel import Kernel
 from marta.profiler.project import Project
 from marta.profiler.timing import Timing
-from marta.version import print_version
+from marta.profiler.logger import Logger
+from marta.version import get_version, print_version
 
 
 class Profiler:
@@ -71,34 +73,47 @@ class Profiler:
         parser = argparse.ArgumentParser(
             prog="marta_profiler",
             description="simple kernel profiler based on compilation files and a configuration file",
+            formatter_class=RawTextHelpFormatter,
+        )
+        parser.add_argument(
+            "--version", action="version", version=get_version("Profiler")
         )
 
-        # If "version" or "dump" option, then positional is not needed
-        required_input = 1
-        if (
-            ("-v" in args)
-            or ("--version" in args)
-            or ("-dump" in args)
-            or ("--dump" in args)
-            or ("--dump-config-file" in args)
-            or ("-h" in args)
-            or ("--help" in args)
-            or ("project" in args)
-        ):
-            required_input = "?"
+        subparsers = parser.add_subparsers(dest="cmd", help="sub-command help")
+        parser_project = subparsers.add_parser(
+            "project", help="project help", aliases=["po"]
+        )
+        parser_project.add_argument(
+            "-n", "--create", nargs=1, type=str, help="name of the new project",
+        )
+        parser_project.add_argument(
+            "-c",
+            "--check-config-file",
+            type=str,
+            nargs=1,
+            help="quit if there is an error checking the configuration file",
+        )
+        parser_project.add_argument(
+            "-dump",
+            "--dump-config-file",
+            action="store_true",
+            help="dump a sample configuration file with all needed files for profiler to work properly",
+        )
 
-        # Positional argument
-        required_named = parser.add_argument_group("required named arguments")
+        parser_general = subparsers.add_parser(
+            "profile", help="profile help", aliases=["perf"]
+        )
+        required_named = parser_general.add_argument_group("required named arguments")
         required_named.add_argument(
             "input",
             metavar="input",
             type=str,
-            nargs=required_input,
+            nargs=1,
             help="input configuration file",
         )
 
         # Optional arguments
-        optional_named = parser.add_argument_group("optional named arguments")
+        optional_named = parser_general.add_argument_group("optional named arguments")
 
         optional_named.add_argument(
             "-o", "--output", help="output results file name", required=False
@@ -117,18 +132,30 @@ class Profiler:
         )
 
         optional_named.add_argument(
-            "-x",
-            "--no-quit-on-error",
-            action="store_true",
-            help="quit if there is an error during compilation or execution of the kernel",
+            "-nsteps",
+            "--iterations",
+            type=int,
+            default=-1,
+            action="store",
+            help="number of iterations",
             required=False,
         )
 
         optional_named.add_argument(
-            "-c",
-            "--check-config-file",
+            "-nexec",
+            "--executions",
+            type=int,
+            default=-1,
+            action="store",
+            help="number of executions",
+            required=False,
+        )
+
+        optional_named.add_argument(
+            "-x",
+            "--no-quit-on-error",
             action="store_true",
-            help="quit if there is an error checking the configuration file",
+            help="quit if there is an error during compilation or execution of the kernel",
             required=False,
         )
 
@@ -147,30 +174,10 @@ class Profiler:
         optional_named.add_argument(
             "-s",
             "--summary",
-            nargs="*",
-            help="print a summary at the end with the given dimensions if interest",
+            nargs="+",
+            action="append",
+            help="print a summary at the end with the given dimensions of interest",
             required=False,
-        )
-
-        optional_named.add_argument(
-            "-dump",
-            "--dump-config-file",
-            action="store_true",
-            help="dump a sample configuration file with all needed files for profiler to work properly",
-            required=False,
-        )
-
-        subparsers = parser.add_subparsers(dest="subparser", help="sub-command help")
-        parser_project = subparsers.add_parser(
-            "project",
-            help="generate a blank project in current folder, with minimal files",
-        )
-        parser_project.add_argument(
-            "-n",
-            "--name",
-            help="name of the new project",
-            required=True,
-            default="marta_bench",
         )
 
         return parser.parse_args(args)
@@ -315,6 +322,16 @@ class Profiler:
             for elem in list_opt:
                 os.system(f"rm {elem}")
 
+    def get_loop_overhead_instructions(self, kernel: Kernel) -> int:
+        if kernel.nsteps == 1:
+            return 0
+        elif kernel.loop_type.lower() == "c":
+            return 3
+        elif kernel.loop_type.lower() == "asm":
+            return 2
+        else:
+            return -1
+
     def profiling_kernels(self, cfg: dict) -> int:
         """
         Configuration file must have at least one kernel for performing profling
@@ -326,6 +343,10 @@ class Profiler:
         """
 
         kernel = Kernel(cfg)
+        if self.args.executions > -1:
+            kernel.nexec = self.args.executions
+        if self.args.iterations > -1:
+            kernel.nsteps = self.args.iterations
         if len(kernel.d_features) > 0:
             params_kernel = Profiler.eval_features(
                 kernel.d_features, kernel.get_kernel_path()
@@ -373,7 +394,7 @@ class Profiler:
         make_stderr = subprocess.STDOUT
 
         # if not kernel.comp_debug and not self.args.debug:
-        if not kernel.comp_debug or not (self.args.debug):
+        if not kernel.comp_debug and not (self.args.debug):
             make_stdout = "/tmp/___marta_stdout.log"
             make_stderr = "/tmp/___marta_stderr.log"
 
@@ -469,14 +490,44 @@ class Profiler:
                     pwarning("Execution process disabled!")
         # Storing results and generating report file
         Timing.save_total_time()
-        # FIXME: this should not be like this...
-        df["overhead_instructions"] = 2
+        df["overhead_instructions"] = self.get_loop_overhead_instructions(kernel)
         df["overhead_loop"] = overhead_loop_tsc
         kernel.save_results(df, output_filename, generate_report)
-        if self.args.summary != None and self.args.summary != []:
-            kernel.print_summary(df, self.args.summary)
+        if self.args.summary != None:
+            kernel.print_summary(df, self.args.summary[0])
         kernel.finalize_actions()
+        Logger.write_to_file(
+            f"{kernel.get_kernel_path()}/marta_profiler_data/marta.log"
+        )
         return 0
+
+    def process_project_args(self):
+        """Process arguments starting with project
+        """
+        if self.args.dump_config_file is not None:
+            for line in dump_config_file("profiler/template.yml"):
+                print(line, end="")
+            sys.exit(0)
+
+        if self.args.create is not None:
+            code = Project.generate_new_project(self.args.name)
+            if code != 0:
+                perror("Something went wrong...", code)
+            pinfo(
+                f"Project generated in folder '{self.args.name}'. Configuration template in current file as '{self.args.name}_template.yml'"
+            )
+            sys.exit(0)
+
+        # Sanity-checks
+        if self.args.check_config_file is not None:
+            kernel_setup = get_kernel_config(self.args.check_config_file[0])
+            if not check_correctness_file(kernel_setup):
+                perror("Configuration file is not correct")
+            else:
+                pinfo(
+                    "Configuration file structure is correct (compilation files might be wrong)"
+                )
+                sys.exit(0)
 
     def __init__(self, list_args):
         """
@@ -492,36 +543,12 @@ class Profiler:
             perror("MARTA must run with Python >=3.7")
         self.args = Profiler.parse_arguments(list_args)
 
-        if self.args.dump_config_file:
-            for line in dump_config_file("profiler/template.yml"):
-                print(line, end="")
-            sys.exit(0)
-
-        if self.args.subparser == "project":
-            code = Project.generate_new_project(self.args.name)
-            if code != 0:
-                perror("Something went wrong...", code)
-            pinfo(
-                f"Project generated in folder '{self.args.name}'. Configuration template in current file as '{self.args.name}_template.yml'"
-            )
-            sys.exit(0)
-
-        if self.args.version:
-            print_version("Profiler")
+        project_subcmd_alias = ["project", "po"]
+        if self.args.cmd in project_subcmd_alias:
+            self.process_project_args()
             sys.exit(0)
 
         kernel_setup = get_kernel_config(self.args.input[0])
-
-        # Sanity-checks
-        if self.args.check_config_file:
-            if not check_correctness_file(kernel_setup):
-                perror("Configuration file is not correct")
-            else:
-                pinfo(
-                    "Configuration file structure is correct (compilation files might be wrong)"
-                )
-                sys.exit(0)
-
         if not self.args.quiet:
             # Print version if not quiet
             print_version("Profiler")

@@ -12,17 +12,50 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from marta.utils.marta_utilities import pwarning, pinfo, perror
+
 
 class Logger:
+    warning_l = []
+    error_l = []
+    info_l = []
+    msg = []
+
     @staticmethod
     def warning(msg: str):
-        Logger.warning.append([msg])
+        Logger.warning_l.append([msg])
 
     @staticmethod
     def error(msg: str):
-        Logger.error.append([msg])
+        Logger.error_l.append([msg])
 
     @staticmethod
     def info(msg: str):
-        Logger.info.append([msg])
+        Logger.info_l.append([msg])
+
+    @staticmethod
+    def print_msg():
+        for msg in Logger.msg:
+            if msg[0].lower() == "info":
+                pinfo(msg[1])
+            if msg[0].lower() in ["warning", "warn"]:
+                pwarning(msg[1])
+            if msg[0].lower() == "error":
+                perror(msg[1])
+
+    @staticmethod
+    def write_to_file(file: str, msg: str = ""):
+        with open(file, "w") as log:
+            log.write(f"MARTA log: {msg}\n")
+            log.write("errors:\n")
+            for err in Logger.error_l:
+                log.write(f"{err}\n")
+            log.write("=" * 80 + "\n")
+            log.write("warnings:\n")
+            for warn in Logger.warning_l:
+                log.write(f"{warn}\n")
+            log.write("=" * 80 + "\n")
+            log.write("info:\n")
+            for inf in Logger.info_l:
+                log.write(f"{inf}\n")
 

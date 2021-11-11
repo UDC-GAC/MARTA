@@ -38,6 +38,7 @@ import numpy as np
 
 # Local imports
 from marta.utils.marta_utilities import pinfo, pwarning, perror, create_dir_or_pass
+from marta.profiler.logger import Logger
 
 
 class TimingError(Exception):
@@ -231,7 +232,7 @@ class Timing:
         for val in range(avg_dev.size):
             if avg_dev[val] > threshold_outliers:
                 outliers = True
-                pwarning(
+                Logger.warning(
                     f"Deviation exceeding threshold: {avg_dev[val]:2.1f}% ({threshold_outliers}%, {benchmark_type.upper()} benchmark)"
                 )
 
@@ -240,7 +241,7 @@ class Timing:
         filtered_results = np.where(mask, np.nan, results)
         mean_results = np.nanmean(filtered_results, axis=0)
         if outliers and isinstance(mean_results, np.ndarray):
-            pinfo(
+            Logger.info(
                 f"Mean values after removing outliers: {' '.join(map(lambda x: f'{x:.2f}', mean_results))}"
             )
 

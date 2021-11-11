@@ -21,6 +21,21 @@
 import pkg_resources
 
 
+def get_version(component: str) -> str:
+    __version__ = pkg_resources.require("marta")[0].version
+    header = (
+        "    __  ___ ___     ____  ______ ___ \n"
+        "   /  |/  //   |   / __ \/_  __//   | \n"
+        "  / /|_/ // /| |  / /_/ / / /  / /| | \n"
+        " / /  / // ___ | / _, _/ / /  / ___ | \n"
+        "/_/  /_//_/  |_|/_/ |_| /_/  /_/  |_| \n"
+        "                                      \n"
+        f"Multi-configuration Assembly pRofiler and Toolkit for performance Analysis (MARTA) - {component} v{__version__}"
+    )
+
+    return header
+
+
 def print_version(component: str) -> None:
     """
     Print version and copyright message

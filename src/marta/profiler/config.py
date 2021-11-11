@@ -218,8 +218,8 @@ def get_kernel_config(input_file: str):
                 f"Error position in configuration file: row {mark.line+1}, column {mark.column+1})"
             )
         perror(f"Error in configuration file: {exc}")
-    except Exception:
-        perror("Unknown error when opening configuration file.")
+    except Exception as e:
+        perror(f"Unknown error when opening configuration file: {e}")
 
     return kernel_setup
 
