@@ -166,20 +166,25 @@ class Kernel:
                 d = (max_size[i] - len(sval)) / 2
                 lspace = max(floor(d), 0)
                 rspace = max(ceil(d), 0)
-                display_val += f"|  {' '*lspace}{sval}{' '*rspace}  "
+                display_val += f"|  {' '*(lspace+rspace)}{sval}  "
             print(f"{display_val}|")
             print(line)
 
         print(f"\ntotal time elapsed: {Timing.to_seconds(Timing.execution_time)}\n")
         print("--- END summary")
 
-    @staticmethod
-    def check_files() -> list:
-        errors = []
-        for file in Timing.dump_files:
-            if not filecmp.cmp(file, f"{file}_MACVETH"):
-                errors.append(file)
-        return errors
+    def check_correctness(self) -> list:
+        if self.check_dump and self.macveth:
+            errors = []
+            for file in Timing.dump_files:
+                if not filecmp.cmp(file, f"{file}_MACVETH"):
+                    errors.append(file)
+            if len(errors) == 0:
+                pinfo(
+                    "Correctness check for MACVETH went OK according to dumped values."
+                )
+            for err in errors:
+                pwarning(f"Check correctness for {err}")
 
     def save_results(
         self, df: pd.DataFrame, filename: str, generate_report=False,
@@ -214,13 +219,6 @@ class Kernel:
             df = df[cols]
         except ValueError:
             pass
-
-        if self.check_dump and self.macveth:
-            errors = Kernel.check_files()
-            if len(errors) == 0:
-                pinfo("Correctness check OK!")
-            for err in errors:
-                pwarning(f"Check correctness for {err}")
 
         filename = f"{self.get_kernel_path()}/marta_profiler_data/{filename}"
         if output_format == "html":
@@ -546,6 +544,7 @@ class Kernel:
         return list_rows
 
     def finalize_actions(self):
+        self.check_correctness()
         self.reset_system_config()
         if self.finalize != None:
             # Cleaning directories
