@@ -184,7 +184,7 @@ class Kernel:
                     "Correctness check for MACVETH went OK according to dumped values."
                 )
             for err in errors:
-                pwarning(f"Check correctness for {err}")
+                perror(f"Check correctness for {err}")
 
     def save_results(
         self, df: pd.DataFrame, filename: str, generate_report=False,
@@ -544,7 +544,6 @@ class Kernel:
         return list_rows
 
     def finalize_actions(self):
-        self.check_correctness()
         self.reset_system_config()
         if self.finalize != None:
             # Cleaning directories
@@ -560,6 +559,7 @@ class Kernel:
                     os.system(f'{self.finalize.get("command")}')
                 except Exception:
                     perror(f"Finalize command went wrong for the kernel")
+        self.check_correctness()
 
     def get_output_filename(self):
         fname = self.output.get("name", self.kernel)
