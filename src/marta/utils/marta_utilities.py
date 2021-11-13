@@ -78,6 +78,7 @@ def create_directories(asm_dir="asm_codes", bin_dir="bin", root="") -> None:
             create_dir_or_pass(root)
     create_dir_or_pass(root + asm_dir)
     create_dir_or_pass(root + bin_dir)
+    create_dir_or_pass(root + "dumps")
 
 
 def check_marta_files(path: str):

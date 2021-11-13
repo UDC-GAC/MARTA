@@ -269,7 +269,7 @@ static inline void _marta_finish_rdtsc() {
 
 #endif
 
-#define INIT_BEGIN_CYCLES_LOOP                                         \
+#define INIT_BEGIN_CYCLES_LOOP                                                 \
   MARTA_PREPARE_INSTRUMENTS;                                                   \
   START_RDTSC;                                                                 \
   INIT_BEGIN_LOOP;
@@ -354,18 +354,18 @@ static inline void _marta_finish_rdtsc() {
     MARTA_PRINT_INSTRUMENTS;                                                   \
   }
 
-#define PROFILE_FUNCTION_COLD_CACHE(F,P,P_OFFSET,...)                          \
-{                                                                              \
+#define PROFILE_FUNCTION_COLD_CACHE(F, P, P_OFFSET, ...)                       \
+  {                                                                            \
     MARTA_START_INSTRUMENTS;                                                   \
     INIT_BEGIN_LOOP;                                                           \
     P = P + P_OFFSET;                                                          \
-    F(P,__VA_ARGS__);                                                          \
+    F(P, __VA_ARGS__);                                                         \
     END_LOOP;                                                                  \
     MARTA_STOP_INSTRUMENTS;                                                    \
     MARTA_PRINT_INSTRUMENTS;                                                   \
-}
+  }
 
- #define PROFILE_FUNCTION_CYCLES_LOOP(X)                                       \
+#define PROFILE_FUNCTION_CYCLES_LOOP(X)                                        \
   {                                                                            \
     INIT_BEGIN_CYCLES_LOOP;                                                    \
     X;                                                                         \
@@ -400,35 +400,39 @@ static inline void _marta_finish_rdtsc() {
 
 /* DCE code. Must scan the entire live-out data.
    Can be used also to check the correctness of the output. */
-static void print_array1d(int n, DATA_TYPE POLYBENCH_1D(y, N, n)) {
-  int i;
+static void marta_print_1darray(char *var, int n,
+                                DATA_TYPE POLYBENCH_1D(x, N, n))
 
+{
   POLYBENCH_DUMP_START;
-  POLYBENCH_DUMP_BEGIN("y");
-  for (i = 0; i < n; i++) {
-    if (i % 20 == 0)
-      fprintf(POLYBENCH_DUMP_TARGET, "\n");
-    fprintf(POLYBENCH_DUMP_TARGET, DATA_PRINTF_MODIFIER, y[i]);
+  POLYBENCH_DUMP_BEGIN(var);
+  fprintf(POLYBENCH_DUMP_TARGET, "\n");
+  for (int i = 0; i < n; i++) {
+    fprintf(POLYBENCH_DUMP_TARGET, "%s[%d] = ", var, i);
+    fprintf(POLYBENCH_DUMP_TARGET, DATA_PRINTF_MODIFIER, x[i]);
+    fprintf(POLYBENCH_DUMP_TARGET, "\n");
   }
-  POLYBENCH_DUMP_END("y");
+  POLYBENCH_DUMP_END(var);
   POLYBENCH_DUMP_FINISH;
 }
 
 /* DCE code. Must scan the entire live-out data.
    Can be used also to check the correctness of the output. */
-static void print_array2d(int n, DATA_TYPE POLYBENCH_2D(A, N, N, n, n)) {
+static void marta_print_2darray(char *var, int n,
+                                DATA_TYPE POLYBENCH_2D(A, N, N, n, n)) {
   int i, j;
 
   POLYBENCH_DUMP_START;
-  POLYBENCH_DUMP_BEGIN("A");
+  POLYBENCH_DUMP_BEGIN(var);
+  fprintf(POLYBENCH_DUMP_TARGET, "\n");
   for (i = 0; i < n; i++) {
     for (j = 0; j < n; j++) {
-      if (i % 20 == 0)
-        fprintf(POLYBENCH_DUMP_TARGET, "\n");
+      fprintf(POLYBENCH_DUMP_TARGET, "%s[%d][%d] = ", var, i, j);
       fprintf(POLYBENCH_DUMP_TARGET, DATA_PRINTF_MODIFIER, A[i][j]);
+      fprintf(POLYBENCH_DUMP_TARGET, "\n");
     }
   }
-  POLYBENCH_DUMP_END("A");
+  POLYBENCH_DUMP_END(var);
   POLYBENCH_DUMP_FINISH;
 }
 

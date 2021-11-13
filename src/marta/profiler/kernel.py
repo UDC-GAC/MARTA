@@ -25,11 +25,10 @@ import pickle
 from typing import Union
 from math import ceil, floor
 from datetime import datetime as dt
+import filecmp
 
 # Third-party libraries
 import pandas as pd
-from yaspin import yaspin
-
 
 # Local imports
 from marta.profiler.compile import (
@@ -45,7 +44,7 @@ from marta.profiler.timing import Timing
 from marta.profiler.static_code_analyzer import StaticCodeAnalyzer
 from marta.profiler.config import parse_kernel_options, get_metadata, get_derived
 from marta.profiler.system_config import SystemConfig
-from marta.utils.marta_utilities import perror, pwarning
+from marta.utils.marta_utilities import perror, pwarning, pinfo
 
 
 class Kernel:
@@ -90,7 +89,7 @@ class Kernel:
         # Get compilation flags and so
         content += f"\n# -- COMPILATION (stdout)\n"
         try:
-            with open("log/___tmp.stdout") as f:
+            with open("log/___tmp.stdout", "r") as f:
                 for l in f.readlines():
                     content += l
             os.remove("log/___tmp.stdout")
@@ -100,7 +99,7 @@ class Kernel:
         # Generate errors
         content += f"\n# -- WARNINGS/ERRORS (stderr)\n"
         try:
-            with open("log/___tmp.stderr") as f:
+            with open("log/___tmp.stderr", "r") as f:
                 for l in f.readlines():
                     content += l
             os.remove("log/___tmp.stderr")
@@ -174,6 +173,14 @@ class Kernel:
         print(f"\ntotal time elapsed: {Timing.to_seconds(Timing.execution_time)}\n")
         print("--- END summary")
 
+    @staticmethod
+    def check_files() -> list:
+        errors = []
+        for file in Timing.dump_files:
+            if not filecmp.cmp(file, f"{file}_MACVETH"):
+                errors.append(file)
+        return errors
+
     def save_results(
         self, df: pd.DataFrame, filename: str, generate_report=False,
     ) -> None:
@@ -207,6 +214,13 @@ class Kernel:
             df = df[cols]
         except ValueError:
             pass
+
+        if self.check_dump and self.macveth:
+            errors = Kernel.check_files()
+            if len(errors) == 0:
+                pinfo("Correctness check OK!")
+            for err in errors:
+                pwarning(f"Check correctness for {err}")
 
         filename = f"{self.get_kernel_path()}/marta_profiler_data/{filename}"
         if output_format == "html":
@@ -323,8 +337,11 @@ class Kernel:
             local_common_flags += " -DMACVETH=1 "
             other_flags.append("MACVETH=true")
             other_flags.append(f"MACVETH_PATH={self.macveth_path}")
+            # FIXME:
             # other_flags.append(f"MACVETH_FLAGS='{self.macveth_flags}'")
-            other_flags.append(f"MACVETH_FLAGS='-misa=avx2'")
+            # other_flags.append(
+            #    f"MACVETH_FLAGS=''"
+            # )
             if self.macveth_target != "":
                 try:
                     macveth_target = (
@@ -415,7 +432,13 @@ class Kernel:
 
         # Dump values: -DPOLYBENCH_DUMP_ARRAYS
         if self.check_dump:
-            Timing.dump_values(name_bin, self.exec_args, compiler)
+            Timing.dump_values(
+                name_bin,
+                self.exec_args,
+                compiler,
+                compiler_flags,
+                bin_path=f"{self.get_kernel_path()}/",
+            )
 
         measurements = {
             "papi": self.papi_counters,

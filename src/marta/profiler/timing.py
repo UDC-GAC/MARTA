@@ -49,6 +49,7 @@ class Timing:
     total_time = time.time()
     compilation_time = 0
     execution_time = 0
+    dump_files = []
 
     @staticmethod
     def start_timer(timer_type: str) -> None:
@@ -98,38 +99,50 @@ class Timing:
             )
 
     @staticmethod
-    def dump_values(code: str, exec_opts: str, compiler: str) -> None:
+    def dump_values(
+        code: str,
+        exec_opts: str,
+        compiler: str,
+        compiler_flags: str = "-O3",
+        bin_path: str = "",
+    ) -> None:
         create_dir_or_pass("dumps")
         # Save execution values in an array
-        suffix = f"dump"
-        bin_file = (
-            f"{exec_opts} ./marta_profiler_data/bin/{code}_{compiler}_{suffix}.o 1"
-        )
-        dump_file = f"/tmp/dumps____tmp_{code}_{compiler}_{suffix}"
+        benchmark_type = f"dump"
+        compiler_flags_suffix = compiler_flags.replace(" ", "_").replace("-", "")
+        if not bin_path.endswith("/"):
+            bin_path += "/"
+        bin_file = [
+            f"./{bin_path}marta_profiler_data/dumps/{code}_{compiler}_{compiler_flags_suffix}_{benchmark_type}.o"
+        ]
+        if exec_opts != "" and isinstance(exec_opts, str):
+            exec_opts_list = exec_opts.split(" ")
+            bin_file = [*exec_opts_list] + bin_file
+        dump_file = f"/tmp/dumps____tmp_{code}_{compiler}__{compiler_flags_suffix}"
+        if "MACVETH" in dump_file:
+            dump_file = dump_file.replace("MACVETH", "") + "_MACVETH"
+        else:
+            Timing.dump_files.append(dump_file)
         with open(dump_file, "w") as f:
-            subprocess.Popen([f"{bin_file}"], stdout=f)
-
-    @contextmanager
-    @staticmethod
-    def redirect_output():
-        pass
+            p = subprocess.Popen(bin_file, stderr=f)
+            p.wait()
 
     @staticmethod
     def measure_benchmark(
         code: str,
         benchmark_type: str,
-        exec_opts="",
-        compiler="gcc",
-        compiler_flags="-O3",
-        nexec=10,
-        nsteps=10000,
-        threshold_outliers=3,
-        discard_outliers=True,
-        compute_avg=True,
-        bin_file="",
-        bin_path="",
-        tmp_file="",
-        redirect_stdout=False,
+        exec_opts: str = "",
+        compiler: str = "gcc",
+        compiler_flags: str = "-O3",
+        nexec: int = 10,
+        nsteps: int = 10000,
+        threshold_outliers: int = 3,
+        discard_outliers: bool = True,
+        compute_avg: bool = True,
+        bin_file: str = "",
+        bin_path: str = "",
+        tmp_file: str = "",
+        redirect_stdout: bool = False,
     ) -> Tuple[Optional[dict], Optional[int]]:
         """Execute and time given benchmark nexec times
 

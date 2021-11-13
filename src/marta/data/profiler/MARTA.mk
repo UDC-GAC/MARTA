@@ -28,13 +28,15 @@ TMPDIR=/tmp/
 PAPI_LIB?=$(USRDIR)/lib
 PAPI_INCLUDE?=$(USRDIR)/include
 PAPI_FLAGS=-I$(PAPI_INCLUDE) -L$(PAPI_LIB) -lpapi
-POLYBENCH_FLAGS = -I utilities utilities/polybench.c
+MARTA_FLAGS= -I utilities
+POLYBENCH_FLAGS = $(MARTA_FLAGS) utilities/polybench.c
 ifeq ($(MULTITHREAD),true)
 	POLYBENCH_FLAGS+= -I $(PAPI_WRAPPER_DIR) $(PAPI_WRAPPER_DIR)/papi_wrapper.c -DMARTA_MULTITHREAD
 endif
 POLY_TFLAGS= -DPOLYBENCH_TIME $(POLYBENCH_FLAGS)
 POLY_CFLAGS= -DMARTA_RDTSC $(POLYBENCH_FLAGS)
 POLY_PFLAGS= -DPOLYBENCH_PAPI $(POLYBENCH_FLAGS) $(PAPI_FLAGS)
+POLY_DFLAGS= -DPOLYBENCH_DUMP_ARRAYS $(POLYBENCH_FLAGS)
 
 TIMING_FLAGS?=$(POLY_TFLAGS)
 
@@ -191,11 +193,12 @@ endif
 # Targets to compile
 all: $(TARGETS)
 
-# EXPERIMENTAL - Compatibility with MACVETH
+# Compatibility with MACVETH
+MACVETH_FLAGS?= -misa=avx2 --simd-cost-model=unlimited --march=cascadelake
 macveth:
 	$(V)$(MACVETH_PATH)macveth $(MACVETH_FLAGS) $(OLD_TARGET)$(MACVETH_SUFFIX).c -o $(TMP_SRC) -- $(MACVETH_DB) 
 
-# EXPERIMENTAL - Compatibility with MACVETH
+# Compatibility with MACVETH
 kernel_macveth: macveth
 	$(V)$(CC) -c $(FLAGS_KERN) $(TMP_SRC)
 	$(V)mv $(TMP_BIN) $(KERNEL_BIN_NAME)
@@ -237,7 +240,7 @@ $(BINARY_NAME)_papi: $(MAIN_RULES)
 
 # -DPOLYBENCH_DUMP_ARRAYS: sanity check when comparing versions
 $(BINARY_NAME)_dump: $(MAIN_RULES)
-	$(V)$(CC) $(FLAGS_MAIN) -DPOLYBENCH_DUMP_ARRAYS $(MAIN_FILE) -o $(BASE_DUMP_NAME)_dump.o
+	$(V)$(CC) $(FLAGS_MAIN) $(POLY_DFLAGS) $(MAIN_FILE) -o $(BASE_DUMP_NAME)_dump.o
 
 clean:
 	find . -type f ! -name "*.c" ! -name "*.h" ! -name "*.c" ! -name "Makefile" -delete

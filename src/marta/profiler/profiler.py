@@ -407,6 +407,10 @@ class Profiler:
         pinfo(
             f"Compilation using {kernel.processes} processes. Number of executions = {kernel.nexec}, number of iterations (TSTEPS) = {kernel.nsteps}"
         )
+        if kernel.macveth:
+            pinfo(
+                f"MACVETH enabled: this could take longer. Use 'check_dump' option also for correctness."
+            )
         for compiler in kernel.compiler_flags:
             for compiler_flags in list(kernel.compiler_flags[compiler]):
                 pinfo(f"Compiler and flags: {compiler} {compiler_flags}")
