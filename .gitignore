@@ -18,6 +18,8 @@ tmp/
 log/
 
 # benchmarks
+examples/*/src/utilities
+examples/*/src/marta_profiler_data
 src/marta/profiler/kernels/*
 examples/*/src/*
 !examples/*/src/main.c

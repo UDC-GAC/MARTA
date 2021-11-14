@@ -32,6 +32,10 @@ from colorama import Fore, Style
 from marta import get_data
 
 
+def marta_exit(code: int = 1):
+    sys.exit(code)
+
+
 def colored(msg: str, color=Fore.RED, style=Style.NORMAL) -> str:
     return f"{color}{style}{msg}{Fore.RESET}{Style.RESET_ALL}"
 
@@ -72,22 +76,13 @@ def create_dir_or_pass(dir_name):
         pass
 
 
-def create_directories(
-    asm_dir="asm_codes", bin_dir="bin", tmp_dir="tmp", log_dir="log", root=""
-) -> None:
+def create_directories(asm_dir="asm_codes", bin_dir="bin", root="") -> None:
     if root != "":
         if not os.path.isdir(root):
             create_dir_or_pass(root)
     create_dir_or_pass(root + asm_dir)
     create_dir_or_pass(root + bin_dir)
-    create_dir_or_pass(root + tmp_dir)
-    if not os.path.exists(root + log_dir):
-        os.mkdir(root + log_dir)
-    else:
-        if os.path.exists(f"{root + log_dir}/___tmp.stdout"):
-            os.remove(f"{root + log_dir}/___tmp.stdout")
-        if os.path.exists(f"{root + log_dir}/___tmp.stderr"):
-            os.remove(f"{root + log_dir}/___tmp.stderr")
+    create_dir_or_pass(root + "dumps")
 
 
 def check_marta_files(path: str):

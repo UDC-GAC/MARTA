@@ -48,12 +48,8 @@
 #define MARTA_CPU_AFFINITY 3
 #endif
 
-#ifndef NRUNS
-#define NRUNS 10000
-#endif
-
 #ifndef TSTEPS
-#define TSTEPS NRUNS
+#define TSTEPS 10000
 #endif
 
 #ifndef MARTA_NO_HEADER
@@ -72,10 +68,70 @@
 #define MARTA_INTEL_FLUSH_DATA 0
 #endif
 
+#define MARTA_TMP_FILE "/tmp/___marta_results.txt"
+
+#define MARTA_OPEN_RESULTS_FILE                                                \
+  FILE *fp;                                                                    \
+  fp = fopen(MARTA_TMP_FILE, "a");                                             \
+  if (fp == NULL)                                                              \
+    exit(-1);
+
+#define MARTA_CLOSE_RESULTS_FILE fclose(fp);
+
+void marta_print_to_file(const char *format, ...) {
+  MARTA_OPEN_RESULTS_FILE;
+  va_list args;
+  va_start(args, format);
+  vfprintf(fp, format, args);
+  va_end(args);
+  MARTA_CLOSE_RESULTS_FILE;
+}
+
+#define MARTA_PREPARE_INSTRUMENTS polybench_prepare_instruments()
+#define MARTA_START_INSTRUMENTS polybench_start_instruments
+#define MARTA_STOP_INSTRUMENTS polybench_stop_instruments
+#define MARTA_PRINT_INSTRUMENTS marta_print_to_file
+
+#ifdef POLYBENCH_PAPI
+extern const unsigned int polybench_papi_eventlist[];
+extern const long long polybench_papi_values[];
+
+void marta_print_papi_to_file() {
+  MARTA_OPEN_RESULTS_FILE;
+  int evid;
+  for (evid = 0; polybench_papi_eventlist[evid] != 0; ++evid) {
+    if (polybench_papi_eventlist[evid + 1] == 0) {
+      fprintf(fp, "%llu", polybench_papi_values[evid]);
+    } else {
+      fprintf(fp, "%llu,", polybench_papi_values[evid]);
+    }
+  }
+  fprintf(fp, "\n");
+  MARTA_CLOSE_RESULTS_FILE;
+}
+
+#undef MARTA_PRINT_INSTRUMENTS
+#define MARTA_PRINT_INSTRUMENTS marta_print_papi_to_file();
+#endif
+
+#if defined(MARTA_MULTITHREAD) && !defined(_OPENMP)
+#error "Compile with -fopenmp!"
+#elif defined(MARTA_MULTITHREAD) && defined(_OPENMP)
+#undef MARTA_START_INSTRUMENTS
+#undef MARTA_STOP_INSTRUMENTS
+#undef MARTA_PRINT_INSTRUMENTS
+#define PW_MULTITHREAD
+#include "papi_wrapper.h"
+#define MARTA_PREPARE_INSTRUMENTS pw_init_instruments
+#define MARTA_START_INSTRUMENTS pw_init_start_instruments
+#define MARTA_STOP_INSTRUMENTS pw_stop_instruments
+#define MARTA_PRINT_INSTRUMENTS pw_print_instruments
+#endif
+
 #define EXPAND_STRING(s) #s
 #define TO_STRING(s) EXPAND_STRING(s)
 
-typedef unsigned long long int marta_cycles_t;
+typedef unsigned long long int _marta_cycles_t;
 
 /**
  * Flush cache using clflush instruction.
@@ -100,25 +156,64 @@ void intel_clflush(volatile void *p, unsigned int allocation_size) {
   __asm volatile("sfence\n\t" : : : "memory");
 }
 
-/**
- *  _Pragma(X) syntax works for this type of macros >=C99. This way we avoid
- *  type of loop optimizations, such as loopnest interchange, in order to
- *  properly inline a function within this loop.
- */
-#define PROFILE_FUNCTION_SINGLE_VAL(STEPS, X)                                  \
-  {                                                                            \
-    polybench_start_instruments;                                               \
-    _Pragma("nounroll_and_jam");                                               \
-    for (int t = 0; t < STEPS; ++t) {                                          \
-      X;                                                                       \
-    }                                                                          \
-    polybench_stop_instruments;                                                \
-    polybench_print_instruments;                                               \
-  }
+static inline _marta_cycles_t _marta_rdtsc_start() {
+  _marta_cycles_t __cycles_lo, __cycles_hi;
+  __asm volatile("sfence\n\t"
+                 "lfence\n\t"
+                 "rdtsc\n\t"
+                 : "=a"(__cycles_lo), "=d"(__cycles_hi));
+  return (_marta_cycles_t)__cycles_hi << 32 | __cycles_lo;
+}
 
-#define RDTSC(t)                                                               \
-  __asm volatile("rdtsc" : "=a"(__cycles_lo), "=d"(__cycles_hi));              \
-  t = (marta_cycles_t)__cycles_hi << 32 | __cycles_lo;
+static inline _marta_cycles_t _marta_rdtsc_stop() {
+  _marta_cycles_t __cycles_lo, __cycles_hi;
+  __asm volatile("sfence\n\t"
+                 "lfence\n\t"
+                 "rdtsc\n\t"
+                 "lfence\n\t"
+                 : "=a"(__cycles_lo), "=d"(__cycles_hi));
+  return (_marta_cycles_t)__cycles_hi << 32 | __cycles_lo;
+}
+
+#ifdef MARTA_MULTITHREAD
+int *__marta_rdtsc;
+static inline void _marta_init_rdtsc() {
+  int __nthreads = 1;
+#pragma omp parallel
+  {
+#pragma omp master
+    { __nthreads = omp_get_num_threads(); }
+  }
+  __marta_rdtsc = (int *)malloc(sizeof(int) * __nthreads);
+#pragma omp parallel
+  {
+    int th = omp_get_thread_num();
+    __marta_rdtsc[th] = _marta_rdtsc_start();
+  }
+}
+
+static inline void _marta_finish_rdtsc() {
+#pragma omp parallel
+  {
+    int th = omp_get_thread_num();
+    __marta_rdtsc[th] = _marta_rdtsc_stop() - __marta_rdtsc[th];
+  }
+}
+
+#define START_RDTSC _marta_init_rdtsc();
+
+#define END_RDTSC _marta_finish_rdtsc();
+#define PRINT_RDTSC                                                            \
+  for (int __th = 0; __th < __nthreads; ++__th) {                              \
+    MARTA_PRINT_INSTRUMENTS("%d,%.1F\n", __th, (double)(__marta_rdtsc[__th])); \
+  }                                                                            \
+  free(__marta_rdtsc);
+
+#else
+#define START_RDTSC _marta_cycles_t __marta_t0 = _marta_rdtsc_start();
+#define END_RDTSC _marta_cycles_t __marta_t1 = _marta_rdtsc_stop() - __marta_t0;
+#define PRINT_RDTSC MARTA_PRINT_INSTRUMENTS("%.1F\n", (double)(__marta_t1));
+#endif
 
 #define MARTA_LOOP_ASM 0x1
 #define MARTA_LOOP_C 0x2
@@ -130,14 +225,14 @@ void intel_clflush(volatile void *p, unsigned int allocation_size) {
 #endif
 
 #if MARTA_LOOP_TYPE == MARTA_LOOP_ASM
-#define INIT_BEGIN_LOOP(TSTEPS)                                                \
+#define INIT_BEGIN_LOOP                                                        \
   __asm volatile("mov $" TO_STRING(TSTEPS) ", %%ecx" : : : "ecx");             \
   __asm volatile("begin_loop:\n");                                             \
   __asm volatile("# LLVM-MCA-BEGIN kernel");
 
-// According to Intel's optimization guide it is better to avoid dec in benefit
-// of sub/add/cmp when using loops
-// Intel® 64 and IA-32 Architectures Optimization Reference Manual
+// According to Intel's optimization guide it is better to
+// avoid dec in benefit of sub/add/cmp when using loops Intel®
+// 64 and IA-32 Architectures Optimization Reference Manual
 // https://software.intel.com/content/dam/develop/external/us/en/documents-tps/64-ia-32-architectures-optimization-manual.pdf
 #define END_LOOP                                                               \
   __asm volatile("# LLVM-MCA-END kernel");                                     \
@@ -159,14 +254,14 @@ void intel_clflush(volatile void *p, unsigned int allocation_size) {
                  :);
 #endif
 #elif MARTA_LOOP_TYPE == MARTA_LOOP_C
-#define INIT_BEGIN_LOOP(TSTEPS)                                                \
+#define INIT_BEGIN_LOOP                                                        \
   _Pragma("nounroll_and_jam");                                                 \
   for (int __marta_tsteps = 0; __marta_tsteps < TSTEPS; ++__marta_tsteps) {    \
     __asm volatile("# LLVM-MCA-BEGIN kernel");
 
-// According to Intel's optimization guide it is better to avoid dec in benefit
-// of sub/add/cmp when using loops
-// Intel® 64 and IA-32 Architectures Optimization Reference Manual
+// According to Intel's optimization guide it is better to
+// avoid dec in benefit of sub/add/cmp when using loops Intel®
+// 64 and IA-32 Architectures Optimization Reference Manual
 // https://software.intel.com/content/dam/develop/external/us/en/documents-tps/64-ia-32-architectures-optimization-manual.pdf
 #define END_LOOP                                                               \
   __asm volatile("# LLVM-MCA-END kernel");                                     \
@@ -174,11 +269,10 @@ void intel_clflush(volatile void *p, unsigned int allocation_size) {
 
 #endif
 
-#define INIT_BEGIN_CYCLES_LOOP(TSTEPS)                                         \
-  polybench_prepare_instruments();                                             \
-  marta_cycles_t t0;                                                           \
-  RDTSC(t0);                                                                   \
-  INIT_BEGIN_LOOP(TSTEPS);
+#define INIT_BEGIN_CYCLES_LOOP                                                 \
+  MARTA_PREPARE_INSTRUMENTS;                                                   \
+  START_RDTSC;                                                                 \
+  INIT_BEGIN_LOOP;
 
 /**
  * CLOBBER_MEMORY - Acts as a read/write memory barrier.
@@ -186,22 +280,20 @@ void intel_clflush(volatile void *p, unsigned int allocation_size) {
 #define CLOBBER_MEMORY __asm volatile("" : : : "memory")
 
 /**
- * DO_NOT_TOUCH[_WRITE|_READ|...](x) - Avoid compiler optimizations
- * Output   : none
- * Input    : x
- * Clobber  : "memory"
- *      The "memory" clobber tells the compiler that the assembly
- *      code performs memory reads or writes to items other than those
- *      listed in the input and output operands (for example, accessing
- *      the memory pointed to by one of the input parameters). To ensure
- *      memory contains correct values, GCC may need to flush specific
- *      register values to memory before executing the asm.
- * Constraints for output parameters:
- *  "r": register allowed as input
- *  "m": memory allowed as input
+ * DO_NOT_TOUCH[_WRITE|_READ|...](x) - Avoid compiler
+ * optimizations Output   : none Input    : x Clobber  :
+ * "memory" The "memory" clobber tells the compiler that the
+ * assembly code performs memory reads or writes to items other
+ * than those listed in the input and output operands (for
+ * example, accessing the memory pointed to by one of the input
+ * parameters). To ensure memory contains correct values, GCC
+ * may need to flush specific register values to memory before
+ * executing the asm. Constraints for output parameters: "r":
+ * register allowed as input "m": memory allowed as input
  */
 
-/* This should only work for V4FSMODE (typically xmm registers, but it seems to
+/* This should only work for V4FSMODE (typically xmm registers,
+   but it seems to
    materizalize properly ymm and zmm registers too). */
 #define DO_NOT_TOUCH_V4FSMODE(var)                                             \
   __asm volatile(""                                                            \
@@ -214,58 +306,25 @@ void intel_clflush(volatile void *p, unsigned int allocation_size) {
 #define DO_NOT_TOUCH_READ(var) __asm volatile("" : "+r,m"(var))
 #define DO_NOT_TOUCH(var) DO_NOT_TOUCH_V4FSMODE(var)
 
-#define PROFILE_FUNCTION_NO_LOOP(X)                                            \
+/**
+ *  _Pragma(X) syntax works for this type of macros >=C99. This way we avoid
+ *  type of loop optimizations, such as loopnest interchange, in order to
+ *  properly inline a function within this loop.
+ */
+#define PROFILE_FUNCTION_SINGLE_VAL(STEPS, X)                                  \
   {                                                                            \
-    polybench_start_instruments;                                               \
-    X;                                                                         \
-    polybench_stop_instruments;                                                \
-    polybench_print_instruments;                                               \
+    MARTA_START_INSTRUMENTS;                                                   \
+    _Pragma("nounroll_and_jam");                                               \
+    for (int t = 0; t < STEPS; ++t) {                                          \
+      X;                                                                       \
+    }                                                                          \
+    MARTA_STOP_INSTRUMENTS;                                                    \
+    MARTA_PRINT_INSTRUMENTS;                                                   \
   }
-
-#define PROFILE_FUNCTION_LOOP(X, TSTEPS)                                       \
-  {                                                                            \
-    polybench_start_instruments;                                               \
-    INIT_BEGIN_LOOP(TSTEPS);                                                   \
-    X;                                                                         \
-    END_LOOP;                                                                  \
-    polybench_stop_instruments;                                                \
-    polybench_print_instruments;                                               \
-  }
-
-#define PROFILE_FUNCTION_CYCLES_LOOP(X, TSTEPS)                                \
-  {                                                                            \
-    INIT_BEGIN_CYCLES_LOOP(TSTEPS)                                             \
-    X;                                                                         \
-    END_LOOP;                                                                  \
-    __asm volatile("rdtsc" : "=a"(__cycles_lo), "=d"(__cycles_hi));            \
-    marta_cycles_t t1 = ((marta_cycles_t)__cycles_hi << 32 | __cycles_lo);     \
-    printf("%Ld\n", (t1 - t0));                                                \
-  }
-
-#define PROFILE_FUNCTION_CYCLES_NO_LOOP(X)                                     \
-  {                                                                            \
-    marta_cycles_t t0;                                                         \
-    RDTSC(t0);                                                                 \
-    X;                                                                         \
-    __asm volatile("rdtsc" : "=a"(__cycles_lo), "=d"(__cycles_hi));            \
-    printf("%Ld\n", ((marta_cycles_t)__cycles_hi << 32 | __cycles_lo) - t0);   \
-  }
-
-#ifdef MARTA_RDTSC
-#undef PROFILE_FUNCTION_NO_LOOP
-#undef PROFILE_FUNCTION_LOOP
-#define PROFILE_FUNCTION_LOOP(X, TSTEPS) PROFILE_FUNCTION_CYCLES_LOOP(X, TSTEPS)
-#define PROFILE_FUNCTION_NO_LOOP(X) PROFILE_FUNCTION_CYCLES_NO_LOOP(X)
-#endif
-
-#if TSTEPS < 2
-#undef PROFILE_FUNCTION_LOOP
-#define PROFILE_FUNCTION_LOOP(X, TSTEPS) PROFILE_FUNCTION_NO_LOOP(X)
-#endif
 
 #define PROFILE_FUNCTION_SINGLE_VAL_DCE(STEPS, X, Y)                           \
   {                                                                            \
-    polybench_start_instruments;                                               \
+    MARTA_START_INSTRUMENTS;                                                   \
     _Pragma("nounroll_and_jam");                                               \
     for (int t = 0; t < STEPS; ++t) {                                          \
       DO_NOT_TOUCH(X);                                                         \
@@ -273,41 +332,107 @@ void intel_clflush(volatile void *p, unsigned int allocation_size) {
       Y = X;                                                                   \
       CLOBBER_MEMORY;                                                          \
     }                                                                          \
-    polybench_stop_instruments;                                                \
-    polybench_print_instruments;                                               \
+    MARTA_STOP_INSTRUMENTS;                                                    \
+    MARTA_PRINT_INSTRUMENTS;                                                   \
   }
+
+#define PROFILE_FUNCTION_NO_LOOP(X)                                            \
+  {                                                                            \
+    MARTA_START_INSTRUMENTS;                                                   \
+    X;                                                                         \
+    MARTA_STOP_INSTRUMENTS;                                                    \
+    MARTA_PRINT_INSTRUMENTS;                                                   \
+  }
+
+#define PROFILE_FUNCTION_LOOP(X)                                               \
+  {                                                                            \
+    MARTA_START_INSTRUMENTS;                                                   \
+    INIT_BEGIN_LOOP;                                                           \
+    X;                                                                         \
+    END_LOOP;                                                                  \
+    MARTA_STOP_INSTRUMENTS;                                                    \
+    MARTA_PRINT_INSTRUMENTS;                                                   \
+  }
+
+#define PROFILE_FUNCTION_COLD_CACHE(F, P, P_OFFSET, ...)                       \
+  {                                                                            \
+    MARTA_START_INSTRUMENTS;                                                   \
+    INIT_BEGIN_LOOP;                                                           \
+    P = P + P_OFFSET;                                                          \
+    F(P, __VA_ARGS__);                                                         \
+    END_LOOP;                                                                  \
+    MARTA_STOP_INSTRUMENTS;                                                    \
+    MARTA_PRINT_INSTRUMENTS;                                                   \
+  }
+
+#define PROFILE_FUNCTION_CYCLES_LOOP(X)                                        \
+  {                                                                            \
+    INIT_BEGIN_CYCLES_LOOP;                                                    \
+    X;                                                                         \
+    END_LOOP;                                                                  \
+    END_RDTSC;                                                                 \
+    PRINT_RDTSC;                                                               \
+  }
+
+#define PROFILE_FUNCTION_CYCLES_NO_LOOP(X)                                     \
+  {                                                                            \
+    START_RDTSC;                                                               \
+    X;                                                                         \
+    END_RDTSC;                                                                 \
+    PRINT_RDTSC;                                                               \
+  }
+
+#ifdef MARTA_RDTSC
+#undef PROFILE_FUNCTION_NO_LOOP
+#undef PROFILE_FUNCTION_LOOP
+#undef PROFILE_FUNCTION
+#define PROFILE_FUNCTION_LOOP(X) PROFILE_FUNCTION_CYCLES_LOOP(X)
+#define PROFILE_FUNCTION_NO_LOOP(X) PROFILE_FUNCTION_CYCLES_NO_LOOP(X)
+#endif
+
+#if TSTEPS == 1
+#undef PROFILE_FUNCTION_LOOP
+#define PROFILE_FUNCTION_LOOP(X) PROFILE_FUNCTION_NO_LOOP(X)
+#define PROFILE_FUNCTION(X) PROFILE_FUNCTION_NO_LOOP(X)
+#else
+#define PROFILE_FUNCTION(X) PROFILE_FUNCTION_LOOP(X)
+#endif
 
 /* DCE code. Must scan the entire live-out data.
    Can be used also to check the correctness of the output. */
-static void print_array1d(int n, DATA_TYPE POLYBENCH_1D(y, N, n)) {
-  int i;
+static void marta_print_1darray(char *var, int n,
+                                DATA_TYPE POLYBENCH_1D(x, N, n))
 
+{
   POLYBENCH_DUMP_START;
-  POLYBENCH_DUMP_BEGIN("y");
-  for (i = 0; i < n; i++) {
-    if (i % 20 == 0)
-      fprintf(POLYBENCH_DUMP_TARGET, "\n");
-    fprintf(POLYBENCH_DUMP_TARGET, DATA_PRINTF_MODIFIER, y[i]);
+  POLYBENCH_DUMP_BEGIN(var);
+  fprintf(POLYBENCH_DUMP_TARGET, "\n");
+  for (int i = 0; i < n; i++) {
+    fprintf(POLYBENCH_DUMP_TARGET, "%s[%d] = ", var, i);
+    fprintf(POLYBENCH_DUMP_TARGET, DATA_PRINTF_MODIFIER, x[i]);
+    fprintf(POLYBENCH_DUMP_TARGET, "\n");
   }
-  POLYBENCH_DUMP_END("y");
+  POLYBENCH_DUMP_END(var);
   POLYBENCH_DUMP_FINISH;
 }
 
 /* DCE code. Must scan the entire live-out data.
    Can be used also to check the correctness of the output. */
-static void print_array2d(int n, DATA_TYPE POLYBENCH_2D(A, N, N, n, n)) {
+static void marta_print_2darray(char *var, int n,
+                                DATA_TYPE POLYBENCH_2D(A, N, N, n, n)) {
   int i, j;
 
   POLYBENCH_DUMP_START;
-  POLYBENCH_DUMP_BEGIN("A");
+  POLYBENCH_DUMP_BEGIN(var);
+  fprintf(POLYBENCH_DUMP_TARGET, "\n");
   for (i = 0; i < n; i++) {
     for (j = 0; j < n; j++) {
-      if (i % 20 == 0)
-        fprintf(POLYBENCH_DUMP_TARGET, "\n");
+      fprintf(POLYBENCH_DUMP_TARGET, "%s[%d][%d] = ", var, i, j);
       fprintf(POLYBENCH_DUMP_TARGET, DATA_PRINTF_MODIFIER, A[i][j]);
+      fprintf(POLYBENCH_DUMP_TARGET, "\n");
     }
   }
-  POLYBENCH_DUMP_END("A");
+  POLYBENCH_DUMP_END(var);
   POLYBENCH_DUMP_FINISH;
 }
 

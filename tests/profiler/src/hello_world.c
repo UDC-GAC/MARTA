@@ -1,6 +1,9 @@
 #include <stdio.h>
 
 int main() {
-  printf("10000\n");
+  FILE *fp;
+  fp = fopen("/tmp/___marta_results.txt", "w");
+  fprintf(fp, "10000\n");
+  fclose(fp);
   return 0;
 }

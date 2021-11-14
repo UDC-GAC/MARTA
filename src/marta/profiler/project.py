@@ -41,4 +41,15 @@ class Project:
             perror(f"Package corrupted: marta_{type} files are missing")
         except Exception:
             perror(f"Something went wrong when creating new project '{name}'")
+        src = get_data(f"profiler/template.yml")
+        dst = f"{os.getcwd()}/{name}_template.yml"
+        try:
+            shutil.copyfile(src, dst)
+        except FileExistsError:
+            perror(f"'{name}_template.yml' already exists!")
+        except FileNotFoundError:
+            perror(f"Package corrupted: marta_{type} files are missing")
+        except Exception as e:
+            perror(f"Something went wrong when creating new project '{name}': {e}")
+
         return 0

@@ -1,0 +1,61 @@
+- kernel:
+      name: "stream"
+      path: "."
+      description: "Setup for experiment autovectorization"
+      debug:
+          False
+          #      preamble:
+          #          command: "sudo cpupower frequency-set -u 2.1GHz  > /dev/null && sudo
+          #          cpupower frequency-set -d 2.1GHz > /dev/null"
+      finalize:
+          clean_tmp_files: False
+          clean_asm_files: False
+          clean_bin_files: False
+          command: "echo 'done!'"
+      compilation:
+          debug: False
+          enabled: True
+          processes: 64
+          language: "C"
+          compiler_flags: { "gcc": [" -march=native -O3 -DTUNED "] }
+          main_src: "stream.c"
+          loop_type: C # if you choose "asm" loop type it may cause SIGSEV as it uses EDX register
+          kernel_inlined: True
+          asm_analysis:
+              syntax: "intel"
+              count_ins: False
+              static_analysis: ""
+      configuration:
+          d_features:
+              OFFSET:
+                  evaluate: True
+                  type: "static"
+                  val_type: "numeric"
+                  value: "[0]"
+              STREAM_ARRAY_SIZE:
+                  evaluate: True
+                  type: "static"
+                  val_type: "numeric"
+                  value: "[33554432]"
+          derived:
+              BANDWIDTH:
+                  type: single
+                  variables: ["tsc", "STREAM_ARRAY_SIZE"]
+                  expression: (3 * VAR_1 * 8) / (VAR_0/(2.1)) # FIXME
+      execution:
+          stdout_redirect: "/tmp/TESTING_OUTPUT_MKS"
+          enabled: True
+          time: False
+          tsc: True
+          threshold_outliers: 3
+          discard_outliers: True
+          compute_avg: True
+          nexec: 3
+          nsteps: 1
+          cpu_affinity: 11
+          prefix: "taskset -c 11"
+      output:
+          name: "default"
+          columns: "all"
+          report: True
+          verbose: True

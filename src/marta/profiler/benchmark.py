@@ -17,6 +17,8 @@
 #
 # -*- coding: utf-8 -*-
 
+from typing import List
+
 # Local imports
 from marta.profiler.timing import Timing
 from marta.profiler.compile import compile_file
@@ -32,10 +34,11 @@ class Benchmark:
 
     def compile_run_benchmark(
         self,
-        compiler="gcc",
-        flags=["-O3"],
-        bin_file="/tmp/a.out",
-        tmp_file="/tmp/___tmp.txt",
+        compiler: str = "gcc",
+        flags: List[str] = ["-O3"],
+        bin_file: str = "/tmp/a.out",
+        tmp_file: str = "/tmp/___marta_results.txt",
+        nsteps: int = 10000,
     ) -> float:
         try:
             compile_file(
@@ -51,11 +54,17 @@ class Benchmark:
             raise BenchmarkError
 
         d, _ = Timing.measure_benchmark(
-            self.src_file, self.btype, bin_file=bin_file, tmp_file=tmp_file
+            self.src_file,
+            self.btype,
+            bin_file=bin_file,
+            tmp_file=tmp_file,
+            nsteps=nsteps,
         )
         return d[self.btype]
 
-    def __init__(self, src_file: str, path="/tmp/", btype="tsc", temp=False):
+    def __init__(
+        self, src_file: str, path: str = "/tmp/", btype: str = "tsc", temp: bool = False
+    ) -> None:
         self.src_file = src_file
         self.path = path
         self.btype = btype

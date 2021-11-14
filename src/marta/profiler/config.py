@@ -17,7 +17,6 @@
 #
 # -*- coding: utf-8 -*-
 
-from logging import exception
 import os
 import yaml
 import subprocess
@@ -29,7 +28,7 @@ class MARTAConfigError(Exception):
     pass
 
 
-def parse_options(config: dict) -> dict:
+def parse_kernel_options(config: dict) -> dict:
     cfg = {}
     try:
         cfg["kernel"] = config["kernel"]["name"]
@@ -50,6 +49,8 @@ def parse_options(config: dict) -> dict:
         perror("Something went wrong when checking path")
     cfg["show_progress_bars"] = config["kernel"].get("show_progress_bars", True)
     cfg["debug"] = config["kernel"].get("debug", False)
+    cfg["preamble"] = config["kernel"].get("preamble")
+    cfg["finalize"] = config["kernel"].get("finalize")
 
     try:
         config_config = config["kernel"]["configuration"]
@@ -71,12 +72,10 @@ def parse_options(config: dict) -> dict:
         cfg["processes"] = int(config_comp["processes"])
         if cfg["processes"] < 1:
             raise ValueError
-        if cfg["processes"] > 32:
-            pwarning(
-                f"Be careful with high degree of processes for compilation ({cfg['processes']} processes set)"
-            )
     except ValueError:
-        pexcept("processes must be an integer greater or equal to '1'")
+        pexcept(
+            "processes must be an integer greater or equal to '1'", MARTAConfigError
+        )
     except KeyError:
         cfg["processes"] = 1
     cfg["compiler_flags"] = config_comp.get("compiler_flags", {"gcc": [""]})
@@ -89,9 +88,12 @@ def parse_options(config: dict) -> dict:
 
     # ASM analysis
     asm_analysis = config_comp.get("asm_analysis", {})
-    cfg["asm_count"] = asm_analysis.get("count_ins", False)
-    cfg["asm_syntax"] = asm_analysis.get("syntax", "att")
-    cfg["static_analysis"] = asm_analysis.get("static_analysis", "")
+    if isinstance(asm_analysis, dict):
+        cfg["asm_count"] = asm_analysis.get("count_ins", False)
+        cfg["asm_syntax"] = asm_analysis.get("syntax", "att")
+        cfg["static_analysis"] = asm_analysis.get("static_analysis", "")
+    else:
+        pexcept("'asm_analysis' must be a dict", MARTAConfigError)
 
     # Configuration
     cfg["kernel_cfg"] = config_config.get("kernel_cfg", [""])
@@ -99,14 +101,17 @@ def parse_options(config: dict) -> dict:
         cfg["kernel_cfg"] = [""]
     cfg["d_features"] = config_config.get("d_features", [])
     cfg["d_flags"] = config_config.get("d_flags", [])
-    cfg["flops"] = config_config.get("flops", 1)
+    cfg["flops"] = config_config.get("flops", "1")
     cfg["meta_info"] = config_config.get("meta_info", {})
     # meta_info = config_config.get("meta_info", {})
     # cfg["meta_info_script"] = meta_info.get("script", "")
     # cfg["meta_info_path"] = meta_info.get("path", ".")
     # cfg["meta_info_script_input"] = meta_info.get("input", "")
     # cfg["meta_info_script_input_suffix"] = meta_info.get("suffix", "")
-    cfg["macveth_path"] = config_config.get("macveth_path_buil", "''")
+    cfg["macveth"] = config_config.get("macveth", False)
+    if cfg["macveth"]:
+        cfg["kernel_cfg"].append("MACVETH")
+    cfg["macveth_path"] = config_config.get("macveth_path", "")
     cfg["macveth_flags"] = config_config.get("macveth_flags", "-misa=avx2")
     cfg["macveth_target"] = config_config.get("macveth_target", "")
 
@@ -115,15 +120,16 @@ def parse_options(config: dict) -> dict:
 
     # Execution arguments
     cfg["intel_cache_flush"] = config_exec.get("intel_cache_flush", False)
+    cfg["stdout_redirect"] = config_exec.get("stdout_redirect", False)
+    cfg["multithread"] = config_exec.get("multithread", False)
     cfg["init_data"] = config_exec.get("init_data", False)
     cfg["check_dump"] = config_exec.get("check_dump", False)
     cfg["execution_enabled"] = config_exec.get("enabled", True)
     cfg["measure_time"] = config_exec.get("time", False)
     cfg["measure_tsc"] = config_exec.get("tsc", False)
     cfg["threshold_outliers"] = config_exec.get("threshold_outliers", 3)
-    cfg["mean_and_discard_outliers"] = config_exec.get(
-        "mean_and_discard_outliers", False
-    )
+    cfg["discard_outliers"] = config_exec.get("discard_outliers", False)
+    cfg["compute_avg"] = config_exec.get("compute_avg", True)
     cfg["nexec"] = config_exec.get("nexec", 7)
     cfg["nsteps"] = config_exec.get("nsteps", 1000)
     cfg["cpu_affinity"] = config_exec.get("cpu_affinity", 0)
@@ -136,17 +142,18 @@ def parse_options(config: dict) -> dict:
     cfg["papi_counters_path"] = config_exec.get("papi_counters_path")
     cfg["papi_counters"] = config_exec.get("papi_counters")
     if cfg["papi_counters"] != None:
-        if type(cfg["papi_counters"]) != list:
+        if not isinstance(cfg["papi_counters"], list):
             pexcept(
                 "'papi_counters' must be a list of hardware events!", MARTAConfigError
             )
     cfg["exec_args"] = config_exec.get("prefix", "")
+    cfg["output"] = config_exec.get("output", {})
     return cfg
 
 
 def check_correctness_kernel(config: dict) -> bool:
     try:
-        parse_options(config)
+        parse_kernel_options(config)
     except Exception:
         return False
     return True
@@ -154,10 +161,10 @@ def check_correctness_kernel(config: dict) -> bool:
 
 def check_correctness_file(config: list) -> bool:
     try:
-        if type(config) != list:
+        if not isinstance(config, list):
             raise Exception
         for cfg in config:
-            parse_options(cfg)
+            parse_kernel_options(cfg)
     except Exception:
         return False
     return True
@@ -204,8 +211,15 @@ def get_kernel_config(input_file: str):
             kernel_setup = yaml.load(ymlfile, Loader=Loader)
     except FileNotFoundError:
         perror("Configuration file not found")
-    except Exception:
-        perror("Unknown error when opening configuration file.")
+    except yaml.YAMLError as exc:
+        if hasattr(exc, "problem_mark"):
+            mark = exc.problem_mark
+            perror(
+                f"Error position in configuration file: row {mark.line+1}, column {mark.column+1})"
+            )
+        perror(f"Error in configuration file: {exc}")
+    except Exception as e:
+        perror(f"Unknown error when opening configuration file: {e}")
 
     return kernel_setup
 
@@ -273,7 +287,7 @@ def get_derived(derived_columns: dict, data: dict) -> dict:
         derived_dict = {}
         for derived in derived_columns:
             variables = derived_columns[derived].get("variables")
-            if variables == None or type(variables) != list:
+            if variables == None or not isinstance(variables, list):
                 perror("Bad formatting derived")
             expression = derived_columns[derived].get("expression")
             if expression == None:

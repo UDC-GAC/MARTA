@@ -1,0 +1,125 @@
+- kernel:
+      name: "packing"
+      path: "examples/packing/src/"
+      description: "Setup for experiment packing"
+      debug: False
+      preamble:
+          command: "sudo cpupower frequency-set -u 2.1GHz  > /dev/null && sudo cpupower frequency-set -d 2.1GHz > /dev/null"
+      finalize:
+          clean_tmp_files: False
+          clean_asm_files: False
+          clean_bin_files: False
+          command: "echo 'done!'"
+      compilation:
+          enabled: True
+          processes: 16
+          language: "C"
+          compiler_flags: { "gcc-11": [" -march=native -mtune=native -Ofast "] }
+          #"icc": [" -march=native -mtune=native -Ofast "],
+          common_flags: " "
+          main_src: "main.c"
+          kernel_inlined: True
+          asm_analysis:
+              syntax: "att"
+              count_ins: False
+              static_analysis: ""
+          debug: False
+      configuration:
+          kernel_cfg: [
+                  #"-DKERNEL_MV",
+                  #"-DKERNEL_MV -DCOLDCACHE",
+                  "-DKERNEL_MV -DFUSED",
+                  "-DKERNEL_AUTOVEC ",
+              ]
+          #"-DKERNEL_MV -DFUSED -DCOLDCACHE",
+          #"-DKERNEL_AUTOVEC ",
+          #"-DKERNEL_AUTOVEC -DCOLDCACHE",
+          #"-DKERNEL_AUTOVEC -DCOLDCACHE",
+          #"-DKERNEL_AUTOVEC",
+          d_features:
+              N:
+                  evaluate: True
+                  type: "static"
+                  val_type: "numeric"
+                  value: "[512*1024*1024]"
+              OFFSET:
+                  evaluate: True
+                  type: "static"
+                  val_type: "numeric"
+                  value: "[2*1024]"
+          flops: "1"
+      execution:
+          enabled: True
+          papi_counters: [
+                  "PAPI_TOT_INS",
+                  #   "PAPI_L1_DCM",
+                  #   "PAPI_L2_DCM",
+                  #   "PAPI_L3_TCM",
+                  #"CYCLE_ACTIVITY:STALLS_TOTAL",
+                  "OFFCORE_REQUESTS:ALL_REQUESTS",
+                  "CYCLE_ACTIVITY:STALLS_MEM_ANY",
+                  "DTLB_LOAD_MISSES:MISS_CAUSES_A_WALK",
+                  "DTLB_STORE_MISSES:MISS_CAUSES_A_WALK",
+              ]
+
+          #"RESOURCE_STALLS:ALL",
+          #   "MEM_LOAD_L3_HIT_RETIRED:XSNP_NONE",
+          #   "MEM_LOAD_L3_HIT_RETIRED:XSNP_MISS",
+          #   "MEM_LOAD_L3_HIT_RETIRED:XSNP_HIT",
+          #   "MEM_LOAD_L3_HIT_RETIRED:XSNP_HITM",
+          #"UOPS_EXECUTED:STALL_CYCLES",
+          #   "CYCLE_ACTIVITY:STALLS_L1D_MISS",
+          #   "CYCLE_ACTIVITY:STALLS_L2_MISS",
+          #   "CYCLE_ACTIVITY:STALLS_L3_MISS",
+          #   "CYCLE_ACTIVITY:CYCLES_LDM_PENDING",
+          #   "OFFCORE_REQUESTS_OUTSTANDING:L3_MISS_DEMAND_DATA_RD",
+          #   "OFFCORE_REQUESTS_OUTSTANDING:ALL_DATA_RD_CYCLES",
+          #   "OFFCORE_REQUESTS_OUTSTANDING:CYCLES_WITH_L3_MISS_DEMAND_DATA_RD",
+          #"OFFCORE_REQUESTS_OUTSTANDING:L3_MISS_DEMAND_DATA_RD_GE_6",
+          #   "DTLB_LOAD_MISSES:MISS_CAUSES_A_WALK",
+          #   "DTLB_STORE_MISSES:MISS_CAUSES_A_WALK",
+          #   "OFFCORE_RESPONSE_0:ANY_DATA_PF",
+          #"CYCLE_ACTIVITY:STALLS_MEM_ANY",
+          #"CYCLE_ACTIVITY:STALLS_L1D_MISS",
+          #"PARTIAL_RAT_STALLS:SCOREBOARD",
+          #"UOPS_RETIRED:STALL_OCCURRENCES",
+          #   "FRONTEND_RETIRED:IDQ_4_BUBBLES",
+          #   "FRONTEND_RETIRED:IDQ_3_BUBBLES",
+          #   "FRONTEND_RETIRED:IDQ_2_BUBBLES",
+          #   "FRONTEND_RETIRED:IDQ_1_BUBBLE",
+          #   "UOPS_EXECUTED:STALL_CYCLES",
+          #   "UOPS_DISPATCHED_PORT:PORT_0",
+          #   "UOPS_DISPATCHED_PORT:PORT_1",
+          #   "UOPS_DISPATCHED_PORT:PORT_2",
+          #   "UOPS_DISPATCHED_PORT:PORT_3",
+          #   "UOPS_DISPATCHED_PORT:PORT_4",
+          #   "UOPS_DISPATCHED_PORT:PORT_5",
+          #   "UOPS_DISPATCHED_PORT:PORT_6",
+          #   "UOPS_DISPATCHED_PORT:PORT_7",
+          # "PAPI_L2_DCM",
+          # "PAPI_L3_TCM",
+          # "OFFCORE_RESPONSE_0:ANY_DATA_PF",
+          # "SW_PREFETCH:T0",
+          #   "CYCLE_ACTIVITY:STALLS_TOTAL",
+          #   "CYCLE_ACTIVITY:STALLS_MEM_ANY",
+          #   "RESOURCE_STALLS:ALL",
+          #   "RESOURCE_STALLS:SB",
+          #   "UOPS_RETIRED:CORE_STALL_CYCLES",
+          #   "UOPS_RETIRED:STALL_CYCLES",
+          #"SW_PREFETCH:T0",
+          # "RESOURCE_STALLS:SB",
+          # "RESOURCE_STALLS:ALL",
+          # "CPU_CLK_THREAD_UNHALTED:THREAD_P",
+          tsc: True
+          threshold_outliers: 3
+          discard_outliers: True
+          compute_avg: False
+          nexec: 1
+          nsteps: 100000
+          cpu_affinity: 10
+          prefix: "numactl -p 0 taskset -c 10"
+      output:
+          name: "intel_xeon_silver"
+          columns: "all"
+          report: True
+          verbose: True

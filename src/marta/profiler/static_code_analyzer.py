@@ -21,9 +21,11 @@
 import os
 import json
 import subprocess
+import pathlib
+import yaspin
 
 # Local imports
-from marta.utils.marta_utilities import pwarning
+from marta.utils.marta_utilities import pwarning, perror
 
 
 class LLVMMCAError(Exception):
@@ -32,7 +34,24 @@ class LLVMMCAError(Exception):
 
 class StaticCodeAnalyzer:
     @staticmethod
-    def fix_json(json_file="perf.json") -> str:
+    def clean_comments(json_file: str = "perf.json") -> None:
+        lines = []
+        with open(json_file, "r") as f:
+            for line in f:
+                if (
+                    "#NO_APP" in line
+                    or "#APP" in line
+                    or line.startswith("# ")
+                    or line == "\n"
+                ) and not "LLVM" in line:
+                    continue
+                lines.append(line)
+
+        with open(json_file, "w") as f:
+            f.writelines(lines)
+
+    @staticmethod
+    def fix_json(json_file: str = "perf.json") -> str:
         """This method is needed if LLVM-MCA version is previous to 13.0.0
 
         :param json_file: Input JSON file, defaults to "perf.json"
@@ -64,8 +83,28 @@ class StaticCodeAnalyzer:
         os.remove(f"{json_file}")
         return json_file_fixed
 
+    def get_llvm_mca_version(self) -> int:
+        lines = os.popen(f"{self.binary} --version").read()
+        try:
+            for line in lines:
+                if "version" in line:
+                    major_version = int(line.split(" ")[-1].split(".")[0])
+                    return major_version
+        except Exception:
+            pass
+        return -1
+
+    def check_if_compatible_version(self):
+        if self.get_llvm_mca_version() < 13:
+            return False
+        return True
+
     def compute_performance(
-        self, name_bench: str, iterations=1, region="kernel"
+        self,
+        name_bench: str,
+        iterations: int = 1,
+        region: str = "kernel",
+        stderr: int = None,
     ) -> dict:
         """Get the performance metrics reported by the tool. Currently only LLVM-MCA.
 
@@ -79,6 +118,16 @@ class StaticCodeAnalyzer:
         :rtype: dict
         """
         json_file = f"/tmp/{name_bench.replace('.s','')}_perf.json"
+        stderr_file = f"/tmp/{name_bench.replace('.s','')}_perf.stderr"
+
+        path_json_file = json_file.rsplit("/", 1)[0]
+        if path_json_file != "/tmp":
+            pathlib.Path(path_json_file).mkdir(parents=True, exist_ok=True)
+
+        if os.path.exists(json_file):
+            os.remove(json_file)
+
+        self.clean_comments(name_bench)
 
         cmd = [
             f"{self.binary}",
@@ -90,38 +139,64 @@ class StaticCodeAnalyzer:
             "-o",
             f"{json_file}",
         ]
-        ret = subprocess.run(cmd)
-        if ret:
-            raise LLVMMCAError
+        with open(stderr_file, "w") as fstderr:
+            ret = subprocess.run(cmd, stderr=fstderr)
+        # ret = subprocess.run(cmd, stderr=stderr)
+
+        if ret and not os.path.exists(json_file):
+            raise LLVMMCAError("Path does not exist")
 
         with open(f"{json_file}") as f:
             try:
                 dom = json.loads(f.read())
             except Exception:
                 json_file = StaticCodeAnalyzer.fix_json(json_file)
-                with open(f"{json_file}") as f:
-                    dom = json.loads(f.read())
+                try:
+                    with open(f"{json_file}") as f:
+                        dom = json.loads(f.read())
+                except Exception:
+                    raise LLVMMCAError
 
-        d = {}
+        llvm_mca_results = {}
         try:
-            summary = dom[region]["SummaryView"]
+            kernel_region = dom["CodeRegions"][0]
+            for i in range(len(dom["CodeRegions"])):
+                if region == dom["CodeRegions"][i]["Name"]:
+                    kernel_region = dom["CodeRegions"][i]
+            summary = kernel_region["SummaryView"]
         except KeyError:
             pwarning("llvm-mca data could not be parsed")
-            return d
-        finally:
-            os.remove(f"{json_file}")
+            return llvm_mca_results
+        except TypeError:
+            pwarning(
+                "\nBad format in llvm-mca json output:\n\tyou need to update your version to LLVM >= 13.x.x."
+            )
+            return llvm_mca_results
 
-        d.update({"llvm-mca_IPC": summary["IPC"]})
-        d.update(
+        llvm_mca_results.update({"llvm-mca_IPC": summary["IPC"]})
+        llvm_mca_results.update(
             {
                 "llvm-mca_CyclesPerIteration": summary["TotalCycles"]
                 / summary["Iterations"]
             }
         )
-        d.update({"llvm-mca_uOpsPerCycle": summary["uOpsPerCycle"]})
-        return d
+        llvm_mca_results.update({"llvm-mca_uOpsPerCycle": summary["uOpsPerCycle"]})
+        return llvm_mca_results
 
-    def __init__(self, cpu: str, binary="llvm-mca", arch="x86-64") -> None:
+    def get_data(self):
+        if not hasattr(self, "data"):
+            self.data = {}
+        return self.data
+
+    def perform_analysis(self, path, nsteps):
+        with yaspin(text="Static analysis with LLVM-MCA") as sp:
+            self.data = self.compute_performance(path, nsteps)
+            sp.hidden()
+
+    def __init__(
+        self, cpu: str, binary: str = "llvm-mca", arch: str = "x86-64",
+    ) -> None:
         self.binary = binary
         self.cpu = cpu
         self.arch = arch
+

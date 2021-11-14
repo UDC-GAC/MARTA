@@ -12,8 +12,8 @@ sklearn
 colorama
 pyperf
 matplotlib
-art
 seaborn==0.11.2
 KDEpy
 dtreeviz
 scipy
+yaspin

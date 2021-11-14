@@ -1,0 +1,3 @@
+[submodule "src/marta/data/profiler/utilities/papi_wrapper"]
+	path = src/marta/data/profiler/utilities/papi_wrapper
+	url = https://github.com/UDC-GAC/papi_wrapper

@@ -20,6 +20,7 @@ PARENT_DIR?=$(CUR_DIR)marta_profiler_data/
 BIN_DIR=$(PARENT_DIR)bin/
 ASM_DIR=$(PARENT_DIR)asm_codes/
 DUMP_DIR=$(PARENT_DIR)dumps/
+PAPI_WRAPPER_DIR:=$(CUR_DIR)utilities/papi_wrapper/lib
 USRDIR=$(HOME)
 TMPDIR=/tmp/
 
@@ -27,10 +28,15 @@ TMPDIR=/tmp/
 PAPI_LIB?=$(USRDIR)/lib
 PAPI_INCLUDE?=$(USRDIR)/include
 PAPI_FLAGS=-I$(PAPI_INCLUDE) -L$(PAPI_LIB) -lpapi
-POLYBENCH_FLAGS = -I utilities utilities/polybench.c
+MARTA_FLAGS= -I utilities
+POLYBENCH_FLAGS = $(MARTA_FLAGS) utilities/polybench.c
+ifeq ($(MULTITHREAD),true)
+	POLYBENCH_FLAGS+= -I $(PAPI_WRAPPER_DIR) $(PAPI_WRAPPER_DIR)/papi_wrapper.c -DMARTA_MULTITHREAD
+endif
 POLY_TFLAGS= -DPOLYBENCH_TIME $(POLYBENCH_FLAGS)
 POLY_CFLAGS= -DMARTA_RDTSC $(POLYBENCH_FLAGS)
 POLY_PFLAGS= -DPOLYBENCH_PAPI $(POLYBENCH_FLAGS) $(PAPI_FLAGS)
+POLY_DFLAGS= -DPOLYBENCH_DUMP_ARRAYS $(POLYBENCH_FLAGS)
 
 TIMING_FLAGS?=$(POLY_TFLAGS)
 
@@ -98,15 +104,6 @@ V =
 
 BASENAME:=$(TARGET)
 
-# Experimental compatibility with MACVETH compiler
-MACVETH_RULE=
-ifeq ($(MACVETH),true)
-	MACVETH_RULE:=macveth
-	OLD_TARGET:=$(MACVETH_TARGET)
-	TARGET:=$(TARGET)_macveth
-	MACVETH_DB:=$(COMMON_FLAGS)
-endif
-
 .PHONY: all clean
 
 KERNEL_NAME?=$(BASENAME)_$(SUFFIX_ASM)_$(COMP)_$(COMP_FLAGS)
@@ -135,6 +132,18 @@ BASE_ASM_NAME?=$(ASM_DIR)$(KERNEL_NAME)
 BASE_DUMP_NAME?=$(DUMP_DIR)$(KERNEL_NAME)
 
 KERNEL_BIN_NAME?=$(BIN_DIR)$(KERNEL_NAME)_kernel.o
+
+
+# Experimental compatibility with MACVETH compiler
+MACVETH_RULE=
+ifeq ($(MACVETH),true)
+	MACVETH_RULE:=macveth
+	BINARY_NAME:=$(BINARY_NAME)_macveth
+	OLD_TARGET:=$(MACVETH_TARGET)
+	TARGET:=$(TARGET)_macveth
+	MACVETH_DB:=$(COMMON_FLAGS)
+	KERNEL_BIN_NAME?=$(BIN_DIR)$(KERNEL_NAME)_kernel_macveth.o
+endif
 
 MAIN_RULES:= $(MACVETH_RULE) $(MAIN_FILE)
 
@@ -184,14 +193,16 @@ endif
 # Targets to compile
 all: $(TARGETS)
 
-# EXPERIMENTAL - Compatibility with MACVETH
+# Compatibility with MACVETH
+MACVETH_FLAGS?= -misa=avx2 --simd-cost-model=unlimited --march=cascadelake
 macveth:
-	$(V)$(MVPATH)macveth $(MACVETH_FLAGS) $(OLD_TARGET)$(MACVETH_SUFFIX).c -o $(TMP_SRC) -- $(MACVETH_DB) 2> ___$(SUFFIX_ASM).log
+	$(V)$(MACVETH_PATH)macveth $(MACVETH_FLAGS) $(OLD_TARGET)$(MACVETH_SUFFIX).c -o $(TMP_SRC) -- $(MACVETH_DB) 
 
-# EXPERIMENTAL - Compatibility with MACVETH
+# Compatibility with MACVETH
 kernel_macveth: macveth
 	$(V)$(CC) -c $(FLAGS_KERN) $(TMP_SRC)
-	$(V)mv $(TMP_BIN) $(KERNEL_NAME).o
+	$(V)mv $(TMP_BIN) $(KERNEL_BIN_NAME)
+	$(V)mv $(TMP_SRC) $(BIN_DIR)
 
 # Compile kernel to assembly code
 asm_code:
@@ -229,7 +240,7 @@ $(BINARY_NAME)_papi: $(MAIN_RULES)
 
 # -DPOLYBENCH_DUMP_ARRAYS: sanity check when comparing versions
 $(BINARY_NAME)_dump: $(MAIN_RULES)
-	$(V)$(CC) $(FLAGS_MAIN) -DPOLYBENCH_DUMP_ARRAYS $(MAIN_FILE) -o $(BASE_DUMP_NAME)_dump.o
+	$(V)$(CC) $(FLAGS_MAIN) $(POLY_DFLAGS) $(MAIN_FILE) -o $(BASE_DUMP_NAME)_dump.o
 
 clean:
 	find . -type f ! -name "*.c" ! -name "*.h" ! -name "*.c" ! -name "Makefile" -delete
