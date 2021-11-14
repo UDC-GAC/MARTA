@@ -120,7 +120,7 @@ class Timing:
             bin_file = [*exec_opts_list] + bin_file
         dump_file = f"/tmp/dumps____tmp_{code}_{compiler}__{compiler_flags_suffix}"
         if "MACVETH" in dump_file:
-            dump_file = dump_file.replace("MACVETH", "") + "_MACVETH"
+            dump_file = dump_file.replace("MACVETH", "") + "MACVETH"
         else:
             Timing.dump_files.append(dump_file)
         with open(dump_file, "w") as f:

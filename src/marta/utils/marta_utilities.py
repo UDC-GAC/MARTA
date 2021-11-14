@@ -32,6 +32,10 @@ from colorama import Fore, Style
 from marta import get_data
 
 
+def marta_exit(code: int = 1):
+    sys.exit(code)
+
+
 def colored(msg: str, color=Fore.RED, style=Style.NORMAL) -> str:
     return f"{color}{style}{msg}{Fore.RESET}{Style.RESET_ALL}"
 

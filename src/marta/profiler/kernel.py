@@ -26,6 +26,7 @@ from typing import Union
 from math import ceil, floor
 from datetime import datetime as dt
 import filecmp
+import difflib
 
 # Third-party libraries
 import pandas as pd
@@ -44,7 +45,7 @@ from marta.profiler.timing import Timing
 from marta.profiler.static_code_analyzer import StaticCodeAnalyzer
 from marta.profiler.config import parse_kernel_options, get_metadata, get_derived
 from marta.profiler.system_config import SystemConfig
-from marta.utils.marta_utilities import perror, pwarning, pinfo
+from marta.utils.marta_utilities import perror, pwarning, pinfo, marta_exit
 
 
 class Kernel:
@@ -177,14 +178,24 @@ class Kernel:
         if self.check_dump and self.macveth:
             errors = []
             for file in Timing.dump_files:
-                if not filecmp.cmp(file, f"{file}_MACVETH"):
+                if not filecmp.cmp(file, f"{file}MACVETH"):
                     errors.append(file)
             if len(errors) == 0:
                 pinfo(
                     "Correctness check for MACVETH went OK according to dumped values."
                 )
+                difflib.context_diff()
             for err in errors:
-                perror(f"Check correctness for {err}")
+                file_org = open(err, "rt").readlines()
+                file_macveth = open(f"{err}MACVETH", "rt").readlines()
+                diffs = difflib.Differ().compare(file_org, file_macveth)
+                differences = sum([1 for line in diffs if line[:2] == "+ "])
+                perror(
+                    f"{differences} lines different between dumped files. Check correctness for '{err}'.",
+                    exit_on_error=False,
+                )
+            if len(errors) > 0:
+                marta_exit()
 
     def save_results(
         self, df: pd.DataFrame, filename: str, generate_report=False,

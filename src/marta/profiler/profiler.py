@@ -46,6 +46,7 @@ from marta.utils.marta_utilities import (
     pinfo,
     create_directories,
     dump_config_file,
+    marta_exit,
 )
 from marta.profiler.benchmark import Benchmark, BenchmarkError
 from marta.profiler.kernel import Kernel
@@ -515,7 +516,7 @@ class Profiler:
         if self.args.dump_config_file is not None:
             for line in dump_config_file("profiler/template.yml"):
                 print(line, end="")
-            sys.exit(0)
+            marta_exit(0)
 
         if self.args.create is not None:
             code = Project.generate_new_project(self.args.name)
@@ -524,7 +525,7 @@ class Profiler:
             pinfo(
                 f"Project generated in folder '{self.args.name}'. Configuration template in current file as '{self.args.name}_template.yml'"
             )
-            sys.exit(0)
+            marta_exit(0)
 
         # Sanity-checks
         if self.args.check_config_file is not None:
@@ -535,7 +536,7 @@ class Profiler:
                 pinfo(
                     "Configuration file structure is correct (compilation files might be wrong)"
                 )
-                sys.exit(0)
+                marta_exit(0)
 
     def __init__(self, list_args):
         """
@@ -557,11 +558,11 @@ class Profiler:
             len(sys.argv) == 1 or len(list_args) == 0
         ):
             self.parser.print_help(sys.stderr)
-            sys.exit(1)
+            marta_exit(1)
 
         if self.args.cmd in project_subcmd_alias:
             self.process_project_args()
-            sys.exit(0)
+            marta_exit(0)
 
         kernel_setup = get_kernel_config(self.args.input[0])
         if not self.args.quiet:
@@ -573,4 +574,4 @@ class Profiler:
             if self.profiling_kernels(cfg) == None:
                 perror("Kernel failed...", exit_on_error=False)
 
-        sys.exit(0)
+        marta_exit(0)
