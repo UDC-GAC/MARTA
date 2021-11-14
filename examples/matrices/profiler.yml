@@ -5,13 +5,10 @@
       description: "Setup for inital experiment!"
       debug: False
       show_progress_bars: True
+      preamble:
+          command: "sudo cpupower frequency-set -u 2.1GHz  > /dev/null && sudo cpupower frequency-set -d 2.1GHz > /dev/null"
       #preamble:
       #    command: "sudo utilities/setup_freq.sh && sudo utilities/disable_turbo_intel.sh"
-      finalize:
-          clean_tmp_files: False
-          clean_asm_files: False
-          clean_bin_files: False
-          command: "echo 'EXPERIMENT FINISHED :D!'"
       compilation:
           enabled: True
           processes: 16
@@ -26,25 +23,41 @@
               static_analysis: ""
           debug: False
       configuration:
+          kernel_cfg: [""]
           macveth: True
           d_features: #
               MATRIX:
                   evaluate: True
                   type: "static"
                   val_type: "string"
-                  value: '["test-codes/bibd_15_3.spf.c"]'
+                  #value: '["test-codes/bibd_15_3.spf.c"]'
+                  value: '["pldi-codes/test.c"]'
           macveth_target: "MATRIX"
+          macveth_flags:
+              [
+                  "-misa=avx2",
+                  "--march=cascadelake",
+                  "--simd-cost-model=unlimited",
+              ]
           flops: "1"
       execution:
           enabled: True
-          papi_counters: ["UNHALTED_CORE_CYCLES", "INSTRUCTIONS_RETIRED"]
+          papi_counters:
+              [
+                  "UNHALTED_CORE_CYCLES",
+                  "INSTRUCTIONS_RETIRED",
+                  "PAPI_L1_TCM",
+                  "PAPI_L2_TCM",
+                  "PAPI_L3_TCM",
+              ]
           tsc: True
           threshold_outliers: 3 # in percentage
           discard_outliers: True # remove outliers from average
           compute_avg: True # divide values by nsteps
           nexec: 7
-          nsteps: 10000
+          nsteps: 1
           cpu_affinity: 10
+          check_dump: True
           prefix: "numactl -p 0 taskset -c 10"
       output:
           name: "intel_xeon_silver"

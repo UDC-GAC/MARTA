@@ -43,7 +43,7 @@
                   variables: ["tsc", "STREAM_ARRAY_SIZE"]
                   expression: (3 * VAR_1 * 8) / (VAR_0/(2.1)) # FIXME
       execution:
-          stdout_redirect: "/dev/null"
+          stdout_redirect: "/tmp/TESTING_OUTPUT_MKS"
           enabled: True
           time: False
           tsc: True

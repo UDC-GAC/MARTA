@@ -355,26 +355,22 @@ if (TSTEPS == 1) {
   // Measure
 #ifdef KERNEL_CSR
   PROFILE_FUNCTION_LOOP(KERNEL_NAME(POLYBENCH_ARRAY(A), POLYBENCH_ARRAY(y),
-                                    POLYBENCH_ARRAY(x), col, row_ptr, 0),
-                        TSTEPS);
+                                    POLYBENCH_ARRAY(x), col, row_ptr, 0));
 #else
   PROFILE_FUNCTION_LOOP(KERNEL_NAME(POLYBENCH_ARRAY(A), POLYBENCH_ARRAY(y),
-                                    POLYBENCH_ARRAY(x), 0, 0),
-                        TSTEPS);
+                                    POLYBENCH_ARRAY(x), 0, 0));
 #endif
 } else {
 #ifdef KERNEL_CSR
   PROFILE_FUNCTION_LOOP(exercise_csr(POLYBENCH_ARRAY(A), POLYBENCH_ARRAY(y),
                                      POLYBENCH_ARRAY(x), col, row_ptr,
                                      random_indices[__marta_tsteps],
-                                     __marta_tsteps),
-                        TSTEPS);
+                                     __marta_tsteps));
 #else
   PROFILE_FUNCTION_LOOP(
       KERNEL_NAME(POLYBENCH_ARRAY(A), POLYBENCH_ARRAY(y), POLYBENCH_ARRAY(x),
                   // random_indices[__marta_tsteps], __marta_tsteps),
-                  0, 0),
-      TSTEPS);
+                  0, 0));
 
 #endif
 }

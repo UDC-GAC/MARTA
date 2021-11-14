@@ -22,14 +22,26 @@
           debug: False
       configuration:
           d_features:
+              N:
+                  evaluate: True
+                  path: True
+                  type: "static"
+                  val_type: "numeric"
+                  value: "[1024*1024*512]"
+              N_OFFSET:
+                  evaluate: True
+                  path: True
+                  type: "static"
+                  val_type: "numeric"
+                  value: "[4096]"
+
               PACKING_TEMPLATE:
                   evaluate: True
+                  path: True
                   type: "static"
                   val_type: "string"
-                  #value: '[f"codes/rvp_float_4elems_4nnz_{i}_{j}_{k}_0.c" for
-                  #i,j,k in it.product([0,1],[0,1],[0,1])]'
-                  value: '[f"codes/rvp_float_4elems_4nnz_1_1_1_0.c"]'
-                  #value: "glob.glob('examples/sat_packing/src/codes/*.c')"
+                  #value: "['codes/rvp_float_8elems_7nnz_0_0_0_0_0_0_0.c']"
+                  value: "glob.glob('[PATH]codes/*.c')"
           flops: "1"
       execution:
           enabled: True
@@ -40,7 +52,7 @@
           discard_outliers: True
           compute_avg: True
           nexec: 7
-          nsteps: 100000
+          nsteps: 10000
           cpu_affinity: 10
           prefix: "numactl -p 0 taskset -c 10"
       output:
