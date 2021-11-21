@@ -22,6 +22,7 @@ from __future__ import annotations
 import os
 import subprocess
 import pickle
+import re
 from typing import Union
 from math import ceil, floor
 from datetime import datetime as dt
@@ -171,7 +172,7 @@ class Kernel:
             print(f"{display_val}|")
             print(line)
 
-        print(f"\ntotal time elapsed: {Timing.to_seconds(Timing.execution_time)}\n")
+        print(f"\nTotal time elapsed: {Timing.to_seconds(Timing.execution_time)}\n")
         print("--- END summary")
 
     def check_correctness(self) -> list:
@@ -184,7 +185,6 @@ class Kernel:
                 pinfo(
                     "Correctness check for MACVETH went OK according to dumped values."
                 )
-                difflib.context_diff()
             for err in errors:
                 file_org = open(err, "rt").readlines()
                 file_macveth = open(f"{err}MACVETH", "rt").readlines()
@@ -353,11 +353,8 @@ class Kernel:
             # )
             if self.macveth_target != "":
                 try:
-                    macveth_target = (
-                        tmp_pickle[self.macveth_target]
-                        .replace(".c", "")
-                        .replace(".spf", "")
-                    )
+                    macveth_target = re.sub(".c$", "", tmp_pickle[self.macveth_target])
+                    # macveth_target = re.sub(".spf$", "", macveth_target)
                     other_flags.append(f" MACVETH_TARGET={macveth_target}")
                 except KeyError:
                     perror("Bad key for MACVETH target")
@@ -391,8 +388,7 @@ class Kernel:
         if self.asm_count or self.static_analysis != "":
             if self.kernel_compilation:
                 other_flags.append("ASM_CODE_KERNEL=true")
-            else:
-                other_flags.append("ASM_CODE_MAIN=true")
+            other_flags.append("ASM_CODE_MAIN=true")
 
         ret = compile_makefile(
             self.kernel,

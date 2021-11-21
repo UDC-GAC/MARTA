@@ -20,24 +20,18 @@
 # Standard libraries
 from __future__ import annotations
 import subprocess
-from typing import ContextManager, Optional, Tuple
+from typing import Optional, Tuple
 import datetime as dt
 import os
 import time
 from pathlib import Path
-import sys
 from tqdm.auto import trange
-from contextlib import contextmanager, redirect_stdout
-
-
-# import warnings
-# warnings.filterwarnings("error")
 
 # Third-party libraries
 import numpy as np
 
 # Local imports
-from marta.utils.marta_utilities import pinfo, pwarning, perror, create_dir_or_pass
+from marta.utils.marta_utilities import pwarning, perror, create_dir_or_pass
 from marta.profiler.logger import Logger
 
 
@@ -82,7 +76,7 @@ class Timing:
         :return: Seconds elapsed
         :rtype: float
         """
-        return dt.timedelta(seconds=t)
+        return dt.timedelta(seconds=int(t))
 
     @staticmethod
     def show_error(line: str, events: list) -> None:
@@ -173,8 +167,9 @@ class Timing:
         """
 
         if nexec < 3:
-            pinfo("Minimum number of executions is 3")
-            nexec = 3
+            Logger.warning(
+                "Consider increasing the number of executions to, at least, 3"
+            )
 
         compiler_flags_suffix = compiler_flags.replace(" ", "_").replace("-", "")
 
@@ -232,6 +227,16 @@ class Timing:
 
         if compute_avg:
             results = np.divide(results, nsteps)
+        else:
+            if nexec != 1:
+                results = np.min(results, axis=0)
+            if isinstance(benchmark_type, list) and len(benchmark_type) > 1:
+                return dict(zip(benchmark_type, results)), 0
+            else:
+                if isinstance(benchmark_type, list):
+                    benchmark_type = benchmark_type[0]
+                return {benchmark_type: results}, 0
+
         if not discard_outliers:
             return results, -1
 

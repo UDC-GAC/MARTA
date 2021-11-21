@@ -2,7 +2,7 @@
       name: "sat_packing"
       type: "regular"
       path: "examples/sat_packing/src/"
-      description: "TBD"
+      description: "MACVETH's random packing model"
       debug: False
       show_progress_bars: True
       preamble:
@@ -34,18 +34,23 @@
                   type: "static"
                   val_type: "numeric"
                   value: "[4096]"
-
               PACKING_TEMPLATE:
                   evaluate: True
                   path: True
                   type: "static"
                   val_type: "string"
-                  #value: "['codes/rvp_float_8elems_7nnz_0_0_0_0_0_0_0.c']"
                   value: "glob.glob('[PATH]codes/*.c')"
           flops: "1"
       execution:
           enabled: True
-          papi_counters: ["UNHALTED_CORE_CYCLES", "INSTRUCTIONS_RETIRED"]
+          papi_counters:
+              [
+                  "UNHALTED_CORE_CYCLES",
+                  "INSTRUCTIONS_RETIRED",
+                  "PAPI_L1_DCM",
+                  "PAPI_L2_DCM",
+                  "PAPI_L3_TCM",
+              ]
           time: False
           tsc: True
           threshold_outliers: 3

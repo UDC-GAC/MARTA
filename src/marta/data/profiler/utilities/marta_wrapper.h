@@ -70,6 +70,11 @@
 
 #define MARTA_TMP_FILE "/tmp/___marta_results.txt"
 
+#define MARTA_FLUSH_CACHE                                                      \
+  polybench_flush_cache();                                                     \
+  __asm volatile("mfence\n\t" : : : "memory");                                 \
+  __asm volatile("lfence\n\t" : : : "memory");
+
 #define MARTA_OPEN_RESULTS_FILE                                                \
   FILE *fp;                                                                    \
   fp = fopen(MARTA_TMP_FILE, "a");                                             \
