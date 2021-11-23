@@ -47,13 +47,14 @@ from marta.utils.marta_utilities import (
     create_directories,
     dump_config_file,
     marta_exit,
+    get_version,
+    print_version,
 )
 from marta.profiler.benchmark import Benchmark, BenchmarkError
 from marta.profiler.kernel import Kernel
 from marta.profiler.project import Project
 from marta.profiler.timing import Timing
 from marta.profiler.logger import Logger
-from marta.version import get_version, print_version
 
 
 class Profiler:
@@ -73,7 +74,7 @@ class Profiler:
         """
         parser = argparse.ArgumentParser(
             prog="marta_profiler",
-            description="simple kernel profiler based on compilation files and a configuration file",
+            description="Micro-architectural profiler based on very simple configurations files.",
             formatter_class=RawTextHelpFormatter,
         )
 
@@ -81,9 +82,14 @@ class Profiler:
             "--version", action="version", version=get_version("Profiler")
         )
 
-        subparsers = parser.add_subparsers(dest="cmd", help="sub-command help")
+        subparsers = parser.add_subparsers(
+            title="subcommands", dest="cmd", help="additional help"
+        )
         parser_project = subparsers.add_parser(
-            "project", help="project help", aliases=["po"]
+            "project",
+            help="project help",
+            aliases=["po"],
+            description="project subcommand is meant to help with the configuration and generation of new projects MARTA-compliant.",
         )
         parser_project.add_argument(
             "-n", "--create", nargs=1, type=str, help="name of the new project",
@@ -103,7 +109,10 @@ class Profiler:
         )
 
         parser_general = subparsers.add_parser(
-            "profile", help="profile help", aliases=["perf"]
+            "profile",
+            help="profile help",
+            aliases=["perf"],
+            description="MARTA requires an input file with the configuration parameters, but some of them can be overwritten at runtime, as described below.",
         )
         required_named = parser_general.add_argument_group("required named arguments")
         required_named.add_argument(

@@ -17,3 +17,4 @@ KDEpy
 dtreeviz
 scipy
 yaspin
+setuptools_scm

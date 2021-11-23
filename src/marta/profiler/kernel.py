@@ -172,7 +172,12 @@ class Kernel:
             print(f"{display_val}|")
             print(line)
 
-        print(f"\nTotal time elapsed: {Timing.to_seconds(Timing.execution_time)}\n")
+        print("\n")
+        print(f"Execution time:      {Timing.to_seconds(Timing.execution_time)}")
+        print(f"Compilation time:    {Timing.to_seconds(Timing.compilation_time)}")
+        print(
+            f"Total time elapsed:  {Timing.to_seconds(Timing.execution_time + Timing.compilation_time)}\n"
+        )
         print("--- END summary")
 
     def check_correctness(self) -> list:
@@ -252,12 +257,18 @@ class Kernel:
             return
         assert isinstance(self.papi_counters, list)
         papi_counter_file = f"{self.get_kernel_path()}/utilities/papi_counters.list"
+        papi_wrapper_counter_file = (
+            f"{self.get_kernel_path()}/utilities/papi_wrapper/lib/papi_counters.list"
+        )
         if len(set(self.papi_counters)) != len(self.papi_counters):
             pwarning("Duplicated counters in PAPI list, skipping them...")
             self.papi_counters = list(set(self.papi_counters))
 
         try:
             with open(papi_counter_file, "w") as f:
+                for ctr in self.papi_counters:
+                    f.write('"' + str(ctr) + '",\n')
+            with open(papi_wrapper_counter_file, "w") as f:
                 for ctr in self.papi_counters:
                     f.write('"' + str(ctr) + '",\n')
         except FileNotFoundError:
@@ -329,11 +340,11 @@ class Kernel:
             local_common_flags += f" -DMARTA_CPU_AFFINITY={self.cpu_affinity} "
 
         # MARTA flags
-        if self.init_data:
-            local_common_flags += f" -DMARTA_INIT_DATA=1 "
         if self.intel_cache_flush:
+            local_common_flags += f" -DMARTA_INTEL_FLUSH_DATA=1 "
+        else:
             local_common_flags += (
-                f" -DMARTA_INTEL_FLUSH_DATA=1 -DPOLYBENCH_NO_FLUSH_CACHE "
+                f" -DMARTA_INTEL_FLUSH_DATA=0 -DPOLYBENCH_NO_FLUSH_CACHE "
             )
 
         other_flags = []
@@ -372,6 +383,7 @@ class Kernel:
 
         if self.multithread:
             other_flags.append("MULTITHREAD=true")
+            local_common_flags += " -fopenmp "
 
         if self.check_dump:
             other_flags.append("DUMP=true")
@@ -469,6 +481,7 @@ class Kernel:
                 self.compute_avg,
                 bin_path=f"{self.get_kernel_path()}/marta_profiler_data/bin",
                 redirect_stdout=self.stdout_redirect,
+                multithread=self.multithread,
             )
             if mtype == "papi":
                 if len(self.papi_counters) == 1:

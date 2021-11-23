@@ -34,8 +34,7 @@ from marta.analyzer.processing import (
     categorize_target_dimension,
     column_strings_to_int,
 )
-from marta.utils.marta_utilities import perror, pinfo, dump_config_file, pwarning
-from marta.version import print_version
+from marta.utils.marta_utilities import perror, pinfo, dump_config_file, pwarning, print_version
 
 
 class Analyzer:

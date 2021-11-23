@@ -29,6 +29,7 @@ from tqdm.auto import trange
 
 # Third-party libraries
 import numpy as np
+import pandas as pd
 
 # Local imports
 from marta.utils.marta_utilities import pwarning, perror, create_dir_or_pass
@@ -122,6 +123,71 @@ class Timing:
             p.wait()
 
     @staticmethod
+    def compute_results(results, threshold_outliers, benchmark_type):
+        res_mean = np.mean(results)
+        res_dev = np.std(results)
+        avg_dev = np.divide(
+            100.0 * res_dev, res_mean, out=np.zeros(res_mean.size), where=res_mean != 0
+        )
+
+        outliers = False
+        for val in range(avg_dev.size):
+            if avg_dev[val] > threshold_outliers:
+                outliers = True
+                Logger.warning(
+                    f"Deviation exceeding threshold: {avg_dev[val]:2.1f}% ({threshold_outliers}%, {benchmark_type.upper()} benchmark)"
+                )
+
+        # Filter values
+        mask = ~(np.abs(results - res_mean) <= threshold_outliers * res_dev)
+        filtered_results = np.where(mask, np.nan, results)
+        mean_results = np.nanmean(filtered_results, axis=0)
+        if outliers and isinstance(mean_results, np.ndarray):
+            Logger.info(
+                f"Mean values after removing outliers: {' '.join(map(lambda x: f'{x:.2f}', mean_results))}"
+            )
+
+        # Retrieve percentage of discarded values
+        discarded_values = float(mask.sum()) / results.size
+        return mean_results, discarded_values
+
+    @staticmethod
+    def compute_multithread(
+        results, compute_avg, nexec, nsteps, benchmark_type
+    ) -> Tuple[Optional[dict], Optional[int]]:
+        df = pd.DataFrame(results)
+        df.set_index(0)
+        df.index.name = "n_thread"
+        if compute_avg:
+            results = df / nsteps
+        else:
+            if nexec != 1:
+                results = df.groupby("n_thread", axis=0).min().reset_index()
+            if isinstance(benchmark_type, list) and len(benchmark_type) > 1:
+                return dict(zip(benchmark_type, results)), 0
+            else:
+                if isinstance(benchmark_type, list):
+                    benchmark_type = benchmark_type[0]
+                return {benchmark_type: results}, 0
+        return results, 0
+
+    @staticmethod
+    def read_results(tmp_file, benchmark_type):
+        try:
+            results = np.loadtxt(tmp_file, delimiter=",")
+        except ValueError:
+            line = ""
+            with open(tmp_file) as f:
+                line = " ".join([l for l in f if "FAILED" in l])
+            Timing.show_error(line, benchmark_type)
+            return None, None
+        except Exception as E:
+            perror(f"Something went wrong when executing: {E}")
+        except RuntimeWarning as R:
+            perror(f"Treating warnings as error: {R}")
+        return results
+
+    @staticmethod
     def measure_benchmark(
         code: str,
         benchmark_type: str,
@@ -137,6 +203,7 @@ class Timing:
         bin_path: str = "",
         tmp_file: str = "",
         redirect_stdout: bool = False,
+        multithread: bool = False,
     ) -> Tuple[Optional[dict], Optional[int]]:
         """Execute and time given benchmark nexec times
 
@@ -170,15 +237,15 @@ class Timing:
             Logger.warning(
                 "Consider increasing the number of executions to, at least, 3"
             )
-
         compiler_flags_suffix = compiler_flags.replace(" ", "_").replace("-", "")
-
         if (
             bin_file != ""
             and not bin_file.startswith("./")
             and not os.path.exists(bin_file)
         ):
             bin_file = [f"./{bin_file}"]
+
+        env = os.environ.copy()
         if bin_file == "":
             bin_file = [
                 f"./{bin_path}/{code}_{compiler}_{compiler_flags_suffix}_{benchmark_type}.o",
@@ -186,7 +253,22 @@ class Timing:
             ]
             if exec_opts != "" and isinstance(exec_opts, str):
                 exec_opts_list = exec_opts.split(" ")
-                bin_file = [*exec_opts_list] + bin_file
+                commands = []
+                environment_vars = []
+                for e in exec_opts_list:
+                    if not "=" in e:
+                        commands.append(e)
+                    else:
+                        environment_vars.append(e)
+                environment_vars = [i.split("=") for i in environment_vars]
+                key_list = []
+                val_list = []
+                for k, v in environment_vars:
+                    key_list.append(k)
+                    val_list.append(v)
+                bin_file = [*commands] + bin_file
+                env.update(dict(zip(key_list, val_list)))
+
         if tmp_file == "":
             tmp_file = f"/tmp/___marta_results.txt"
 
@@ -194,36 +276,30 @@ class Timing:
             os.remove(tmp_file)
         Path(tmp_file).touch()
 
-        def measure(file=None, f=lambda: None):
+        def __measure(env: dict = {}, file=None, f=lambda: None):
             for _ in trange(
                 nexec, leave=False, desc=f"{benchmark_type.upper():4} exec."
             ):
-                p = subprocess.Popen(bin_file, stdout=file)
+                p = subprocess.Popen(bin_file, stdout=file, env=env)
                 p.wait()
                 f
 
         if isinstance(redirect_stdout, str):
             with open(redirect_stdout, "w") as f:
-                measure(f, f.flush())
+                __measure(env=env, file=f, f=f.flush())
         else:
-            measure()
+            __measure(env=env)
 
-        try:
-            results = np.loadtxt(tmp_file, delimiter=",")
-        except ValueError:
-            line = ""
-            with open(tmp_file) as f:
-                line = " ".join([l for l in f if "FAILED" in l])
-            Timing.show_error(line, benchmark_type)
-            return None, None
-        except Exception as E:
-            perror(f"Something went wrong when executing: {E}")
-        except RuntimeWarning as R:
-            perror(f"Treating warnings as error: {R}")
+        results = Timing.read_results(tmp_file, benchmark_type)
 
         # Empty files...
         if not isinstance(results, np.ndarray):
             return None, None
+
+        if multithread:
+            return Timing.compute_multithread(
+                results, compute_avg, nexec, nsteps, benchmark_type
+            )
 
         if compute_avg:
             results = np.divide(results, nsteps)
@@ -240,31 +316,9 @@ class Timing:
         if not discard_outliers:
             return results, -1
 
-        res_mean = np.mean(results)
-        res_dev = np.std(results)
-        avg_dev = np.divide(
-            100.0 * res_dev, res_mean, out=np.zeros(res_mean.size), where=res_mean != 0
+        mean_results, discarded_values = Timing.compute_results(
+            results, threshold_outliers, benchmark_type
         )
-
-        outliers = False
-        for val in range(avg_dev.size):
-            if avg_dev[val] > threshold_outliers:
-                outliers = True
-                Logger.warning(
-                    f"Deviation exceeding threshold: {avg_dev[val]:2.1f}% ({threshold_outliers}%, {benchmark_type.upper()} benchmark)"
-                )
-
-        # Filter values
-        mask = ~(np.abs(results - res_mean) <= threshold_outliers * res_dev)
-        filtered_results = np.where(mask, np.nan, results)
-        mean_results = np.nanmean(filtered_results, axis=0)
-        if outliers and isinstance(mean_results, np.ndarray):
-            Logger.info(
-                f"Mean values after removing outliers: {' '.join(map(lambda x: f'{x:.2f}', mean_results))}"
-            )
-
-        # Retrieve percentage of discarded values
-        discarded_values = float(mask.sum()) / results.size
 
         # Return mean values in a dictionary fashion
         if isinstance(benchmark_type, list) and len(benchmark_type) > 1:
