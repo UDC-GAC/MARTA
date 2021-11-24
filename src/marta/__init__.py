@@ -18,17 +18,30 @@
 # -*- coding: utf-8 -*-
 
 import os
-from importlib.metadata import version, PackageNotFoundError
+import sys
 
-try:
-    __version__ = version("package-name")
-except PackageNotFoundError:
-    __version__ = "unknown"
+# Python <3.8 does not have importlib.metadata
+if sys.version_info[1] < 8:
+    from pkg_resources import get_distribution, DistributionNotFound
+
+    try:
+        __version__ = get_distribution("package-name").version
+    except DistributionNotFound:
+        __version__ = "unknown"
+else:
+    from importlib.metadata import version, PackageNotFoundError
+
+    try:
+        __version__ = version("package-name")
+    except PackageNotFoundError:
+        __version__ = "unknown"
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 _ROOT = os.path.abspath(os.path.dirname(__file__))
 
+
 def get_data(path):
     return os.path.join(_ROOT, "data", path)
+
 
 __all__ = ["__version__", "get_data"]
