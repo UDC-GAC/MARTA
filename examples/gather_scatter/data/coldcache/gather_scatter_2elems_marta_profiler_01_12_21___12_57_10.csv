@@ -1,0 +1,7 @@
+compiler,compiler_flags,ELEMS,OFFSET,IDX0,IDX1,INSTRUCTIONS_RETIRED,CFG,CL_IDX0,CL_IDX1,DiscardedpapiValues,DiscardedtscValues,GATHER,N_CL,N_SET,SET_IDX0,SET_IDX1,loop_interchange,loops_vectorized,tsc,vgatherdps_XMM_GPR_GPR_MEM_XMM,vmovaps_XMM_XMM,vxorps_XMM_XMM_XMM,SCATTER,kmovb_GPR_GPR,vmovq_XMM_GPR,vscatterdps_MEM_XMM,overhead_instructions,overhead_loop
+gcc-11, -march=native -mtune=native -Ofast ,2,65536,0,1,6.731,-DGATHER,0.0,0.0,0.0,0.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,116.80019999999999,1.0,1.0,1.0,0.0,0.0,0.0,0.0,3,0.036
+gcc-11, -march=native -mtune=native -Ofast ,2,65536,0,1,7.733199999999999,-DSCATTER,0.0,0.0,0.0,0.0,0.0,1.0,1.0,0.0,0.0,0.0,0.0,207.878,0.0,0.0,1.0,1.0,1.0,1.0,1.0,3,0.036
+gcc-11, -march=native -mtune=native -Ofast ,2,65536,0,8,6.731,-DGATHER,0.0,0.0,0.0,0.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,117.06040000000003,1.0,1.0,1.0,0.0,0.0,0.0,0.0,3,0.036
+gcc-11, -march=native -mtune=native -Ofast ,2,65536,0,8,7.733,-DSCATTER,0.0,0.0,0.1,0.0,0.0,1.0,1.0,0.0,0.0,0.0,0.0,204.32959999999997,0.0,0.0,1.0,1.0,1.0,1.0,1.0,3,0.036
+gcc-11, -march=native -mtune=native -Ofast ,2,65536,0,16,6.731,-DGATHER,0.0,1.0,0.0,0.0,1.0,2.0,2.0,0.0,1.0,0.0,0.0,118.5666,1.0,1.0,1.0,0.0,0.0,0.0,0.0,3,0.036
+gcc-11, -march=native -mtune=native -Ofast ,2,65536,0,16,7.733199999999999,-DSCATTER,0.0,1.0,0.0,0.0,0.0,2.0,2.0,0.0,1.0,0.0,0.0,214.709,0.0,0.0,1.0,1.0,1.0,1.0,1.0,3,0.036
