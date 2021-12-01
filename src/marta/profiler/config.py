@@ -55,6 +55,7 @@ def parse_kernel_options(config: dict) -> dict:
     try:
         config_config = config["kernel"]["configuration"]
         config_exec = config["kernel"]["execution"]
+        config_output = config["kernel"]["output"]
     except KeyError:
         pexcept(
             "Check your configuration file: 'configuration' and 'execution' keys could be missing...",
@@ -147,7 +148,7 @@ def parse_kernel_options(config: dict) -> dict:
                 "'papi_counters' must be a list of hardware events!", MARTAConfigError
             )
     cfg["exec_args"] = config_exec.get("prefix", "")
-    cfg["output"] = config_exec.get("output", {})
+    cfg["output"] = config_output
     return cfg
 
 

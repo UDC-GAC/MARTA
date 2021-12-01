@@ -582,7 +582,7 @@ class Kernel:
         self.check_correctness()
 
     def get_output_filename(self):
-        fname = self.output.get("name", self.kernel)
+        fname = f'{self.kernel}_{self.output.get("name", self.kernel)}'
         tstamp = dt.now().strftime("%d_%m_%y___%H_%M_%S")
         output_filename = (
             f"{fname}_marta_profiler_{tstamp}.{self.output.get('format', 'csv')}"

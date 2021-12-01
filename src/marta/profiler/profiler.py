@@ -127,7 +127,11 @@ class Profiler:
         optional_named = parser_general.add_argument_group("optional named arguments")
 
         optional_named.add_argument(
-            "-o", "--output", help="output results file name", required=False
+            "-o",
+            "--output",
+            help="output results file name",
+            required=False,
+            default=None,
         )
 
         optional_named.add_argument(
@@ -370,10 +374,9 @@ class Profiler:
         generate_report = kernel.emit_report() | self.args.report
         output_filename = (
             kernel.get_output_filename()
-            if self.args.output is None
+            if self.args.output == None
             else self.args.output
         )
-
         if isinstance(output_cols, str) and output_cols == "all":
             if isinstance(params_kernel, dict):
                 output_cols = list(params_kernel.keys())
