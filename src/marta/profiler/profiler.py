@@ -412,7 +412,7 @@ class Profiler:
             make_stdout = "/tmp/___marta_stdout.log"
             make_stderr = "/tmp/___marta_stderr.log"
 
-        create_directories(root=f"{kernel.get_kernel_path()}/marta_profiler_data/")
+        create_directories(root=kernel.get_kernel_path("/marta_profiler_data/"))
         exit_on_error = not self.args.no_quit_on_error
         overhead_loop_tsc = self.get_loop_overhead(kernel, exit_on_error)
         Profiler.clean_previous_files()
@@ -517,9 +517,7 @@ class Profiler:
         if self.args.summary != None:
             kernel.print_summary(df, self.args.summary[0])
         kernel.finalize_actions()
-        Logger.write_to_file(
-            f"{kernel.get_kernel_path()}/marta_profiler_data/marta.log"
-        )
+        Logger.write_to_file(kernel.get_kernel_path("/marta_profiler_data/marta.log"))
         return 0
 
     def process_project_args(self):

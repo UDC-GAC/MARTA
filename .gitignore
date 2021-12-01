@@ -17,6 +17,9 @@ __pycache__/
 tmp/
 log/
 
+# _version.py
+src/marta/_version.py
+
 # benchmarks
 examples/*/src/utilities
 examples/*/src/marta_profiler_data

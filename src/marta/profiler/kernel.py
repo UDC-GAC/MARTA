@@ -236,7 +236,7 @@ class Kernel:
         except ValueError:
             pass
 
-        filename = f"{self.get_kernel_path()}/marta_profiler_data/{filename}"
+        filename = self.get_kernel_path(f"/marta_profiler_data/{filename}")
         if output_format == "html":
             df.to_html(filename, index=False)
         elif output_format == "json":
@@ -256,9 +256,9 @@ class Kernel:
         if self.papi_counters == None:
             return
         assert isinstance(self.papi_counters, list)
-        papi_counter_file = f"{self.get_kernel_path()}/utilities/papi_counters.list"
-        papi_wrapper_counter_file = (
-            f"{self.get_kernel_path()}/utilities/papi_wrapper/lib/papi_counters.list"
+        papi_counter_file = self.get_kernel_path(f"/utilities/papi_counters.list")
+        papi_wrapper_counter_file = self.get_kernel_path(
+            "/utilities/papi_wrapper/lib/papi_counters.list"
         )
         if len(set(self.papi_counters)) != len(self.papi_counters):
             pwarning("Duplicated counters in PAPI list, skipping them...")
@@ -268,13 +268,14 @@ class Kernel:
             with open(papi_counter_file, "w") as f:
                 for ctr in self.papi_counters:
                     f.write('"' + str(ctr) + '",\n')
-            with open(papi_wrapper_counter_file, "w") as f:
-                for ctr in self.papi_counters:
-                    f.write('"' + str(ctr) + '",\n')
-        except FileNotFoundError:
-            perror("Package corrupted: papi_counters.list file not found")
-        except Exception:
-            perror("PAPI counters file could not have been set.")
+            if self.multithread:
+                with open(papi_wrapper_counter_file, "w") as f:
+                    for ctr in self.papi_counters:
+                        f.write('"' + str(ctr) + '",\n')
+        except FileNotFoundError as f:
+            perror(f"Package corrupted: papi_counters.list file not found ('{f}')")
+        except Exception as e:
+            perror(f"PAPI counters file could not have been set: {e}")
 
     @staticmethod
     def compute_flops(flops: float, avg_time: Union[float, int, str]) -> float:
@@ -365,7 +366,6 @@ class Kernel:
             if self.macveth_target != "":
                 try:
                     macveth_target = re.sub(".c$", "", tmp_pickle[self.macveth_target])
-                    # macveth_target = re.sub(".spf$", "", macveth_target)
                     other_flags.append(f" MACVETH_TARGET={macveth_target}")
                 except KeyError:
                     perror("Bad key for MACVETH target")
@@ -434,13 +434,17 @@ class Kernel:
         if self.asm_count:
             asm_dict = ASMParserFactory.parse_asm(
                 self.asm_syntax,
-                f"{self.get_kernel_path()}/marta_profiler_data/asm_codes/{base_filename}.s",
+                self.get_kernel_path(
+                    f"/marta_profiler_data/asm_codes/{base_filename}.s"
+                ),
             )
             data.update(asm_dict)
 
         if self.static_analysis:
             self.S.perform_analysis(
-                f"{self.get_kernel_path()}/marta_profiler_data/asm_codes/{base_filename}.s",
+                self.get_kernel_path(
+                    f"/marta_profiler_data/asm_codes/{base_filename}.s"
+                ),
                 self.nsteps,
             )
             data.update(self.S.get_data())
@@ -454,7 +458,7 @@ class Kernel:
                 self.exec_args,
                 compiler,
                 compiler_flags,
-                bin_path=f"{self.get_kernel_path()}/",
+                bin_path=self.get_kernel_path("/"),
             )
 
         measurements = {
@@ -479,7 +483,7 @@ class Kernel:
                 self.threshold_outliers,
                 self.discard_outliers,
                 self.compute_avg,
-                bin_path=f"{self.get_kernel_path()}/marta_profiler_data/bin",
+                bin_path=self.get_kernel_path("/marta_profiler_data/bin"),
                 redirect_stdout=self.stdout_redirect,
                 multithread=self.multithread,
             )
@@ -602,9 +606,9 @@ class Kernel:
             self.system.reset()
             self.system.check_errors("reset")
 
-    def get_kernel_path(self):
+    def get_kernel_path(self, path: str = ""):
         assert hasattr(self, "path_kernel")
-        return self.path_kernel
+        return self.path_kernel + path
 
     def get_output_columns(self):
         return self.output.get("columns", "all")
