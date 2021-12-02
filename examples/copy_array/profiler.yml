@@ -1,0 +1,53 @@
+- kernel:
+      name: "copy_array"
+      type: "regular"
+      path: "src"
+      description: "Default setup for copy_array"
+      debug: False
+      show_progress_bars: True
+      #   preamble:
+      #       command: "sudo utilities/setup_freq.sh && sudo utilities/disable_turbo_intel.sh"
+      finalize:
+          command: "echo 'EXPERIMENT copy_array FINISHED :D!'"
+      compilation:
+          enabled: True
+          processes: 16
+          language: "C"
+          compiler_flags: { "gcc": [" -march=native -mtune=native -mavx2 "] }
+          main_src: "main.c"
+          common_flags: " -O3 "
+          kernel_inlined: True
+          asm_analysis:
+              syntax: "att"
+              count_ins: False
+              static_analysis: "llvm-mca"
+          debug: False
+      configuration:
+          kernel_cfg: [" "] # here you can use -D flags, e.g. -DKERNEL_1
+          d_features: #
+              N:
+                  evaluate: True
+                  type: "static"
+                  val_type: "numeric" # numeric or string
+                  value: "[1024,2048,4196,8192]" # you can define a pythonic iterator
+          flops:
+              "1" # here you can use a formula using numpy functions and the
+              # names used in d_features, e.g. flops: "np.divide(N*2,3)"
+      execution:
+          enabled: True
+          papi_counters: ["UNHALTED_CORE_CYCLES", "INSTRUCTIONS_RETIRED"]
+          time: False # measure time
+          tsc: True
+          threshold_outliers: 3 # in percentage
+          discard_outliers: True # remove outliers from average
+          compute_avg: True # divide values by nsteps
+          nexec: 7
+          nsteps: 100000
+          cpu_affinity: 10
+          prefix: "numactl -p 0 taskset -c 10"
+      output:
+          name: "default"
+          format: "csv" # csv, html, json
+          columns: "all"
+          report: True
+          verbose: True

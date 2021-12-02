@@ -119,6 +119,8 @@ class Kernel:
         headers = ""
 
         d = []
+        if "all" in dimensions:
+            dimensions = df.columns
         if "PAPI_COUNTERS" in dimensions:
             idx = dimensions.index("PAPI_COUNTERS")
             if self.papi_counters != None and isinstance(self.papi_counters, list):

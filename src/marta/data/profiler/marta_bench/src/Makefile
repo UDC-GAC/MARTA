@@ -2,4 +2,4 @@ BINARY_NAME=main
 MAIN_SRC=main.c
 TARGET=benchmark
 
-include ../MakeFlags.mk
+include MARTA.mk
