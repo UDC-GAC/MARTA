@@ -24,7 +24,6 @@ import shutil
 import filecmp
 import pkg_resources
 from io import StringIO
-from typing import List
 
 # Third-party libraries
 from colorama import Fore, Style
@@ -119,27 +118,6 @@ def check_marta_files(path: str):
 
 def get_name_from_dir(path_file):
     return path_file.split("/")[-1]
-
-
-def dump_config_file(data_path: str) -> List[str]:
-    """
-    Read config template line by line
-
-    :return: List of strings with all lines
-    :rtype: list
-    """
-    config_file = get_data(data_path)
-    try:
-        f = open(config_file)
-    except FileNotFoundError:
-        perror("Package corrupted: template.yml missing")
-    except IOError:
-        perror("I/O error...")
-    except Exception:
-        perror("Something went wrong when dumping file")
-    else:
-        with f:
-            return f.readlines()
 
 
 class CaptureOutput(list):

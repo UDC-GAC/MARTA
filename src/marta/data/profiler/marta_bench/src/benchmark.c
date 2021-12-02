@@ -1,5 +1,5 @@
 #ifndef NO_HEADER
-#include "marta_bench.h"
+#include "benchmark.h"
 #endif
 
 void kernel(float *restrict A, float *restrict B, float *restrict C) {

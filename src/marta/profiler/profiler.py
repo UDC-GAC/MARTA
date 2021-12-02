@@ -45,7 +45,6 @@ from marta.utils.marta_utilities import (
     pwarning,
     pinfo,
     create_directories,
-    dump_config_file,
     marta_exit,
     get_version,
     print_version,
@@ -92,7 +91,13 @@ class Profiler:
             description="project subcommand is meant to help with the configuration and generation of new projects MARTA-compliant.",
         )
         parser_project.add_argument(
-            "-n", "--create", nargs=1, type=str, help="name of the new project",
+            "-n", "--name", nargs=1, type=str, help="name of the new project",
+        )
+        parser_project.add_argument(
+            "-u",
+            "--microbenchmark",
+            action="store_true",
+            help="set new project as micro-benchmark",
         )
         parser_project.add_argument(
             "-c",
@@ -107,7 +112,6 @@ class Profiler:
             action="store_true",
             help="dump a sample configuration file with all needed files for profiler to work properly",
         )
-
         parser_general = subparsers.add_parser(
             "profile",
             help="profile help",
@@ -524,16 +528,17 @@ class Profiler:
         """Process arguments starting with project
         """
         if self.args.dump_config_file:
-            for line in dump_config_file("profiler/template.yml"):
+            for line in Project.dump_config_file("profiler/template.yml"):
                 print(line, end="")
             marta_exit(0)
 
-        if self.args.create is not None:
-            code = Project.generate_new_project(self.args.name)
+        if self.args.name is not None:
+            project_name = self.args.name[0]
+            code = Project.generate_new_project(project_name)
             if code != 0:
                 perror("Something went wrong...", code)
             pinfo(
-                f"Project generated in folder '{self.args.name}'. Configuration template in current file as '{self.args.name}_template.yml'"
+                f"Project generated in folder '{project_name}'. Configuration template in current file as '{project_name}_template.yml'"
             )
             marta_exit(0)
 

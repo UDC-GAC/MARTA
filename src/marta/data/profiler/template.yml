@@ -1,17 +1,14 @@
 - kernel:
-      name: "marta_bench"
+      name: "##NAME##"
       type: "regular"
-      path: "marta_bench"
-      description: "Setup for inital experiment!"
+      path: "##NAME##"
+      description: "Default setup for ##NAME##"
       debug: False
       show_progress_bars: True
       preamble:
           command: "sudo utilities/setup_freq.sh && sudo utilities/disable_turbo_intel.sh"
       finalize:
-          clean_tmp_files: False
-          clean_asm_files: False
-          clean_bin_files: False
-          command: "echo 'EXPERIMENT FINISHED :D!'"
+          command: "echo 'EXPERIMENT ##NAME## FINISHED :D!'"
       compilation:
           enabled: True
           processes: 16
@@ -49,7 +46,7 @@
           cpu_affinity: 10
           prefix: "numactl -p 0 taskset -c 10"
       output:
-          name: "intel_xeon_silver"
+          name: "default"
           format: "csv" # csv, html, json
           columns: "all"
           report: True

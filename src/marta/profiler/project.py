@@ -19,6 +19,7 @@
 
 # Standard libraries
 import os
+from typing import List
 
 # Third-party libraries
 import shutil
@@ -42,14 +43,33 @@ class Project:
         except Exception:
             perror(f"Something went wrong when creating new project '{name}'")
         src = get_data(f"profiler/template.yml")
-        dst = f"{os.getcwd()}/{name}_template.yml"
-        try:
-            shutil.copyfile(src, dst)
-        except FileExistsError:
-            perror(f"'{name}_template.yml' already exists!")
-        except FileNotFoundError:
-            perror(f"Package corrupted: marta_{type} files are missing")
-        except Exception as e:
-            perror(f"Something went wrong when creating new project '{name}': {e}")
+        dst = f"{os.getcwd()}/{name}/profiler.yml"
+        lines = Project.dump_config_file(src, name)
+        with open(dst, "w") as f:
+            f.writelines(lines)
 
         return 0
+
+    @staticmethod
+    def dump_config_file(data_path: str, name: str = "marta_bench") -> List[str]:
+        """
+        Read config template line by line
+
+        :return: List of strings with all lines
+        :rtype: list
+        """
+        config_file = get_data(data_path)
+        try:
+            f = open(config_file)
+        except FileNotFoundError:
+            perror("Package corrupted: template.yml missing")
+        except IOError:
+            perror("I/O error...")
+        except Exception:
+            perror("Something went wrong when dumping file")
+        else:
+            with f:
+                lines = []
+                for line in f.readlines():
+                    lines.append(line.replace("##NAME##", name))
+                return lines
