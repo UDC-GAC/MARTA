@@ -523,7 +523,7 @@ class Profiler:
     def process_project_args(self):
         """Process arguments starting with project
         """
-        if self.args.dump_config_file is not None:
+        if self.args.dump_config_file:
             for line in dump_config_file("profiler/template.yml"):
                 print(line, end="")
             marta_exit(0)
@@ -538,7 +538,7 @@ class Profiler:
             marta_exit(0)
 
         # Sanity-checks
-        if self.args.check_config_file is not None:
+        if self.args.check_config_file:
             kernel_setup = get_kernel_config(self.args.check_config_file[0])
             if not check_correctness_file(kernel_setup):
                 perror("Configuration file is not correct")
@@ -547,6 +547,9 @@ class Profiler:
                     "Configuration file structure is correct (compilation files might be wrong)"
                 )
                 marta_exit(0)
+
+        self.parser.print_help(sys.stderr)
+        marta_exit(1)
 
     def __init__(self, list_args):
         """
@@ -572,7 +575,6 @@ class Profiler:
 
         if self.args.cmd in project_subcmd_alias:
             self.process_project_args()
-            marta_exit(0)
 
         kernel_setup = get_kernel_config(self.args.input[0])
         if not self.args.quiet:
