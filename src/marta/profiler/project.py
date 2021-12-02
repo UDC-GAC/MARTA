@@ -19,14 +19,13 @@
 
 # Standard libraries
 import os
-from typing import List
 
 # Third-party libraries
 import shutil
 
 # Local imports
 from marta import get_data
-from marta.utils.marta_utilities import perror
+from marta.utils.marta_utilities import perror, dump_config_file
 
 
 class Project:
@@ -44,32 +43,8 @@ class Project:
             perror(f"Something went wrong when creating new project '{name}'")
         src = get_data(f"profiler/template.yml")
         dst = f"{os.getcwd()}/{name}/profiler.yml"
-        lines = Project.dump_config_file(src, name)
+        lines = dump_config_file(src, name)
         with open(dst, "w") as f:
             f.writelines(lines)
 
         return 0
-
-    @staticmethod
-    def dump_config_file(data_path: str, name: str = "marta_bench") -> List[str]:
-        """
-        Read config template line by line
-
-        :return: List of strings with all lines
-        :rtype: list
-        """
-        config_file = get_data(data_path)
-        try:
-            f = open(config_file)
-        except FileNotFoundError:
-            perror("Package corrupted: template.yml missing")
-        except IOError:
-            perror("I/O error...")
-        except Exception:
-            perror("Something went wrong when dumping file")
-        else:
-            with f:
-                lines = []
-                for line in f.readlines():
-                    lines.append(line.replace("##NAME##", name))
-                return lines

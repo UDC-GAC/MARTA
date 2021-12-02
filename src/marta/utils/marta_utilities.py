@@ -24,6 +24,7 @@ import shutil
 import filecmp
 import pkg_resources
 from io import StringIO
+from typing import List
 
 # Third-party libraries
 from colorama import Fore, Style
@@ -83,6 +84,30 @@ def create_directories(asm_dir="asm_codes", bin_dir="bin", root="") -> None:
     create_dir_or_pass(root + asm_dir)
     create_dir_or_pass(root + bin_dir)
     create_dir_or_pass(root + "dumps")
+
+
+def dump_config_file(data_path: str, name: str = "marta_bench") -> List[str]:
+    """
+    Read config template line by line
+
+    :return: List of strings with all lines
+    :rtype: list
+    """
+    config_file = get_data(data_path)
+    try:
+        f = open(config_file)
+    except FileNotFoundError:
+        perror("Package corrupted: template.yml missing")
+    except IOError:
+        perror("I/O error...")
+    except Exception:
+        perror("Something went wrong when dumping file")
+    else:
+        with f:
+            lines = []
+            for line in f.readlines():
+                lines.append(line.replace("##NAME##", name))
+            return lines
 
 
 def check_marta_files(path: str):

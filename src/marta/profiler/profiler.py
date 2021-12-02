@@ -48,6 +48,7 @@ from marta.utils.marta_utilities import (
     marta_exit,
     get_version,
     print_version,
+    dump_config_file,
 )
 from marta.profiler.benchmark import Benchmark, BenchmarkError
 from marta.profiler.kernel import Kernel
@@ -528,7 +529,7 @@ class Profiler:
         """Process arguments starting with project
         """
         if self.args.dump_config_file:
-            for line in Project.dump_config_file("profiler/template.yml"):
+            for line in dump_config_file("profiler/template.yml"):
                 print(line, end="")
             marta_exit(0)
 
