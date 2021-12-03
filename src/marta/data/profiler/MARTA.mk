@@ -216,7 +216,7 @@ asm_code_main:
 	$(V)cp $(MAIN_FILE) $(TMP_SRC)
 	$(V)$(CC) $(FLAGS_MAIN) $(TIMING_FLAGS) $(TMP_SRC) -masm=$(ASM_SYNTAX) -S
 	$(V)mv $(TMP_ASM) $(BASE_ASM_NAME).s
-	$(V)rm $(TMP_SRC)
+	$(V)rm -f $(TMP_SRC) polybench.s
 
 # Compile assembly code
 asm_code_custom:

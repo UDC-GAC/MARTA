@@ -1,6 +1,6 @@
 - kernel:
       name: "##NAME##"
-      type: "micro"
+      type: "asm"
       path: "src"
       description: "Default setup for ##NAME##"
       debug: False
@@ -23,16 +23,9 @@
               static_analysis: "llvm-mca"
           debug: False
       configuration:
-          kernel_cfg: [" "] # here you can use -D flags, e.g. -DKERNEL_1
-          d_features: #
-              N:
-                  evaluate: True
-                  type: "static"
-                  val_type: "numeric" # numeric or string
-                  value: "[1024,2048,4196,8192]" # you can define a pythonic iterator
-          flops:
-              "1" # here you can use a formula using numpy functions and the
-              # names used in d_features, e.g. flops: "np.divide(N*2,3)"
+          kernel_cfg: [""] # here you can use -D flags, e.g. -DKERNEL_1
+          asm_init: [""]
+          asm_body: [""]
       execution:
           enabled: True
           papi_counters: ["UNHALTED_CORE_CYCLES", "INSTRUCTIONS_RETIRED"]

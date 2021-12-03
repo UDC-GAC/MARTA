@@ -1,7 +1,7 @@
 - kernel:
       name: "##NAME##"
       type: "regular"
-      path: "##NAME##"
+      path: "src"
       description: "Default setup for ##NAME##"
       debug: False
       show_progress_bars: True

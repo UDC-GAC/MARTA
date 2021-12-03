@@ -35,8 +35,10 @@ def parse_kernel_options(config: dict) -> dict:
     except KeyError:
         pexcept("'name' key is missing!", MARTAConfigError)
     cfg["bench_type"] = config["kernel"].get("type", "regular")
-    if cfg["bench_type"] not in ["regular", "micro"]:
-        pexcept("type of benchmarking must be 'regular' or 'micro'", MARTAConfigError)
+    if cfg["bench_type"] not in ["regular", "micro", "asm"]:
+        pexcept(
+            "type of benchmarking must be 'regular', 'micro' or 'asm'", MARTAConfigError
+        )
     cfg["descr"] = config["kernel"].get("description", "")
     try:
         cfg["path_kernel"] = config["kernel"].get("path", ".")

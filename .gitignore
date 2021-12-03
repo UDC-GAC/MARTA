@@ -2,7 +2,6 @@
 __*
 !__init__.py
 !__main__.py
-!__version__
 *.list
 macveth_output.c*
 codelet*.c

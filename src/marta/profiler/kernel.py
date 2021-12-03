@@ -117,9 +117,8 @@ class Kernel:
         )
         line = ""
         headers = ""
-
         d = []
-        if "all" in dimensions:
+        if "all" in dimensions or len(dimensions) == 0:
             dimensions = df.columns
         if "PAPI_COUNTERS" in dimensions:
             idx = dimensions.index("PAPI_COUNTERS")
@@ -360,11 +359,7 @@ class Kernel:
             local_common_flags += " -DMACVETH=1 "
             other_flags.append("MACVETH=true")
             other_flags.append(f"MACVETH_PATH={self.macveth_path}")
-            # FIXME:
-            # other_flags.append(f"MACVETH_FLAGS='{self.macveth_flags}'")
-            # other_flags.append(
-            #    f"MACVETH_FLAGS=''"
-            # )
+            other_flags.append(f"MACVETH_FLAGS={self.macveth_flags}")
             if self.macveth_target != "":
                 try:
                     macveth_target = re.sub(".c$", "", tmp_pickle[self.macveth_target])
