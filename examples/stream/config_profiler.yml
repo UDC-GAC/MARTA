@@ -17,7 +17,7 @@
           enabled: True
           processes: 64
           language: "C"
-          compiler_flags: { "gcc": [" -march=native -O3 -DTUNED "] }
+          compiler_flags: { "gcc": [" -march=native -O3 -DTUNED"] }
           main_src: "stream.c"
           loop_type: C # if you choose "asm" loop type it may cause SIGSEV as it uses EDX register
           kernel_inlined: True
@@ -31,26 +31,55 @@
                   evaluate: True
                   type: "static"
                   val_type: "numeric"
-                  value: "[0]"
+                  value: "[8]"
               STREAM_ARRAY_SIZE:
                   evaluate: True
                   type: "static"
                   val_type: "numeric"
                   value: "[33554432]"
+              ADD_VERSION:
+                  evaluate: True
+                  type: "static"
+                  val_type: "numeric"
+                  value: "list(range(6))"
+                    #value: "[1]"
+              ASSIGNMENT_VERSION:
+                  evaluate: True
+                  type: "static"
+                  val_type: "numeric"
+                  value: "list(range(2))"
+                    #value: "[0]"
+              STRIDE:
+                  evaluate: True
+                  type: "static"
+                  val_type: "numeric"
+                  value: "[1,2,4,8,16,32,64,128,256,512,1024,2*1024,4*1024,8*1024,16*1024,32*1024,64*1024]"
+                    #value: "[128]"
+              SW_PREFETCH:
+                  evaluate: True
+                  type: "static"
+                  val_type: "numeric"
+                    #value: "[0,1,2,4,8,16,32,64,128,256,512]"
+                  value: "[0]"
           derived:
               BANDWIDTH:
                   type: single
                   variables: ["tsc", "STREAM_ARRAY_SIZE"]
-                  expression: (3 * VAR_1 * 8) / (VAR_0/(2.1)) # FIXME
+                  expression: (3 * VAR_1 * 8) / (VAR_0/3.4) #3.4GHz is the base freq of Ryzen 5950X
       execution:
           stdout_redirect: "/tmp/TESTING_OUTPUT_MKS"
           enabled: True
           time: False
+            #          papi_counters: ["HARDWARE_PREFETCH_DATA_CACHE_FILLS:LCL_L2", "HARDWARE_PREFETCH_DATA_CACHE_FILLS:MEM_IO_LCL", "perf::L1-DCACHE-PREFETCHES"]
+            #papi_counters: ["DEMAND_DATA_CACHE_FILLS_FROM_SYSTEM:LCL_L2","DEMAND_DATA_CACHE_FILLS_FROM_SYSTEM:INT_CACHE","DEMAND_DATA_CACHE_FILLS_FROM_SYSTEM:EXT_CACHE_LCL","DEMAND_DATA_CACHE_FILLS_FROM_SYSTEM:MEM_IO_LCL","DEMAND_DATA_CACHE_FILLS_FROM_SYSTEM:EXT_CACHE_RMT","DEMAND_DATA_CACHE_FILLS_FROM_SYSTEM:MEM_IO_RMT"]
+          papi_counters: ["DEMAND_DATA_CACHE_FILLS_FROM_SYSTEM:LCL_L2","DEMAND_DATA_CACHE_FILLS_FROM_SYSTEM:INT_CACHE","DEMAND_DATA_CACHE_FILLS_FROM_SYSTEM:MEM_IO_LCL","DEMAND_DATA_CACHE_FILLS_FROM_SYSTEM:EXT_CACHE_LCL","DEMAND_DATA_CACHE_FILLS_FROM_SYSTEM:EXT_CACHE_RMT","DEMAND_DATA_CACHE_FILLS_FROM_SYSTEM:MEM_IO_RMT"]
+            #                          "HARDWARE_PREFETCH_DATA_CACHE_FILLS:LCL_L2","HARDWARE_PREFETCH_DATA_CACHE_FILLS:INT_CACHE","HARDWARE_PREFETCH_DATA_CACHE_FILLS:MEM_IO_LCL",
+                          #"SOFTWARE_PREFETCH_DATA_CACHE_FILLS:LCL_L2","SOFTWARE_PREFETCH_DATA_CACHE_FILLS:INT_CACHE","SOFTWARE_PREFETCH_DATA_CACHE_FILLS:MEM_IO_LCL"]
           tsc: True
           threshold_outliers: 3
           discard_outliers: True
           compute_avg: True
-          nexec: 3
+          nexec: 10
           nsteps: 1
           cpu_affinity: 11
           prefix: "taskset -c 11"

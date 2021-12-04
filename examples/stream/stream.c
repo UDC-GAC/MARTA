@@ -49,6 +49,7 @@
 #include <unistd.h>
 
 #include "marta_wrapper.h"
+#include <immintrin.h>
 
 /*-----------------------------------------------------------------------
  * INSTRUCTIONS:
@@ -180,8 +181,9 @@
 #define STREAM_TYPE double
 #endif
 
-static STREAM_TYPE a[STREAM_ARRAY_SIZE + OFFSET], b[STREAM_ARRAY_SIZE + OFFSET],
-    c[STREAM_ARRAY_SIZE + OFFSET];
+//static STREAM_TYPE a[STREAM_ARRAY_SIZE + OFFSET], b[STREAM_ARRAY_SIZE + OFFSET],
+//    c[STREAM_ARRAY_SIZE + OFFSET];
+static STREAM_TYPE *a, *b, *c;
 
 static double avgtime[4] = {0}, maxtime[4] = {0},
               mintime[4] = {FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX};
@@ -212,6 +214,10 @@ int main() {
   ssize_t j;
   STREAM_TYPE scalar;
   double t, times[4][NTIMES];
+
+  posix_memalign( &a, 64, 3*sizeof(STREAM_TYPE)*(STREAM_ARRAY_SIZE+OFFSET) );
+  b = &a[STREAM_ARRAY_SIZE+OFFSET];
+  c = &b[STREAM_ARRAY_SIZE+OFFSET];
 
   /* --- SETUP --- determine precision and check timing --- */
 
@@ -312,7 +318,7 @@ int main() {
   for (k = 0; k < NTIMES; k++) {
     times[0][k] = mysecond();
 #ifdef TUNED
-    tuned_STREAM_Copy();
+//    tuned_STREAM_Copy();
 #else
 #pragma omp parallel for
     for (j = 0; j < STREAM_ARRAY_SIZE; j++)
@@ -322,7 +328,7 @@ int main() {
 
     times[1][k] = mysecond();
 #ifdef TUNED
-    tuned_STREAM_Scale(scalar);
+ //   tuned_STREAM_Scale(scalar);
 #else
 #pragma omp parallel for
     for (j = 0; j < STREAM_ARRAY_SIZE; j++)
@@ -332,6 +338,7 @@ int main() {
 
 #ifdef TUNED
     PROFILE_FUNCTION_LOOP(tuned_STREAM_Add(), TSTEPS);
+//    tuned_STREAM_Add();
 #endif
 
     times[2][k] = mysecond();
@@ -339,7 +346,7 @@ int main() {
     // MARTA_BENCHMARK_BEGIN(MARTA_NO_HEADER);
     // MARTA_BENCHMARK_END;
     //	tuned_STREAM_Add();
-    tuned_STREAM_Add();
+//    tuned_STREAM_Add();
 #else
 #pragma omp parallel for
     for (j = 0; j < STREAM_ARRAY_SIZE; j++)
@@ -349,7 +356,7 @@ int main() {
 
     times[3][k] = mysecond();
 #ifdef TUNED
-    tuned_STREAM_Triad(scalar);
+//    tuned_STREAM_Triad(scalar);
 #else
 #pragma omp parallel for
     for (j = 0; j < STREAM_ARRAY_SIZE; j++)
@@ -577,10 +584,41 @@ void tuned_STREAM_Scale(STREAM_TYPE scalar) {
 void tuned_STREAM_Add() {
   ssize_t j;
   for (j = 0; j < STREAM_ARRAY_SIZE; j += 8) {
-    int data = ((rand()) % STREAM_ARRAY_SIZE) / 8 * 8;
-    //	  int data = ((j*64*1024)%STREAM_ARRAY_SIZE);
-    for (int k = 0; k < 8; ++k)
-      c[j + k] = a[j + k] * b[data + k];
+#if ADD_VERSION == 0 // ORIGINAL
+	  int data_c = j;
+	  int data_a = j;
+	  int data_b = j;
+#elif ADD_VERSION == 1 // STRIDED b
+	  int data_c = j;
+	  int data_a = j;
+    	  int data_b = ((j*STRIDE)%STREAM_ARRAY_SIZE + (j*STRIDE*8) / STREAM_ARRAY_SIZE);
+#if SW_PREFETCH > 0
+	  _mm_prefetch( &b[((j+SW_PREFETCH)*STRIDE)%STREAM_ARRAY_SIZE], _MM_HINT_T0 );
+#endif
+#elif ADD_VERSION == 2 // STRIDED x 3
+    	  int data_c = ((j*STRIDE)%STREAM_ARRAY_SIZE + (j*STRIDE*8) / STREAM_ARRAY_SIZE);
+    	  int data_a = data_c;
+    	  int data_b = data_c;
+#elif ADD_VERSION == 3 // random b
+    	  int data_c = j;
+    	  int data_a = j;
+    	  int data_b = ((rand()) % STREAM_ARRAY_SIZE) / 8 * 8;
+#elif ADD_VERSION == 4 // random b
+    	  int data_c = j;
+    	  int data_a = ((rand()) % STREAM_ARRAY_SIZE) / 8 * 8;
+    	  int data_b = data_a;
+#elif ADD_VERSION == 5 // random b
+    	  int data_c = ((rand()) % STREAM_ARRAY_SIZE) / 8 * 8;
+    	  int data_a = data_c;
+    	  int data_b = data_c;
+#endif
+    for (int k = 0; k < 8; ++k) {
+#if ASSIGNMENT_VERSION == 0
+      c[data_c + k] = a[data_a + k] * b[data_b + k];
+#elif ASSIGNMENT_VERSION == 1
+      c[data_c + k] += a[data_a + k] * b[data_b + k];
+#endif
+    }
   }
 }
 
