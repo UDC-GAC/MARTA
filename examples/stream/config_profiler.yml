@@ -4,9 +4,9 @@
       description: "Setup for experiment autovectorization"
       debug:
           False
-          #      preamble:
-          #          command: "sudo cpupower frequency-set -u 2.1GHz  > /dev/null && sudo
-          #          cpupower frequency-set -d 2.1GHz > /dev/null"
+      preamble:
+          command: "sudo cpupower frequency-set -u 3.7GHz  > /dev/null && sudo
+                    cpupower frequency-set -d 3.7GHz > /dev/null"
       finalize:
           clean_tmp_files: False
           clean_asm_files: False
@@ -15,7 +15,7 @@
       compilation:
           debug: False
           enabled: True
-          processes: 64
+          processes: 6
           language: "C"
           compiler_flags: { "gcc": [" -march=native -O3 -DTUNED"] }
           main_src: "stream.c"
@@ -36,7 +36,8 @@
                   evaluate: True
                   type: "static"
                   val_type: "numeric"
-                  value: "[33554432]"
+                    #value: "[33554432]"
+                  value: "[8388608]"
               ADD_VERSION:
                   evaluate: True
                   type: "static"
@@ -70,11 +71,7 @@
           stdout_redirect: "/tmp/TESTING_OUTPUT_MKS"
           enabled: True
           time: False
-            #          papi_counters: ["HARDWARE_PREFETCH_DATA_CACHE_FILLS:LCL_L2", "HARDWARE_PREFETCH_DATA_CACHE_FILLS:MEM_IO_LCL", "perf::L1-DCACHE-PREFETCHES"]
-            #papi_counters: ["DEMAND_DATA_CACHE_FILLS_FROM_SYSTEM:LCL_L2","DEMAND_DATA_CACHE_FILLS_FROM_SYSTEM:INT_CACHE","DEMAND_DATA_CACHE_FILLS_FROM_SYSTEM:EXT_CACHE_LCL","DEMAND_DATA_CACHE_FILLS_FROM_SYSTEM:MEM_IO_LCL","DEMAND_DATA_CACHE_FILLS_FROM_SYSTEM:EXT_CACHE_RMT","DEMAND_DATA_CACHE_FILLS_FROM_SYSTEM:MEM_IO_RMT"]
-          papi_counters: ["DEMAND_DATA_CACHE_FILLS_FROM_SYSTEM:LCL_L2","DEMAND_DATA_CACHE_FILLS_FROM_SYSTEM:INT_CACHE","DEMAND_DATA_CACHE_FILLS_FROM_SYSTEM:MEM_IO_LCL","DEMAND_DATA_CACHE_FILLS_FROM_SYSTEM:EXT_CACHE_LCL","DEMAND_DATA_CACHE_FILLS_FROM_SYSTEM:EXT_CACHE_RMT","DEMAND_DATA_CACHE_FILLS_FROM_SYSTEM:MEM_IO_RMT"]
-            #                          "HARDWARE_PREFETCH_DATA_CACHE_FILLS:LCL_L2","HARDWARE_PREFETCH_DATA_CACHE_FILLS:INT_CACHE","HARDWARE_PREFETCH_DATA_CACHE_FILLS:MEM_IO_LCL",
-                          #"SOFTWARE_PREFETCH_DATA_CACHE_FILLS:LCL_L2","SOFTWARE_PREFETCH_DATA_CACHE_FILLS:INT_CACHE","SOFTWARE_PREFETCH_DATA_CACHE_FILLS:MEM_IO_LCL"]
+          papi_counters:  [ "MEM_LOAD_UOPS_RETIRED:L1_HIT", "MEM_LOAD_UOPS_RETIRED:L1_MISS", "L2_RQSTS:MISS", "LONGEST_LAT_CACHE:MISS", "MEM_INST_RETIRED:ALL_LOADS", "MEM_INST_RETIRED:ALL_STORES" ]
           tsc: True
           threshold_outliers: 3
           discard_outliers: True
