@@ -17,7 +17,7 @@
           enabled: True
           processes: 6
           language: "C"
-          compiler_flags: { "gcc": [" -march=native -O3 -DTUNED"] }
+          compiler_flags: { "gcc": [" -march=native -O3 -DTUNED -fno-inline"] }
           main_src: "stream.c"
           loop_type: C # if you choose "asm" loop type it may cause SIGSEV as it uses EDX register
           kernel_inlined: True
@@ -42,20 +42,20 @@
                   evaluate: True
                   type: "static"
                   val_type: "numeric"
-                  value: "list(range(6))"
-                    #value: "[1]"
+                  value: "list(range(7))"
+                    #value: "[4]"
               ASSIGNMENT_VERSION:
                   evaluate: True
                   type: "static"
                   val_type: "numeric"
-                  value: "list(range(2))"
-                    #value: "[0]"
+                    #value: "list(range(2))"
+                  value: "[0]"
               STRIDE:
                   evaluate: True
                   type: "static"
                   val_type: "numeric"
                   value: "[1,2,4,8,16,32,64,128,256,512,1024,2*1024,4*1024,8*1024,16*1024,32*1024,64*1024]"
-                    #value: "[128]"
+                    #value: "[64]"
               SW_PREFETCH:
                   evaluate: True
                   type: "static"

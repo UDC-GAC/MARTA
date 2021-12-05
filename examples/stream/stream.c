@@ -50,6 +50,7 @@
 
 #include "marta_wrapper.h"
 #include <immintrin.h>
+#include <stdint.h>
 
 /*-----------------------------------------------------------------------
  * INSTRUCTIONS:
@@ -595,20 +596,25 @@ void tuned_STREAM_Add() {
 #if SW_PREFETCH > 0
 	  _mm_prefetch( &b[((j+SW_PREFETCH)*STRIDE)%STREAM_ARRAY_SIZE], _MM_HINT_T0 );
 #endif
-#elif ADD_VERSION == 2 // STRIDED x 3
+#elif ADD_VERSION == 2 // STRIDED x 2
+          int data_c = j;
+    	  int data_a = ((j*STRIDE)%STREAM_ARRAY_SIZE + (j*STRIDE*8) / STREAM_ARRAY_SIZE);
+          int data_b = data_a;
+#elif ADD_VERSION == 3 // STRIDED x 3
     	  int data_c = ((j*STRIDE)%STREAM_ARRAY_SIZE + (j*STRIDE*8) / STREAM_ARRAY_SIZE);
     	  int data_a = data_c;
     	  int data_b = data_c;
-#elif ADD_VERSION == 3 // random b
-    	  int data_c = j;
-    	  int data_a = j;
-    	  int data_b = ((rand()) % STREAM_ARRAY_SIZE) / 8 * 8;
 #elif ADD_VERSION == 4 // random b
     	  int data_c = j;
-    	  int data_a = ((rand()) % STREAM_ARRAY_SIZE) / 8 * 8;
-    	  int data_b = data_a;
+    	  int data_a = j;
+          int data_b = (rand() % STREAM_ARRAY_SIZE) / 8 * 8;          
+          printf( "Accessing: %d\n", data_b );
 #elif ADD_VERSION == 5 // random b
-    	  int data_c = ((rand()) % STREAM_ARRAY_SIZE) / 8 * 8;
+    	  int data_c = j;
+          int data_a = (rand() % STREAM_ARRAY_SIZE) / 8 * 8;          
+    	  int data_b = data_a;
+#elif ADD_VERSION == 6 // random b
+          int data_c = (rand() % STREAM_ARRAY_SIZE) / 8 * 8;          
     	  int data_a = data_c;
     	  int data_b = data_c;
 #endif
