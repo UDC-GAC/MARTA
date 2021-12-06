@@ -1,5 +1,5 @@
 BINARY_NAME=main
-MAIN_SRC=main.c
+MAIN_FILE?=main.c
 TARGET=marta_microbench
 
 include ../MakeFlags.mk

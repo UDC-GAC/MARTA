@@ -326,7 +326,7 @@ class Profiler:
                 ],
                 nsteps=kernel.nsteps,
             )
-            pinfo(f"Loop overhead: {overhead_loop_tsc} cycles (TSC)")
+            pinfo(f"Loop overhead: {overhead_loop_tsc} cycles (RDTSC)")
         except BenchmarkError:
             msg = "Loop overhead could not be computed."
             if exit_on_error:

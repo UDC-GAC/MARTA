@@ -1,0 +1,60 @@
+- kernel:
+      name: "asm"
+      type: "asm"
+      path: "examples/asm/src"
+      description: "Default setup for asm"
+      compilation:
+          enabled: True
+          processes: 16
+          language: "C"
+          compiler_flags: { "gcc": [" -march=native -mtune=native -mavx2 "] }
+          main_src: "main.c"
+          common_flags: " -O3 "
+          loop_type: "asm"
+          kernel_inlined: True
+          asm_analysis:
+              syntax: "att"
+              count_ins: False
+              static_analysis: "llvm-mca"
+      configuration:
+          d_features:
+              NONE:
+                  evaluate: True
+                  type: "static"
+                  val_type: "numeric"
+                  value: "[0]"
+          asm_init: { "case0": [""] }
+          asm_body: { "case0": ["add %r8d, %r9d", "add %r9d, %r8d"] }
+          asm_unroll: 100
+          asm_permutations: True
+      execution:
+          stdout_redirect: "/tmp/TESTING_OUTPUT_MKS"
+          enabled: True
+          papi_counters:
+              [
+                  "CPU_CLK_THREAD_UNHALTED:REF_P",
+                  "CPU_CLK_THREAD_UNHALTED:THREAD_P",
+                  "INSTRUCTIONS_RETIRED",
+              ]
+          #   "UOPS_DISPATCHED_PORT:PORT_0",
+          #   "UOPS_DISPATCHED_PORT:PORT_1",
+          #   "UOPS_DISPATCHED_PORT:PORT_2",
+          #   "UOPS_DISPATCHED_PORT:PORT_3",
+          #   "UOPS_DISPATCHED_PORT:PORT_4",
+          #   "UOPS_DISPATCHED_PORT:PORT_5",
+          #   "UOPS_DISPATCHED_PORT:PORT_6",
+          #   "UOPS_DISPATCHED_PORT:PORT_7",
+          tsc: True
+          threshold_outliers: 3 # in percentage
+          discard_outliers: True # remove outliers from average
+          compute_avg: True # divide values by nsteps
+          nexec: 10
+          nsteps: 100000
+          cpu_affinity: 11
+          prefix: "taskset -c 11"
+      output:
+          name: "default"
+          format: "csv" # csv, html, json
+          columns: "all"
+          report: True
+          verbose: True

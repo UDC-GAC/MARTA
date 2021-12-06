@@ -102,7 +102,25 @@ def parse_kernel_options(config: dict) -> dict:
     cfg["kernel_cfg"] = config_config.get("kernel_cfg", [""])
     if len(cfg["kernel_cfg"]) == 0:
         cfg["kernel_cfg"] = [""]
-    cfg["d_features"] = config_config.get("d_features", [])
+    if cfg["bench_type"] == "asm":
+        try:
+            cfg["asm_body"] = config_config["asm_body"]
+            cfg["asm_init"] = config_config["asm_init"]
+            cfg["asm_unroll"] = config_config.get("loop_unroll", 100)
+            cfg["asm_permutations"] = config_config.get("asm_permutation", False)
+        except KeyError as k:
+            perror(f"Configuration key missing for 'asm' config: {k}")
+    cfg["d_features"] = config_config.get(
+        "d_features",
+        {
+            "NONE": {
+                "evaluate": True,
+                "value": "[0]",
+                "type": "static",
+                "val_type": "numeric",
+            }
+        },
+    )
     cfg["d_flags"] = config_config.get("d_flags", [])
     cfg["flops"] = config_config.get("flops", "1")
     cfg["meta_info"] = config_config.get("meta_info", {})

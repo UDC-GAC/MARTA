@@ -20,10 +20,11 @@
 # Standard library
 import subprocess
 import shutil
-from typing import Union, Any, Tuple
+from typing import Union, Any, Tuple, List
 
 # Local imports
 from marta.utils.marta_utilities import pinfo, get_name_from_dir, perror
+from marta import get_data
 
 
 class CompilationError(Exception):
@@ -95,6 +96,27 @@ def vector_report_analysis(file: str, compiler: str) -> dict:
             return ICCAnalysis.analysis(f.readlines())
     # clang not supported yet...
     return {}
+
+
+def gen_asm_bench(
+    asm_init: List[str], asm_body: List[str], loop_unroll: int
+) -> List[str]:
+    asm_bench_file = get_data("profiler/marta_asm/src/main.c")
+    lines = []
+    with open(asm_bench_file, "r") as f:
+        for line in f:
+            if not "MARTA_CMD" in line:
+                lines.append(line)
+                continue
+            if "ASM_CODE" in line:
+                asm_code = [f'    __asm volatile("{asm}");\n' for asm in asm_body]
+                for _ in range(loop_unroll):
+                    lines.extend(asm_code)
+            if "ASM_INIT" in line:
+                if asm_init[0] != "":
+                    asm_code = [f'    __asm volatile("{asm}");' for asm in asm_init]
+                    lines.extend(asm_code)
+    return lines
 
 
 def compile_file(

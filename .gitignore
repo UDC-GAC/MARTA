@@ -60,6 +60,8 @@ tests/Makefile
 tests/MARTA.mk
 tests/utilities
 
+examples/kernels/*
+
 # LaTeX
 *.bbl
 *.aux

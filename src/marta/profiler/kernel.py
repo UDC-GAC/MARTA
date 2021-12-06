@@ -39,6 +39,7 @@ from marta.profiler.compile import (
     get_dict_from_d_flags,
     get_suffix_and_flags,
     vector_report_analysis,
+    gen_asm_bench,
 )
 from marta.profiler.report import Report
 from marta.profiler.asm_analyzer import ASMParserFactory
@@ -112,8 +113,11 @@ class Kernel:
 
     def print_summary(self, df: pd.DataFrame, dimensions: list = []):
         print("\n--------------")
+        loop_unroll = ""
+        if hasattr(self, "asm_unroll"):
+            loop_unroll = f", loop_unroll = {self.asm_unroll}"
         print(
-            f"MARTA summary [no. executions = {self.nexec}, tsteps = {self.nsteps}]\n"
+            f"MARTA summary [type = {self.bench_type}, no. exec. = {self.nexec}, tsteps = {self.nsteps}{loop_unroll}]\n"
         )
         line = ""
         headers = ""
@@ -399,9 +403,19 @@ class Kernel:
                 other_flags.append("ASM_CODE_KERNEL=true")
             other_flags.append("ASM_CODE_MAIN=true")
 
+        main_src = self.main_src
+        if self.bench_type == "asm":
+            for case in self.asm_init:
+                asm_init = self.asm_init[case]
+                asm_body = self.asm_body[case]
+                raw_asm = gen_asm_bench(asm_init, asm_body, self.asm_unroll)
+                main_src = f"_{case}_{main_src}"
+                with open(f"{self.path_kernel}/{main_src}", "w") as f:
+                    f.writelines(raw_asm)
+
         ret = compile_makefile(
             self.kernel,
-            self.main_src,
+            main_src,
             self.path_kernel,
             compiler,
             compiler_flags,

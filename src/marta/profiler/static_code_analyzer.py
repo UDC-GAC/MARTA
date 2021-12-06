@@ -84,7 +84,8 @@ class StaticCodeAnalyzer:
         return json_file_fixed
 
     def get_llvm_mca_version(self) -> int:
-        lines = os.popen(f"{self.binary} --version").read()
+        with os.popen(f"{self.binary} --version") as f:
+            lines = f.read()
         try:
             for line in lines:
                 if "version" in line:

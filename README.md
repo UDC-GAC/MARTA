@@ -32,7 +32,7 @@ interest specified.
 
 MARTA is also a very low intrusive profiler, even though it requires recompiling.
 Just with a header and two directives indicating the start and end of the
-region of interest (ROI), it can perform different compilations and executions,
+region of interest (RoI), it can perform different compilations and executions,
 for instance, using different flags and/or compilers, and generating a readable
 table with performance metrics. This enables a fast comparison between
 compilers for a vast set of different combinations of parameters and flags.
@@ -42,7 +42,8 @@ compilers for a vast set of different combinations of parameters and flags.
 - Python >=3.7
 - Libraries specified in [`requirements.txt`](requirements.txt)
 - PAPI >=5.7.0
-- Linux environment with root access
+- Linux environment with root access. Recommended >=3.14 version to allow PAPI
+  use `rdpmc` for reading hardware counters.
 
 ## Getting started
 
@@ -75,7 +76,7 @@ python -m pip install dist/<marta-wheel>
 python -m pip install <marta-wheel>
 ```
 
-This will install a module named `marta`, and two console scripts:
+This will install a module named `marta`, and two console scripts or CLI commands:
 `marta_profiler` and `marta_analyzer`. **NOTE**: to run these commands it is needed
 to specify in `PATH` variable the path where your Python version install
 applications, e.g. `export PATH=$PATH:$HOME/.local/bin` if your Python
@@ -91,6 +92,10 @@ python -m profiler ...
 # or
 python -m analyzer ...
 ``` 
+
+## Profiler
+
+## Analyzer
 
 ### Examples: cases of study
 

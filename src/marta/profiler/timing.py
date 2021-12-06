@@ -26,6 +26,9 @@ import os
 import time
 from pathlib import Path
 from tqdm.auto import trange
+import warnings
+
+warnings.filterwarnings("error")
 
 # Third-party libraries
 import numpy as np
@@ -175,6 +178,8 @@ class Timing:
     def read_results(tmp_file, benchmark_type):
         try:
             results = np.loadtxt(tmp_file, delimiter=",")
+        except UserWarning as e:
+            perror(f"{e}")
         except ValueError:
             line = ""
             with open(tmp_file) as f:
@@ -291,8 +296,9 @@ class Timing:
             __measure(env=env)
 
         results = Timing.read_results(tmp_file, benchmark_type)
+        if results.size == 0:
+            perror("Results are empty: probably there was an error in the execution")
 
-        # Empty files...
         if not isinstance(results, np.ndarray):
             return None, None
 

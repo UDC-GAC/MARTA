@@ -1,0 +1,109 @@
+- kernel:
+      name: "stream"
+      path: "."
+      description: "Setup for experiment STREAM"
+      debug: False
+      preamble:
+          command: "sudo cpupower frequency-set -u 2.1GHz  > /dev/null && sudo
+              cpupower frequency-set -d 2.1GHz > /dev/null"
+      finalize:
+          clean_tmp_files: False
+          clean_asm_files: False
+          clean_bin_files: False
+          command: "echo 'done!'"
+      compilation:
+          debug: False
+          enabled: True
+          processes: 64
+          language: "C"
+          compiler_flags:
+              { "gcc-11": [" -march=native -O3 -DTUNED -fno-inline"] }
+          main_src: "stream.c"
+          loop_type: C # if you choose "asm" loop type it may cause SIGSEV as it uses EDX register
+          kernel_inlined: True
+          asm_analysis:
+              syntax: "intel"
+              count_ins: False
+              static_analysis: ""
+      configuration:
+          d_features:
+              OFFSET:
+                  evaluate: True
+                  type: "static"
+                  val_type: "numeric"
+                  value: "[8]"
+              STREAM_ARRAY_SIZE:
+                  evaluate: True
+                  type: "static"
+                  val_type:
+                      "numeric"
+                      #value: "[33554432]"
+                  value: "[16777216]"
+              ADD_VERSION:
+                  evaluate: True
+                  type: "static"
+                  val_type: "numeric"
+                  value:
+                      "list(range(7))"
+                      #value: "[1]"
+              ASSIGNMENT_VERSION:
+                  evaluate: True
+                  type: "static"
+                  val_type: "numeric"
+                  # value: "list(range(2))"
+                  value: "[0]"
+              STRIDE:
+                  evaluate: True
+                  type: "static"
+                  val_type: "numeric"
+                  value:
+                      "2**np.arange(22)"
+                      #value: "[128]"
+              SW_PREFETCH:
+                  evaluate: True
+                  type: "static"
+                  val_type:
+                      "numeric"
+                      #value: "[0,1,2,4,8,16,32,64,128,256,512]"
+                  value: "[0]"
+          derived:
+              BANDWIDTH:
+                  type: single
+                  variables: ["tsc", "STREAM_ARRAY_SIZE"]
+                  expression: (3 * VAR_1 * 8) / (VAR_0/2.1) #3.4GHz is the base freq of Ryzen 5950X
+      execution:
+          stdout_redirect: "/tmp/TESTING_OUTPUT_MKS"
+          enabled: True
+          time: False
+          papi_counters:
+              [
+                  "MEM_LOAD_UOPS_RETIRED:L1_HIT",
+                  "MEM_LOAD_UOPS_RETIRED:L1_MISS",
+                  "L2_RQSTS:MISS",
+                  "LONGEST_LAT_CACHE:MISS",
+                  "MEM_INST_RETIRED:ALL_LOADS",
+                  "MEM_INST_RETIRED:ALL_STORES",
+                  "MEM_LOAD_L3_MISS_RETIRED:LOCAL_DRAM",
+                  "MEM_LOAD_L3_MISS_RETIRED:REMOTE_DRAM",
+                  "OFFCORE_RESPONSE_0:L3_MISS",
+                  "PAPI_L1_DCM",
+                  "PAPI_L1_TCM",
+                  "PAPI_L2_DCA",
+                  "PAPI_L2_DCM",
+                  "PAPI_L3_TCA",
+                  "PAPI_L3_DCA",
+                  "PAPI_L3_TCM",
+              ]
+          tsc: True
+          threshold_outliers: 3
+          discard_outliers: True
+          compute_avg: True
+          nexec: 10
+          nsteps: 1
+          cpu_affinity: 11
+          prefix: "taskset -c 11"
+      output:
+          name: "default"
+          columns: "all"
+          report: True
+          verbose: True
