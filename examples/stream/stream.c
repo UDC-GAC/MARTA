@@ -220,6 +220,9 @@ int main() {
   b = &a[STREAM_ARRAY_SIZE+OFFSET];
   c = &b[STREAM_ARRAY_SIZE+OFFSET];
 
+  // Random seed
+  srand( time( 0 ) );
+
   /* --- SETUP --- determine precision and check timing --- */
 
   printf(HLINE);
@@ -276,7 +279,16 @@ int main() {
   /* Get initial value for system clock. */
 #pragma omp parallel for
   for (j = 0; j < STREAM_ARRAY_SIZE; j++) {
+#if (ADD_VERSION == 24) || (ADD_VERSION == 25)
+    // a will be used as an index array over b
+    if( j % 8 == 0 ) {
+        a[j] = (rand() % STREAM_ARRAY_SIZE) / 8 * 8;          
+    } else {
+        a[j] = 1.0;
+    }
+#else
     a[j] = 1.0;
+#endif
     b[j] = 2.0;
     c[j] = 0.0;
   }
@@ -344,10 +356,7 @@ int main() {
 
     times[2][k] = mysecond();
 #ifdef TUNED
-    // MARTA_BENCHMARK_BEGIN(MARTA_NO_HEADER);
-    // MARTA_BENCHMARK_END;
-    //	tuned_STREAM_Add();
-//    tuned_STREAM_Add();
+    //tuned_STREAM_Add();
 #else
 #pragma omp parallel for
     for (j = 0; j < STREAM_ARRAY_SIZE; j++)
@@ -584,47 +593,69 @@ void tuned_STREAM_Scale(STREAM_TYPE scalar) {
 
 void tuned_STREAM_Add() {
   ssize_t j;
+
+#pragma omp parallel for num_threads(MARTA_NUM_THREADS)
   for (j = 0; j < STREAM_ARRAY_SIZE; j += 8) {
 #if ADD_VERSION == 0 // ORIGINAL
 	  int data_c = j;
 	  int data_a = j;
 	  int data_b = j;
-#elif ADD_VERSION == 1 // STRIDED b
+#elif ADD_VERSION == 11 // STRIDED b
 	  int data_c = j;
 	  int data_a = j;
-    	  int data_b = ((j*STRIDE)%STREAM_ARRAY_SIZE + (j*STRIDE*8) / STREAM_ARRAY_SIZE);
+    	  int data_b = ((j*STRIDE)%STREAM_ARRAY_SIZE + ((j*STRIDE) / STREAM_ARRAY_SIZE)*8);
 #if SW_PREFETCH > 0
 	  _mm_prefetch( &b[((j+SW_PREFETCH)*STRIDE)%STREAM_ARRAY_SIZE], _MM_HINT_T0 );
 #endif
-#elif ADD_VERSION == 2 // STRIDED x 2
+#elif ADD_VERSION == 12 // STRIDED x 2
           int data_c = j;
-    	  int data_a = ((j*STRIDE)%STREAM_ARRAY_SIZE + (j*STRIDE*8) / STREAM_ARRAY_SIZE);
+    	  int data_a = ((j*STRIDE)%STREAM_ARRAY_SIZE + ((j*STRIDE) / STREAM_ARRAY_SIZE)*8);
           int data_b = data_a;
-#elif ADD_VERSION == 3 // STRIDED x 3
-    	  int data_c = ((j*STRIDE)%STREAM_ARRAY_SIZE + (j*STRIDE*8) / STREAM_ARRAY_SIZE);
+#elif ADD_VERSION == 13 // STRIDED x 3
+    	  int data_c = ((j*STRIDE)%STREAM_ARRAY_SIZE + ((j*STRIDE) / STREAM_ARRAY_SIZE)*8);
     	  int data_a = data_c;
     	  int data_b = data_c;
-#elif ADD_VERSION == 4 // random b
+#elif ADD_VERSION == 14 // STRIDED write
+    	  int data_c = ((j*STRIDE)%STREAM_ARRAY_SIZE + ((j*STRIDE) / STREAM_ARRAY_SIZE)*8);
+    	  int data_a = j;
+    	  int data_b = j;
+#elif ADD_VERSION == 21 // random b
     	  int data_c = j;
     	  int data_a = j;
           int data_b = (rand() % STREAM_ARRAY_SIZE) / 8 * 8;          
-          printf( "Accessing: %d\n", data_b );
-#elif ADD_VERSION == 5 // random b
+#elif ADD_VERSION == 22 // random b
     	  int data_c = j;
           int data_a = (rand() % STREAM_ARRAY_SIZE) / 8 * 8;          
     	  int data_b = data_a;
-#elif ADD_VERSION == 6 // random b
+#elif ADD_VERSION == 23 // random b
           int data_c = (rand() % STREAM_ARRAY_SIZE) / 8 * 8;          
     	  int data_a = data_c;
     	  int data_b = data_c;
+#elif ADD_VERSION == 24 // random b
+          int data_c = j;
+    	  int data_a = j;
+#elif ADD_VERSION == 25
+          int data_c = j;
+          int data_a = j;
+          int data_b = a[data_a];
+#elif ADD_VERSION == 26
+          int data_c = (rand() % STREAM_ARRAY_SIZE) / 8 * 8;          
+    	  int data_a = j;
+    	  int data_b = j;
 #endif
-    for (int k = 0; k < 8; ++k) {
-#if ASSIGNMENT_VERSION == 0
-      c[data_c + k] = a[data_a + k] * b[data_b + k];
-#elif ASSIGNMENT_VERSION == 1
-      c[data_c + k] += a[data_a + k] * b[data_b + k];
+    __m256d regA1 = _mm256_load_pd( &a[data_a] );
+    __m256d regA2 = _mm256_load_pd( &a[data_a+4] );
+#if ADD_VERSION == 24
+    __m256d regB1 = _mm256_load_pd( &b[_mm_cvttsd_si32( _mm256_castpd256_pd128( regA1 ) )] );
+    __m256d regB2 = _mm256_load_pd( &b[_mm_cvttsd_si32( _mm256_castpd256_pd128( regA1 ) )+4] );
+#else
+    __m256d regB1 = _mm256_load_pd( &b[data_b] );
+    __m256d regB2 = _mm256_load_pd( &b[data_b+4] );
 #endif
-    }
+    __m256d regC1 = _mm256_mul_pd( regA1, regB1 );
+    __m256d regC2 = _mm256_mul_pd( regA2, regB2 );
+    _mm256_store_pd( &c[data_c], regC1 );
+    _mm256_store_pd( &c[data_c+4], regC2 );
   }
 }
 
