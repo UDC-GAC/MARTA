@@ -132,10 +132,9 @@ def categorize_target_dimension(
     if len(mi) >= 1:
         P.append(X[X >= score_samples_space[mi][-1]])
 
-    intervals = []
+    intervals = [min(P[0])]
     for sub_int in P:
-        intervals.append(min(sub_int))
-    intervals.append(max(P[-1]))
+        intervals.append(max(sub_int))
 
     labels = []
     for cat in P:
