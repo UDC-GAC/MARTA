@@ -132,6 +132,11 @@ def categorize_target_dimension(
     if len(mi) >= 1:
         P.append(X[X >= score_samples_space[mi][-1]])
 
+    intervals = []
+    for sub_int in P:
+        intervals.append(min(sub_int))
+    intervals.append(max(P[-1]))
+
     labels = []
     for cat in P:
         new_label = f"{target_value}-{min(cat):06.3f}-{max(cat):06.3f}"
@@ -147,7 +152,9 @@ def categorize_target_dimension(
             "Please revise the settings in the configuration file."
         )
 
-    df[f"{target_value}_cat"] = pd.cut(tmp_target_value, len(P), labels=labels)
+    df[f"{target_value}_cat"] = pd.cut(
+        tmp_target_value, intervals, labels=labels, include_lowest=True
+    )
     return df, labels
 
 
