@@ -180,15 +180,18 @@ static inline _marta_cycles_t _marta_rdtsc_stop() {
 }
 
 #ifdef MARTA_MULTITHREAD
-int *__marta_rdtsc;
+_marta_cycles_t *__marta_rdtsc;
 static inline void _marta_init_rdtsc() {
   int __nthreads = 1;
 #pragma omp parallel
   {
 #pragma omp master
-    { __nthreads = omp_get_num_threads(); }
+    {
+      __nthreads = omp_get_num_threads();
+      __marta_rdtsc =
+          (_marta_cycles_t *)malloc(sizeof(_marta_cycles_t) * __nthreads);
+    }
   }
-  __marta_rdtsc = (int *)malloc(sizeof(int) * __nthreads);
 #pragma omp parallel
   {
     int th = omp_get_thread_num();
@@ -211,8 +214,8 @@ static inline void _marta_finish_rdtsc() {
   _Pragma("omp parallel") {                                                    \
     _Pragma("omp master") {                                                    \
       for (int __th = 0; __th < omp_get_num_threads(); ++__th) {               \
-        MARTA_PRINT_INSTRUMENTS("%d,%.1F\n", __th,                             \
-                                (double)(__marta_rdtsc[__th]));                \
+        MARTA_PRINT_INSTRUMENTS("%d,%llu\n", __th,                             \
+                                (_marta_cycles_t)(__marta_rdtsc[__th]));       \
       }                                                                        \
       free(__marta_rdtsc);                                                     \
     }                                                                          \
