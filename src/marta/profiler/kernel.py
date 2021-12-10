@@ -178,8 +178,8 @@ class Kernel:
             print(line)
 
         print("\n")
-        print(f"Execution time:      {Timing.to_seconds(Timing.execution_time)}")
         print(f"Compilation time:    {Timing.to_seconds(Timing.compilation_time)}")
+        print(f"Execution time:      {Timing.to_seconds(Timing.execution_time)}")
         print(
             f"Total time elapsed:  {Timing.to_seconds(Timing.execution_time + Timing.compilation_time)}\n"
         )
@@ -258,7 +258,7 @@ class Kernel:
         """
         Define PAPI counters in a new file recognized by PolyBench/C
         """
-        if self.papi_counters == None:
+        if self.papi_counters is None:
             return
         assert isinstance(self.papi_counters, list)
         papi_counter_file = self.get_kernel_path(f"/utilities/papi_counters.list")
@@ -479,7 +479,7 @@ class Kernel:
         }
         d_avg_values = {}
         for mtype in measurements:
-            if measurements[mtype] == None or (
+            if measurements[mtype] is None or (
                 isinstance(measurements[mtype], bool) and not measurements[mtype]
             ):
                 continue
@@ -498,30 +498,44 @@ class Kernel:
                 redirect_stdout=self.stdout_redirect,
                 multithread=self.multithread,
             )
-            if mtype == "papi":
-                if len(self.papi_counters) == 1:
-                    d_avg_values[self.papi_counters[0]] = avg_values
-                else:
-                    for i in range(len(self.papi_counters)):
-                        d_avg_values[self.papi_counters[i]] = avg_values["papi"][i]
-            else:
-                d_avg_values[mtype] = avg_values
-            if avg_values is None:
-                return None
-            if discarded_values != -1:
-                if mtype == "papi" and len(self.papi_counters) != 1:
-                    for i in range(len(self.papi_counters)):
-                        data.update({f"{self.papi_counters[i]}": avg_values["papi"][i]})
-                else:
-                    if mtype == "papi":
-                        data.update({f"{self.papi_counters[0]}": avg_values["papi"]})
+            if not self.multithread:
+                if mtype == "papi":
+                    if len(self.papi_counters) == 1:
+                        d_avg_values[self.papi_counters[0]] = avg_values
                     else:
-                        data.update(avg_values)
+                        for i in range(len(self.papi_counters)):
+                            d_avg_values[self.papi_counters[i]] = avg_values["papi"][i]
+                else:
+                    d_avg_values[mtype] = avg_values
+                if avg_values is None:
+                    return None
+                if discarded_values != -1:
+                    if mtype == "papi" and len(self.papi_counters) != 1:
+                        for i in range(len(self.papi_counters)):
+                            data.update(
+                                {f"{self.papi_counters[i]}": avg_values["papi"][i]}
+                            )
+                    else:
+                        if mtype == "papi":
+                            data.update(
+                                {f"{self.papi_counters[0]}": avg_values["papi"]}
+                            )
+                        else:
+                            data.update(avg_values)
 
-                data.update({f"Discarded{mtype}Values": discarded_values})
-
-        if len(d_avg_values) == 0:
-            pwarning("Nothing executed: set 'time', 'tsc' or at least one PAPI counter")
+                    data.update({f"Discarded{mtype}Values": discarded_values})
+                if len(d_avg_values) == 0:
+                    pwarning(
+                        "Nothing executed: set 'time', 'tsc' or at least one PAPI counter"
+                    )
+            else:
+                tmp = avg_values.columns.values.tolist()
+                if mtype == "papi":
+                    col_dict = dict(zip(tmp, self.papi_counters))
+                    avg_values.rename(col_dict, axis=1, inplace=True)
+                # avg_values = avg_values.reset_index()
+                # avg_values["n_thread"] = avg_values["n_thread"].apply(int)
+                d_avg_values[mtype] = avg_values
 
         # Updating parameters
         if not isinstance(params_dict, list):
@@ -556,26 +570,37 @@ class Kernel:
             return data
 
         list_rows = []
-        for execution in range(self.nexec):
-            new_dict = data.copy()
-            if "time" in d_avg_values:
-                new_dict.update(
-                    {
-                        "FLOPSs": Kernel.compute_flops(
-                            self.flops, d_avg_values["time"][execution]
-                        )
-                    }
-                )
-                new_dict.update({"time": d_avg_values["time"][execution]})
-            new_dict.update({"nexec": execution})
-            if "tsc" in d_avg_values:
-                if self.measure_tsc:
-                    new_dict.update({"tsc": d_avg_values["tsc"][execution]})
-            if "papi" in d_avg_values:
-                new_dict.update(
-                    dict(zip(self.papi_counters, [d_avg_values["papi"][execution]]))
-                )
-            list_rows += [new_dict]
+        if not self.multithread:
+            for execution in range(self.nexec):
+                new_dict = data.copy()
+                if "time" in d_avg_values:
+                    new_dict.update(
+                        {
+                            "FLOPSs": Kernel.compute_flops(
+                                self.flops, d_avg_values["time"][execution]
+                            )
+                        }
+                    )
+                    new_dict.update({"time": d_avg_values["time"][execution]})
+                new_dict.update({"nexec": execution})
+                if "tsc" in d_avg_values:
+                    if self.measure_tsc:
+                        new_dict.update({"tsc": d_avg_values["tsc"][execution]})
+                if "papi" in d_avg_values:
+                    new_dict.update(
+                        dict(zip(self.papi_counters, [d_avg_values["papi"][execution]]))
+                    )
+                list_rows += [new_dict]
+        else:
+            list_rows = pd.DataFrame()
+            for key in d_avg_values:
+                if not list_rows.empty:
+                    list_rows = list_rows.join(d_avg_values[key])
+                else:
+                    list_rows = d_avg_values[key]
+            list_rows = list_rows.reset_index()
+            for key in data:
+                list_rows[key] = data[key]
         return list_rows
 
     def finalize_actions(self):

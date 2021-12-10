@@ -157,21 +157,20 @@ class Timing:
     @staticmethod
     def compute_multithread(
         results, compute_avg, nexec, nsteps, benchmark_type
-    ) -> Tuple[Optional[dict], Optional[int]]:
-        df = pd.DataFrame(results)
-        df.set_index(0)
-        df.index.name = "n_thread"
-        if compute_avg:
-            results = df / nsteps
-        else:
-            if nexec != 1:
-                results = df.groupby("n_thread", axis=0).min().reset_index()
-            if isinstance(benchmark_type, list) and len(benchmark_type) > 1:
-                return dict(zip(benchmark_type, results)), 0
+    ) -> Tuple[dict, Optional[int]]:
+        df = pd.DataFrame(results).rename({0: "n_thread"}, axis=1)
+        df["n_thread"] = df["n_thread"].apply(int)
+        df = df.set_index("n_thread") / nsteps
+        if nexec > 1:
+            if compute_avg:
+                results = df.groupby("n_thread", axis=0).mean()
             else:
-                if isinstance(benchmark_type, list):
-                    benchmark_type = benchmark_type[0]
-                return {benchmark_type: results}, 0
+                results = df.groupby("n_thread", axis=0).min()
+        tmp = results.columns.values.tolist()
+        if not isinstance(benchmark_type, list):
+            benchmark_type = [benchmark_type]
+            col_dict = dict(zip(tmp, benchmark_type))
+            results.rename(col_dict, axis=1, inplace=True)
         return results, 0
 
     @staticmethod
@@ -307,9 +306,8 @@ class Timing:
                 results, compute_avg, nexec, nsteps, benchmark_type
             )
 
-        if compute_avg:
-            results = np.divide(results, nsteps)
-        else:
+        results = np.divide(results, nsteps)
+        if not compute_avg:
             if nexec != 1:
                 results = np.min(results, axis=0)
             if isinstance(benchmark_type, list) and len(benchmark_type) > 1:

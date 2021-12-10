@@ -379,7 +379,7 @@ class Profiler:
         generate_report = kernel.emit_report() | self.args.report
         output_filename = (
             kernel.get_output_filename()
-            if self.args.output == None
+            if self.args.output is None
             else self.args.output
         )
         if isinstance(output_cols, str) and output_cols == "all":
@@ -502,13 +502,13 @@ class Profiler:
                     for params_val in loop_iterator:
                         kern_exec = kernel.run(params_val, compiler, compiler_flags)
                         # There was an error, exit on error, save data first
-                        if kern_exec == None:
+                        if kern_exec is None:
                             kernel.save_results(df, output_filename, generate_report)
                             perror("Execution failed, partial results saved")
                             return None
                         if isinstance(kern_exec, list):
-                            for exec in kern_exec:
-                                df = df.append(exec, ignore_index=True)
+                            for execution in kern_exec:
+                                df = df.append(execution, ignore_index=True)
                         else:
                             df = df.append(kern_exec, ignore_index=True)
                     Timing.accm_timer("execution")
@@ -589,7 +589,7 @@ class Profiler:
 
         # For each kernel configuration
         for cfg in kernel_setup:
-            if self.profiling_kernels(cfg) == None:
+            if self.profiling_kernels(cfg) is None:
                 perror("Kernel failed...", exit_on_error=False)
 
         marta_exit(0)

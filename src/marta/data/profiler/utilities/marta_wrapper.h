@@ -208,10 +208,15 @@ static inline void _marta_finish_rdtsc() {
 
 #define END_RDTSC _marta_finish_rdtsc();
 #define PRINT_RDTSC                                                            \
-  for (int __th = 0; __th < omp_get_num_threads(); ++__th) {                   \
-    MARTA_PRINT_INSTRUMENTS("%d,%.1F\n", __th, (double)(__marta_rdtsc[__th])); \
-  }                                                                            \
-  free(__marta_rdtsc);
+  _Pragma("omp parallel") {                                                    \
+    _Pragma("omp master") {                                                    \
+      for (int __th = 0; __th < omp_get_num_threads(); ++__th) {               \
+        MARTA_PRINT_INSTRUMENTS("%d,%.1F\n", __th,                             \
+                                (double)(__marta_rdtsc[__th]));                \
+      }                                                                        \
+      free(__marta_rdtsc);                                                     \
+    }                                                                          \
+  }
 
 #else
 #define START_RDTSC _marta_cycles_t __marta_t0 = _marta_rdtsc_start();

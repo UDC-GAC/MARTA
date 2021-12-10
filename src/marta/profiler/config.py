@@ -308,10 +308,10 @@ def get_derived(derived_columns: dict, data: dict) -> dict:
         derived_dict = {}
         for derived in derived_columns:
             variables = derived_columns[derived].get("variables")
-            if variables == None or not isinstance(variables, list):
+            if variables is None or not isinstance(variables, list):
                 perror("Bad formatting derived")
             expression = derived_columns[derived].get("expression")
-            if expression == None:
+            if expression is None:
                 perror("Bad formatting derived")
             expr_type = derived_columns[derived].get("type", "single")
             if expr_type == "single":
