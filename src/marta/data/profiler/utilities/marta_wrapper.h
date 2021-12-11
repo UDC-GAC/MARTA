@@ -22,6 +22,10 @@
 #define _GNU_SOURCE
 #endif
 
+#ifdef MARTA_MULTITHREAD
+#include <omp.h>
+#endif
+
 #include "polybench.h"
 #include "polybench_definitions.h"
 
