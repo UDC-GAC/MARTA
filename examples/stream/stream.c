@@ -216,9 +216,18 @@ int main() {
   STREAM_TYPE scalar;
   double t, times[4][NTIMES];
 
-  posix_memalign( &a, 64, 3*sizeof(STREAM_TYPE)*(STREAM_ARRAY_SIZE+OFFSET) );
-  b = &a[STREAM_ARRAY_SIZE+OFFSET];
-  c = &b[STREAM_ARRAY_SIZE+OFFSET];
+//  posix_memalign( &a, 64, 3*sizeof(STREAM_TYPE)*(STREAM_ARRAY_SIZE+OFFSET) );
+//  b = &a[STREAM_ARRAY_SIZE+OFFSET];
+//  c = &b[STREAM_ARRAY_SIZE+OFFSET];
+  posix_memalign( &a, 64, sizeof(STREAM_TYPE)*(STREAM_ARRAY_SIZE+3*OFFSET) );
+  posix_memalign( &b, 64, sizeof(STREAM_TYPE)*(STREAM_ARRAY_SIZE+3*OFFSET) );
+  posix_memalign( &c, 64, sizeof(STREAM_TYPE)*(STREAM_ARRAY_SIZE+3*OFFSET) );
+  b = &b[OFFSET];
+  c = &c[OFFSET*2];
+  
+  printf( "a -> %lx\n", a );
+  printf( "b -> %lx\n", b );
+  printf( "c -> %lx\n", c );
 
   // Random seed
   srand( time( 0 ) );
@@ -282,7 +291,7 @@ int main() {
 #if (ADD_VERSION == 24) || (ADD_VERSION == 25)
     // a will be used as an index array over b
     if( j % 8 == 0 ) {
-        a[j] = (rand() % STREAM_ARRAY_SIZE) / 8 * 8;          
+        a[j] = (rand() % STREAM_ARRAY_SIZE) / 8 * 8;
     } else {
         a[j] = 1.0;
     }
@@ -308,7 +317,7 @@ int main() {
   t = mysecond();
 #pragma omp parallel for
   for (j = 0; j < STREAM_ARRAY_SIZE; j++)
-    a[j] = 2.0E0 * a[j];
+    c[j] = 2.0E0 * c[j];
   t = 1.0E6 * (mysecond() - t);
 
   printf("Each test below will take on the order"
@@ -350,19 +359,20 @@ int main() {
     times[1][k] = mysecond() - times[1][k];
 
 #ifdef TUNED
-    PROFILE_FUNCTION_LOOP(tuned_STREAM_Add(), TSTEPS);
+    PROFILE_FUNCTION_LOOP(tuned_STREAM_Add());
 //    tuned_STREAM_Add();
 #endif
 
     times[2][k] = mysecond();
 #ifdef TUNED
-    //tuned_STREAM_Add();
+//    tuned_STREAM_Add();
 #else
 #pragma omp parallel for
     for (j = 0; j < STREAM_ARRAY_SIZE; j++)
       c[j] = a[j] + b[j];
 #endif
     times[2][k] = mysecond() - times[2][k];
+
 
     times[3][k] = mysecond();
 #ifdef TUNED
@@ -480,8 +490,6 @@ void checkSTREAMresults() {
     aSumErr += abs(a[j] - aj);
     bSumErr += abs(b[j] - bj);
     cSumErr += abs(c[j] - cj);
-    // if (j == 417) printf("Index 417: c[j]: %f, cj: %f\n",c[j],cj);	//
-    // MCCALPIN
   }
   aAvgErr = aSumErr / (STREAM_TYPE)STREAM_ARRAY_SIZE;
   bAvgErr = bSumErr / (STREAM_TYPE)STREAM_ARRAY_SIZE;
@@ -637,7 +645,7 @@ void tuned_STREAM_Add() {
 #elif ADD_VERSION == 25
           int data_c = j;
           int data_a = j;
-          int data_b = a[data_a];
+          int data_b = (int)a[data_a];
 #elif ADD_VERSION == 26
           int data_c = (rand() % STREAM_ARRAY_SIZE) / 8 * 8;          
     	  int data_a = j;

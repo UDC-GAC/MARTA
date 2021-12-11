@@ -70,7 +70,7 @@
               BANDWIDTH:
                   type: single
                   variables: ["tsc", "STREAM_ARRAY_SIZE"]
-                  expression: (3 * VAR_1 * 8) / (VAR_0/3.4) #3.4GHz is the base freq of Ryzen 5950X
+                  expression: (3 * VAR_1 * 8) / (VAR_0/3.7) #3.4GHz is the base freq of Ryzen 5950X
       execution:
           stdout_redirect: "/tmp/TESTING_OUTPUT_MKS"
           enabled: True
@@ -83,7 +83,7 @@
           nexec: 10
           nsteps: 1
           cpu_affinity: 11
-          prefix: "taskset -c 11"
+            #prefix: "taskset -c 11"
       output:
           name: "default"
           columns: "all"
