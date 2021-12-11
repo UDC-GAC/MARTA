@@ -1,0 +1,106 @@
+- kernel:
+      name: "stream"
+      path: "."
+      description: "Setup for experiment autovectorization"
+      debug: False
+      preamble:
+          command: "sudo cpupower frequency-set -u 4.0GHz  > /dev/null && sudo
+              cpupower frequency-set -d 4.0GHz > /dev/null"
+      finalize:
+          clean_tmp_files: False
+          clean_asm_files: False
+          clean_bin_files: False
+          command: "echo 'done!'"
+      compilation:
+          debug: False
+          enabled: True
+          processes: 64
+          language: "C"
+          compiler_flags:
+              { "gcc-11": [" -march=native -O3 -DTUNED -fno-inline -fopenmp "] }
+          main_src: "stream.c"
+          loop_type: C # if you choose "asm" loop type it may cause SIGSEV as it uses EDX register
+          kernel_inlined: True
+          asm_analysis:
+              syntax: "intel"
+              count_ins: False
+              static_analysis: ""
+      configuration:
+          d_features:
+              MARTA_NUM_THREADS:
+                  evaluate: True
+                  type: "static"
+                  val_type: "numeric"
+                  #value: "[1,2,4,8]"
+                  value: "[24]"
+              OFFSET:
+                  evaluate: True
+                  type: "static"
+                  val_type: "numeric"
+                  value: "[8]"
+              STREAM_ARRAY_SIZE:
+                  evaluate: True
+                  type: "static"
+                  val_type:
+                      "numeric"
+                      #value: "[33554432]"
+                  value: "[8388608]"
+              ADD_VERSION:
+                  evaluate: True
+                  type: "static"
+                  val_type: "numeric"
+                  value:
+                      "[0,11,12,13,14,21,22,23,24,25,26]"
+                      #"[24]"
+                      #value: "[4]"
+                      #              ASSIGNMENT_VERSION:
+                      #                  evaluate: True
+                      #                  type: "static"
+                      #                  val_type: "numeric"
+                      #                    #value: "list(range(2))"
+                      #                  value: "[0]"
+              STRIDE:
+                  evaluate: True
+                  type: "static"
+                  val_type: "numeric"
+                  value: "2**np.arange(21)"
+                  #value: "[2]"
+              SW_PREFETCH:
+                  evaluate: True
+                  type: "static"
+                  val_type: "numeric"
+                  value: "[0]"
+          derived:
+              BANDWIDTH:
+                  type: single
+                  variables: ["tsc", "STREAM_ARRAY_SIZE"]
+                  expression: (3 * VAR_1 * 8) / (VAR_0/4.0)
+      execution:
+          stdout_redirect: "/tmp/TESTING_OUTPUT_MKS"
+          enabled: True
+          time: False
+          papi_counters:
+              [
+                  "MEM_LOAD_UOPS_RETIRED:L1_HIT",
+                  "MEM_LOAD_UOPS_RETIRED:L1_MISS",
+                  "L2_RQSTS:DEMAND_DATA_RD_HIT",
+                  "L2_RQSTS:DEMAND_DATA_RD_MISS",
+                  "LONGEST_LAT_CACHE:MISS",
+                  "MEM_LOAD_L3_MISS_RETIRED:LOCAL_DRAM",
+                  "MEM_INST_RETIRED:ALL_LOADS",
+                  "MEM_INST_RETIRED:ALL_STORES",
+              ]
+          tsc: True
+          threshold_outliers: 3
+          #discard_outliers: True
+          compute_avg: False
+          nexec: 10
+          nsteps: 1
+          cpu_affinity: 11
+          prefix: "OMP_NUM_THREADS=24"
+          multithread: True
+      output:
+          name: "cascadelake_gold"
+          columns: "all"
+          report: True
+          verbose: True
