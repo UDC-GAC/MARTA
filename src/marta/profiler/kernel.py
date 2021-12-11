@@ -551,11 +551,11 @@ class Kernel:
             data.update({"CFG": kconfig})
         data.update({"compiler": compiler, "compiler_flags": compiler_flags})
 
-        # Add metadata
-        data.update(get_metadata(self.meta_info, data))
-
-        # Add derived
-        data.update(get_derived(self.derived_columns, data))
+        if not self.multithread:
+            # Add metadata
+            data.update(get_metadata(self.meta_info, data))
+            # Add derived
+            data.update(get_derived(self.derived_columns, data))
 
         # Discard outliers
         if self.discard_outliers:
@@ -601,6 +601,9 @@ class Kernel:
             list_rows = list_rows.reset_index()
             for key in data:
                 list_rows[key] = data[key]
+            derived = get_derived(self.derived_columns, list_rows)
+            for key in derived:
+                list_rows[key] = derived[key]
         return list_rows
 
     def finalize_actions(self):

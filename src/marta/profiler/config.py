@@ -251,14 +251,23 @@ def get_derived_single(
     var_index = 0
     new_expression = expression
     for var in variables:
-        new_expression = new_expression.replace(f"VAR_{var_index}", f"{str(data[var])}")
+        if isinstance(data, dict):
+            new_expression = new_expression.replace(
+                f"VAR_{var_index}", f"{str(data[var])}"
+            )
+        else:
+            new_expression = new_expression.replace(
+                f"VAR_{var_index}", f"data['{var}']"
+            )
         var_index += 1
     try:
         value = eval(new_expression)
     except KeyError as k:
         perror(f"Key {k} does not exist in derived columns")
     except Exception as e:
-        perror(f"Something went wrong when parsing derived values: {e}")
+        perror(
+            f"Something went wrong when parsing derived values: {e} {new_expression}"
+        )
     return {derived: value}
 
 
