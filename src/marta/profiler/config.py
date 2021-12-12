@@ -106,7 +106,7 @@ def parse_kernel_options(config: dict) -> dict:
         try:
             cfg["asm_body"] = config_config["asm_body"]
             cfg["asm_init"] = config_config["asm_init"]
-            cfg["asm_unroll"] = config_config.get("loop_unroll", 100)
+            cfg["asm_unroll"] = config_config.get("asm_unroll", 100)
             cfg["asm_permutations"] = config_config.get("asm_permutation", False)
         except KeyError as k:
             perror(f"Configuration key missing for 'asm' config: {k}")

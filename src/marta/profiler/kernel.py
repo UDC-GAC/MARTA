@@ -438,6 +438,15 @@ class Kernel:
         del tmp_pickle["KERNEL_CFG"]
         params_dict = tmp_pickle
         name_bin, _ = get_suffix_and_flags(kconfig, params_dict)
+        if "MARTA_NUM_THREADS" in params_dict:
+            if "OMP_NUM_THREADS" in self.exec_args:
+                self.exec_args = re.sub(
+                    r"OMP_NUM_THREADS=([0-9]+)",
+                    f"OMP_NUM_THREADS={params_dict['MARTA_NUM_THREADS']}",
+                    self.exec_args,
+                )
+            else:
+                self.exec_args += f"OMP_NUM_THREADS={params_dict['MARTA_NUM_THREADS']}"
         name_bin = f"{self.kernel}_{name_bin}"
         compiler_flags_suffix = compiler_flags.replace(" ", "_").replace("-", "")
 
@@ -483,6 +492,7 @@ class Kernel:
                 isinstance(measurements[mtype], bool) and not measurements[mtype]
             ):
                 continue
+
             avg_values, discarded_values = Timing.measure_benchmark(
                 name_bin,
                 mtype,
