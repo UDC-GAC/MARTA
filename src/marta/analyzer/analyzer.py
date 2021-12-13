@@ -34,7 +34,13 @@ from marta.analyzer.processing import (
     categorize_target_dimension,
     column_strings_to_int,
 )
-from marta.utils.marta_utilities import perror, pinfo, dump_config_file, pwarning, print_version
+from marta.utils.marta_utilities import (
+    perror,
+    pinfo,
+    dump_config_file,
+    pwarning,
+    print_version,
+)
 
 
 class Analyzer:
@@ -185,21 +191,25 @@ class Analyzer:
             pwarning("Feature importance analysis disabled")
 
         # Plotting
-        if self.plot_enabled:
-            if self.plot_cfg.data == "raw":
-                plot_data(
-                    self.raw_data,
-                    self.plot_cfg,
-                    f"{self.output_path}/plot_raw_data_{self.plot_cfg.type}",
-                )
-            else:
-                plot_data(
-                    self.data_processed,
-                    self.plot_cfg,
-                    f"{self.output_path}/plot_processed_data_{self.plot_cfg.type}",
-                )
+        if len(self.plot_cfg) > 0:
+            for plt in self.plot_cfg:
+                if not self.plot_enabled[plt]:
+                    pwarning(f"Plotting disabled for {plt}")
+                    continue
+                if self.plot_cfg[plt].data == "raw":
+                    plot_data(
+                        self.raw_data,
+                        self.plot_cfg[plt],
+                        f"{self.output_path}/plot_raw_data_{self.plot_cfg[plt].type}",
+                    )
+                else:
+                    plot_data(
+                        self.data_processed,
+                        self.plot_cfg[plt],
+                        f"{self.output_path}/plot_processed_data_{self.plot_cfg[plt].type}",
+                    )
         else:
-            pwarning("Plotting disabled")
+            pwarning("Nothing to plot")
 
     def __init__(self, args):
         self.args = self.parse_arguments(args)
