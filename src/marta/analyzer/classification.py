@@ -231,6 +231,7 @@ class DecisionTree(Classification):
             self.labels = np.unique(self.target_data).tolist()
         else:
             self.labels = self.config.labels
+        
         self.var_train, self.var_test, self.res_train, self.res_test = train_test_split(
             self.data.values, self.target_data.values, test_size=0.2
         )

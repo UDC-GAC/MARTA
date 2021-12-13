@@ -137,8 +137,12 @@ def categorize_target_dimension(
         intervals.append(max(sub_int))
 
     labels = []
+    max_integer_part = 0
     for cat in P:
-        new_label = f"{target_value}-{min(cat):06.3f}-{max(cat):06.3f}"
+        c_max = str(int(max(cat)))
+        max_integer_part = max(max_integer_part, len(c_max))
+    for cat in P:
+        new_label = f"{target_value}-{min(cat):0{max_integer_part+4}.3f}-{max(cat):0{max_integer_part+4}.3f}"
         labels.append(new_label)
         pinfo(f"    New category created = {new_label}")
 
