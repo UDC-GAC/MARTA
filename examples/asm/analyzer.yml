@@ -1,0 +1,76 @@
+- kernel:
+      input: examples/asm/data/data_consolidated.csv
+      output_path: examples/asm/data/
+      prepare_data:
+          cols: N_FMA _ASM_VERSION
+          rows: {}
+          target: THROUGHPUT
+          norm: None
+          categories:
+              mode: "gaussian"
+              grid_search: True
+              enabled: True
+              scaling_factor: "1"
+      plot:
+          density:
+              enabled: False
+              type: kdeplot
+              format: pdf
+              data: processed
+              x_axis: THROUGHPUT
+              log_scale: False
+              hue: N_FMA
+              cumulative: False
+              hatches: True
+              multiple: "stack"
+              rugplot: True
+              mark_centroids: True
+          scatterplot:
+              enabled: False
+              type: scatterplot
+              format: pdf
+              data: raw
+              x_axis: N_FMA
+              y_axis: THROUGHPUT
+              palette: "crimson"
+              hue: _ASM_VERSION
+          lineplot:
+              enabled: True
+              type: lineplot
+              format: pdf
+              data: raw
+              x_axis: N_FMA
+              y_axis: THROUGHPUT
+              palette: "crimson"
+              hue: _ASM_VERSION
+              hue_order:
+                  [
+                      "float_128",
+                      "float_256",
+                      "float_512",
+                      "double_128",
+                      "double_256",
+                      "double_512",
+                  ]
+              markers: True
+              err_style: "bars"
+              ci: 68
+      classification:
+          type: decision_tree
+          enabled: True
+          config:
+              max_depth: 4
+              max_leaves: 10000
+              proportion: True
+              text_tree: False
+              graph_tree: True
+              orientation: "horizontal"
+      feature_importance:
+          type: random_forest
+          enabled: False
+          config:
+              n_estimators: 50
+              criterion: "gini"
+              max_depth: 50
+              n_jobs: -1
+              random_state: 0
