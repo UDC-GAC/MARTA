@@ -138,8 +138,9 @@ class DecisionTree(Classification):
             if prediction != label:
                 missclassified += 1
         if missclassified:
+            miss_rate = missclassified / len(self.data.values)
             pwarning(
-                f"Missclassified data: {missclassified}/{len(self.data.values)} ({1-score_dt:.3f})".format()
+                f"Missclassified data: {missclassified}/{len(self.data.values)} ({miss_rate:.3f})".format()
             )
 
         if not self.continuous:
@@ -231,7 +232,7 @@ class DecisionTree(Classification):
             self.labels = np.unique(self.target_data).tolist()
         else:
             self.labels = self.config.labels
-        
+
         self.var_train, self.var_test, self.res_train, self.res_test = train_test_split(
             self.data.values, self.target_data.values, test_size=0.2
         )

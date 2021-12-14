@@ -23,6 +23,7 @@ import os
 import subprocess
 import pickle
 import re
+import itertools as it
 from typing import Union
 from math import ceil, floor
 from datetime import datetime as dt
@@ -405,13 +406,34 @@ class Kernel:
 
         main_src = self.main_src
         if self.bench_type == "asm":
-            for case in self.asm_init:
-                asm_init = self.asm_init[case]
-                asm_body = self.asm_body[case]
+            case = params_dict["_ASM_VERSION"]
+            asm_init = self.asm_init.get(case, [])
+            asm_body = self.asm_body[case]
+            if self.asm_permutations:
+                perm_indices = [
+                    int(idx) for idx in list(params_dict["_ASM_PERMUTATION"])
+                ]
+                permuted_body = []
+                for idx in perm_indices:
+                    permuted_body.append(asm_body[idx])
+                raw_asm = gen_asm_bench(asm_init, permuted_body, self.asm_unroll)
+                main_src = (
+                    f"_{case}_perm{params_dict['_ASM_PERMUTATION']}_{self.main_src}"
+                )
+            elif self.asm_range:
+                raw_asm = gen_asm_bench(
+                    asm_init,
+                    asm_body[: params_dict["_ASM_PERMUTATION"]],
+                    self.asm_unroll,
+                )
+                main_src = (
+                    f"_{case}_perm{params_dict['_ASM_PERMUTATION']}_{self.main_src}"
+                )
+            else:
                 raw_asm = gen_asm_bench(asm_init, asm_body, self.asm_unroll)
-                main_src = f"_{case}_{main_src}"
-                with open(f"{self.path_kernel}/{main_src}", "w") as f:
-                    f.writelines(raw_asm)
+                main_src = f"_{case}_perm0_{self.main_src}"
+            with open(f"{self.path_kernel}/{main_src}", "w") as f:
+                f.writelines(raw_asm)
 
         ret = compile_makefile(
             self.kernel,

@@ -20,6 +20,7 @@
 import os
 import yaml
 import subprocess
+import itertools as it
 
 from marta.utils.marta_utilities import pwarning, pexcept, perror, check_marta_files
 
@@ -102,14 +103,7 @@ def parse_kernel_options(config: dict) -> dict:
     cfg["kernel_cfg"] = config_config.get("kernel_cfg", [""])
     if len(cfg["kernel_cfg"]) == 0:
         cfg["kernel_cfg"] = [""]
-    if cfg["bench_type"] == "asm":
-        try:
-            cfg["asm_body"] = config_config["asm_body"]
-            cfg["asm_init"] = config_config["asm_init"]
-            cfg["asm_unroll"] = config_config.get("asm_unroll", 100)
-            cfg["asm_permutations"] = config_config.get("asm_permutation", False)
-        except KeyError as k:
-            perror(f"Configuration key missing for 'asm' config: {k}")
+
     cfg["d_features"] = config_config.get(
         "d_features",
         {
@@ -121,14 +115,66 @@ def parse_kernel_options(config: dict) -> dict:
             }
         },
     )
+    if cfg["bench_type"] == "asm":
+        try:
+            cfg["asm_body"] = config_config["asm_body"]
+            values = []
+            for k in cfg["asm_body"]:
+                values.append(k)
+            cfg["d_features"].update(
+                {
+                    "_ASM_VERSION": {
+                        "evaluate": True,
+                        "type": "static",
+                        "val_type": "string",
+                        "value": str(values),
+                    }
+                }
+            )
+            cfg["asm_init"] = config_config.get("asm_init", {})
+            cfg["asm_unroll"] = config_config.get("asm_unroll", 100)
+            cfg["asm_permutations"] = config_config.get("asm_perm", False)
+            cfg["asm_range"] = config_config.get("asm_range", False)
+            if cfg["asm_range"]:
+                values = []
+                for k in cfg["asm_body"]:
+                    cfg["d_features"].update(
+                        {
+                            f"_ASM_PERMUTATION": {
+                                "evaluate": True,
+                                "type": "static",
+                                "val_type": "string",
+                                "value": str(
+                                    list(range(1, len(cfg["asm_body"][k]) + 1))
+                                ),
+                            }
+                        }
+                    )
+            if cfg["asm_permutations"]:
+                values = []
+                for k in cfg["asm_body"]:
+                    size_body = len(cfg["asm_body"][k])
+                    if size_body == 1:
+                        values.append("0")
+                    for i in range(1, size_body + 1):
+                        for k in list(it.permutations(list(range(size_body)), i)):
+                            s = "".join(list([str(j) for j in k]))
+                            values.append(s)
+                cfg["d_features"].update(
+                    {
+                        f"_ASM_PERMUTATION": {
+                            "evaluate": True,
+                            "type": "static",
+                            "val_type": "string",
+                            "value": str(values),
+                        }
+                    }
+                )
+        except KeyError as k:
+            perror(f"Configuration key missing for 'asm' config: {k}")
     cfg["d_flags"] = config_config.get("d_flags", [])
     cfg["flops"] = config_config.get("flops", "1")
     cfg["meta_info"] = config_config.get("meta_info", {})
-    # meta_info = config_config.get("meta_info", {})
-    # cfg["meta_info_script"] = meta_info.get("script", "")
-    # cfg["meta_info_path"] = meta_info.get("path", ".")
-    # cfg["meta_info_script_input"] = meta_info.get("input", "")
-    # cfg["meta_info_script_input_suffix"] = meta_info.get("suffix", "")
     cfg["macveth"] = config_config.get("macveth", False)
     if cfg["macveth"]:
         cfg["kernel_cfg"].append("MACVETH")

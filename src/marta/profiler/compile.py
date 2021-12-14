@@ -113,7 +113,7 @@ def gen_asm_bench(
                 for _ in range(loop_unroll):
                     lines.extend(asm_code)
             if "ASM_INIT" in line:
-                if asm_init[0] != "":
+                if len(asm_init) > 0 and asm_init[0] != "":
                     asm_code = [f'    __asm volatile("{asm}");' for asm in asm_init]
                     lines.extend(asm_code)
     return lines

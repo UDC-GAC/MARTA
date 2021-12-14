@@ -56,7 +56,7 @@ def column_strings_to_int(df: pd.DataFrame, columns: list) -> Tuple[pd.DataFrame
     return df, encoders
 
 
-def grid_search(X: pd.Series) -> Tuple[float, str]:
+def _grid_search(X: pd.Series) -> Tuple[float, str]:
     bw_space = np.linspace(0.0, 1.0, 30)
     kernels = [
         "cosine",
@@ -109,7 +109,7 @@ def categorize_target_dimension(
     score_samples_space = np.linspace(min(X), max(X), int(len(X))).reshape(1, -1)[0]
     if mode != "normal":
         if grid_search:
-            bw, kern = grid_search(X)
+            bw, kern = _grid_search(X)
             pinfo(f"Best parameters for KDE: bandwidth = {bw}; kernel = {kern}")
             kde = KernelDensity(bandwidth=bw, kernel=kern).fit(X)
             e = kde.score_samples(score_samples_space.reshape(-1, 1))
@@ -120,7 +120,7 @@ def categorize_target_dimension(
             _, e = FFTKDE(kernel="gaussian", bw=bandwidth_type).fit(X).evaluate(len(X))
     else:
         _, e = FFTKDE(kernel="gaussian", bw="silverman").fit(X).evaluate(len(X))
-    mi = argrelextrema(e, np.less)[0]
+    mi = argrelextrema(e, np.less_equal)[0]
 
     P = [X[X < score_samples_space[mi][0]]]
     for i in range(len(mi) - 1):
@@ -132,9 +132,15 @@ def categorize_target_dimension(
     if len(mi) >= 1:
         P.append(X[X >= score_samples_space[mi][-1]])
 
-    intervals = [min(P[0])]
+    intervals = []
+    if len(P[0]) != 0:
+        intervals.append(min(P[0]))
+    else:
+        P = P[1:]
+        intervals.append(min(P[0]))
     for sub_int in P:
-        intervals.append(max(sub_int))
+        if len(sub_int) != 0:
+            intervals.append(max(sub_int))
 
     labels = []
     max_integer_part = 0
@@ -155,8 +161,11 @@ def categorize_target_dimension(
             "Please revise the settings in the configuration file."
         )
 
+    intervals = list(np.unique(intervals))
+    if len(intervals) == len(labels):
+        intervals.append(np.inf)
     df[f"{target_value}_cat"] = pd.cut(
-        tmp_target_value, intervals, labels=labels, include_lowest=True
+        tmp_target_value, intervals, labels=labels, include_lowest=True,
     )
     return df, labels
 
