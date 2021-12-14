@@ -1,24 +1,37 @@
 - kernel:
-      input: examples/gather_scatter/data/intel_xeon_silver_4216.csv
+      input: examples/gather_scatter/data/coldcache/full_data_archs.csv
       output_path: examples/gather_scatter/data/
       prepare_data:
-          cols: N_SET N_CL
-          rows: { "CFG": "-DSCATTER" }
+          cols: N_CL arch vec_width
+          rows: { "CFG": "-DGATHER" }
           target: tsc
           norm: None
           categories:
               enabled: True
               scaling_factor: "1"
-              mode: multimodal
       plot:
-          enabled: False
-          type: kdeplot
-          format: pdf
-          data: raw
-          x_axis: tsc
-          log_scale: False
-          hue: CFG
-          hatches: True
+          density:
+              enabled: False
+              type: kdeplot
+              format: pdf
+              data: processed
+              x_axis: tsc
+              log_scale: False
+              hue: tsc_cat
+              cumulative: False
+              hatches: True
+              multiple: "stack"
+              rugplot: True
+              mark_centroids: True
+          scatterplot:
+              enabled: True
+              type: scatterplot
+              format: pdf
+              data: processed
+              x_axis: index
+              y_axis: tsc
+              palette: "crimson"
+              hue: arch
       classification:
           type: decision_tree
           enabled: True
@@ -26,12 +39,12 @@
               max_depth: 4
               max_leaves: 10000
               proportion: True
-              text_tree: True
+              text_tree: False
               graph_tree: True
               orientation: "horizontal"
       feature_importance:
           type: random_forest
-          enabled: False
+          enabled: True
           config:
               n_estimators: 50
               criterion: "gini"
