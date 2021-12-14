@@ -74,6 +74,7 @@ class PlotCfg:
         "kdeplot",
         "catplot",
         "jointplot",
+        "displot",
     ]
     allowed_formats = ["pdf", "eps", "png", "ps", "svg"]
 

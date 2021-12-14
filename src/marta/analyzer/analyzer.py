@@ -114,9 +114,12 @@ class Analyzer:
             except TypeError:
                 cond = getattr(df, d) == self.filter_rows[d]
             except Exception as E:
-                perror(
-                    f"check kernel[prepare_data[rows]], there is something wrong: {E}"
-                )
+                try:
+                    cond = eval(f"df['{d}']{self.filter_rows[d]}")
+                except Exception as E:
+                    perror(
+                        f"check kernel[prepare_data[rows]], there is something wrong: {E}"
+                    )
             df = df[cond].copy()
         if df.count()[0] == 0:
             perror("dataset empty, check constraints in data please!")
