@@ -90,6 +90,7 @@ class PlotCfg:
                 f"Wrong format for plot configuration, must be one of {PlotCfg.allowed_formats}"
             )
         self.hue = cfg.get("hue", None)
+        self.hue_order = cfg.get("hue_order", None)
         self.size = cfg.get("size", None)
         self.col = cfg.get("col", None)
         self.row = cfg.get("row", None)
@@ -105,6 +106,10 @@ class PlotCfg:
         self.font_scale = cfg.get("font_scale", 1.0)
         self.multiple = cfg.get("multiple", "stack")
         self.rugplot = cfg.get("rugplot", False)
+        self.markers = cfg.get("markers", False)
+        self.dashes = cfg.get("dashes", False)
+        self.err_style = cfg.get("err_style", None)
+        self.style = cfg.get("style", self.hue)
         try:
             self.x = cfg["x_axis"]
         except KeyError as K:

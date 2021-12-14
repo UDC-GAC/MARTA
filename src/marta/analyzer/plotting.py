@@ -136,9 +136,15 @@ def plot_data(data: pd.DataFrame, cfg: PlotCfg, output_file: str) -> None:
         )
     else:
         plot_type(
-            data=data, x=cfg.x, y=cfg.y, hue=cfg.hue, size=cfg.size,
+            data=data,
+            x=cfg.x,
+            y=cfg.y,
+            hue=cfg.hue,
+            hue_order=cfg.hue_order,
+            style=cfg.style,
         )
-        sns.rugplot(data=data, x=cfg.x, y=cfg.y, hue=cfg.hue)
+
+        # sns.rugplot(data=data, x=cfg.x, y=cfg.y, hue=cfg.hue)
 
     if output_file == "":
         perror("Wrong file to save plot")
