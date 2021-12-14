@@ -22,16 +22,16 @@
               {
                   "float_512":
                       [
-                          "vfmadd213ps  %xmm2, %xmm1, %xmm0",
-                          "vfmadd213ps  %xmm5, %xmm4, %xmm3",
-                          "vfmadd213ps  %xmm8, %xmm7, %xmm6",
-                          "vfmadd213ps  %xmm11, %xmm10, %xmm9",
-                          "vfmadd213ps  %xmm14, %xmm13, %xmm12",
-                          "vfmadd213ps  %xmm17, %xmm16, %xmm15",
-                          "vfmadd213ps  %xmm20, %xmm19, %xmm18",
-                          "vfmadd213ps  %xmm23, %xmm22, %xmm21",
-                          "vfmadd213ps  %xmm26, %xmm25, %xmm24",
-                          "vfmadd213ps  %xmm29, %xmm28, %xmm27",
+                          "vfmadd213ps  %zmm2, %zmm1, %zmm0",
+                          "vfmadd213ps  %zmm5, %zmm4, %zmm3",
+                          "vfmadd213ps  %zmm8, %zmm7, %zmm6",
+                          "vfmadd213ps  %zmm11, %zmm10, %zmm9",
+                          "vfmadd213ps  %zmm14, %zmm13, %zmm12",
+                          "vfmadd213ps  %zmm17, %zmm16, %zmm15",
+                          "vfmadd213ps  %zmm20, %zmm19, %zmm18",
+                          "vfmadd213ps  %zmm23, %zmm22, %zmm21",
+                          "vfmadd213ps  %zmm26, %zmm25, %zmm24",
+                          "vfmadd213ps  %zmm29, %zmm28, %zmm27",
                       ],
               }
           asm_unroll: 1000
