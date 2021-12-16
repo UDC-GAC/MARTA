@@ -42,7 +42,7 @@ from marta.profiler.compile import (
     vector_report_analysis,
     gen_asm_bench,
 )
-from marta.profiler.d_features import eval_features, get_d_features_iterations
+from marta.profiler.d_features import eval_features
 from marta.profiler.report import Report
 from marta.profiler.timing import Timing
 from marta.profiler.static_code_analyzer import StaticCodeAnalyzer
@@ -442,12 +442,12 @@ class Kernel:
             kconfig,
             other_flags,
             suffix_file,
+            self.debug,
         )
 
         return not (not ret and quit_on_error)
 
     def run(self, product_params: bytes, compiler: str, compiler_flags="") -> list:
-        # FIXME: refactor this now.
         data = {}
         tmp_pickle = pickle.loads(product_params)
         kconfig = tmp_pickle["KERNEL_CFG"]
@@ -462,7 +462,7 @@ class Kernel:
                     self.exec_args,
                 )
             else:
-                self.exec_args += f"OMP_NUM_THREADS={params_dict['MARTA_NUM_THREADS']}"
+                self.exec_args += f" OMP_NUM_THREADS={params_dict['MARTA_NUM_THREADS']}"
         name_bin = f"{self.kernel}_{name_bin}"
         compiler_flags_suffix = compiler_flags.replace(" ", "_").replace("-", "")
 
@@ -518,8 +518,8 @@ class Kernel:
                 self.nexec,
                 self.nsteps,
                 self.threshold_outliers,
-                self.discard_outliers,
-                self.compute_avg,
+                discard_outliers=self.discard_outliers,
+                compute_avg=self.compute_avg,
                 bin_path=self.get_kernel_path("/marta_profiler_data/bin"),
                 redirect_stdout=self.stdout_redirect,
                 multithread=self.multithread,
@@ -559,8 +559,6 @@ class Kernel:
                 if mtype == "papi":
                     col_dict = dict(zip(tmp, self.papi_counters))
                     avg_values.rename(col_dict, axis=1, inplace=True)
-                # avg_values = avg_values.reset_index()
-                # avg_values["n_thread"] = avg_values["n_thread"].apply(int)
                 d_avg_values[mtype] = avg_values
 
         # Updating parameters
@@ -584,16 +582,14 @@ class Kernel:
             data.update(get_derived(self.derived_columns, data))
 
         # Discard outliers
-        if self.discard_outliers:
-            if self.measure_time:
-                data.update(
-                    {
-                        "FLOPSs": Kernel.compute_flops(
-                            self.flops, d_avg_values["time"]["time"]
-                        )
-                    }
-                )
-            return data
+        if self.measure_time:
+            data.update(
+                {
+                    "FLOPSs": Kernel.compute_flops(
+                        self.flops, d_avg_values["time"]["time"]
+                    )
+                }
+            )
 
         list_rows = []
         if not self.multithread:

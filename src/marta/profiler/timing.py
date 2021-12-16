@@ -155,7 +155,12 @@ class Timing:
 
     @staticmethod
     def compute_multithread(
-        results, compute_avg, nexec, nsteps, benchmark_type
+        results,
+        discard_outliers: bool,
+        compute_avg: bool,
+        nexec: int,
+        nsteps: int,
+        benchmark_type,
     ) -> Tuple[dict, Optional[int]]:
         df = pd.DataFrame(results).rename({0: "n_thread"}, axis=1)
         df["n_thread"] = df["n_thread"].apply(int)
@@ -237,8 +242,6 @@ class Timing:
         """
 
         cmd_line = bin_file
-
-        print(bin_file)
         if nexec < 3:
             Logger.warning(
                 "Consider increasing the number of executions to, at least, 3"
@@ -303,7 +306,7 @@ class Timing:
 
         if multithread:
             return Timing.compute_multithread(
-                results, compute_avg, nexec, nsteps, benchmark_type
+                results, discard_outliers, compute_avg, nexec, nsteps, benchmark_type
             )
 
         results = np.divide(results, nsteps)

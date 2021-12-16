@@ -162,6 +162,7 @@ def compile_makefile(
     kconfig: str,
     other_flags: list,
     suffix_file="",
+    debug: bool = False,
 ) -> bool:
     """
     Compile benchmark according to a set of flags, suffixes and so
@@ -179,13 +180,12 @@ def compile_makefile(
     """
 
     # Check if options in kernel config string:
-    tok = kconfig.split(" ")
-    for t in tok:
-        if "-D" in t:
+    for t in kconfig.split(" "):
+        if "-D" in t:  # D flags
             kconfig = kconfig.replace(t, "")
             common_flags += f" {t}"
             continue
-        if "=" in t:
+        if "=" in t:  # Makefile option
             kconfig = kconfig.replace(t, "")
             other_flags += f" {t}"
 
@@ -207,12 +207,12 @@ def compile_makefile(
         *other_flags,
     ]
 
-    # if type(stdout) != type(subprocess.STDOUT):
-    #     with open(stdout, "a") as fstdout:
-    #         with open(stderr, "a") as fstderr:
-    #             cp = subprocess.run(cmd, stdout=fstdout, stderr=fstderr)
-    # else:
-    cp = subprocess.run(cmd)
+    if not debug:
+        with open("/tmp/__marta_compiler.stdout", "a") as fstdout:
+            with open("/tmp/__marta_compiler.stderr", "a") as fstderr:
+                cp = subprocess.run(cmd, stdout=fstdout, stderr=fstderr)
+    else:
+        cp = subprocess.run(cmd)
 
     if cp.returncode != 0:
         # returns a 16-bit value:

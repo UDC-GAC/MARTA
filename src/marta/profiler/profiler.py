@@ -32,7 +32,7 @@ from tqdm.auto import tqdm
 from marta import get_data
 from marta.profiler.benchmark import Benchmark, BenchmarkError
 from marta.profiler.config import check_correctness_file, get_kernel_config
-from marta.profiler.d_features import get_d_features_iterations, dict_product
+from marta.profiler.d_features import dict_product
 from marta.profiler.kernel import Kernel
 from marta.profiler.logger import Logger
 from marta.profiler.macveth import _pinfo_macveth
@@ -216,7 +216,6 @@ class Profiler:
             loop_benchmark = Benchmark(
                 get_data("profiler/src/loop_overhead.c"), temp=True
             )
-            print(get_data("profiler/src/loop_overhead.c"))
             overhead_loop_tsc = loop_benchmark.compile_run_benchmark(
                 flags=[
                     "-Ofast",
@@ -292,7 +291,8 @@ class Profiler:
         if kernel.papi_counters != None:
             output_cols += kernel.papi_counters
 
-        niterations = get_d_features_iterations(kernel.params) * len(kernel.kernel_cfg)
+        product = dict_product(kernel.params, kernel.kernel_cfg)
+        niterations = len([i for i in product]) * len(kernel.kernel_cfg)
         create_directories(root=kernel.get_kernel_path("/marta_profiler_data/"))
         exit_on_error = not self.args.no_quit_on_error
         overhead_loop_tsc = self.get_loop_overhead(kernel, exit_on_error)

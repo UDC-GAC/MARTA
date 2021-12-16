@@ -28,28 +28,9 @@ from marta.utils.marta_utilities import perror
 
 
 class Feature:
-    def get_number_combinations(self) -> int:
-        """Computer the number of iterations of some iterables. This is for the
-        tqdm progress bar
-
-        :param params_values: Any type of iterable
-        :type params_values: Union[list, Iterable]
-        :return: Number of elements
-        :rtype: int
-        """
-        if not hasattr(self, "params_values"):
-            self.params_values = self.value
-        if isinstance(self.params_values, list):
-            return len(self.params_values)
-        params_values_copy = copy.deepcopy(self.params_values)
-        try:
-            return len(list(*params_values_copy))
-        except Exception:
-            return len(list(it.product(*params_values_copy)))
-
     def __init__(self, name: str, cfg: dict) -> None:
         self.name = name
-        self.type_feature = cfg["type"]
+        self.type_feature = cfg.get("type", "static")
         self.evaluate = cfg.get("evaluate", True)
         self.is_path = cfg.get("path", False)
         self.restrictions = cfg.get("restrict")
@@ -73,19 +54,32 @@ def dict_product(dicts: dict, kernel_cfg: list) -> bytes:
         dicts[d] if isinstance(dicts[d], list) else dicts[d].params_values
         for d in dicts
     ]
-    return (pickle.dumps(dict(zip(dicts, x))) for x in it.product(*values))
+    values_filtered = []
+    restrictions = {}
+    for key in dicts:
+        if not isinstance(dicts[key], Feature):
+            continue
+        restr = dicts[key].restrictions
+        if not restr is None:
+            restrictions[key] = restr
+    if len(restrictions) == 0:
+        return (pickle.dumps(dict(zip(dicts, x))) for x in it.product(*values))
+    for x in it.product(*values):
+        tmp_dict = dict(zip(dicts, x))
+        for key in dicts:
+            restr = restrictions.get(key)
+            if not restr is None:
+                for _key in dicts:
+                    rp = restr.replace(_key, f"tmp_dict['{_key}']")
+                    if rp == restr:
+                        continue
+                    if not eval(rp):
+                        tmp_dict.pop(key)
+                        break
 
-
-def get_d_features_iterations(params_kernel: dict[Feature]):
-    niterations = 1
-    if isinstance(params_kernel, dict):
-        niterations = np.prod(
-            [params_kernel[k].get_number_combinations() for k in params_kernel]
-        )
-    else:
-        niterations = len(params_kernel)
-    return niterations
-
+        if not (tmp_dict in values_filtered):  # avoid duplicates
+            values_filtered.append(tmp_dict)
+    return (pickle.dumps(x) for x in values_filtered)
 
 def get_params_values(params_dict, f, feature, path):
     params_values = [feature]
