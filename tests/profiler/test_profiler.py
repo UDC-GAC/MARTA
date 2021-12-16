@@ -19,7 +19,7 @@
 import pytest
 
 from marta.profiler.profiler import Profiler
-from marta.profiler.d_features import get_d_features_iterations, Feature
+from marta.profiler.d_features import Feature, dict_product
 
 
 def test_profiler_correct_file():
@@ -30,6 +30,37 @@ def test_profiler_correct_file():
 
 
 def test_number_iterations():
-    assert get_d_features_iterations([0, 1, 2, 3]) == 4
-    f = Feature("feature", {"type": "static", "evaluate": True, "value": [0, 1, 2, 3]})
-    assert get_d_features_iterations({"feature": f}) == 4
+    f = Feature(
+        "feature", {"type": "static", "evaluate": True, "value": [0, 1, 2, 3],},
+    )
+    f2 = Feature(
+        "feature2",
+        {
+            "type": "static",
+            "evaluate": True,
+            "value": [0, 1, 2, 3],
+            "restrict": "feature >= 2",
+        },
+    )
+    f3 = Feature(
+        "feature3",
+        {
+            "type": "static",
+            "evaluate": True,
+            "value": [0, 1, 2, 3],
+            "restrict": "feature2 >= 2",
+        },
+    )
+    assert len([i for i in dict_product({"feature": f}, [""])]) == 4
+    assert len([i for i in dict_product({"feature": f, "feature2": f2}, [""])]) == 10
+    assert (
+        len(
+            [
+                i
+                for i in dict_product(
+                    {"feature": f, "feature2": f2, "feature2": f3}, [""]
+                )
+            ]
+        )
+        == 12
+    )

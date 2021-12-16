@@ -36,9 +36,10 @@ class Feature:
         self.restrictions = cfg.get("restrict")
         self.val_type = cfg.get("val_type", "numeric")
         self.value = cfg.get("value")
+        self.params_values = cfg.get("value")
 
 
-def dict_product(dicts: dict, kernel_cfg: list) -> bytes:
+def dict_product(dicts: dict, kernel_cfg: list):
     """
     Generate the product of different dictionaries in a serializable
     fashion, since `dict_keys` is not serializable.
@@ -73,13 +74,17 @@ def dict_product(dicts: dict, kernel_cfg: list) -> bytes:
                     rp = restr.replace(_key, f"tmp_dict['{_key}']")
                     if rp == restr:
                         continue
-                    if not eval(rp):
-                        tmp_dict.pop(key)
-                        break
+                    try:
+                        if not eval(rp):
+                            tmp_dict.pop(key)
+                            break
+                    except Exception:
+                        continue
 
         if not (tmp_dict in values_filtered):  # avoid duplicates
             values_filtered.append(tmp_dict)
     return (pickle.dumps(x) for x in values_filtered)
+
 
 def get_params_values(params_dict, f, feature, path):
     params_values = [feature]
