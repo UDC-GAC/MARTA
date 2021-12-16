@@ -21,6 +21,7 @@
 import filecmp
 import glob
 from io import StringIO
+import logging
 import os
 import pkg_resources
 import shutil
@@ -33,8 +34,11 @@ from colorama import Fore, Style
 # Local imports
 from marta import get_data
 
+_quiet_msg = False
+
 
 def marta_exit(code: int = 1):
+    logging.info(f"exiting with code {code}")
     sys.exit(code)
 
 
@@ -51,30 +55,32 @@ def colored(msg: str, color=Fore.RED, style=Style.NORMAL) -> str:
 
 def perror(msg: str, CODE=1, exit_on_error=True) -> None:
     colored_msg = colored(f"[ERROR] {msg}", Fore.RED, Style.BRIGHT)
-    print(f"{colored_msg}")
+    logging.error(f"{msg}")
+    if not _quiet_msg:
+        print(f"{colored_msg}")
     if exit_on_error:
         sys.exit(CODE)
 
 
 def pwarning(msg: str) -> None:
     colored_msg = colored(f"[WARNING] {msg}", Fore.YELLOW, Style.BRIGHT)
-    print(f"{colored_msg}")
+    logging.warning(f"{msg}")
+    if not _quiet_msg:
+        print(f"{colored_msg}")
 
 
 def pexcept(msg: str, exception: Exception) -> None:
     colored_msg = colored(f"[SYSTEM ERROR] {msg}", Fore.RED, Style.BRIGHT)
-    print(f"{colored_msg}")
+    logging.critical(f"{msg}")
+    if not _quiet_msg:
+        print(f"{colored_msg}")
     raise exception
 
 
 def pinfo(msg: str) -> None:
     colored_msg = colored(f"[INFO] {msg}", Fore.CYAN, Style.NORMAL)
-    print(f"{colored_msg}")
-
-
-def pdebug(msg: str, debug=False) -> None:
-    if debug:
-        colored_msg = colored(f"[DEBUG] {msg}", Fore.MAGENTA, Style.NORMAL)
+    logging.info(f"{msg}")
+    if not _quiet_msg:
         print(f"{colored_msg}")
 
 

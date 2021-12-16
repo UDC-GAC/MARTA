@@ -20,6 +20,7 @@
 # Standard libraries
 import argparse
 import itertools as it
+import logging
 import multiprocessing as mp
 import sys
 
@@ -143,6 +144,16 @@ class Profiler:
 
         optional_named.add_argument(
             "-d", "--debug", action="store_true", help="debug verbose", required=False,
+        )
+
+        optional_named.add_argument(
+            "-log",
+            "--loglevel",
+            type=str,
+            default="warning",
+            choices=["debug", "info", "warning", "error", "critical"],
+            help="log level",
+            required=False,
         )
 
         optional_named.add_argument(
@@ -413,6 +424,23 @@ class Profiler:
         self.parser.print_help(sys.stderr)
         marta_exit(1)
 
+    def config_logger(self):
+        loglevel = getattr(logging, self.args.loglevel.upper(), None)
+        if not isinstance(loglevel, int):
+            loglevel = logging.DEBUG
+        logging.basicConfig(
+            filename="/tmp/__marta_logger.log",
+            level=loglevel,
+            format="%(asctime)s:[%(levelname)s]:%(name)s:%(message)s",
+            datefmt="%d-%m-%Y %I:%M:%S %p",
+            filemode="w",
+        )
+        import marta.utils.marta_utilities as mu
+
+        mu._quiet_msg = False
+        if hasattr(self.args, "quiet"):
+            mu._quiet_msg = self.args.quiet
+
     def __init__(self, list_args):
         """
         Main function for profiler
@@ -443,6 +471,7 @@ class Profiler:
             # Print version if not quiet
             print_version("Profiler")
 
+        self.config_logger()
         # For each kernel configuration
         for cfg in kernel_setup:
             if self.profiling_kernels(cfg) is None:

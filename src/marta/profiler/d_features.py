@@ -22,6 +22,7 @@ import copy
 import itertools as it
 import pickle
 
+# Do not remove this: d_features may contain formulas using numpy functions
 import numpy as np
 
 from marta.utils.marta_utilities import perror
