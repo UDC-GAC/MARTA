@@ -18,12 +18,13 @@
 # -*- coding: utf-8 -*-
 
 # Standard libraries
-import sys
-import os
-import shutil
 import filecmp
-import pkg_resources
+import glob
 from io import StringIO
+import os
+import pkg_resources
+import shutil
+import sys
 from typing import List
 
 # Third-party libraries
@@ -35,6 +36,13 @@ from marta import get_data
 
 def marta_exit(code: int = 1):
     sys.exit(code)
+
+
+def clean_previous_files() -> None:
+    list_opt = glob.glob("/tmp/*.opt")
+    if list_opt != []:
+        for elem in list_opt:
+            os.system(f"rm {elem}")
 
 
 def colored(msg: str, color=Fore.RED, style=Style.NORMAL) -> str:

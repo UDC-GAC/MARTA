@@ -18,10 +18,12 @@
 # -*- coding: utf-8 -*-
 
 # Standard libraries
-import os
+
 import json
-import subprocess
+import os
 import pathlib
+import shutil
+import subprocess
 import yaspin
 
 # Local imports
@@ -84,6 +86,8 @@ class StaticCodeAnalyzer:
         return json_file_fixed
 
     def get_llvm_mca_version(self) -> int:
+        if shutil.which(self.binary) is None:
+            return -1
         with os.popen(f"{self.binary} --version") as f:
             lines = f.read()
         try:
@@ -96,16 +100,10 @@ class StaticCodeAnalyzer:
         return -1
 
     def check_if_compatible_version(self):
-        if self.get_llvm_mca_version() < 13:
-            return False
-        return True
+        return not (self.get_llvm_mca_version() < 13)
 
     def compute_performance(
-        self,
-        name_bench: str,
-        iterations: int = 1,
-        region: str = "kernel",
-        stderr: int = None,
+        self, name_bench: str, iterations: int = 1, region: str = "kernel",
     ) -> dict:
         """Get the performance metrics reported by the tool. Currently only LLVM-MCA.
 

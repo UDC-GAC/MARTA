@@ -16,3 +16,16 @@
 # Author: Marcos Horro <marcos.horro@udc.es>
 #
 # -*- coding: utf-8 -*-
+
+from marta.profiler.kernel import Kernel
+from marta.utils.marta_utilities import pinfo
+
+
+def _pinfo_macveth(kernel: Kernel) -> None:
+    if kernel.macveth:
+        text = f"MACVETH enabled: this could take longer."
+        if not kernel.check_dump:
+            text += "Use 'check_dump' option also for correctness."
+        else:
+            text += " Dumping values for assessing correctness."
+        pinfo(text)

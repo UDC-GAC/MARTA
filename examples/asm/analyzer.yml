@@ -1,16 +1,12 @@
 - kernel:
-      input: examples/asm/data/data_consolidated.csv
+      input: examples/asm/data/points/data_consolidated.csv
       output_path: examples/asm/data/
       prepare_data:
-          cols: N_FMA _ASM_VERSION
+          cols: N_FMA vec_width
           rows: {}
           target: THROUGHPUT
-          norm: None
           categories:
-              mode: "gaussian"
-              grid_search: True
               enabled: True
-              scaling_factor: "1"
       plot:
           density:
               enabled: False
@@ -41,6 +37,8 @@
               data: raw
               x_axis: N_FMA
               y_axis: THROUGHPUT
+              x_label: "Number of FMA instructions issued"
+              y_label: "Throughput (instructions/cycles)"
               palette: "crimson"
               hue: _ASM_VERSION
               hue_order:
@@ -52,14 +50,21 @@
                       "double_256",
                       "double_512",
                   ]
-              markers: True
-              err_style: "bars"
-              ci: 68
+              style: arch
+          catplot:
+              enabled: True
+              type: relplot
+              format: pdf
+              data: raw
+              x_axis: N_FMA
+              y_axis: THROUGHPUT
+              palette: "crimson"
+              hue: _ASM_VERSION
       classification:
           type: decision_tree
           enabled: True
           config:
-              max_depth: 4
+              max_depth: 3
               max_leaves: 10000
               proportion: True
               text_tree: False

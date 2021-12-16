@@ -142,6 +142,7 @@ def plot_data(data: pd.DataFrame, cfg: PlotCfg, output_file: str) -> None:
             hue=cfg.hue,
             hue_order=cfg.hue_order,
             style=cfg.style,
+            markers=True,
         )
 
         # sns.rugplot(data=data, x=cfg.x, y=cfg.y, hue=cfg.hue)

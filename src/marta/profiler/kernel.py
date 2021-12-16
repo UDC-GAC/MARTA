@@ -19,21 +19,21 @@
 
 # Standard library
 from __future__ import annotations
-import os
-import subprocess
-import pickle
-import re
-import itertools as it
-from typing import Union
 from math import ceil, floor
 from datetime import datetime as dt
-import filecmp
 import difflib
+import filecmp
+import os
+import pickle
+import re
+import shutil
+from typing import Union
 
 # Third-party libraries
 import pandas as pd
 
 # Local imports
+from marta.profiler.asm_analyzer import ASMParserFactory
 from marta.profiler.compile import (
     compile_makefile,
     get_asm_name,
@@ -42,8 +42,8 @@ from marta.profiler.compile import (
     vector_report_analysis,
     gen_asm_bench,
 )
+from marta.profiler.d_features import eval_features, get_d_features_iterations
 from marta.profiler.report import Report
-from marta.profiler.asm_analyzer import ASMParserFactory
 from marta.profiler.timing import Timing
 from marta.profiler.static_code_analyzer import StaticCodeAnalyzer
 from marta.profiler.config import parse_kernel_options, get_metadata, get_derived
@@ -54,7 +54,7 @@ from marta.utils.marta_utilities import perror, pwarning, pinfo, marta_exit
 class Kernel:
     debug = False
 
-    def generate_report(self, verbose=True) -> str:
+    def _generate_report(self, verbose=True) -> str:
         """Generate report based on the details of the execution
 
         :param verbose: Verbose mode to display machine information, defaults to True
@@ -208,9 +208,7 @@ class Kernel:
             if len(errors) > 0:
                 marta_exit()
 
-    def save_results(
-        self, df: pd.DataFrame, filename: str, generate_report=False,
-    ) -> None:
+    def save_results(self, df: pd.DataFrame, filename: str) -> None:
         """
         Save data as a pandas.DataFrame
 
@@ -250,10 +248,10 @@ class Kernel:
         else:
             df.to_csv(filename, index=False)
 
-        if generate_report:
+        if hasattr(self, "generate_report") and self.generate_report:
             report_filename = filename.split(".")[0] + ".log"
             with open(report_filename, "w") as f:
-                f.write(self.generate_report())
+                f.write(self._generate_report())
 
     def define_papi_counters(self) -> None:
         """
@@ -313,8 +311,6 @@ class Kernel:
         product_params: bytes,
         compiler: str,
         compiler_flags: str,
-        make_stdout: subprocess.STDOUT,
-        make_stderr: subprocess.STDOUT,
         quit_on_error=False,
     ) -> bool:
         """Compile a given configuration of the kernel.
@@ -347,12 +343,10 @@ class Kernel:
             local_common_flags += f" -DMARTA_CPU_AFFINITY={self.cpu_affinity} "
 
         # MARTA flags
-        if self.intel_cache_flush:
-            local_common_flags += f" -DMARTA_INTEL_FLUSH_DATA=1 "
+        if self.cache_flush:
+            local_common_flags += f" -DMARTA_FLUSH_DATA=1 "
         else:
-            local_common_flags += (
-                f" -DMARTA_INTEL_FLUSH_DATA=0 -DPOLYBENCH_NO_FLUSH_CACHE "
-            )
+            local_common_flags += f" -DMARTA_FLUSH_DATA=0 -DPOLYBENCH_NO_FLUSH_CACHE "
 
         other_flags = []
         asm_name = get_asm_name(params_dict)
@@ -364,7 +358,7 @@ class Kernel:
             local_common_flags += " -DMACVETH=1 "
             other_flags.append("MACVETH=true")
             other_flags.append(f"MACVETH_PATH={self.macveth_path}")
-            other_flags.append(f"MACVETH_FLAGS={self.macveth_flags}")
+            other_flags.append(f"MACVETH_FLAGS={' '.join(self.macveth_flags)}")
             if self.macveth_target != "":
                 try:
                     macveth_target = re.sub(".c$", "", tmp_pickle[self.macveth_target])
@@ -399,7 +393,7 @@ class Kernel:
         if self.kernel_compilation:
             other_flags.append("COMPILE_KERNEL=true")
 
-        if self.asm_count or self.static_analysis != "":
+        if self.asm_count or self.static_analysis:
             if self.kernel_compilation:
                 other_flags.append("ASM_CODE_KERNEL=true")
             other_flags.append("ASM_CODE_MAIN=true")
@@ -435,6 +429,9 @@ class Kernel:
             with open(f"{self.path_kernel}/{main_src}", "w") as f:
                 f.writelines(raw_asm)
 
+        if shutil.which(compiler) is None:
+            return -1
+
         ret = compile_makefile(
             self.kernel,
             main_src,
@@ -445,14 +442,11 @@ class Kernel:
             kconfig,
             other_flags,
             suffix_file,
-            make_stdout,
-            make_stderr,
         )
 
         return not (not ret and quit_on_error)
 
     def run(self, product_params: bytes, compiler: str, compiler_flags="") -> list:
-        # TODO: need to refactor this function a LOT
         # FIXME: refactor this now.
         data = {}
         tmp_pickle = pickle.loads(product_params)
@@ -701,8 +695,8 @@ class Kernel:
             self.system.tune()
             self.system.check_errors("tune")
         self.execute_preamble()
-        if self.static_analysis != "":
-            self.S = StaticCodeAnalyzer("native", self.static_analysis,)
+        if self.static_analysis:
+            self.S = StaticCodeAnalyzer("native", self.llvm_mca_binary)
             if not self.S.check_if_compatible_version():
                 self.static_analysis = False
                 pwarning(
@@ -710,4 +704,5 @@ class Kernel:
                 )
             else:
                 self.static_analysis = True
+        self.params = eval_features(self.d_features, self.get_kernel_path())
 

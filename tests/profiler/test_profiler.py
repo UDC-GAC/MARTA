@@ -19,6 +19,7 @@
 import pytest
 
 from marta.profiler.profiler import Profiler
+from marta.profiler.d_features import get_d_features_iterations, Feature
 
 
 def test_profiler_correct_file():
@@ -29,4 +30,6 @@ def test_profiler_correct_file():
 
 
 def test_number_iterations():
-    assert Profiler.comp_nvals([0, 1, 2, 3]) == 4
+    assert get_d_features_iterations([0, 1, 2, 3]) == 4
+    f = Feature("feature", {"type": "static", "evaluate": True, "value": [0, 1, 2, 3]})
+    assert get_d_features_iterations({"feature": f}) == 4

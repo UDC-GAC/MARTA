@@ -95,7 +95,8 @@ def parse_kernel_options(config: dict) -> dict:
     if isinstance(asm_analysis, dict):
         cfg["asm_count"] = asm_analysis.get("count_ins", False)
         cfg["asm_syntax"] = asm_analysis.get("syntax", "att")
-        cfg["static_analysis"] = asm_analysis.get("static_analysis", "")
+        cfg["static_analysis"] = asm_analysis.get("static_analysis", False)
+        cfg["llvm_mca_binary"] = asm_analysis.get("llvm_mca_bin", "llvm-mca")
     else:
         pexcept("'asm_analysis' must be a dict", MARTAConfigError)
 
@@ -172,7 +173,6 @@ def parse_kernel_options(config: dict) -> dict:
                 )
         except KeyError as k:
             perror(f"Configuration key missing for 'asm' config: {k}")
-    cfg["d_flags"] = config_config.get("d_flags", [])
     cfg["flops"] = config_config.get("flops", "1")
     cfg["meta_info"] = config_config.get("meta_info", {})
     cfg["macveth"] = config_config.get("macveth", False)
@@ -186,10 +186,9 @@ def parse_kernel_options(config: dict) -> dict:
     cfg["derived_columns"] = config_config.get("derived", None)
 
     # Execution arguments
-    cfg["intel_cache_flush"] = config_exec.get("intel_cache_flush", False)
+    cfg["cache_flush"] = config_exec.get("cache_flush", False)
     cfg["stdout_redirect"] = config_exec.get("stdout_redirect", False)
     cfg["multithread"] = config_exec.get("multithread", False)
-    cfg["init_data"] = config_exec.get("init_data", False)
     cfg["check_dump"] = config_exec.get("check_dump", False)
     cfg["execution_enabled"] = config_exec.get("enabled", True)
     cfg["measure_time"] = config_exec.get("time", False)

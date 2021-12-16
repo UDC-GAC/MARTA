@@ -18,8 +18,8 @@
 # -*- coding: utf-8 -*-
 
 # Standard library
-import subprocess
 import shutil
+import subprocess
 from typing import Union, Any, Tuple, List
 
 # Local imports
@@ -162,8 +162,6 @@ def compile_makefile(
     kconfig: str,
     other_flags: list,
     suffix_file="",
-    stdout=subprocess.STDOUT,
-    stderr=subprocess.STDOUT,
 ) -> bool:
     """
     Compile benchmark according to a set of flags, suffixes and so
@@ -209,12 +207,12 @@ def compile_makefile(
         *other_flags,
     ]
 
-    if type(stdout) != type(subprocess.STDOUT):
-        with open(stdout, "a") as fstdout:
-            with open(stderr, "a") as fstderr:
-                cp = subprocess.run(cmd, stdout=fstdout, stderr=fstderr)
-    else:
-        cp = subprocess.run(cmd)
+    # if type(stdout) != type(subprocess.STDOUT):
+    #     with open(stdout, "a") as fstdout:
+    #         with open(stderr, "a") as fstderr:
+    #             cp = subprocess.run(cmd, stdout=fstdout, stderr=fstderr)
+    # else:
+    cp = subprocess.run(cmd)
 
     if cp.returncode != 0:
         # returns a 16-bit value:

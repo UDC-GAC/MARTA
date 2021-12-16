@@ -27,6 +27,7 @@ import time
 from pathlib import Path
 from tqdm.auto import trange
 import warnings
+import shlex
 
 warnings.filterwarnings("error")
 
@@ -110,19 +111,17 @@ class Timing:
         compiler_flags_suffix = compiler_flags.replace(" ", "_").replace("-", "")
         if not bin_path.endswith("/"):
             bin_path += "/"
-        bin_file = [
-            f"./{bin_path}marta_profiler_data/dumps/{code}_{compiler}_{compiler_flags_suffix}_{benchmark_type}.o"
-        ]
+        cmd_line = f"./{bin_path}marta_profiler_data/dumps/{code}_{compiler}_{compiler_flags_suffix}_{benchmark_type}.o"
         if exec_opts != "" and isinstance(exec_opts, str):
-            exec_opts_list = exec_opts.split(" ")
-            bin_file = [*exec_opts_list] + bin_file
+            cmd_line = f"{exec_opts} {cmd_line}"
+        cmd_line = shlex.split(cmd_line)
         dump_file = f"/tmp/dumps____tmp_{code}_{compiler}__{compiler_flags_suffix}"
         if "MACVETH" in dump_file:
             dump_file = dump_file.replace("MACVETH", "") + "MACVETH"
         else:
             Timing.dump_files.append(dump_file)
         with open(dump_file, "w") as f:
-            p = subprocess.Popen(bin_file, stderr=f)
+            p = subprocess.Popen(cmd_line, stderr=f)
             p.wait()
 
     @staticmethod
@@ -237,6 +236,9 @@ class Timing:
         :rtype: Tuple[Union[None, dict], int]
         """
 
+        cmd_line = bin_file
+
+        print(bin_file)
         if nexec < 3:
             Logger.warning(
                 "Consider increasing the number of executions to, at least, 3"
@@ -247,21 +249,17 @@ class Timing:
             and not bin_file.startswith("./")
             and not os.path.exists(bin_file)
         ):
-            bin_file = [f"./{bin_file}"]
-
+            cmd_line = f"./{bin_file}"
         env = os.environ.copy()
         if bin_file == "":
-            bin_file = [
-                f"./{bin_path}/{code}_{compiler}_{compiler_flags_suffix}_{benchmark_type}.o",
-                f"{nsteps}",
-            ]
+            cmd_line = f"./{bin_path}/{code}_{compiler}_{compiler_flags_suffix}_{benchmark_type}.o {nsteps}"
             if exec_opts != "" and isinstance(exec_opts, str):
                 exec_opts_list = exec_opts.split(" ")
-                commands = []
+                commands = ""
                 environment_vars = []
                 for e in exec_opts_list:
                     if not "=" in e:
-                        commands.append(e)
+                        commands += f"{e} "
                     else:
                         environment_vars.append(e)
                 environment_vars = [i.split("=") for i in environment_vars]
@@ -270,7 +268,7 @@ class Timing:
                 for k, v in environment_vars:
                     key_list.append(k)
                     val_list.append(v)
-                bin_file = [*commands] + bin_file
+                cmd_line = f"{commands} {cmd_line}"
                 env.update(dict(zip(key_list, val_list)))
 
         if tmp_file == "":
@@ -280,11 +278,13 @@ class Timing:
             os.remove(tmp_file)
         Path(tmp_file).touch()
 
+        cmd_list = shlex.split(cmd_line)
+
         def __measure(env: dict = {}, file=None, f=lambda: None):
             for _ in trange(
                 nexec, leave=False, desc=f"{benchmark_type.upper():4} exec."
             ):
-                p = subprocess.Popen(bin_file, stdout=file, env=env)
+                p = subprocess.Popen(cmd_list, stdout=file, env=env)
                 p.wait()
                 f
 
