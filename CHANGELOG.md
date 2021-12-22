@@ -1,6 +1,6 @@
 # Change Log
 
-## v0.1.0a0:
+## v0.1.0b1:
 
 ### Added/modified
 - `d_features`:
