@@ -16,5 +16,4 @@ seaborn==0.11.2
 KDEpy
 dtreeviz
 scipy
-yaspin
 setuptools_scm

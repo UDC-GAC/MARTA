@@ -52,8 +52,6 @@ from marta.utils.marta_utilities import perror, pwarning, pinfo, marta_exit
 
 
 class Kernel:
-    debug = False
-
     def _generate_report(self, verbose=True) -> str:
         """Generate report based on the details of the execution
 
@@ -442,7 +440,7 @@ class Kernel:
             kconfig,
             other_flags,
             suffix_file,
-            self.debug,
+            self.debug | self.comp_debug,
         )
 
         return not (not ret and quit_on_error)
@@ -509,7 +507,7 @@ class Kernel:
             ):
                 continue
 
-            avg_values, discarded_values = Timing.measure_benchmark(
+            raw_values, discarded_values = Timing.measure_benchmark(
                 name_bin,
                 mtype,
                 self.exec_args,
@@ -527,27 +525,27 @@ class Kernel:
             if not self.multithread:
                 if mtype == "papi":
                     if len(self.papi_counters) == 1:
-                        d_avg_values[self.papi_counters[0]] = avg_values
+                        d_avg_values[self.papi_counters[0]] = raw_values
                     else:
                         for i in range(len(self.papi_counters)):
-                            d_avg_values[self.papi_counters[i]] = avg_values["papi"][i]
+                            d_avg_values[self.papi_counters[i]] = raw_values["papi"][i]
                 else:
-                    d_avg_values[mtype] = avg_values
-                if avg_values is None:
+                    d_avg_values[mtype] = raw_values
+                if raw_values is None:
                     return None
                 if discarded_values != -1:
                     if mtype == "papi" and len(self.papi_counters) != 1:
                         for i in range(len(self.papi_counters)):
                             data.update(
-                                {f"{self.papi_counters[i]}": avg_values["papi"][i]}
+                                {f"{self.papi_counters[i]}": raw_values["papi"][i]}
                             )
                     else:
                         if mtype == "papi":
                             data.update(
-                                {f"{self.papi_counters[0]}": avg_values["papi"]}
+                                {f"{self.papi_counters[0]}": raw_values["papi"]}
                             )
                         else:
-                            data.update(avg_values)
+                            data.update(raw_values)
 
                     data.update({f"Discarded{mtype}Values": discarded_values})
                 if len(d_avg_values) == 0:
@@ -555,11 +553,11 @@ class Kernel:
                         "Nothing executed: set 'time', 'tsc' or at least one PAPI counter"
                     )
             else:
-                tmp = avg_values.columns.values.tolist()
+                tmp = raw_values.columns.values.tolist()
                 if mtype == "papi":
                     col_dict = dict(zip(tmp, self.papi_counters))
-                    avg_values.rename(col_dict, axis=1, inplace=True)
-                d_avg_values[mtype] = avg_values
+                    raw_values.rename(col_dict, axis=1, inplace=True)
+                d_avg_values[mtype] = raw_values
 
         # Updating parameters
         if not isinstance(params_dict, list):
@@ -593,26 +591,18 @@ class Kernel:
 
         list_rows = []
         if not self.multithread:
-            for execution in range(self.nexec):
-                new_dict = data.copy()
-                if "time" in d_avg_values:
-                    new_dict.update(
-                        {
-                            "FLOPSs": Kernel.compute_flops(
-                                self.flops, d_avg_values["time"][execution]
-                            )
-                        }
-                    )
-                    new_dict.update({"time": d_avg_values["time"][execution]})
-                new_dict.update({"nexec": execution})
-                if "tsc" in d_avg_values:
-                    if self.measure_tsc:
-                        new_dict.update({"tsc": d_avg_values["tsc"][execution]})
-                if "papi" in d_avg_values:
-                    new_dict.update(
-                        dict(zip(self.papi_counters, [d_avg_values["papi"][execution]]))
-                    )
-                list_rows += [new_dict]
+            new_dict = data.copy()
+            if "time" in d_avg_values:
+                new_dict.update(
+                    {"FLOPSs": Kernel.compute_flops(self.flops, d_avg_values["time"])}
+                )
+                new_dict.update({"time": d_avg_values["time"]})
+            if "tsc" in d_avg_values:
+                if self.measure_tsc:
+                    new_dict.update({"tsc": d_avg_values["tsc"]["tsc"]})
+            if "papi" in d_avg_values:
+                new_dict.update(dict(zip(self.papi_counters, [d_avg_values["papi"]])))
+            list_rows += [new_dict]
         else:
             list_rows = pd.DataFrame()
             for key in d_avg_values:
@@ -696,7 +686,7 @@ class Kernel:
             if not self.S.check_if_compatible_version():
                 self.static_analysis = False
                 pwarning(
-                    "You need to update your version to LLVM >= 13.x.x. for static analysis"
+                    "LLVM-MCA >= 13.x.x. version required for static analysis"
                 )
             else:
                 self.static_analysis = True

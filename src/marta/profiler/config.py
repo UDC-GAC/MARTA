@@ -94,8 +94,16 @@ def parse_kernel_options(config: dict) -> dict:
     asm_analysis = config_comp.get("asm_analysis", {})
     if isinstance(asm_analysis, dict):
         cfg["asm_count"] = asm_analysis.get("count_ins", False)
-        cfg["asm_syntax"] = asm_analysis.get("syntax", "att")
+        cfg["asm_syntax"] = asm_analysis.get("syntax", "att").lower()
+        if not cfg["asm_syntax"] in ["att", "intel"]:
+            pwarning(
+                "'asm_syntax' key was not set to 'att' or 'intel', changing vañie to 'att'"
+            )
+            cfg["asm_syntax"] = "att"
         cfg["static_analysis"] = asm_analysis.get("static_analysis", False)
+        if cfg["static_analysis"] and cfg["asm_syntax"] != "att":
+            pwarning("incompatible 'asm_syntax' with llvm-mca, changing value to 'att'")
+            cfg["asm_syntax"] = "att"
         cfg["llvm_mca_binary"] = asm_analysis.get("llvm_mca_bin", "llvm-mca")
     else:
         pexcept("'asm_analysis' must be a dict", MARTAConfigError)

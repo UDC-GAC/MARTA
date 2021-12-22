@@ -272,6 +272,7 @@ class Profiler:
         if self.args.iterations > -1:
             kernel.nsteps = self.args.iterations
         kernel.generate_report = kernel.emit_report() | self.args.report
+        kernel.debug |= self.args.debug
         return kernel
 
     def profiling_kernels(self, cfg: dict) -> int:

@@ -21,6 +21,7 @@ import os
 import copy
 import itertools as it
 import pickle
+import glob
 
 # Do not remove this: d_features may contain formulas using numpy functions
 import numpy as np
@@ -107,8 +108,10 @@ def get_params_values(params_dict, f, feature, path):
                 params_values = eval(to_eval)
             else:
                 params_values = to_eval
-        except NameError:
-            perror(f"Evaluation of expression for {feature} went wrong!")
+        except NameError as name:
+            perror(f"Evaluation of expression for {feature} went wrong: {name}")
+        except Exception as err:
+            perror(f"{feature}: {err}")
     return params_values
 
 
