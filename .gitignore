@@ -21,6 +21,10 @@ src/marta/_version.py
 
 # benchmarks
 examples/*/src/utilities
+examples/*/utilities
+examples/*/data/*.pdf
+examples/*/*/data/*.pdf
+examples/*/*/*/data/*.pdf
 examples/*/src/marta_profiler_data
 src/marta/profiler/kernels/*
 examples/*/src/*

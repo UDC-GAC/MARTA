@@ -4,8 +4,8 @@
       description: "Setup for experiment autovectorization"
       debug: False
       preamble:
-          command: "sudo cpupower frequency-set -u 3.7GHz  > /dev/null && sudo
-              cpupower frequency-set -d 3.7GHz > /dev/null"
+          command: "sudo cpupower frequency-set -u 2.2GHz  > /dev/null && sudo
+              cpupower frequency-set -d 2.2GHz > /dev/null"
       finalize:
           clean_tmp_files: False
           clean_asm_files: False
@@ -14,10 +14,10 @@
       compilation:
           debug: False
           enabled: True
-          processes: 6
+          processes: 64
           language: "C"
           compiler_flags:
-              { "gcc": [" -march=native -O3 -DTUNED -fno-inline -fopenmp"] }
+              { "gcc-11": [" -march=native -O3 -DTUNED -fno-inline -fopenmp "] }
           main_src: "stream.c"
           loop_type: C # if you choose "asm" loop type it may cause SIGSEV as it uses EDX register
           kernel_inlined: True
@@ -31,7 +31,8 @@
                   evaluate: True
                   type: "static"
                   val_type: "numeric"
-                  value: "[1,2,4,8]"
+                  value: "[16]"
+                  #value: "[24]"
               OFFSET:
                   evaluate: True
                   type: "static"
@@ -43,13 +44,14 @@
                   val_type:
                       "numeric"
                       #value: "[33554432]"
-                  value: "[8388608]"
+                  value: "[33554432]"
               ADD_VERSION:
                   evaluate: True
                   type: "static"
                   val_type: "numeric"
                   value:
                       "[0,11,12,13,14,21,22,23,24,25,26]"
+                      #"[24]"
                       #value: "[4]"
                       #              ASSIGNMENT_VERSION:
                       #                  evaluate: True
@@ -62,18 +64,17 @@
                   type: "static"
                   val_type: "numeric"
                   value: "2**np.arange(21)"
+                  #value: "[2]"
               SW_PREFETCH:
                   evaluate: True
                   type: "static"
-                  val_type:
-                      "numeric"
-                      #value: "[0,1,2,4,8,16,32,64,128,256,512]"
+                  val_type: "numeric"
                   value: "[0]"
           derived:
               BANDWIDTH:
                   type: single
                   variables: ["tsc", "STREAM_ARRAY_SIZE"]
-                  expression: (3 * VAR_1 * 8) / (VAR_0/3.7) #3.4GHz is the base freq of Ryzen 5950X
+                  expression: (3 * VAR_1 * 8) / (VAR_0/2.2)
       execution:
           stdout_redirect: "/tmp/TESTING_OUTPUT_MKS"
           enabled: True
@@ -91,15 +92,15 @@
               ]
           tsc: True
           threshold_outliers: 3
-          discard_outliers: True
-          compute_avg: True
-          nexec: 10
+          #discard_outliers: True
+          compute_avg: False
+          nexec: 7
           nsteps: 1
-          cpu_affinity:
-              11
-              #prefix: "taskset -c 11"
+          cpu_affinity: 11
+          prefix: "OMP_NUM_THREADS=16"
+          multithread: True
       output:
-          name: "default"
+          name: "cascadelake_gold_proc16"
           columns: "all"
           report: True
           verbose: True

@@ -4,8 +4,8 @@
       description: "Setup for experiment autovectorization"
       debug: False
       preamble:
-          command: "sudo cpupower frequency-set -u 4.0GHz  > /dev/null && sudo
-              cpupower frequency-set -d 4.0GHz > /dev/null"
+          command: "sudo cpupower frequency-set -u 2.2GHz  > /dev/null && sudo
+              cpupower frequency-set -d 2.2GHz > /dev/null"
       finalize:
           clean_tmp_files: False
           clean_asm_files: False
@@ -31,8 +31,8 @@
                   evaluate: True
                   type: "static"
                   val_type: "numeric"
-                  #value: "[1,2,4,8]"
-                  value: "[24]"
+                  value: "[2]"
+                  #value: "[24]"
               OFFSET:
                   evaluate: True
                   type: "static"
@@ -44,7 +44,7 @@
                   val_type:
                       "numeric"
                       #value: "[33554432]"
-                  value: "[8388608]"
+                  value: "[33554432]"
               ADD_VERSION:
                   evaluate: True
                   type: "static"
@@ -74,7 +74,7 @@
               BANDWIDTH:
                   type: single
                   variables: ["tsc", "STREAM_ARRAY_SIZE"]
-                  expression: (3 * VAR_1 * 8) / (VAR_0/4.0)
+                  expression: (3 * VAR_1 * 8) / (VAR_0/2.2)
       execution:
           stdout_redirect: "/tmp/TESTING_OUTPUT_MKS"
           enabled: True
@@ -94,13 +94,13 @@
           threshold_outliers: 3
           #discard_outliers: True
           compute_avg: False
-          nexec: 10
+          nexec: 7
           nsteps: 1
           cpu_affinity: 11
-          prefix: "OMP_NUM_THREADS=24"
+          prefix: "OMP_NUM_THREADS=2"
           multithread: True
       output:
-          name: "cascadelake_gold"
+          name: "cascadelake_gold_proc2"
           columns: "all"
           report: True
           verbose: True

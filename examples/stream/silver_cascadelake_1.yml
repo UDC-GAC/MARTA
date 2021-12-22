@@ -4,8 +4,8 @@
       description: "Setup for experiment autovectorization"
       debug: False
       preamble:
-          command: "sudo cpupower frequency-set -u 3.7GHz  > /dev/null && sudo
-              cpupower frequency-set -d 3.7GHz > /dev/null"
+          command: "sudo cpupower frequency-set -u 2.1GHz  > /dev/null && sudo
+              cpupower frequency-set -d 2.1GHz > /dev/null"
       finalize:
           clean_tmp_files: False
           clean_asm_files: False
@@ -14,10 +14,10 @@
       compilation:
           debug: False
           enabled: True
-          processes: 6
+          processes: 64
           language: "C"
           compiler_flags:
-              { "gcc": [" -march=native -O3 -DTUNED -fno-inline -fopenmp"] }
+              { "gcc-11": [" -march=native -O3 -DTUNED -fno-inline -fopenmp "] }
           main_src: "stream.c"
           loop_type: C # if you choose "asm" loop type it may cause SIGSEV as it uses EDX register
           kernel_inlined: True
@@ -31,7 +31,8 @@
                   evaluate: True
                   type: "static"
                   val_type: "numeric"
-                  value: "[1,2,4,8]"
+                  value: "[1]"
+                  #value: "[24]"
               OFFSET:
                   evaluate: True
                   type: "static"
@@ -43,13 +44,15 @@
                   val_type:
                       "numeric"
                       #value: "[33554432]"
-                  value: "[8388608]"
+                  value: "[16777216]"
               ADD_VERSION:
                   evaluate: True
                   type: "static"
                   val_type: "numeric"
                   value:
-                      "[0,11,12,13,14,21,22,23,24,25,26]"
+                      #"[0,11,12,13,14,21,22,23,24,26]"
+                      "[11]"
+                      #"[24]"
                       #value: "[4]"
                       #              ASSIGNMENT_VERSION:
                       #                  evaluate: True
@@ -61,19 +64,18 @@
                   evaluate: True
                   type: "static"
                   val_type: "numeric"
-                  value: "2**np.arange(21)"
+                  #value: "2**np.arange(21)"
+                  value: "[7,137]"
               SW_PREFETCH:
                   evaluate: True
                   type: "static"
-                  val_type:
-                      "numeric"
-                      #value: "[0,1,2,4,8,16,32,64,128,256,512]"
+                  val_type: "numeric"
                   value: "[0]"
           derived:
               BANDWIDTH:
                   type: single
                   variables: ["tsc", "STREAM_ARRAY_SIZE"]
-                  expression: (3 * VAR_1 * 8) / (VAR_0/3.7) #3.4GHz is the base freq of Ryzen 5950X
+                  expression: (3 * VAR_1 * 8) / (VAR_0/2.1)
       execution:
           stdout_redirect: "/tmp/TESTING_OUTPUT_MKS"
           enabled: True
@@ -88,18 +90,31 @@
                   "MEM_LOAD_L3_MISS_RETIRED:LOCAL_DRAM",
                   "MEM_INST_RETIRED:ALL_LOADS",
                   "MEM_INST_RETIRED:ALL_STORES",
+                  "RESOURCE_STALLS:ALL",
+                  "RESOURCE_STALLS:RS",
+                  "RESOURCE_STALLS:SB",
+                  "RESOURCE_STALLS:ROB",
+                  "UOPS_RETIRED:STALL_OCCURRENCES",
+                  "FRONTEND_RETIRED:IDQ_4_BUBBLES",
+                  "FRONTEND_RETIRED:IDQ_3_BUBBLES",
+                  "FRONTEND_RETIRED:IDQ_2_BUBBLES",
+                  "FRONTEND_RETIRED:IDQ_1_BUBBLE",
+                  "PARTIAL_RAT_STALLS:SCOREBOARD",
+                  "IDQ_UOPS_NOT_DELIVERED:CYCLES_FE_WAS_OK",
+                  "CYCLE_ACTIVITY:STALLS_TOTAL",
+                  "CYCLE_ACTIVITY:STALLS_MEM_ANY",
               ]
           tsc: True
           threshold_outliers: 3
-          discard_outliers: True
-          compute_avg: True
-          nexec: 10
+          #discard_outliers: True
+          compute_avg: False
+          nexec: 7
           nsteps: 1
-          cpu_affinity:
-              11
-              #prefix: "taskset -c 11"
+          cpu_affinity: 11
+          prefix: "OMP_NUM_THREADS=1"
+          multithread: True
       output:
-          name: "default"
+          name: "cascadelake_silver_1proc"
           columns: "all"
           report: True
           verbose: True

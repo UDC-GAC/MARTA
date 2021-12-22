@@ -3,7 +3,7 @@
       output_path: examples/stream/data/
       prepare_data:
           cols: MARTA_NUM_THREADS STRIDE ADD_VERSION
-          rows: { "STRIDE": "<32*2**10" }
+          rows: { "STRIDE": "<32*2**10", "ADD_VERSION": ["!=24", "!=25"] }
           target: BANDWIDTH
           categories: # This is for generating categories
               enabled: True
