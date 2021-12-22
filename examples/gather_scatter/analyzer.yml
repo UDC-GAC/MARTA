@@ -11,11 +11,12 @@
               scaling_factor: "1"
       plot:
           density:
-              enabled: False
+              enabled: True
               type: kdeplot
               format: pdf
               data: processed
               x_axis: tsc
+              x_label: "Time Stamp Counter (TSC)"
               log_scale: False
               hue: tsc_cat
               cumulative: False
@@ -24,7 +25,7 @@
               rugplot: True
               mark_centroids: True
           scatterplot:
-              enabled: True
+              enabled: False
               type: scatterplot
               format: pdf
               data: processed
