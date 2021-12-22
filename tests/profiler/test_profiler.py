@@ -30,26 +30,14 @@ def test_profiler_correct_file():
 
 
 def test_number_iterations():
-    f = Feature(
-        "feature", {"type": "static", "evaluate": True, "value": [0, 1, 2, 3],},
-    )
+    f = Feature("feature", {"type": "static", "value": [0, 1, 2, 3],},)
     f2 = Feature(
         "feature2",
-        {
-            "type": "static",
-            "evaluate": True,
-            "value": [0, 1, 2, 3],
-            "restrict": "feature >= 2",
-        },
+        {"type": "static", "value": [0, 1, 2, 3], "restrict": "feature >= 2",},
     )
     f3 = Feature(
         "feature3",
-        {
-            "type": "static",
-            "evaluate": True,
-            "value": [0, 1, 2, 3],
-            "restrict": "feature2 >= 2",
-        },
+        {"type": "static", "value": [0, 1, 2, 3], "restrict": "feature2 >= 2",},
     )
     assert len([i for i in dict_product({"feature": f}, [""])]) == 4
     assert len([i for i in dict_product({"feature": f, "feature2": f2}, [""])]) == 10

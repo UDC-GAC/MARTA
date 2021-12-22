@@ -599,6 +599,7 @@ class Kernel:
                 new_dict.update({"time": d_avg_values["time"]})
             if "tsc" in d_avg_values:
                 if self.measure_tsc:
+                    # FIXME:
                     new_dict.update({"tsc": d_avg_values["tsc"]["tsc"]})
             if "papi" in d_avg_values:
                 new_dict.update(dict(zip(self.papi_counters, [d_avg_values["papi"]])))
@@ -685,9 +686,7 @@ class Kernel:
             self.S = StaticCodeAnalyzer("native", self.llvm_mca_binary)
             if not self.S.check_if_compatible_version():
                 self.static_analysis = False
-                pwarning(
-                    "LLVM-MCA >= 13.x.x. version required for static analysis"
-                )
+                pwarning("LLVM-MCA >= 13.x.x. version required for static analysis")
             else:
                 self.static_analysis = True
         self.params = eval_features(self.d_features, self.get_kernel_path())

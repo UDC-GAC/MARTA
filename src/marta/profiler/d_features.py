@@ -33,10 +33,8 @@ class Feature:
     def __init__(self, name: str, cfg: dict) -> None:
         self.name = name
         self.type_feature = cfg.get("type", "static")
-        self.evaluate = cfg.get("evaluate", True)
         self.is_path = cfg.get("path", False)
         self.restrictions = cfg.get("restrict")
-        self.val_type = cfg.get("val_type", "numeric")
         self.value = cfg.get("value")
         self.params_values = cfg.get("value")
 
@@ -104,10 +102,7 @@ def get_params_values(params_dict, f, feature, path):
             if f.type_feature == "dependent":
                 for key in params_dict:
                     to_eval.replace(key, params_dict[key])
-            if f.evaluate:
-                params_values = eval(to_eval)
-            else:
-                params_values = to_eval
+            params_values = eval(to_eval)
         except NameError as name:
             perror(f"Evaluation of expression for {feature} went wrong: {name}")
         except Exception as err:

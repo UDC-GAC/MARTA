@@ -114,15 +114,7 @@ def parse_kernel_options(config: dict) -> dict:
         cfg["kernel_cfg"] = [""]
 
     cfg["d_features"] = config_config.get(
-        "d_features",
-        {
-            "NONE": {
-                "evaluate": True,
-                "value": "[0]",
-                "type": "static",
-                "val_type": "numeric",
-            }
-        },
+        "d_features", {"NONE": {"value": "[0]", "type": "static",}},
     )
     if cfg["bench_type"] == "asm":
         try:
@@ -131,14 +123,7 @@ def parse_kernel_options(config: dict) -> dict:
             for k in cfg["asm_body"]:
                 values.append(k)
             cfg["d_features"].update(
-                {
-                    "_ASM_VERSION": {
-                        "evaluate": True,
-                        "type": "static",
-                        "val_type": "string",
-                        "value": str(values),
-                    }
-                }
+                {"_ASM_VERSION": {"type": "static", "value": str(values),}}
             )
             cfg["asm_init"] = config_config.get("asm_init", {})
             cfg["asm_unroll"] = config_config.get("asm_unroll", 100)
@@ -150,9 +135,7 @@ def parse_kernel_options(config: dict) -> dict:
                     cfg["d_features"].update(
                         {
                             f"_ASM_PERMUTATION": {
-                                "evaluate": True,
                                 "type": "static",
-                                "val_type": "string",
                                 "value": str(
                                     list(range(1, len(cfg["asm_body"][k]) + 1))
                                 ),
@@ -170,14 +153,7 @@ def parse_kernel_options(config: dict) -> dict:
                             s = "".join(list([str(j) for j in k]))
                             values.append(s)
                 cfg["d_features"].update(
-                    {
-                        f"_ASM_PERMUTATION": {
-                            "evaluate": True,
-                            "type": "static",
-                            "val_type": "string",
-                            "value": str(values),
-                        }
-                    }
+                    {f"_ASM_PERMUTATION": {"type": "static", "value": str(values),}}
                 )
         except KeyError as k:
             perror(f"Configuration key missing for 'asm' config: {k}")
