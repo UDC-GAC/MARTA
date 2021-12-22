@@ -18,12 +18,13 @@
 # -*- coding: utf-8 -*-
 
 # Standard library
-import subprocess
 import shutil
-from typing import Union, Any, Tuple
+import subprocess
+from typing import Union, Any, Tuple, List
 
 # Local imports
 from marta.utils.marta_utilities import pinfo, get_name_from_dir, perror
+from marta import get_data
 
 
 class CompilationError(Exception):
@@ -97,6 +98,27 @@ def vector_report_analysis(file: str, compiler: str) -> dict:
     return {}
 
 
+def gen_asm_bench(
+    asm_init: List[str], asm_body: List[str], loop_unroll: int
+) -> List[str]:
+    asm_bench_file = get_data("profiler/marta_asm/src/main.c")
+    lines = []
+    with open(asm_bench_file, "r") as f:
+        for line in f:
+            if not "MARTA_CMD" in line:
+                lines.append(line)
+                continue
+            if "ASM_CODE" in line:
+                asm_code = [f'    __asm volatile("{asm}");\n' for asm in asm_body]
+                for _ in range(loop_unroll):
+                    lines.extend(asm_code)
+            if "ASM_INIT" in line:
+                if len(asm_init) > 0 and asm_init[0] != "":
+                    asm_code = [f'    __asm volatile("{asm}");' for asm in asm_init]
+                    lines.extend(asm_code)
+    return lines
+
+
 def compile_file(
     src_file: str, output="", compiler="gcc", flags=["-O3"], temp=False
 ) -> None:
@@ -140,8 +162,7 @@ def compile_makefile(
     kconfig: str,
     other_flags: list,
     suffix_file="",
-    stdout=subprocess.STDOUT,
-    stderr=subprocess.STDOUT,
+    debug: bool = False,
 ) -> bool:
     """
     Compile benchmark according to a set of flags, suffixes and so
@@ -159,13 +180,12 @@ def compile_makefile(
     """
 
     # Check if options in kernel config string:
-    tok = kconfig.split(" ")
-    for t in tok:
-        if "-D" in t:
+    for t in kconfig.split(" "):
+        if "-D" in t:  # D flags
             kconfig = kconfig.replace(t, "")
             common_flags += f" {t}"
             continue
-        if "=" in t:
+        if "=" in t:  # Makefile option
             kconfig = kconfig.replace(t, "")
             other_flags += f" {t}"
 
@@ -187,9 +207,9 @@ def compile_makefile(
         *other_flags,
     ]
 
-    if type(stdout) != type(subprocess.STDOUT):
-        with open(stdout, "a") as fstdout:
-            with open(stderr, "a") as fstderr:
+    if not debug:
+        with open("/tmp/__marta_compiler.stdout", "a") as fstdout:
+            with open("/tmp/__marta_compiler.stderr", "a") as fstderr:
                 cp = subprocess.run(cmd, stdout=fstdout, stderr=fstderr)
     else:
         cp = subprocess.run(cmd)

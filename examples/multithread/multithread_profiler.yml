@@ -2,50 +2,47 @@
       name: "multithread"
       type: "regular"
       path: "examples/multithread/src"
-      description: "TBD"
-      debug: False
-      show_progress_bars: True
-      #preamble:
-      #    command: "sudo utilities/setup_freq.sh && sudo utilities/disable_turbo_intel.sh"
-      finalize:
-          clean_tmp_files: False
-          clean_asm_files: False
-          clean_bin_files: False
-          command: "echo 'EXPERIMENT FINISHED :D!'"
+      description: "Dummy test program for multithread support"
       compilation:
           enabled: True
-          processes: 16
+          processes: 1
           language: "C"
           compiler_flags:
-              { "gcc": " -flto -march=native -mtune=native -mavx2 -fopenmp " }
-          common_flags: " -Ofast "
+              { "gcc": [" -Ofast -march=native -mtune=native -mavx2 "] }
           main_src: "main.c"
-          kernel_compilation_type: "infile" # apart
           kernel_inlined: True
-          debug: True
+          debug: False
       configuration:
-          kernel_cfg: [" "]
           d_features:
+              MARTA_NUM_THREADS:
+                  evaluate: True
+                  type: "static"
+                  val_type: "numeric"
+                  value: "[1]"
               N:
                   evaluate: True
                   type: "static"
                   val_type: "numeric"
-                  value: "[1024,2048,8192]"
+                  value: "[512, 2048, 4048]"
+              M:
+                  evaluate: True
+                  type: "static"
+                  val_type: "numeric"
+                  value: "[10, 20]"
+                  restrict: "N > 1024"
           flops: "1"
       execution:
           enabled: True
           papi_counters: ["UNHALTED_CORE_CYCLES", "INSTRUCTIONS_RETIRED"]
-          time: True
+          #time: True
           tsc: True
           threshold_outliers: 3
-          mean_and_discard_outliers: True
-          init_data: True
-          intel_cache_flush: False
-          check_dump: False
-          nexec: 10
-          nsteps: 10000
+          compute_avg: False
+          discard_outliers: False
+          nexec: 3
+          nsteps: 1
           cpu_affinity: 2
-          prefix: ""
+          prefix: "OMP_NUM_THREADS=5"
           multithread: True
       output:
           format: "csv" # csv, html, json

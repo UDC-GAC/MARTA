@@ -67,7 +67,15 @@ class DTConfig:
 
 
 class PlotCfg:
-    allowed_types = ["scatterplot", "lineplot", "relplot", "kdeplot", "catplot"]
+    allowed_types = [
+        "scatterplot",
+        "lineplot",
+        "relplot",
+        "kdeplot",
+        "catplot",
+        "jointplot",
+        "displot",
+    ]
     allowed_formats = ["pdf", "eps", "png", "ps", "svg"]
 
     def __init__(self, cfg: dict):
@@ -83,6 +91,7 @@ class PlotCfg:
                 f"Wrong format for plot configuration, must be one of {PlotCfg.allowed_formats}"
             )
         self.hue = cfg.get("hue", None)
+        self.hue_order = cfg.get("hue_order", None)
         self.size = cfg.get("size", None)
         self.col = cfg.get("col", None)
         self.row = cfg.get("row", None)
@@ -96,6 +105,12 @@ class PlotCfg:
         self.mark_centroids = cfg.get("mark_centroids", False)
         self.labels_catplot = cfg.get("labels_catplot", None)
         self.font_scale = cfg.get("font_scale", 1.0)
+        self.multiple = cfg.get("multiple", "stack")
+        self.rugplot = cfg.get("rugplot", False)
+        self.markers = cfg.get("markers", False)
+        self.dashes = cfg.get("dashes", False)
+        self.err_style = cfg.get("err_style", None)
+        self.style = cfg.get("style", self.hue)
         try:
             self.x = cfg["x_axis"]
         except KeyError as K:
@@ -171,10 +186,15 @@ def parse_options(config: dict) -> dict:
 
     try:
         # plot keys
-        analyzer_cfg["plot_cfg"] = PlotCfg(general_cfg["plot"])
-        analyzer_cfg["plot_enabled"] = general_cfg["plot"].get("enabled", True)
-    except KeyError:
-        analyzer_cfg["plot_enabled"] = False
+        analyzer_cfg["plot_cfg"] = {}
+        analyzer_cfg["plot_enabled"] = {}
+        for key in general_cfg["plot"]:
+            analyzer_cfg["plot_cfg"][key] = PlotCfg(general_cfg["plot"][key])
+            analyzer_cfg["plot_enabled"][key] = general_cfg["plot"][key].get(
+                "enabled", True
+            )
+    except KeyError as k:
+        pass
 
     try:
         # classification keys

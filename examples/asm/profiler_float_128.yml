@@ -1,0 +1,67 @@
+- kernel:
+      name: "asm"
+      type: "asm"
+      path: "examples/asm/src"
+      description: "Default setup for asm"
+      compilation:
+          enabled: True
+          processes: 64
+          language: "C"
+          compiler_flags: { "gcc": [" -march=native -mtune=native -mavx2 "] }
+          main_src: "main.c"
+          common_flags: " -O3 "
+          loop_type: "asm"
+          kernel_inlined: True
+          asm_analysis:
+              syntax: "att"
+              count_ins: False
+              static_analysis: "llvm-mca"
+      configuration:
+          asm_init: {}
+          asm_body:
+              {
+                  "float_128":
+                      [
+                          "vfmadd213ps  %xmm11, %xmm10, %xmm0",
+                          "vfmadd213ps  %xmm11, %xmm10, %xmm1",
+                          "vfmadd213ps  %xmm11, %xmm10, %xmm2",
+                          "vfmadd213ps  %xmm11, %xmm10, %xmm3",
+                          "vfmadd213ps  %xmm11, %xmm10, %xmm4",
+                          "vfmadd213ps  %xmm11, %xmm10, %xmm5",
+                          "vfmadd213ps  %xmm11, %xmm10, %xmm6",
+                          "vfmadd213ps  %xmm11, %xmm10, %xmm7",
+                          "vfmadd213ps  %xmm11, %xmm10, %xmm8",
+                          "vfmadd213ps  %xmm11, %xmm10, %xmm9",
+                      ],
+              }
+          asm_unroll: 1000
+          asm_perm: False
+          asm_range: True
+          derived:
+              THROUGHPUT:
+                  type: single
+                  variables:
+                      [
+                          "CPU_CLK_THREAD_UNHALTED:THREAD_P",
+                          "INSTRUCTIONS_RETIRED",
+                      ]
+                  expression: (VAR_1) / (VAR_0)
+      execution:
+          stdout_redirect: "/tmp/TESTING_OUTPUT_MKS"
+          enabled: True
+          papi_counters:
+              ["CPU_CLK_THREAD_UNHALTED:THREAD_P", "INSTRUCTIONS_RETIRED"]
+          tsc: True
+          threshold_outliers: 3 # in percentage
+          discard_outliers: True # remove outliers from average
+          compute_avg: False # divide values by nsteps
+          nexec: 10
+          nsteps: 10000
+          cpu_affinity: 11
+          prefix: "taskset -c 11"
+      output:
+          name: "default"
+          format: "csv" # csv, html, json
+          columns: "all"
+          report: True
+          verbose: True

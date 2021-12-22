@@ -35,8 +35,8 @@ def get_kernel():
 
 
 def test_generate_report(get_kernel):
-    assert isinstance(get_kernel.generate_report(), str)
-    assert isinstance(get_kernel.generate_report(False), str)
+    assert isinstance(get_kernel._generate_report(), str)
+    assert isinstance(get_kernel._generate_report(False), str)
 
 
 def test_compute_flops():

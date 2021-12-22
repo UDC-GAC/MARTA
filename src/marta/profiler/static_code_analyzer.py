@@ -18,11 +18,12 @@
 # -*- coding: utf-8 -*-
 
 # Standard libraries
-import os
+
 import json
-import subprocess
+import os
 import pathlib
-import yaspin
+import shutil
+import subprocess
 
 # Local imports
 from marta.utils.marta_utilities import pwarning, perror
@@ -50,41 +51,44 @@ class StaticCodeAnalyzer:
         with open(json_file, "w") as f:
             f.writelines(lines)
 
-    @staticmethod
-    def fix_json(json_file: str = "perf.json") -> str:
-        """This method is needed if LLVM-MCA version is previous to 13.0.0
+    # @staticmethod
+    # def fix_json(json_file: str = "perf.json") -> str:
+    #     """This method is needed if LLVM-MCA version is previous to 13.0.0
 
-        :param json_file: Input JSON file, defaults to "perf.json"
-        :type json_file: str, optional
-        :return: Name of fixed JSON file
-        :rtype: str
-        """
-        with open(json_file) as f:
-            lines = f.readlines()
-            new_lines = []
-            new_lines.append("[\n")
-            for l in lines:
-                if "not implemented" in l or "\n" == l or "Code Region" in l:
-                    continue
-                if l == "}\n":
-                    new_lines.append("},\n")
-                elif l == "]\n":
-                    new_lines.append("],\n")
-                else:
-                    new_lines.append(l)
-            if new_lines[-1] == "},\n":
-                new_lines[-1] = "}\n"
-            elif new_lines[-1] == "],\n":
-                new_lines[-1] = "]\n"
-            new_lines.append("]\n")
-        json_file_fixed = json_file.replace(".json", "_fixed.json")
-        with open(json_file_fixed, "w") as f:
-            f.writelines(new_lines)
-        os.remove(f"{json_file}")
-        return json_file_fixed
+    #     :param json_file: Input JSON file, defaults to "perf.json"
+    #     :type json_file: str, optional
+    #     :return: Name of fixed JSON file
+    #     :rtype: str
+    #     """
+    #     with open(json_file) as f:
+    #         lines = f.readlines()
+    #         new_lines = []
+    #         new_lines.append("[\n")
+    #         for l in lines:
+    #             if "not implemented" in l or "\n" == l or "Code Region" in l:
+    #                 continue
+    #             if l == "}\n":
+    #                 new_lines.append("},\n")
+    #             elif l == "]\n":
+    #                 new_lines.append("],\n")
+    #             else:
+    #                 new_lines.append(l)
+    #         if new_lines[-1] == "},\n":
+    #             new_lines[-1] = "}\n"
+    #         elif new_lines[-1] == "],\n":
+    #             new_lines[-1] = "]\n"
+    #         new_lines.append("]\n")
+    #     json_file_fixed = json_file.replace(".json", "_fixed.json")
+    #     with open(json_file_fixed, "w") as f:
+    #         f.writelines(new_lines)
+    #     os.remove(f"{json_file}")
+    #     return json_file_fixed
 
     def get_llvm_mca_version(self) -> int:
-        lines = os.popen(f"{self.binary} --version").read()
+        if shutil.which(self.binary) is None:
+            return -1
+        with os.popen(f"{self.binary} --version") as f:
+            lines = f.readlines()
         try:
             for line in lines:
                 if "version" in line:
@@ -95,16 +99,11 @@ class StaticCodeAnalyzer:
         return -1
 
     def check_if_compatible_version(self):
-        if self.get_llvm_mca_version() < 13:
-            return False
-        return True
+        _llvm_mca_major_version = self.get_llvm_mca_version()
+        return not (_llvm_mca_major_version < 13)
 
     def compute_performance(
-        self,
-        name_bench: str,
-        iterations: int = 1,
-        region: str = "kernel",
-        stderr: int = None,
+        self, name_bench: str, iterations: int = 1, region: str = "kernel",
     ) -> dict:
         """Get the performance metrics reported by the tool. Currently only LLVM-MCA.
 
@@ -117,8 +116,8 @@ class StaticCodeAnalyzer:
         :return: Returns the IPC, Cycles and uOPS reported by the tool.
         :rtype: dict
         """
-        json_file = f"/tmp/{name_bench.replace('.s','')}_perf.json"
-        stderr_file = f"/tmp/{name_bench.replace('.s','')}_perf.stderr"
+        json_file = f"/tmp/{name_bench.replace('.s','').split('/')[-1]}_perf.json"
+        stderr_file = f"/tmp/{name_bench.replace('.s','').split('/')[-1]}_perf.stderr"
 
         path_json_file = json_file.rsplit("/", 1)[0]
         if path_json_file != "/tmp":
@@ -141,10 +140,9 @@ class StaticCodeAnalyzer:
         ]
         with open(stderr_file, "w") as fstderr:
             ret = subprocess.run(cmd, stderr=fstderr)
-        # ret = subprocess.run(cmd, stderr=stderr)
 
         if ret and not os.path.exists(json_file):
-            raise LLVMMCAError("Path does not exist")
+            pwarning(f"LLVM-MCA output file not generated, return code {ret}.")
 
         with open(f"{json_file}") as f:
             try:
@@ -189,9 +187,7 @@ class StaticCodeAnalyzer:
         return self.data
 
     def perform_analysis(self, path, nsteps):
-        with yaspin(text="Static analysis with LLVM-MCA") as sp:
-            self.data = self.compute_performance(path, nsteps)
-            sp.hidden()
+        self.data = self.compute_performance(path, nsteps)
 
     def __init__(
         self, cpu: str, binary: str = "llvm-mca", arch: str = "x86-64",

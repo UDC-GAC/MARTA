@@ -30,7 +30,7 @@ class Report:
         Get information regarding processor and SO of host machine
         """
         cpu_info = ""
-        if Report.cinfo == None:
+        if Report.cinfo is None:
             Report.cinfo = cpu.get_cpu_info()
 
         cpu_info += f"CPU:           {Report.cinfo['brand_raw']}\n"

@@ -77,7 +77,7 @@ def plot_data(data: pd.DataFrame, cfg: PlotCfg, output_file: str) -> None:
             data=data,
             **new_cfg,
             palette=sns.light_palette("crimson", n_colors=n_colors),
-            multiple="stack",
+            multiple=cfg.multiple,
         )
         if cfg.mark_centroids:
             for line in lines_set:
@@ -105,7 +105,6 @@ def plot_data(data: pd.DataFrame, cfg: PlotCfg, output_file: str) -> None:
         ax.yaxis.tick_left()
         ax.xaxis.tick_bottom()
         ax.autoscale()
-
     elif cfg.type == "catplot":
         sns.set(font_scale=cfg.font_scale)
         sns.set_style("whitegrid", {"axes.grid": False})
@@ -131,12 +130,22 @@ def plot_data(data: pd.DataFrame, cfg: PlotCfg, output_file: str) -> None:
             title=None,
             frameon=False,
         )
-
-    else:
+    elif cfg.type == "jointplot":
         plot_type(
             data=data, x=cfg.x, y=cfg.y, hue=cfg.hue, size=cfg.size,
         )
-        sns.rugplot(data=data, x=cfg.x, y=cfg.y, hue=cfg.hue)
+    else:
+        plot_type(
+            data=data,
+            x=cfg.x,
+            y=cfg.y,
+            hue=cfg.hue,
+            hue_order=cfg.hue_order,
+            style=cfg.style,
+            markers=True,
+        )
+
+        # sns.rugplot(data=data, x=cfg.x, y=cfg.y, hue=cfg.hue)
 
     if output_file == "":
         perror("Wrong file to save plot")
@@ -152,7 +161,23 @@ def plot_data(data: pd.DataFrame, cfg: PlotCfg, output_file: str) -> None:
         for collection, hatch in zip(ax.collections[::-1], hatches):
             collection.set_hatch(hatch)
 
+    if cfg.rugplot:
+        import matplotlib.patheffects as pe
+
+        sns.rugplot(
+            data=data,
+            x=cfg.x,
+            hue=cfg.hue,
+            palette=sns.light_palette("crimson", n_colors=n_colors),
+            height=-0.02,
+            clip_on=False,
+            legend=False,
+            path_effects=[
+                pe.PathPatchEffect(edgecolor="black", linewidth=2),
+                pe.Normal(),
+            ],
+        )
+
     fig.tight_layout()  # adjust padding
     output_file = f"{output_file.split('.')[0]}.{cfg.format}"
     fig.savefig(output_file, format=cfg.format)
-

@@ -20,6 +20,7 @@
 import os
 import yaml
 import subprocess
+import itertools as it
 
 from marta.utils.marta_utilities import pwarning, pexcept, perror, check_marta_files
 
@@ -35,8 +36,10 @@ def parse_kernel_options(config: dict) -> dict:
     except KeyError:
         pexcept("'name' key is missing!", MARTAConfigError)
     cfg["bench_type"] = config["kernel"].get("type", "regular")
-    if cfg["bench_type"] not in ["regular", "micro"]:
-        pexcept("type of benchmarking must be 'regular' or 'micro'", MARTAConfigError)
+    if cfg["bench_type"] not in ["regular", "micro", "asm"]:
+        pexcept(
+            "type of benchmarking must be 'regular', 'micro' or 'asm'", MARTAConfigError
+        )
     cfg["descr"] = config["kernel"].get("description", "")
     try:
         cfg["path_kernel"] = config["kernel"].get("path", ".")
@@ -55,6 +58,7 @@ def parse_kernel_options(config: dict) -> dict:
     try:
         config_config = config["kernel"]["configuration"]
         config_exec = config["kernel"]["execution"]
+        config_output = config["kernel"]["output"]
     except KeyError:
         pexcept(
             "Check your configuration file: 'configuration' and 'execution' keys could be missing...",
@@ -90,8 +94,17 @@ def parse_kernel_options(config: dict) -> dict:
     asm_analysis = config_comp.get("asm_analysis", {})
     if isinstance(asm_analysis, dict):
         cfg["asm_count"] = asm_analysis.get("count_ins", False)
-        cfg["asm_syntax"] = asm_analysis.get("syntax", "att")
-        cfg["static_analysis"] = asm_analysis.get("static_analysis", "")
+        cfg["asm_syntax"] = asm_analysis.get("syntax", "att").lower()
+        if not cfg["asm_syntax"] in ["att", "intel"]:
+            pwarning(
+                "'asm_syntax' key was not set to 'att' or 'intel', changing vañie to 'att'"
+            )
+            cfg["asm_syntax"] = "att"
+        cfg["static_analysis"] = asm_analysis.get("static_analysis", False)
+        if cfg["static_analysis"] and cfg["asm_syntax"] != "att":
+            pwarning("incompatible 'asm_syntax' with llvm-mca, changing value to 'att'")
+            cfg["asm_syntax"] = "att"
+        cfg["llvm_mca_binary"] = asm_analysis.get("llvm_mca_bin", "llvm-mca")
     else:
         pexcept("'asm_analysis' must be a dict", MARTAConfigError)
 
@@ -99,15 +112,53 @@ def parse_kernel_options(config: dict) -> dict:
     cfg["kernel_cfg"] = config_config.get("kernel_cfg", [""])
     if len(cfg["kernel_cfg"]) == 0:
         cfg["kernel_cfg"] = [""]
-    cfg["d_features"] = config_config.get("d_features", [])
-    cfg["d_flags"] = config_config.get("d_flags", [])
+
+    cfg["d_features"] = config_config.get(
+        "d_features", {"NONE": {"value": "[0]", "type": "static",}},
+    )
+    if cfg["bench_type"] == "asm":
+        try:
+            cfg["asm_body"] = config_config["asm_body"]
+            values = []
+            for k in cfg["asm_body"]:
+                values.append(k)
+            cfg["d_features"].update(
+                {"_ASM_VERSION": {"type": "static", "value": str(values),}}
+            )
+            cfg["asm_init"] = config_config.get("asm_init", {})
+            cfg["asm_unroll"] = config_config.get("asm_unroll", 100)
+            cfg["asm_permutations"] = config_config.get("asm_perm", False)
+            cfg["asm_range"] = config_config.get("asm_range", False)
+            if cfg["asm_range"]:
+                values = []
+                for k in cfg["asm_body"]:
+                    cfg["d_features"].update(
+                        {
+                            f"_ASM_PERMUTATION": {
+                                "type": "static",
+                                "value": str(
+                                    list(range(1, len(cfg["asm_body"][k]) + 1))
+                                ),
+                            }
+                        }
+                    )
+            if cfg["asm_permutations"]:
+                values = []
+                for k in cfg["asm_body"]:
+                    size_body = len(cfg["asm_body"][k])
+                    if size_body == 1:
+                        values.append("0")
+                    for i in range(1, size_body + 1):
+                        for k in list(it.permutations(list(range(size_body)), i)):
+                            s = "".join(list([str(j) for j in k]))
+                            values.append(s)
+                cfg["d_features"].update(
+                    {f"_ASM_PERMUTATION": {"type": "static", "value": str(values),}}
+                )
+        except KeyError as k:
+            perror(f"Configuration key missing for 'asm' config: {k}")
     cfg["flops"] = config_config.get("flops", "1")
     cfg["meta_info"] = config_config.get("meta_info", {})
-    # meta_info = config_config.get("meta_info", {})
-    # cfg["meta_info_script"] = meta_info.get("script", "")
-    # cfg["meta_info_path"] = meta_info.get("path", ".")
-    # cfg["meta_info_script_input"] = meta_info.get("input", "")
-    # cfg["meta_info_script_input_suffix"] = meta_info.get("suffix", "")
     cfg["macveth"] = config_config.get("macveth", False)
     if cfg["macveth"]:
         cfg["kernel_cfg"].append("MACVETH")
@@ -119,10 +170,9 @@ def parse_kernel_options(config: dict) -> dict:
     cfg["derived_columns"] = config_config.get("derived", None)
 
     # Execution arguments
-    cfg["intel_cache_flush"] = config_exec.get("intel_cache_flush", False)
+    cfg["cache_flush"] = config_exec.get("cache_flush", False)
     cfg["stdout_redirect"] = config_exec.get("stdout_redirect", False)
     cfg["multithread"] = config_exec.get("multithread", False)
-    cfg["init_data"] = config_exec.get("init_data", False)
     cfg["check_dump"] = config_exec.get("check_dump", False)
     cfg["execution_enabled"] = config_exec.get("enabled", True)
     cfg["measure_time"] = config_exec.get("time", False)
@@ -147,7 +197,7 @@ def parse_kernel_options(config: dict) -> dict:
                 "'papi_counters' must be a list of hardware events!", MARTAConfigError
             )
     cfg["exec_args"] = config_exec.get("prefix", "")
-    cfg["output"] = config_exec.get("output", {})
+    cfg["output"] = config_output
     return cfg
 
 
@@ -230,14 +280,23 @@ def get_derived_single(
     var_index = 0
     new_expression = expression
     for var in variables:
-        new_expression = new_expression.replace(f"VAR_{var_index}", f"{str(data[var])}")
+        if isinstance(data, dict):
+            new_expression = new_expression.replace(
+                f"VAR_{var_index}", f"{str(data[var])}"
+            )
+        else:
+            new_expression = new_expression.replace(
+                f"VAR_{var_index}", f"data['{var}']"
+            )
         var_index += 1
     try:
         value = eval(new_expression)
     except KeyError as k:
         perror(f"Key {k} does not exist in derived columns")
     except Exception as e:
-        perror(f"Something went wrong when parsing derived values: {e}")
+        perror(
+            f"Something went wrong when parsing derived values: {e} {new_expression}"
+        )
     return {derived: value}
 
 
@@ -287,10 +346,10 @@ def get_derived(derived_columns: dict, data: dict) -> dict:
         derived_dict = {}
         for derived in derived_columns:
             variables = derived_columns[derived].get("variables")
-            if variables == None or not isinstance(variables, list):
+            if variables is None or not isinstance(variables, list):
                 perror("Bad formatting derived")
             expression = derived_columns[derived].get("expression")
-            if expression == None:
+            if expression is None:
                 perror("Bad formatting derived")
             expr_type = derived_columns[derived].get("type", "single")
             if expr_type == "single":

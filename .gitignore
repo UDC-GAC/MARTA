@@ -2,7 +2,6 @@
 __*
 !__init__.py
 !__main__.py
-!__version__
 *.list
 macveth_output.c*
 codelet*.c
@@ -17,8 +16,15 @@ __pycache__/
 tmp/
 log/
 
+# _version.py
+src/marta/_version.py
+
 # benchmarks
 examples/*/src/utilities
+examples/*/utilities
+examples/*/data/*.pdf
+examples/*/*/data/*.pdf
+examples/*/*/*/data/*.pdf
 examples/*/src/marta_profiler_data
 src/marta/profiler/kernels/*
 examples/*/src/*
@@ -57,6 +63,8 @@ cyc_*
 tests/Makefile
 tests/MARTA.mk
 tests/utilities
+
+examples/kernels/*
 
 # LaTeX
 *.bbl

@@ -34,8 +34,13 @@ from marta.analyzer.processing import (
     categorize_target_dimension,
     column_strings_to_int,
 )
-from marta.utils.marta_utilities import perror, pinfo, dump_config_file, pwarning
-from marta.version import print_version
+from marta.utils.marta_utilities import (
+    perror,
+    pinfo,
+    dump_config_file,
+    pwarning,
+    print_version,
+)
 
 
 class Analyzer:
@@ -91,6 +96,22 @@ class Analyzer:
 
         return parser.parse_args(args)
 
+    def _filter_data(self, val, d, df):
+        try:
+            cond = getattr(df, d) == eval(val)
+        except NameError:
+            cond = getattr(df, d) == val
+        except TypeError:
+            cond = getattr(df, d) == val
+        except Exception as E:
+            try:
+                cond = eval(f"df['{d}']{val}")
+            except Exception as E:
+                perror(
+                    f"check kernel[prepare_data[rows]], there is something wrong: {E}"
+                )
+        return df[cond].copy()
+
     def preprocess_data(self) -> pd.DataFrame:
         """Process data: filter, normalize and categorize
 
@@ -102,17 +123,12 @@ class Analyzer:
         self.raw_data = df.copy()
         target_value = self.target
         for d in self.filter_rows:
-            try:
-                cond = getattr(df, d) == eval(self.filter_rows[d])
-            except NameError:
-                cond = getattr(df, d) == self.filter_rows[d]
-            except TypeError:
-                cond = getattr(df, d) == self.filter_rows[d]
-            except Exception as E:
-                perror(
-                    f"check kernel[prepare_data[rows]], there is something wrong: {E}"
-                )
-            df = df[cond].copy()
+            if isinstance(self.filter_rows[d], list):
+                for val in self.filter_rows[d]:
+                    df = self._filter_data(val, d, df)
+            else:
+                df = self._filter_data(self.filter_rows[d], d, df)
+
         if df.count()[0] == 0:
             perror("dataset empty, check constraints in data please!")
 
@@ -186,21 +202,25 @@ class Analyzer:
             pwarning("Feature importance analysis disabled")
 
         # Plotting
-        if self.plot_enabled:
-            if self.plot_cfg.data == "raw":
-                plot_data(
-                    self.raw_data,
-                    self.plot_cfg,
-                    f"{self.output_path}/plot_raw_data_{self.plot_cfg.type}",
-                )
-            else:
-                plot_data(
-                    self.data_processed,
-                    self.plot_cfg,
-                    f"{self.output_path}/plot_processed_data_{self.plot_cfg.type}",
-                )
+        if len(self.plot_cfg) > 0:
+            for plt in self.plot_cfg:
+                if not self.plot_enabled[plt]:
+                    pwarning(f"Plotting disabled for {plt}")
+                    continue
+                if self.plot_cfg[plt].data == "raw":
+                    plot_data(
+                        self.raw_data,
+                        self.plot_cfg[plt],
+                        f"{self.output_path}/plot_raw_data_{self.plot_cfg[plt].type}",
+                    )
+                else:
+                    plot_data(
+                        self.data_processed,
+                        self.plot_cfg[plt],
+                        f"{self.output_path}/plot_processed_data_{self.plot_cfg[plt].type}",
+                    )
         else:
-            pwarning("Plotting disabled")
+            pwarning("Nothing to plot")
 
     def __init__(self, args):
         self.args = self.parse_arguments(args)

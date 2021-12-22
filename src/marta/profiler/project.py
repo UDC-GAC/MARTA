@@ -25,7 +25,7 @@ import shutil
 
 # Local imports
 from marta import get_data
-from marta.utils.marta_utilities import perror
+from marta.utils.marta_utilities import perror, dump_config_file
 
 
 class Project:
@@ -42,14 +42,9 @@ class Project:
         except Exception:
             perror(f"Something went wrong when creating new project '{name}'")
         src = get_data(f"profiler/template.yml")
-        dst = f"{os.getcwd()}/{name}_template.yml"
-        try:
-            shutil.copyfile(src, dst)
-        except FileExistsError:
-            perror(f"'{name}_template.yml' already exists!")
-        except FileNotFoundError:
-            perror(f"Package corrupted: marta_{type} files are missing")
-        except Exception as e:
-            perror(f"Something went wrong when creating new project '{name}': {e}")
+        dst = f"{os.getcwd()}/{name}/profiler.yml"
+        lines = dump_config_file(src, name)
+        with open(dst, "w") as f:
+            f.writelines(lines)
 
         return 0

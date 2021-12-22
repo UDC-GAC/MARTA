@@ -22,8 +22,11 @@
 #define _GNU_SOURCE
 #endif
 
-#include "polybench.h"
+#ifdef MARTA_MULTITHREAD
+#include <omp.h>
+#endif
 
+#include "polybench.h"
 #include "polybench_definitions.h"
 
 #include <assert.h>
@@ -60,15 +63,20 @@
 #define MARTA_CSV_HEADER 1
 #endif
 
-#ifndef MARTA_INIT_DATA
-#define MARTA_INIT_DATA 0
-#endif
-
 #ifndef MARTA_INTEL_FLUSH_DATA
 #define MARTA_INTEL_FLUSH_DATA 0
 #endif
 
 #define MARTA_TMP_FILE "/tmp/___marta_results.txt"
+
+#if (MARTA_INTEL_FLUSH_DATA == 1) && !defined(POLYBENCH_NO_FLUSH_CACHE)
+#define MARTA_FLUSH_CACHE                                                      \
+  polybench_flush_cache();                                                     \
+  __asm volatile("mfence\n\t" : : : "memory");                                 \
+  __asm volatile("lfence\n\t" : : : "memory");
+#else
+#define MARTA_FLUSH_CACHE
+#endif
 
 #define MARTA_OPEN_RESULTS_FILE                                                \
   FILE *fp;                                                                    \
@@ -116,11 +124,11 @@ void marta_print_papi_to_file() {
 
 #if defined(MARTA_MULTITHREAD) && !defined(_OPENMP)
 #error "Compile with -fopenmp!"
-#elif defined(MARTA_MULTITHREAD) && defined(_OPENMP)
+#elif defined(MARTA_MULTITHREAD) && defined(_OPENMP) && defined(POLYBENCH_PAPI)
 #undef MARTA_START_INSTRUMENTS
 #undef MARTA_STOP_INSTRUMENTS
 #undef MARTA_PRINT_INSTRUMENTS
-#define PW_MULTITHREAD
+#undef MARTA_PREPARE_INSTRUMENTS
 #include "papi_wrapper.h"
 #define MARTA_PREPARE_INSTRUMENTS pw_init_instruments
 #define MARTA_START_INSTRUMENTS pw_init_start_instruments
@@ -176,15 +184,18 @@ static inline _marta_cycles_t _marta_rdtsc_stop() {
 }
 
 #ifdef MARTA_MULTITHREAD
-int *__marta_rdtsc;
+_marta_cycles_t *__marta_rdtsc;
 static inline void _marta_init_rdtsc() {
   int __nthreads = 1;
 #pragma omp parallel
   {
 #pragma omp master
-    { __nthreads = omp_get_num_threads(); }
+    {
+      __nthreads = omp_get_num_threads();
+      __marta_rdtsc =
+          (_marta_cycles_t *)malloc(sizeof(_marta_cycles_t) * __nthreads);
+    }
   }
-  __marta_rdtsc = (int *)malloc(sizeof(int) * __nthreads);
 #pragma omp parallel
   {
     int th = omp_get_thread_num();
@@ -204,10 +215,15 @@ static inline void _marta_finish_rdtsc() {
 
 #define END_RDTSC _marta_finish_rdtsc();
 #define PRINT_RDTSC                                                            \
-  for (int __th = 0; __th < __nthreads; ++__th) {                              \
-    MARTA_PRINT_INSTRUMENTS("%d,%.1F\n", __th, (double)(__marta_rdtsc[__th])); \
-  }                                                                            \
-  free(__marta_rdtsc);
+  _Pragma("omp parallel") {                                                    \
+    _Pragma("omp master") {                                                    \
+      for (int __th = 0; __th < omp_get_num_threads(); ++__th) {               \
+        MARTA_PRINT_INSTRUMENTS("%d,%llu\n", __th,                             \
+                                (_marta_cycles_t)(__marta_rdtsc[__th]));       \
+      }                                                                        \
+      free(__marta_rdtsc);                                                     \
+    }                                                                          \
+  }
 
 #else
 #define START_RDTSC _marta_cycles_t __marta_t0 = _marta_rdtsc_start();
@@ -489,10 +505,7 @@ DATA_TYPE marta_avoid_dce_sum(const char *fmt, ...) {
     cpu_set_t MARTA_CPU_MASK;                                                  \
     CPU_ZERO(&MARTA_CPU_MASK);                                                 \
     CPU_SET(MARTA_CPU_AFFINITY, &MARTA_CPU_MASK);                              \
-    assert(sched_setaffinity(0, sizeof(MARTA_CPU_MASK), &MARTA_CPU_MASK) ==    \
-           0);                                                                 \
-    unsigned int __cycles_lo;                                                  \
-    unsigned int __cycles_hi;
+    assert(sched_setaffinity(0, sizeof(MARTA_CPU_MASK), &MARTA_CPU_MASK) == 0);
 
 #define MARTA_BENCHMARK_END                                                    \
   return 0;                                                                    \

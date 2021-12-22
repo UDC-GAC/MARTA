@@ -320,27 +320,6 @@ void polybench_papi_print() {
 #endif
 }
 
-long_long polybench_get_val(int evid) {
-  int verbose = 0;
-#ifdef POLYBENCH_PAPI_VERBOSE
-  verbose = 1;
-#endif
-#ifdef _OPENMP
-#pragma omp parallel
-  {
-    if (omp_get_thread_num() == polybench_papi_counters_threadid) {
-      if (verbose)
-        printf("On thread %d:\n", polybench_papi_counters_threadid);
-#endif
-      return polybench_papi_values[evid];
-#ifdef _OPENMP
-    }
-    º
-  }
-#pragma omp barrier
-#endif
-}
-
 #endif
 /* ! POLYBENCH_PAPI */
 

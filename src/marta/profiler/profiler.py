@@ -18,42 +18,38 @@
 # -*- coding: utf-8 -*-
 
 # Standard libraries
-import os
-import copy
-import subprocess
-import sys
-from marta.profiler.config import check_correctness_file, get_kernel_config
 import argparse
-from argparse import RawTextHelpFormatter
-import pickle
 import itertools as it
+import logging
 import multiprocessing as mp
-from typing import Iterable, Union
-import glob
+import sys
 
 # Third-party libraries
 import pandas as pd
-import numpy as np
 from tqdm import tqdm
 from tqdm.auto import tqdm
-from itertools import repeat
 
 # Local imports
 from marta import get_data
-from marta.utils.marta_utilities import (
-    perror,
-    pwarning,
-    pinfo,
-    create_directories,
-    dump_config_file,
-    marta_exit,
-)
 from marta.profiler.benchmark import Benchmark, BenchmarkError
+from marta.profiler.config import check_correctness_file, get_kernel_config
+from marta.profiler.d_features import dict_product
 from marta.profiler.kernel import Kernel
+from marta.profiler.logger import Logger
+from marta.profiler.macveth import _pinfo_macveth
 from marta.profiler.project import Project
 from marta.profiler.timing import Timing
-from marta.profiler.logger import Logger
-from marta.version import get_version, print_version
+from marta.utils.marta_utilities import (
+    clean_previous_files,
+    create_directories,
+    dump_config_file,
+    get_version,
+    marta_exit,
+    perror,
+    pinfo,
+    print_version,
+    pwarning,
+)
 
 
 class Profiler:
@@ -73,20 +69,31 @@ class Profiler:
         """
         parser = argparse.ArgumentParser(
             prog="marta_profiler",
-            description="simple kernel profiler based on compilation files and a configuration file",
-            formatter_class=RawTextHelpFormatter,
+            description="Productivity-aware framework for micro-architectural profiling and performance characterization",
+            formatter_class=argparse.RawTextHelpFormatter,
         )
 
         parser.add_argument(
             "--version", action="version", version=get_version("Profiler")
         )
 
-        subparsers = parser.add_subparsers(dest="cmd", help="sub-command help")
+        subparsers = parser.add_subparsers(
+            title="subcommands", dest="cmd", help="additional help"
+        )
         parser_project = subparsers.add_parser(
-            "project", help="project help", aliases=["po"]
+            "project",
+            help="project help",
+            aliases=["po"],
+            description="project subcommand is meant to help with the configuration and generation of new projects MARTA-compliant.",
         )
         parser_project.add_argument(
-            "-n", "--create", nargs=1, type=str, help="name of the new project",
+            "-n", "--name", nargs=1, type=str, help="name of the new project",
+        )
+        parser_project.add_argument(
+            "-u",
+            "--microbenchmark",
+            action="store_true",
+            help="set new project as micro-benchmark",
         )
         parser_project.add_argument(
             "-c",
@@ -101,9 +108,11 @@ class Profiler:
             action="store_true",
             help="dump a sample configuration file with all needed files for profiler to work properly",
         )
-
         parser_general = subparsers.add_parser(
-            "profile", help="profile help", aliases=["perf"]
+            "profile",
+            help="profile help",
+            aliases=["perf"],
+            description="MARTA requires an input file with the configuration parameters, but some of them can be overwritten at runtime, as described below.",
         )
         required_named = parser_general.add_argument_group("required named arguments")
         required_named.add_argument(
@@ -118,7 +127,11 @@ class Profiler:
         optional_named = parser_general.add_argument_group("optional named arguments")
 
         optional_named.add_argument(
-            "-o", "--output", help="output results file name", required=False
+            "-o",
+            "--output",
+            help="output results file name",
+            required=False,
+            default=None,
         )
 
         optional_named.add_argument(
@@ -130,7 +143,17 @@ class Profiler:
         )
 
         optional_named.add_argument(
-            "-d", "--debug", action="store_true", help="debug verbose", required=False
+            "-d", "--debug", action="store_true", help="debug verbose", required=False,
+        )
+
+        optional_named.add_argument(
+            "-log",
+            "--loglevel",
+            type=str,
+            default="warning",
+            choices=["debug", "info", "warning", "error", "critical"],
+            help="log level",
+            required=False,
         )
 
         optional_named.add_argument(
@@ -162,7 +185,11 @@ class Profiler:
         )
 
         optional_named.add_argument(
-            "-q", "--quiet", action="store_true", help="quiet execution", required=False
+            "-q",
+            "--quiet",
+            action="store_true",
+            help="quiet execution",
+            required=False,
         )
 
         optional_named.add_argument(
@@ -183,103 +210,6 @@ class Profiler:
         )
 
         return parser
-
-    @staticmethod
-    def eval_features(feature: dict, path: str) -> dict:
-        """
-        Evaluate features from configuration file
-
-        Example:
-
-        "it.combinations(range(0,4),2)"
-
-        This would generate a list of values such as: (0,1), (0,2), (0,3), (1,2), etc.
-
-        :param feat: Dictionary of strings
-        :type feat: dict
-        :return: Returns a dict with all features or parameters properly expanded
-        :rtype: dict
-        """
-        params_dict = {}
-        for f in feature.keys():
-            type_feature = feature[f]["type"]
-            evaluate = feature[f].get("evaluate", True)
-            is_path = feature[f].get("path", False)
-            params_values = []
-            if isinstance(feature[f]["value"], str):
-                try:
-                    to_eval = feature[f]["value"]
-                    if is_path:
-                        if isinstance(to_eval, list):
-                            new_list = []
-                            for val in to_eval:
-                                new_list.append(
-                                    val.replace("[PATH]", f"{os.getcwd()}/{path}")
-                                )
-                            to_eval = new_list
-                        elif isinstance(to_eval, str):
-                            to_eval = to_eval.replace("[PATH]", f"{os.getcwd()}/{path}")
-                    if evaluate:
-                        params_values = eval(to_eval)
-                    else:
-                        params_values = to_eval
-
-                except NameError:
-                    perror(f"Evaluation of expression for {f} went wrong!")
-            else:
-                params_values = [feature[f]]
-            # This is useful for iterators, such as permutations, combinations...
-            if type_feature == "dynamic":
-                try:
-                    size = len(params_values)
-                except TypeError:
-                    tmp_eval_copy = copy.deepcopy(params_values)
-                    for t in tmp_eval_copy:
-                        size = len(t)
-                        break
-                for i in range(size):
-                    params_dict[f"{f}{str(i)}"] = [params_values]
-            elif type_feature == "static":
-                try:
-                    params_dict[f] = list(params_values)
-                except TypeError:
-                    params_dict[f] = params_values
-            else:
-                raise TypeError
-        return params_dict
-
-    @staticmethod
-    def comp_nvals(params_values: Union[list, Iterable]) -> int:
-        """Computer the number of iterations of some iterables. This is for the
-        tqdm progress bar
-
-        :param params_values: Any type of iterable
-        :type params_values: Union[list, Iterable]
-        :return: Number of elements
-        :rtype: int
-        """
-        if isinstance(params_values, list):
-            return len(params_values)
-        params_values_copy = copy.deepcopy(params_values)
-        try:
-            return len(list(*params_values_copy))
-        except Exception:
-            return len(list(it.product(*params_values_copy)))
-
-    @staticmethod
-    def dict_product(dicts: dict, kernel_cfg: list) -> bytes:
-        """
-        Generate the product of different dictionaries in a serializable
-        fashion, since `dict_keys` is not serializable.
-
-        >>> list(dict_product(dict(number=[1,2], character='ab')))
-        [{'character': 'a', 'number': 1},
-        {'character': 'a', 'number': 2},
-        {'character': 'b', 'number': 1},
-        {'character': 'b', 'number': 2}]
-        """
-        dicts.update({"KERNEL_CFG": kernel_cfg})
-        return (pickle.dumps(dict(zip(dicts, x))) for x in it.product(*dicts.values()))
 
     def get_loop_overhead(self, kernel: Kernel, exit_on_error: bool) -> float:
         """Auxiliar function for getting the overhead of measuring in a loop.
@@ -308,7 +238,7 @@ class Profiler:
                 ],
                 nsteps=kernel.nsteps,
             )
-            pinfo(f"Loop overhead: {overhead_loop_tsc} cycles (TSC)")
+            pinfo(f"Loop overhead: {overhead_loop_tsc} cycles (RDTSC)")
         except BenchmarkError:
             msg = "Loop overhead could not be computed."
             if exit_on_error:
@@ -316,13 +246,6 @@ class Profiler:
             else:
                 pwarning(f"{msg} Skipping.")
         return overhead_loop_tsc
-
-    @staticmethod
-    def clean_previous_files() -> None:
-        list_opt = glob.glob("/tmp/*.opt")
-        if list_opt != []:
-            for elem in list_opt:
-                os.system(f"rm {elem}")
 
     def get_loop_overhead_instructions(self, kernel: Kernel) -> int:
         if kernel.nsteps == 1:
@@ -334,6 +257,24 @@ class Profiler:
         else:
             return -1
 
+    def process_kernel_parameters(self, cfg: dict) -> Kernel:
+        """Process all kernel parameters, both from the configuration file and
+           CLI. CLI parameters have priority
+
+        :param cfg: parameters provided in the configuration file
+        :type cfg: dict
+        :return: the whole kernel configuration
+        :rtype: Kernel
+        """
+        kernel = Kernel(cfg)
+        if self.args.executions > -1:
+            kernel.nexec = self.args.executions
+        if self.args.iterations > -1:
+            kernel.nsteps = self.args.iterations
+        kernel.generate_report = kernel.emit_report() | self.args.report
+        kernel.debug |= self.args.debug
+        return kernel
+
     def profiling_kernels(self, cfg: dict) -> int:
         """
         Configuration file must have at least one kernel for performing profling
@@ -343,33 +284,17 @@ class Profiler:
         :param cfg: Dictionary with many
         :type cfg: dict
         """
-
-        kernel = Kernel(cfg)
-        if self.args.executions > -1:
-            kernel.nexec = self.args.executions
-        if self.args.iterations > -1:
-            kernel.nsteps = self.args.iterations
-        if len(kernel.d_features) > 0:
-            params_kernel = Profiler.eval_features(
-                kernel.d_features, kernel.get_kernel_path()
-            )
-        else:
-            params_kernel = kernel.d_flags
+        kernel = self.process_kernel_parameters(cfg)
 
         # Output configuration: default values
         output_cols = kernel.get_output_columns()
-        generate_report = kernel.emit_report() | self.args.report
         output_filename = (
             kernel.get_output_filename()
             if self.args.output is None
             else self.args.output
         )
-
         if isinstance(output_cols, str) and output_cols == "all":
-            if isinstance(params_kernel, dict):
-                output_cols = list(params_kernel.keys())
-            else:
-                output_cols = []
+            output_cols = list(kernel.params.keys())
 
         if not isinstance(output_cols, list):
             perror("'output_cols' parameter must be a list or 'all'")
@@ -378,65 +303,32 @@ class Profiler:
         if kernel.papi_counters != None:
             output_cols += kernel.papi_counters
 
-        niterations = 1
-        if isinstance(params_kernel, dict):
-            niterations = np.prod(
-                [Profiler.comp_nvals(params_kernel[k]) for k in params_kernel]
-            )
-        else:
-            niterations = len(params_kernel)
-
-        niterations *= len(kernel.kernel_cfg)
-
-        # Structure for storing results and ploting
-        df = pd.DataFrame(columns=output_cols)
-
-        # Silent compilation or not
-        make_stdout = subprocess.STDOUT
-        make_stderr = subprocess.STDOUT
-
-        # if not kernel.comp_debug and not self.args.debug:
-        if not kernel.comp_debug and not (self.args.debug):
-            make_stdout = "/tmp/___marta_stdout.log"
-            make_stderr = "/tmp/___marta_stderr.log"
-
-        create_directories(root=f"{kernel.get_kernel_path()}/marta_profiler_data/")
+        product = dict_product(kernel.params, kernel.kernel_cfg)
+        niterations = len([i for i in product]) * len(kernel.kernel_cfg)
+        create_directories(root=kernel.get_kernel_path("/marta_profiler_data/"))
         exit_on_error = not self.args.no_quit_on_error
         overhead_loop_tsc = self.get_loop_overhead(kernel, exit_on_error)
-        Profiler.clean_previous_files()
+        clean_previous_files()
 
         pinfo(
             f"Compilation using {kernel.processes} processes. Number of executions = {kernel.nexec}, number of iterations (TSTEPS) = {kernel.nsteps}"
         )
-        if kernel.macveth:
-            text = f"MACVETH enabled: this could take longer."
-            if not kernel.check_dump:
-                text += "Use 'check_dump' option also for correctness."
-            else:
-                text += " Dumping values for assessing correctness."
-            pinfo(text)
+        _pinfo_macveth(kernel)
+        # Structure for storing results and ploting
+        df = pd.DataFrame(columns=output_cols)
         for compiler in kernel.compiler_flags:
             for compiler_flags in list(kernel.compiler_flags[compiler]):
                 pinfo(f"Compiler and flags: {compiler} {compiler_flags}")
-                if isinstance(params_kernel, dict):
-                    product = Profiler.dict_product(params_kernel, kernel.kernel_cfg)
-                else:
-                    product = params_kernel
-
-                # Compilation process can be done in parallel if compilers are
-                # thread-safe, so user must be aware of this, not the
-                # profiler (passive-agressive comment :-P)
+                product = dict_product(kernel.params, kernel.kernel_cfg)
                 if kernel.compilation_enabled:
                     Timing.start_timer("compilation")
                     with mp.Pool(processes=kernel.processes) as pool:
                         iterable = zip(
-                            repeat(kernel),
+                            it.repeat(kernel),
                             product,
-                            repeat(compiler),
-                            repeat(compiler_flags),
-                            repeat(make_stdout),
-                            repeat(make_stderr),
-                            repeat(exit_on_error),
+                            it.repeat(compiler),
+                            it.repeat(compiler_flags),
+                            it.repeat(exit_on_error),
                         )
                         if kernel.show_progress_bars:
                             pbar = tqdm(
@@ -462,17 +354,7 @@ class Profiler:
                 else:
                     pwarning("Compilation process disabled!")
 
-                # IMPORTANT NOTE:
-                # This section could be parallel as well, if kernels
-                # running are monolithic. Even though, you would have to
-                # control properly CPU affinity and be aware if kernels are
-                # cache sensitive or not. Thus, for simplicity, this is
-                # still not parallel at all.
-                # Moreover: I think this should not EVER be parallel
-                if isinstance(params_kernel, dict):
-                    product = Profiler.dict_product(params_kernel, kernel.kernel_cfg)
-                else:
-                    product = params_kernel
+                product = dict_product(kernel.params, kernel.kernel_cfg)
                 if kernel.execution_enabled:
                     if kernel.show_progress_bars:
                         loop_iterator = tqdm(
@@ -485,13 +367,13 @@ class Profiler:
                     for params_val in loop_iterator:
                         kern_exec = kernel.run(params_val, compiler, compiler_flags)
                         # There was an error, exit on error, save data first
-                        if kern_exec == None:
-                            kernel.save_results(df, output_filename, generate_report)
+                        if kern_exec is None:
+                            kernel.save_results(df, output_filename)
                             perror("Execution failed, partial results saved")
                             return None
                         if isinstance(kern_exec, list):
-                            for exec in kern_exec:
-                                df = df.append(exec, ignore_index=True)
+                            for execution in kern_exec:
+                                df = df.append(execution, ignore_index=True)
                         else:
                             df = df.append(kern_exec, ignore_index=True)
                     Timing.accm_timer("execution")
@@ -499,36 +381,38 @@ class Profiler:
                     pwarning("Execution process disabled!")
         # Storing results and generating report file
         Timing.save_total_time()
+        # FIXME:
         df["overhead_instructions"] = self.get_loop_overhead_instructions(kernel)
         df["overhead_loop"] = overhead_loop_tsc
-        kernel.save_results(df, output_filename, generate_report)
+        kernel.save_results(df, output_filename)
         if self.args.summary != None:
             kernel.print_summary(df, self.args.summary[0])
         kernel.finalize_actions()
-        Logger.write_to_file(
-            f"{kernel.get_kernel_path()}/marta_profiler_data/marta.log"
-        )
+        # FIXME: change for logging implementation
+        Logger.write_to_file(kernel.get_kernel_path("/marta_profiler_data/marta.log"))
+        pinfo(f"Results saved to '{output_filename}'")
         return 0
 
     def process_project_args(self):
         """Process arguments starting with project
         """
-        if self.args.dump_config_file is not None:
+        if self.args.dump_config_file:
             for line in dump_config_file("profiler/template.yml"):
                 print(line, end="")
             marta_exit(0)
 
-        if self.args.create is not None:
-            code = Project.generate_new_project(self.args.name)
+        if self.args.name is not None:
+            project_name = self.args.name[0]
+            code = Project.generate_new_project(project_name)
             if code != 0:
                 perror("Something went wrong...", code)
             pinfo(
-                f"Project generated in folder '{self.args.name}'. Configuration template in current file as '{self.args.name}_template.yml'"
+                f"Project generated in folder '{project_name}'. Configuration template in current file as '{project_name}_template.yml'"
             )
             marta_exit(0)
 
         # Sanity-checks
-        if self.args.check_config_file is not None:
+        if self.args.check_config_file:
             kernel_setup = get_kernel_config(self.args.check_config_file[0])
             if not check_correctness_file(kernel_setup):
                 perror("Configuration file is not correct")
@@ -537,6 +421,26 @@ class Profiler:
                     "Configuration file structure is correct (compilation files might be wrong)"
                 )
                 marta_exit(0)
+
+        self.parser.print_help(sys.stderr)
+        marta_exit(1)
+
+    def config_logger(self):
+        loglevel = getattr(logging, self.args.loglevel.upper(), None)
+        if not isinstance(loglevel, int):
+            loglevel = logging.DEBUG
+        logging.basicConfig(
+            filename="/tmp/__marta_logger.log",
+            level=loglevel,
+            format="%(asctime)s:[%(levelname)s]:%(name)s:%(message)s",
+            datefmt="%d-%m-%Y %I:%M:%S %p",
+            filemode="w",
+        )
+        import marta.utils.marta_utilities as mu
+
+        mu._quiet_msg = False
+        if hasattr(self.args, "quiet"):
+            mu._quiet_msg = self.args.quiet
 
     def __init__(self, list_args):
         """
@@ -562,16 +466,16 @@ class Profiler:
 
         if self.args.cmd in project_subcmd_alias:
             self.process_project_args()
-            marta_exit(0)
 
         kernel_setup = get_kernel_config(self.args.input[0])
         if not self.args.quiet:
             # Print version if not quiet
             print_version("Profiler")
 
+        self.config_logger()
         # For each kernel configuration
         for cfg in kernel_setup:
-            if self.profiling_kernels(cfg) == None:
+            if self.profiling_kernels(cfg) is None:
                 perror("Kernel failed...", exit_on_error=False)
 
         marta_exit(0)

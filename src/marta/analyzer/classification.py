@@ -138,8 +138,9 @@ class DecisionTree(Classification):
             if prediction != label:
                 missclassified += 1
         if missclassified:
+            miss_rate = missclassified / len(self.data.values)
             pwarning(
-                f"Missclassified data: {missclassified}/{len(self.data.values)} ({1-score_dt:.3f})".format()
+                f"Missclassified data: {missclassified}/{len(self.data.values)} ({miss_rate:.3f})".format()
             )
 
         if not self.continuous:
@@ -148,10 +149,23 @@ class DecisionTree(Classification):
             cm = confusion_matrix(
                 self.target_data.values, predictions, labels=self.labels
             )
-            print(cm)
-            print("Labels for target dimension:")
+            max_size = 1
+            for row in cm:
+                for val in row:
+                    s = str(val)
+                    max_size = max(len(s), max_size)
+            max_size_label = 1
+            for label in self.labels:
+                max_size_label = max(len(label), max_size_label)
+            i = 0
+            for label in self.labels:
+                print(f"{label:{max_size_label+2}s} |", end="")
+                for val in cm[i]:
+                    print(f"{val:{max_size+2}d}", end="")
+                print("|")
+                i += 1
+            print("")
             if self.config.labels != []:
-                print(self.config.labels)
                 disp = ConfusionMatrixDisplay(
                     confusion_matrix=cm, display_labels=self.config.labels
                 )
@@ -159,7 +173,6 @@ class DecisionTree(Classification):
                 disp = ConfusionMatrixDisplay(
                     confusion_matrix=cm, display_labels=self.labels
                 )
-                print(self.labels)
             # plt.show()
             file_conf_matrix = f"{output_path}/conf_matrix.pdf"
             fig, ax = plt.subplots()
@@ -219,6 +232,7 @@ class DecisionTree(Classification):
             self.labels = np.unique(self.target_data).tolist()
         else:
             self.labels = self.config.labels
+
         self.var_train, self.var_test, self.res_train, self.res_test = train_test_split(
             self.data.values, self.target_data.values, test_size=0.2
         )

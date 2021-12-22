@@ -1,0 +1,47 @@
+- kernel:
+      name: "##NAME##"
+      type: "asm"
+      path: "src"
+      description: "Default setup for ##NAME##"
+      debug: False
+      show_progress_bars: True
+      preamble:
+          command: "sudo utilities/setup_freq.sh && sudo utilities/disable_turbo_intel.sh"
+      finalize:
+          command: "echo 'EXPERIMENT ##NAME## FINISHED :D!'"
+      compilation:
+          enabled: True
+          processes: 16
+          language: "C"
+          compiler_flags: { "gcc": [" -march=native -mtune=native -mavx2 "] }
+          main_src: "main.c"
+          common_flags: " -O3 "
+          kernel_inlined: True
+          asm_analysis:
+              syntax: "att"
+              count_ins: False
+              static_analysis: True
+              llvm_mca_bin: "llvm-mca"
+          debug: False
+      configuration:
+          kernel_cfg: [""] # here you can use -D flags, e.g. -DKERNEL_1
+          asm_init: [""]
+          asm_body: [""]
+      execution:
+          enabled: True
+          papi_counters: ["UNHALTED_CORE_CYCLES", "INSTRUCTIONS_RETIRED"]
+          time: True # measure time
+          tsc: True
+          threshold_outliers: 3 # in percentage
+          discard_outliers: True # remove outliers from average
+          compute_avg: True # divide values by nsteps
+          nexec: 7
+          nsteps: 100000
+          cpu_affinity: 10
+          prefix: "numactl -p 0 taskset -c 10"
+      output:
+          name: "default"
+          format: "csv" # csv, html, json
+          columns: "all"
+          report: True
+          verbose: True

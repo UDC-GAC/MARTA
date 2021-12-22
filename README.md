@@ -8,14 +8,15 @@ package](https://github.com/markoshorro/MARTA/actions/workflows/python-package.y
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 
-MARTA is a toolkit for analyzing performance in any architecture given any kind,
-in form and shape, of C/C++ code and a set of features to take into account.
+MARTA is a productivity-aware toolkit for profiling and performance
+characterization. It is meant for executing 
 
 This toolkit performs in two stages: profiling and analysis. The first component
 compiles, executes and collects information from hardware counters, and the second
 component post-process that data offline given a set of parameters to consider,
-applying ML techniques for classification in order to generate knowledge.
-For instance, having a piece of code or kernel such as:
+applying data mining and ML techniques for classification in order to build
+knowledge, e.g., in the form of decision trees, analyzing the influence of
+dimensiones, etc. For instance, having a piece of code or kernel such as:
 
 ```
 for (int i = INIT_VAL; i < UPPER_BOUND; i += STEP) {
@@ -30,19 +31,21 @@ decision tree regarding performance. Decision trees categorize the performance
 of the kernel (or other target column of the domain) according to the dimensions of
 interest specified.
 
-MARTA is also a very low intrusive profiler, even though it requires recompiling.
-Just with a header and two directives indicating the start and end of the
-region of interest (ROI), it can perform different compilations and executions,
-for instance, using different flags and/or compilers, and generating a readable
-table with performance metrics. This enables a fast comparison between
-compilers for a vast set of different combinations of parameters and flags.
+MARTA is also a very low intrusive profiler, even though it requires
+recompiling. It is a header-based profiler, including directives for detailing
+the start and end of the region of interest (RoI), it can perform different
+compilations and executions, for instance, using different flags and/or
+compilers, and generating a readable table with performance metrics. This
+enables a fast comparison between compilers for a vast set of different
+combinations of parameters and flags.
 
 ## Dependencies
 
 - Python >=3.7
 - Libraries specified in [`requirements.txt`](requirements.txt)
 - PAPI >=5.7.0
-- Linux environment with root access
+- Linux environment with root access. Recommended >=3.14 version to allow PAPI
+  use `rdpmc` for reading hardware counters.
 
 ## Getting started
 
@@ -75,7 +78,7 @@ python -m pip install dist/<marta-wheel>
 python -m pip install <marta-wheel>
 ```
 
-This will install a module named `marta`, and two console scripts:
+This will install a module named `marta`, and two console scripts or CLI commands:
 `marta_profiler` and `marta_analyzer`. **NOTE**: to run these commands it is needed
 to specify in `PATH` variable the path where your Python version install
 applications, e.g. `export PATH=$PATH:$HOME/.local/bin` if your Python
@@ -91,6 +94,10 @@ python -m profiler ...
 # or
 python -m analyzer ...
 ``` 
+
+## Profiler
+
+## Analyzer
 
 ### Examples: cases of study
 
