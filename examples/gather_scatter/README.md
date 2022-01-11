@@ -32,7 +32,7 @@ begin_loop:
 
 This way, the profiler is only including within the loop (`begin_loop`) those
 instructions we want to measure in the micro-kernel. The same example applies
-for `vscatterdps`. With [this configuration](config_profiler.yml), we generate
+for `vscatterdps`. With [these configurations](profiler_8elems.yml), we generate
 **13122 variants or versions** of the [source code](src/main.c).
 
 ### Analyzer
@@ -40,9 +40,9 @@ for `vscatterdps`. With [this configuration](config_profiler.yml), we generate
 Our analyzer enables the exploration of the most promising features in the
 performance. The processing of data is, normally, an iterative process, where
 on each step we learn more about the system to characterize or model. Thus, in
-a first step, we explore data using a relational plot (see [configuration file](config_analyzer.yml)):
+a first step, we explore data using a relational plot (see [configuration file](analyzer.yml)):
 
-![alt text](data/relplot.png)
+![alt text](data/hotcache/relplot.png)
 
 Gather performance seems pretty steady, regardless some outliers, but scatter
 performance seems to be more volatile, requiring further inspection.
