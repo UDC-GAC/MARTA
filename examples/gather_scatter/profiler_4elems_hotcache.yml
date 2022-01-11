@@ -15,7 +15,7 @@
           asm_analysis:
               syntax: "intel"
               count_ins: True
-              static_analysis: ""
+              static_analysis: True
           debug: False
       configuration:
           kernel_cfg: ["-DGATHER"]
