@@ -1,0 +1,64 @@
+- kernel:
+      name: "sat_packing"
+      type: "regular"
+      path: "src/"
+      description: "MACVETH's random packing model"
+      preamble:
+          command: "sudo cpupower frequency-set -u 2.1GHz  > /dev/null && sudo cpupower frequency-set -d 2.1GHz > /dev/null"
+      compilation:
+          enabled: True
+          processes: 32
+          language: "C"
+          compiler_flags:
+              { "gcc-11": [" -Ofast -march=native -mtune=native -mavx2 "] }
+          main_src: "main.c"
+          kernel_inlined: True
+          asm_analysis:
+              syntax: "att"
+              count_ins: True
+              static_analysis: True
+      configuration:
+          d_features:
+              OFFSET:
+                  value: "[0]"
+              PACKING_TEMPLATE:
+                  path: True
+                  value: "glob.glob('[PATH]full_codes/float_n*.c')"
+          derived:
+              NELEMS:
+                  type: single
+                  variables: ["PACKING_TEMPLATE"]
+                  expression: "int('VAR_0'.split('/')[-1].split('_')[1][1:])"
+              VERSION:
+                  type: single
+                  variables: ["PACKING_TEMPLATE"]
+                  expression: "int('VAR_0'.split('/')[-1].split('_')[-1][:-2])"
+              CONT:
+                  type: single
+                  variables: ["PACKING_TEMPLATE"]
+                  expression: "'_'.join('VAR_0'.split('/')[-1].split('_')[2:-1])"
+          flops: "1"
+      execution:
+          papi_counters:
+              [
+                  "CPU_CLK_UNHALTED",
+                  "INST_RETIRED:ANY_P",
+                  "UOPS_RETIRED:ALL",
+                  "UOPS_ISSUED:ALL",
+                  "UOPS_EXECUTED:THREAD",
+              ]
+          tsc: True
+          threshold_outliers: 3
+          discard_outliers: True
+          compute_avg: True
+          nexec: 7
+          nsteps: 10000
+          cpu_affinity: 10
+          prefix: "numactl -p 0 taskset -c 10"
+      output:
+          name: "hotcache"
+          sort_by: ["NELEMS", "CONT", "VERSION"]
+          format: "csv"
+          columns: "all"
+          report: True
+          verbose: True
