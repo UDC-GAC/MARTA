@@ -250,10 +250,8 @@ class Profiler:
     def get_loop_overhead_instructions(self, kernel: Kernel) -> int:
         if kernel.nsteps == 1:
             return 0
-        elif kernel.loop_type.lower() == "c":
-            return 3
-        elif kernel.loop_type.lower() == "asm":
-            return 2
+        elif kernel.loop_type.lower() == "c" or kernel.loop_type.lower() == "asm":
+            return 1
         else:
             return -1
 
@@ -304,7 +302,8 @@ class Profiler:
             output_cols += kernel.papi_counters
 
         product = dict_product(kernel.params, kernel.kernel_cfg)
-        niterations = len([i for i in product]) * len(kernel.kernel_cfg)
+        # niterations = len([i for i in product]) * len(kernel.kernel_cfg)
+        niterations = len([i for i in product])
         create_directories(root=kernel.get_kernel_path("/marta_profiler_data/"))
         exit_on_error = not self.args.no_quit_on_error
         overhead_loop_tsc = self.get_loop_overhead(kernel, exit_on_error)
@@ -334,7 +333,7 @@ class Profiler:
                             pbar = tqdm(
                                 pool.istarmap(Kernel.compile, iterable),
                                 total=niterations,
-                                desc="Compiling",
+                                desc="Compiling ",
                                 position=0,
                             )
                             for output in pbar:
@@ -358,7 +357,7 @@ class Profiler:
                 if kernel.execution_enabled:
                     if kernel.show_progress_bars:
                         loop_iterator = tqdm(
-                            product, desc="Benchmark", total=niterations, leave=True,
+                            product, desc="Benchmark ", total=niterations, leave=True,
                         )
                     else:
                         loop_iterator = product
@@ -381,16 +380,14 @@ class Profiler:
                     pwarning("Execution process disabled!")
         # Storing results and generating report file
         Timing.save_total_time()
-        # FIXME:
-        df["overhead_instructions"] = self.get_loop_overhead_instructions(kernel)
-        df["overhead_loop"] = overhead_loop_tsc
-        kernel.save_results(df, output_filename)
+        df["oh_loop_ins"] = self.get_loop_overhead_instructions(kernel)
+        df["oh_loop_tsc"] = overhead_loop_tsc
+        df = kernel.save_results(df, output_filename)
         if self.args.summary != None:
             kernel.print_summary(df, self.args.summary[0])
-        kernel.finalize_actions()
-        # FIXME: change for logging implementation
         Logger.write_to_file(kernel.get_kernel_path("/marta_profiler_data/marta.log"))
         pinfo(f"Results saved to '{output_filename}'")
+        kernel.finalize_actions()
         return 0
 
     def process_project_args(self):

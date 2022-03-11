@@ -126,12 +126,12 @@ class Timing:
 
     @staticmethod
     def compute_results(results, threshold_outliers, benchmark_type):
+        results = np.sort(results)[1:-1]
         res_mean = np.mean(results)
         res_dev = np.std(results)
         avg_dev = np.divide(
             100.0 * res_dev, res_mean, out=np.zeros(res_mean.size), where=res_mean != 0
         )
-
         outliers = False
         for val in range(avg_dev.size):
             if avg_dev[val] > threshold_outliers:
@@ -151,6 +151,8 @@ class Timing:
 
         # Retrieve percentage of discarded values
         discarded_values = float(mask.sum()) / results.size
+        if discarded_values > 0.25:
+            pwarning(f"Discarded values = {discarded_values:.2f}")
         return mean_results, discarded_values
 
     @staticmethod

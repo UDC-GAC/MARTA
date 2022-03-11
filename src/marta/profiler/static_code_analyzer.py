@@ -179,6 +179,9 @@ class StaticCodeAnalyzer:
             }
         )
         llvm_mca_results.update({"llvm-mca_uOpsPerCycle": summary["uOpsPerCycle"]})
+        llvm_mca_results.update(
+            {"llvm-mca_BlockRThroughput": summary["BlockRThroughput"]}
+        )
         return llvm_mca_results
 
     def get_data(self):

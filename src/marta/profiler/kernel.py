@@ -195,18 +195,25 @@ class Kernel:
                     "Correctness check for MACVETH went OK according to dumped values."
                 )
             for err in errors:
-                file_org = open(err, "rt").readlines()
-                file_macveth = open(f"{err}MACVETH", "rt").readlines()
+                file_org = []
+                with open(err, "rt") as f:
+                    file_org = f.readlines()
+                file_macveth = []
+                with open(f"{err}MACVETH", "rt") as f:
+                    file_macveth = f.readlines()
                 diffs = difflib.Differ().compare(file_org, file_macveth)
+                num_lines = 1
+                with open(err, "r") as f:
+                    num_lines = sum(1 for _ in f)
                 differences = sum([1 for line in diffs if line[:2] == "+ "])
                 perror(
-                    f"{differences} lines different between dumped files. Check correctness for '{err}'.",
+                    f"{differences}/{num_lines} lines ({(100*differences/num_lines):3.2f} %) different between dumped files. Check correctness for '{err}'.",
                     exit_on_error=False,
                 )
             if len(errors) > 0:
                 marta_exit()
 
-    def save_results(self, df: pd.DataFrame, filename: str) -> None:
+    def save_results(self, df: pd.DataFrame, filename: str) -> pd.DataFrame:
         """
         Save data as a pandas.DataFrame
 
@@ -238,6 +245,9 @@ class Kernel:
         except ValueError:
             pass
 
+        sort_by = self.output.get("sort_by")
+        if not sort_by is None:
+            df = df.sort_values(sort_by).reset_index().drop("index", axis=1)
         filename = self.get_kernel_path(f"/marta_profiler_data/{filename}")
         if output_format == "html":
             df.to_html(filename, index=False)
@@ -250,6 +260,7 @@ class Kernel:
             report_filename = filename.split(".")[0] + ".log"
             with open(report_filename, "w") as f:
                 f.write(self._generate_report())
+        return df
 
     def define_papi_counters(self) -> None:
         """
@@ -483,7 +494,8 @@ class Kernel:
             )
             data.update(self.S.get_data())
 
-        data.update(vector_report_analysis(f"/tmp/{base_filename}.opt", compiler))
+        if os.path.exists(f"/tmp/{base_filename}.opt"):
+            data.update(vector_report_analysis(f"/tmp/{base_filename}.opt", compiler))
 
         # Dump values: -DPOLYBENCH_DUMP_ARRAYS
         if self.check_dump:
