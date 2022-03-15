@@ -370,11 +370,8 @@ class Profiler:
                             kernel.save_results(df, output_filename)
                             perror("Execution failed, partial results saved")
                             return None
-                        if isinstance(kern_exec, list):
-                            for execution in kern_exec:
-                                df = df.append(execution, ignore_index=True)
-                        else:
-                            df = df.append(kern_exec, ignore_index=True)
+                        if not isinstance(kern_exec, list): kern_exec = [kern_exec]
+                        df = pd.concat( [df, pd.DataFrame.from_records( kern_exec )], ignore_index = True )
                     Timing.accm_timer("execution")
                 else:
                     pwarning("Execution process disabled!")
