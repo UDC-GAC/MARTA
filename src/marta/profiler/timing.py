@@ -126,7 +126,7 @@ class Timing:
 
     @staticmethod
     def compute_results(results, threshold_outliers, benchmark_type):
-        results = np.sort(results)[1:-1]
+        if len(results.shape) > 0: results = np.sort(results)[1:-1]
         res_mean = np.mean(results)
         res_dev = np.std(results)
         avg_dev = np.divide(
