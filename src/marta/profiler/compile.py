@@ -146,7 +146,7 @@ def compile_file(
             shutil.copyfile(src_file, input_file)
         except shutil.SameFileError:
             pass
-    cmd = [compiler, *flags, input_file, "-o", output]
+    cmd = [x for x in [compiler, *flags, input_file, "-o", output] if x != ""]
     cp = subprocess.run(cmd)
     if cp.returncode:
         raise CompilationError

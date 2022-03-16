@@ -265,9 +265,9 @@ class Profiler:
         :rtype: Kernel
         """
         kernel = Kernel(cfg)
-        if self.args.executions > -1:
+        if self.args.executions > 0:
             kernel.nexec = self.args.executions
-        if self.args.iterations > -1:
+        if self.args.iterations > 0:
             kernel.nsteps = self.args.iterations
         kernel.generate_report = kernel.emit_report() | self.args.report
         kernel.debug |= self.args.debug
@@ -302,18 +302,20 @@ class Profiler:
             output_cols += kernel.papi_counters
 
         product = dict_product(kernel.params, kernel.kernel_cfg)
-        # niterations = len([i for i in product]) * len(kernel.kernel_cfg)
-        niterations = len([i for i in product])
+        niterations_comp = len([i for i in product])
+        if kernel.gesummv:
+            niterations_comp += 1
+        product = dict_product(kernel.params, kernel.kernel_cfg + kernel.magic_syntax)
+        niterations_exec = len([i for i in product])
         create_directories(root=kernel.get_kernel_path("/marta_profiler_data/"))
         exit_on_error = not self.args.no_quit_on_error
         overhead_loop_tsc = self.get_loop_overhead(kernel, exit_on_error)
         clean_previous_files()
-
         pinfo(
             f"Compilation using {kernel.processes} processes. Number of executions = {kernel.nexec}, number of iterations (TSTEPS) = {kernel.nsteps}"
         )
         _pinfo_macveth(kernel)
-        # Structure for storing results and ploting
+        # Structure for storing results and plotting
         df = pd.DataFrame(columns=output_cols)
         for compiler in kernel.compiler_flags:
             for compiler_flags in list(kernel.compiler_flags[compiler]):
@@ -329,10 +331,23 @@ class Profiler:
                             it.repeat(compiler_flags),
                             it.repeat(exit_on_error),
                         )
+                        if kernel.gesummv:
+                            iterable = it.chain(
+                                iterable,
+                                [
+                                    (
+                                        kernel,
+                                        "gesummv",
+                                        compiler,
+                                        compiler_flags,
+                                        exit_on_error,
+                                    )
+                                ],
+                            )
                         if kernel.show_progress_bars:
                             pbar = tqdm(
                                 pool.istarmap(Kernel.compile, iterable),
-                                total=niterations,
+                                total=niterations_comp,
                                 desc="Compiling ",
                                 position=0,
                             )
@@ -353,11 +368,16 @@ class Profiler:
                 else:
                     pwarning("Compilation process disabled!")
 
-                product = dict_product(kernel.params, kernel.kernel_cfg)
+                product = dict_product(
+                    kernel.params, kernel.kernel_cfg + kernel.magic_syntax
+                )
                 if kernel.execution_enabled:
                     if kernel.show_progress_bars:
                         loop_iterator = tqdm(
-                            product, desc="Benchmark ", total=niterations, leave=True,
+                            product,
+                            desc="Benchmark ",
+                            total=niterations_exec,
+                            leave=True,
                         )
                     else:
                         loop_iterator = product
@@ -370,8 +390,12 @@ class Profiler:
                             kernel.save_results(df, output_filename)
                             perror("Execution failed, partial results saved")
                             return None
-                        if not isinstance(kern_exec, list): kern_exec = [kern_exec]
-                        df = pd.concat( [df, pd.DataFrame.from_records( kern_exec )], ignore_index = True )
+                        if not isinstance(kern_exec, list):
+                            kern_exec = [kern_exec]
+                        df = pd.concat(
+                            [df, pd.DataFrame.from_records(kern_exec)],
+                            ignore_index=True,
+                        )
                     Timing.accm_timer("execution")
                 else:
                     pwarning("Execution process disabled!")

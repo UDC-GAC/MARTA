@@ -33,6 +33,8 @@ from typing import Union
 import pandas as pd
 
 # Local imports
+from marta import get_data
+from marta.profiler.benchmark import Benchmark, BenchmarkError
 from marta.profiler.asm_analyzer import ASMParserFactory
 from marta.profiler.compile import (
     compile_makefile,
@@ -315,6 +317,27 @@ class Kernel:
         else:
             return 0.0
 
+    def compile_magic_syntax(
+        self,
+        magic_syntax: str,
+        compiler: str,
+        compiler_flags: str,
+        quit_on_error=False,
+    ) -> bool:
+        try:
+            magic = Benchmark(get_data(f"profiler/{magic_syntax}.c"), temp=False)
+            magic.compile(
+                compiler,
+                compiler_flags.split(" ") + [f"-I{get_data('profiler/utilities')}/"],
+            )
+        except BenchmarkError:
+            msg = f"{magic_syntax} could not be compiled."
+            if quit_on_error:
+                perror(f"{msg} Quitting.")
+            else:
+                pwarning(f"{msg} Skipping.")
+        return True
+
     def compile(
         self,
         product_params: bytes,
@@ -339,6 +362,10 @@ class Kernel:
         :return: `True` is compilation was successfull, `False` otherwise
         :rtype: bool
         """
+        if isinstance(product_params, str):
+            self.compile_magic_syntax(
+                product_params, compiler, compiler_flags, quit_on_error
+            )
         tmp_pickle = pickle.loads(product_params)
         kconfig = tmp_pickle["KERNEL_CFG"]
         del tmp_pickle["KERNEL_CFG"]

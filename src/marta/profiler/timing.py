@@ -190,10 +190,10 @@ class Timing:
                 line = " ".join([l for l in f if "FAILED" in l])
             Timing.show_error(line, benchmark_type)
             return None, None
-        except Exception as E:
-            perror(f"Something went wrong when executing: {E}")
         except RuntimeWarning as R:
             perror(f"Treating warnings as error: {R}")
+        except Exception as E:
+            perror(f"Something went wrong when executing: {E}")
         return results
 
     @staticmethod
@@ -213,6 +213,7 @@ class Timing:
         tmp_file: str = "",
         redirect_stdout: bool = False,
         multithread: bool = False,
+        exec_args: list = [],
     ) -> Tuple[Optional[dict], Optional[int]]:
         """Execute and time given benchmark nexec times
 
@@ -282,7 +283,7 @@ class Timing:
             os.remove(tmp_file)
         Path(tmp_file).touch()
 
-        cmd_list = shlex.split(cmd_line)
+        cmd_list = shlex.split(cmd_line) + exec_args
 
         def __measure(env: dict = {}, file=None, f=lambda: None):
             for _ in trange(

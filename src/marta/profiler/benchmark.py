@@ -32,6 +32,42 @@ class BenchmarkError(Exception):
 class Benchmark:
     """Benchmark class if meant for generating small benchmarks dynamically"""
 
+    def compile(
+        self,
+        compiler: str = "gcc",
+        flags: List[str] = ["-O3"],
+        bin_file: str = "/tmp/a.out",
+    ) -> float:
+        try:
+            compile_file(
+                self.src_file,
+                output=bin_file,
+                compiler=compiler,
+                flags=flags,
+                temp=self.temp,
+            )
+        except FileNotFoundError as e:
+            perror(e)
+        except Exception:
+            raise BenchmarkError
+
+    def execute(
+        self,
+        bin_file: str = "/tmp/a.out",
+        tmp_file: str = "/tmp/___marta_results.txt",
+        nsteps: int = 10000,
+        exec_args: List[str] = [""],
+    ):
+        d, _ = Timing.measure_benchmark(
+            self.src_file,
+            self.btype,
+            bin_file=bin_file,
+            tmp_file=tmp_file,
+            nsteps=nsteps,
+            exec_args=exec_args,
+        )
+        return d[self.btype]
+
     def compile_run_benchmark(
         self,
         compiler: str = "gcc",
