@@ -22,7 +22,7 @@ sys.setrecursionlimit(1500)
 # -- Project information -----------------------------------------------------
 
 project = "MARTA"
-copyright = "2020 Colorado State University"
+copyright = "2022 Colorado State University. University of A Coruña."
 author = "Marcos Horro"
 
 # The full version, including alpha/beta/rc tags
@@ -51,7 +51,7 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = "haiku"
+html_theme = "sphinx_material"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

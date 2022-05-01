@@ -99,8 +99,8 @@ static inline void gather(float *restrict x) {
   DO_NOT_TOUCH(mask);
 #endif
 #endif
-  DO_NOT_TOUCH(tmp);
   DO_NOT_TOUCH(index);
+  DO_NOT_TOUCH(tmp);
 }
 
 static inline void scatter(float *restrict x) {
@@ -143,5 +143,5 @@ int n = N;
 POLYBENCH_1D_ARRAY_DECL(x, DATA_TYPE, N, n);
 init_1darray(n, POLYBENCH_ARRAY(x));
 MARTA_FLUSH_CACHE;
-PROFILE_FUNCTION(KERNEL(POLYBENCH_ARRAY(x) + __marta_tsteps * OFFSET));
+PROFILE_FUNCTION(KERNEL(POLYBENCH_ARRAY(x)));
 MARTA_BENCHMARK_END;

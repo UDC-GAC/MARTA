@@ -303,8 +303,7 @@ class Profiler:
 
         product = dict_product(kernel.params, kernel.kernel_cfg)
         niterations_comp = len([i for i in product])
-        if kernel.gesummv:
-            niterations_comp += 1
+
         product = dict_product(kernel.params, kernel.kernel_cfg + kernel.magic_syntax)
         niterations_exec = len([i for i in product])
         create_directories(root=kernel.get_kernel_path("/marta_profiler_data/"))
@@ -331,19 +330,7 @@ class Profiler:
                             it.repeat(compiler_flags),
                             it.repeat(exit_on_error),
                         )
-                        if kernel.gesummv:
-                            iterable = it.chain(
-                                iterable,
-                                [
-                                    (
-                                        kernel,
-                                        "gesummv",
-                                        compiler,
-                                        compiler_flags,
-                                        exit_on_error,
-                                    )
-                                ],
-                            )
+
                         if kernel.show_progress_bars:
                             pbar = tqdm(
                                 pool.istarmap(Kernel.compile, iterable),

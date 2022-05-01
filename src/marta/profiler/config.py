@@ -160,14 +160,7 @@ def parse_kernel_options(config: dict) -> dict:
             perror(f"Configuration key missing for 'asm' config: {k}")
     cfg["flops"] = config_config.get("flops", "1")
     cfg["meta_info"] = config_config.get("meta_info", {})
-    cfg["gesummv"] = config_config.get("gesummv", False)
     cfg["magic_syntax"] = []
-    if cfg["gesummv"]:
-        cfg["magic_syntax"].append("gesummv")
-    cfg["gesummv_path"] = config_config.get("gesummv_path", ".")
-    cfg["gesummv_path"] = cfg["gesummv_path"].replace(
-        "[PATH]", f"{os.getcwd()}/{cfg['path_kernel']}"
-    )
     cfg["macveth"] = config_config.get("macveth", False)
     if cfg["macveth"]:
         cfg["kernel_cfg"].append("MACVETH")
