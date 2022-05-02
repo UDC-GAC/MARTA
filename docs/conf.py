@@ -14,19 +14,21 @@ import os
 import sys
 
 sys.path.insert(0, os.path.abspath("../"))
-sys.path.insert(1, os.path.abspath("../profiler"))
-sys.path.insert(1, os.path.abspath("../analyzer"))
+sys.path.insert(1, os.path.abspath("../src/marta/analyzer"))
+sys.path.insert(1, os.path.abspath("../src/marta/profiler"))
 sys.setrecursionlimit(1500)
 
 
 # -- Project information -----------------------------------------------------
 
-project = "MARTA"
+project = (
+    "MARTA: Multi-configuration Assembly pRofiler Toolkit for performance Analysis"
+)
 copyright = "2022 Colorado State University. University of A Coruña."
 author = "Marcos Horro"
 
 # The full version, including alpha/beta/rc tags
-release = "0.0.0"
+release = "0.1.0"
 
 
 # -- General configuration ---------------------------------------------------
@@ -51,7 +53,7 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = "sphinx_material"
+html_theme = "sphinx_rtd_theme"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
