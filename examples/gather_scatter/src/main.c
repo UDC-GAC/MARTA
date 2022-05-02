@@ -81,6 +81,7 @@ static inline void gather(float *restrict x) {
 #endif
   __m256 mask = _mm256_set_ps(0, MASK_2, MASK_1, -1, -1, -1, -1, -1);
   tmp = _mm256_mask_i32gather_ps(tmp, x, index, mask, 4);
+  DO_NOT_TOUCH(mask);
 #endif
 #else
   __m128i index = _mm_set_epi32(IDX3, IDX2, IDX1, IDX0);
@@ -95,8 +96,10 @@ static inline void gather(float *restrict x) {
   __m128 mask = _mm_set_ps(0, MASK_2, -1, -1);
   __m128 tmp;
   tmp = _mm_mask_i32gather_ps(tmp, x, index, mask, 4);
+  DO_NOT_TOUCH(mask);
 #endif
 #endif
+  DO_NOT_TOUCH(index);
   DO_NOT_TOUCH(tmp);
 }
 
@@ -140,5 +143,5 @@ int n = N;
 POLYBENCH_1D_ARRAY_DECL(x, DATA_TYPE, N, n);
 init_1darray(n, POLYBENCH_ARRAY(x));
 MARTA_FLUSH_CACHE;
-PROFILE_FUNCTION(KERNEL(POLYBENCH_ARRAY(x) + __marta_tsteps * OFFSET));
+PROFILE_FUNCTION(KERNEL(POLYBENCH_ARRAY(x)));
 MARTA_BENCHMARK_END;

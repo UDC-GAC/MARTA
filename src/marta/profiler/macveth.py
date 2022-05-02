@@ -25,7 +25,7 @@ def _pinfo_macveth(kernel: Kernel) -> None:
     if kernel.macveth:
         text = f"MACVETH enabled: this could take longer."
         if not kernel.check_dump:
-            text += "Use 'check_dump' option also for correctness."
+            text += " Use 'check_dump' option also for correctness."
         else:
             text += " Dumping values for assessing correctness."
         pinfo(text)

@@ -2,7 +2,7 @@
       input: examples/asm/data/points/data_consolidated.csv
       output_path: examples/asm/data/
       prepare_data:
-          cols: N_FMA vec_width
+          cols: N_FMA #vec_width
           rows: {}
           target: THROUGHPUT
           categories:
