@@ -47,7 +47,6 @@ from marta.utils.marta_utilities import (
     marta_exit,
     perror,
     pinfo,
-    print_version,
     pwarning,
 )
 
@@ -87,7 +86,11 @@ class Profiler:
             description="project subcommand is meant to help with the configuration and generation of new projects MARTA-compliant.",
         )
         parser_project.add_argument(
-            "-n", "--name", nargs=1, type=str, help="name of the new project",
+            "-n",
+            "--name",
+            nargs=1,
+            type=str,
+            help="name of the new project",
         )
         parser_project.add_argument(
             "-u",
@@ -143,7 +146,11 @@ class Profiler:
         )
 
         optional_named.add_argument(
-            "-d", "--debug", action="store_true", help="debug verbose", required=False,
+            "-d",
+            "--debug",
+            action="store_true",
+            help="debug verbose",
+            required=False,
         )
 
         optional_named.add_argument(
@@ -399,8 +406,7 @@ class Profiler:
         return 0
 
     def process_project_args(self):
-        """Process arguments starting with project
-        """
+        """Process arguments starting with project"""
         if self.args.dump_config_file:
             for line in dump_config_file("profiler/template.yml"):
                 print(line, end="")
@@ -475,7 +481,7 @@ class Profiler:
         kernel_setup = get_kernel_config(self.args.input[0])
         if not self.args.quiet:
             # Print version if not quiet
-            print_version("Profiler")
+            print(get_version("Profiler"))
 
         self.config_logger()
         # For each kernel configuration

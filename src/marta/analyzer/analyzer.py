@@ -39,7 +39,7 @@ from marta.utils.marta_utilities import (
     pinfo,
     dump_config_file,
     pwarning,
-    print_version,
+    get_version,
 )
 
 
@@ -225,7 +225,7 @@ class Analyzer:
     def __init__(self, args):
         self.args = self.parse_arguments(args)
         if not self.args.quiet or self.args.version:
-            print_version("Analyzer")
+            print(get_version("Analyzer"))
             if self.args.version:
                 sys.exit(0)
 
