@@ -30,7 +30,14 @@ release = "v0.1.0"
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ["sphinx.ext.autodoc", "sphinx.ext.coverage", "sphinx.ext.napoleon"]
+extensions = [
+    'sphinx.ext.intersphinx',
+    'sphinx.ext.autodoc',
+    'sphinx.ext.mathjax',
+    'sphinx.ext.viewcode',
+    'sphinxcontrib.httpdomain',
+    'sphinx_rtd_theme',
+]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
@@ -52,3 +59,20 @@ html_theme = "sphinx_rtd_theme"
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
+
+html_theme_options = {
+    "logo_only": True,
+    "display_version": True,
+    "prev_next_buttons_location": "bottom",
+    "style_external_links": False,
+    "vcs_pageview_mode": "",
+    "collapse_navigation": True,
+    "sticky_navigation": True,
+    "navigation_depth": 5,
+    "includehidden": True,
+    "titles_only": False,
+    'style_nav_header_background': 'white',
+}
+
+html_logo = "../marta_logo.png"
+html_show_sourcelink = True
