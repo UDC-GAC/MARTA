@@ -4,6 +4,7 @@
 
 [![Python
 package](https://github.com/markoshorro/MARTA/actions/workflows/python-package.yml/badge.svg)](https://github.com/markoshorro/MARTA/actions/workflows/python-package.yml)
+[![Documentation Status](https://readthedocs.org/projects/marta/badge/?version=latest)](https://marta.readthedocs.io/en/latest/?badge=latest)
 [![Version](https://img.shields.io/badge/version-v0.1.0-008080)](https://github.com/markoshorro/MARTA)
 [![Python versions](https://img.shields.io/badge/python-3.7%20%7C%203.8%20%7C%203.9-cf362b)](https://www.python.org/download/releases/3.0/)
 [![Code Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
