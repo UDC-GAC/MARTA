@@ -60,9 +60,9 @@ combinations of parameters and flags.
 Dependencies
 ------------
 
-* Python >=3.7
-* Libraries specified in `\ ``requirements.txt`` <requirements.txt>`_
-* PAPI >=5.7.0
+* Python >=3.7.
+* Libraries specified in `requirements.txt <https://github.com/UDC-GAC/tree/main/requirements.txt>`_.
+* PAPI >=5.7.0.
 * Linux environment with root access. Recommended >=3.14 version to allow PAPI
   use ``rdpmc`` for reading hardware counters.
 
@@ -89,7 +89,7 @@ The Profiler receives two inputs:
 
 
 * Configuration file: a structured YAML file containing all parameters
-  related to compilation (e.g. -D flags, compilers and their flags, etc.),
+  related to compilation (e.g. ``-D`` flags, compilers and their flags, etc.),
   execution (e.g. threads to launch and their affinity, number of
   repetitions, maximum deviation in measurements, etc.), and data collection
   (e.g. output format, dimensions to include, static code analysis

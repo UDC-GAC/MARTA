@@ -238,3 +238,67 @@ Parameters available for the **profiler** kernel dictionary:
      - Generate a log file with all information related to the experiment: host machine, elapsed time, standard output, standard error, etc.
      - ``bool``
      - -
+
+Example
+-------
+
+Imagine we want to compile a ``test.c`` file with the Cartesian product of the
+``-DINPUT=["$PWD/file0.txt","$PWD/file1.txt"]`` and ``-DNUM_VAR=[0,2,4]``. This
+way MARTA will generate the combination of all these parameters, i.e.,
+``-DINPUT="$PWD/file0.txt"`` and ``-DNUM_VAR=0``, ``-DINPUT="$PWD/file0.txt"``
+and ``-DNUM_VAR=2``, etc. A possible configuration file for the profiler could be:
+
+.. code-block:: yaml
+
+  - kernel:
+    name: "test"
+    type: "regular"
+    path: "src/"
+    preamble:
+        command: "sudo cpupower frequency-set -u 2.1GHz  > /dev/null && sudo cpupower frequency-set -d 2.1GHz > /dev/null"
+    compilation:
+      enabled: True
+      processes: 1
+      language: "C"
+      compiler_flags:
+        { "gcc-10": [" -Ofast -march=native -mtune=native -mavx2 "] }
+      main_src: "main.c"
+      kernel_inlined: False
+      asm_analysis:
+        syntax: "att"
+        count_ins: False
+        static_analysis: False
+        llvm_mca_bin: llvm-mca
+      debug: False
+    configuration:
+      d_features:
+        INPUT:
+          type: "static"
+          path: True
+          value: '["[PATH]/file0.txt","[PATH]/file1.txt"]'
+        NUM_VAR:
+          type: "dynamic"
+          value: 'range(5,0,2)'
+      flops: ""
+    execution:
+      enabled: True
+      papi_counters: ["PAPI_L1_DCM", "PAPI_L2_TCM"]
+      tsc: True
+      time: True
+      threshold_outliers: 5 # in percentage
+      discard_outliers: True # remove outliers from average
+      compute_avg: True # divide values by nsteps
+      nexec: 20
+      nsteps: 1
+      cpu_affinity: 1
+      check_dump: False
+      prefix: ""
+    output:
+      name: "test_config_file"
+      format: "csv"
+      columns: "all"
+      report: False
+      verbose: True
+
+
+For further more complete examples please refer to the `repository <https://github.com/UDC-GAC/MARTA/tree/main/examples>`_.

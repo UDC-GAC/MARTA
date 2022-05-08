@@ -10,14 +10,18 @@ file:
    * - Macro
      - Description
    * - ``MARTA_BENCHMARK_BEGIN``
-     - Init the source code.
+     - Sets benchmark's start. It also sets CPU affinity for the execution using Linux system calls.
    * - ``MARTA_BENCHMARK_END``
-     - Indicates the end of the benchmark.
+     - Sets the end of the main function in the program.
    * - ``MARTA_FLUSH_CACHE``
-     - Flushes the last-level cache.
+     - Performs ``clflush`` of size ``s`` at memory address ``p``. Flush is performed at cache line level, typically 64 bytes.
    * - ``PROFILE_FUNCTION(f)``
-     - Instrument a concrete function ``f``.
+     - Instruments function ``f`` in a loop with ``TSTEPS`` iterations without
+       performing any loop optimization. This is useful for collecting stable
+       measurements, even though it provokes the hot cache effect for small
+       functions without saturating memory caches. It avoids the loop if
+       ``TSTEPS`` is not greater than 1.
    * - ``CLOBBER_MEM``
-     - Acts as a memory barrier.
+     - Acts as a read/write barrier. Useful for micro-benchmarking, avoiding the reuse of values in register bringing values from memory.
    * - ``DO_NOT_TOUCH(x)``
-     - Avoid dead-code elimination for a concrete variable ``x``.
+     - Useful for avoiding any compiler optimization over variable ``x`` materialized in a register.

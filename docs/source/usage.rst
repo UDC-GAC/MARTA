@@ -75,6 +75,8 @@ configuration file:
 Analyzer
 --------
 
+``marta_analyzer --help`` will display: 
+
 .. code-block:: 
 
     usage: marta_analyzer [-h] [-q] [-v] [-dump] [input]

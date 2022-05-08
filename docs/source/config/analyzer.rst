@@ -1,8 +1,6 @@
 Analyzer configuration
 ======================
 
-
-
 The same scheme follows for the **analyzer**. Parameters available for this
 component:
 
@@ -111,3 +109,74 @@ component:
      - Apply logarithmic scale.
      - ``bool``
      - -
+
+Example
+-------
+
+Imagine we have a dataset with 5 columns: ``DIM_0``, ``DIM_1``, ``DIM_2``,
+``DIM_3`` and ``Cycles``. We want to filter those values where
+``DIM_1=="VALUE"``, and we want to measure the impact of the rest of the
+dimensions over ``Cycles``. We also want to normalize the values and create
+categories as the target dimension is not discrete. We are plotting a KDE or
+density plot and a scatterplot. The system also performs a classification using
+a 4-depth decision tree. The possible configuration file could be as follows:
+
+.. code-block:: yaml
+
+  - kernel:
+      input: input.csv
+      output_path: .
+      prepare_data:
+          cols: DIM_0 DIM_2 DIM_3
+          rows: { "DIM_1": "VALUE" }
+          target: Cycles
+          norm: True
+          categories:
+              enabled: True
+              scaling_factor: "1"
+      plot:
+          density:
+              enabled: True
+              type: kdeplot
+              format: pdf
+              data: processed
+              x_axis: tsc
+              x_label: "Time Stamp Counter (TSC)"
+              log_scale: False
+              hue: tsc_cat
+              cumulative: False
+              hatches: True
+              multiple: "stack"
+              rugplot: True
+              mark_centroids: True
+          scatterplot:
+              enabled: False
+              type: scatterplot
+              format: pdf
+              data: processed
+              x_axis: index
+              y_axis: cycles
+              palette: "crimson"
+              hue: arch
+      classification:
+          type: decision_tree
+          enabled: True
+          config:
+              max_depth: 4
+              max_leaves: 10000
+              proportion: True
+              text_tree: False
+              graph_tree: True
+              orientation: "horizontal"
+      feature_importance:
+          type: random_forest
+          enabled: True
+          config:
+              n_estimators: 50
+              criterion: "gini"
+              max_depth: 50
+              n_jobs: -1
+              random_state: 0
+
+Refer to the `examples/ <https://github.com/UDC-GAC/MARTA/tree/main/examples>`_
+for more elaborate examples.
