@@ -287,19 +287,19 @@ Lili Kudrili/Shutterstock.com
 Regular citation:
 
 ```
-Horro, M. Pouchet, L.-N. Rodríguez, G. and Touriño, J. MARTA: Multi-configuration Assembly pRofiler and Toolkit for performance Analysis in Proceedings of the EEE International Symposium on Performance Analysis of Systems and Software (ISPASS), Singapore, pp. 10:1-11. 2022.
+Horro, M. Pouchet, L.-N. Rodríguez, G. and Touriño, J. MARTA: Multi-configuration Assembly pRofiler and Toolkit for performance Analysis in Proceedings of the IEEE International Symposium on Performance Analysis of Systems and Software, ISPASS22, Singapore, pp. 79-89. 2022.
 ```
 
 Bibtex example:
 
 ```
-@inproceedings{horro,
+@inproceedings{horro:ispass22,
   author={Horro, Marcos and Pouchet, Louis-Noël and Rodríguez, Gabriel and Touriño, Juan},
   booktitle={2022 IEEE International Symposium on Performance Analysis of Systems and Software (ISPASS)},
   title={MARTA: Multi-configuration Assembly pRofiler and Toolkit for performance Analysis},
   year={2022},
   volume={},
   number={},
-  pages={35-44},
+  pages={79-89},
 }
 ```
