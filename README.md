@@ -11,7 +11,7 @@ package](https://github.com/markoshorro/MARTA/actions/workflows/python-package.y
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 MARTA is a productivity-aware toolkit for profiling and performance
-characterization. It is meant for executing
+characterization.
 
 This toolkit performs in two stages: profiling and analysis. The first component
 compiles, executes and collects information from hardware counters, and the second
@@ -283,6 +283,8 @@ See [LICENSE](LICENSE), [COPYRIGHT](COPYRIGHT) and [AUTHORS](AUTHORS) files, res
 Lili Kudrili/Shutterstock.com
 
 ## Citation
+
+The author .pdf is available [here](https://gac.udc.es/~gabriel/files/ispass22.pdf).
 
 Regular citation:
 
