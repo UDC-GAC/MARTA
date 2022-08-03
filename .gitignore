@@ -29,6 +29,7 @@ examples/*/src/marta_profiler_data
 src/marta/profiler/kernels/*
 examples/*/src/*
 !examples/*/src/main.c
+!examples/sat_packing/src/codes
 
 # results
 old_files/
