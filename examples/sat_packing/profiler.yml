@@ -1,7 +1,7 @@
 - kernel:
       name: "sat_packing"
       type: "regular"
-      path: "examples/sat_packing/src/"
+      path: "src/"
       description: "MACVETH's random packing model"
       debug: False
       show_progress_bars: True
@@ -12,13 +12,9 @@
           processes: 16
           language: "C"
           compiler_flags:
-              { "gcc-11": [" -Ofast -march=native -mtune=native -mavx2 "] }
+              { "gcc": [" -Ofast -march=native -mtune=native -mavx2 "] }
           main_src: "main.c"
           kernel_inlined: True
-          asm_analysis:
-              syntax: "att"
-              count_ins: False
-              static_analysis: "llvm-mca"
           debug: False
       configuration:
           d_features:
@@ -47,9 +43,7 @@
               [
                   "UNHALTED_CORE_CYCLES",
                   "INSTRUCTIONS_RETIRED",
-                  "PAPI_L1_DCM",
-                  "PAPI_L2_DCM",
-                  "PAPI_L3_TCM",
+                  "UOPS_EXECUTED:THREAD",
               ]
           time: False
           tsc: True
