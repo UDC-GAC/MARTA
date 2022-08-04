@@ -1,6 +1,6 @@
 - kernel:
       name: "gather_scatter"
-      path: "examples/gather_scatter/src/"
+      path: "src/"
       description: "Setup for experiment gather"
       debug: False
       preamble:
@@ -12,9 +12,9 @@
           command: "echo 'done!'"
       compilation:
           enabled: True
-          processes: 32
+          processes: 16
           language: "C"
-          compiler_flags: { "gcc-11": [" -march=native -mtune=native -Ofast "] }
+          compiler_flags: { "gcc": [" -march=native -mtune=native -Ofast -mavx2"] }
           main_src: "main.c"
           kernel_inlined: True
           asm_analysis:
@@ -23,7 +23,7 @@
               static_analysis: ""
           debug: False
       configuration:
-          kernel_cfg: ["-DGATHER", "-DSCATTER"]
+          kernel_cfg: ["-DGATHER"]
           d_features:
               ELEMS:
                   evaluate: True
@@ -118,7 +118,7 @@
           compute_avg: True
           nexec: 10
           nsteps: 1000
-          cpu_affinity: 11
+          cpu_affinity: 1
           prefix: "numactl -p 0 taskset -c 1"
       output:
           name: "7elems"
