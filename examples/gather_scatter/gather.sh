@@ -14,10 +14,10 @@
 
 #!/bin/bash
 
-marta_profiler perf profiler_2elems_hotcache.yml
-marta_profiler perf profiler_3elems_hotcache.yml
-marta_profiler perf profiler_4elems_hotcache.yml
-marta_profiler perf profiler_5elems_hotcache.yml
-marta_profiler perf profiler_6elems_hotcache.yml
-marta_profiler perf profiler_7elems_hotcache.yml
-marta_profiler perf profiler_8elems_hotcache.yml
+python -m marta.profiler perf profiler_2elems.yml
+python -m marta.profiler perf profiler_3elems.yml
+python -m marta.profiler perf profiler_4elems.yml
+python -m marta.profiler perf profiler_5elems.yml
+python -m marta.profiler perf profiler_6elems.yml
+python -m marta.profiler perf profiler_7elems.yml
+python -m marta.profiler perf profiler_8elems.yml
