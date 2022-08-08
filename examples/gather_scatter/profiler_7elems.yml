@@ -110,7 +110,9 @@
           flops: "1"
       execution:
           enabled: True
-          papi_counters: ["INSTRUCTIONS_RETIRED"]
+          papi_counters: [ "UNHALTED_CORE_CYCLES",
+                           "INSTRUCTIONS_RETIRED",
+                           "UOPS_EXECUTED:THREAD", ]
           time: False
           tsc: True
           threshold_outliers: 3
