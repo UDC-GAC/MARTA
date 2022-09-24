@@ -296,12 +296,12 @@ Bibtex example:
 
 ```
 @inproceedings{horro:ispass22,
-  author={Horro, Marcos and Pouchet, Louis-Noël and Rodríguez, Gabriel and Touriño, Juan},
-  booktitle={2022 IEEE International Symposium on Performance Analysis of Systems and Software (ISPASS)},
-  title={MARTA: Multi-configuration Assembly pRofiler and Toolkit for performance Analysis},
-  year={2022},
-  volume={},
-  number={},
-  pages={79-89},
+  author    = {Horro, Marcos and Pouchet, Louis-Noël and Rodríguez, Gabriel and Touriño, Juan},
+  booktitle = {2022 IEEE International Symposium on Performance Analysis of Systems and Software (ISPASS)},
+  title     = {MARTA: Multi-configuration Assembly pRofiler and Toolkit for performance Analysis},
+  year      = {2022},
+  volume    = {},
+  number    = {},
+  pages     = {79--89},
 }
 ```
