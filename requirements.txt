@@ -8,7 +8,7 @@ rinohtype
 py-cpuinfo
 pytest
 graphviz
-sklearn
+scikit-learn
 colorama
 pyperf
 matplotlib
