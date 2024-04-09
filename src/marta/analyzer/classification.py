@@ -26,7 +26,7 @@ from sklearn import tree
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
-from dtreeviz.trees import dtreeviz
+from dtreeviz.trees import model
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -99,7 +99,7 @@ class DecisionTree(Classification):
             orientation = "TD"
         else:
             orientation = "LR"
-        viz = dtreeviz(
+        viz = model(
             self.clf,
             x_data=self.data,
             y_data=self.target_data,
