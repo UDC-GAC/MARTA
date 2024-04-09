@@ -111,11 +111,11 @@
  */
 #ifdef NTIMES
 #if NTIMES <= 1
-#define NTIMES 10
+#define NTIMES 1
 #endif
 #endif
 #ifndef NTIMES
-#define NTIMES 10
+#define NTIMES 1
 #endif
 
 /*  Users are allowed to modify the "OFFSET" variable, which *may* change the

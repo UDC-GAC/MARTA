@@ -30,6 +30,9 @@ import shutil
 from typing import Union
 
 # Third-party libraries
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
+
 import pandas as pd
 
 # Local imports
@@ -567,7 +570,7 @@ class Kernel:
                         d_avg_values[self.papi_counters[0]] = raw_values
                     else:
                         for i in range(len(self.papi_counters)):
-                            d_avg_values[self.papi_counters[i]] = raw_values["papi"][i]
+                            d_avg_values[self.papi_counters[i]] = raw_values["papi"][i] # FIXME:GRA: 82 PAPI counters but raw_values["papi"] has only 10 elements
                 else:
                     d_avg_values[mtype] = raw_values
                 if raw_values is None:
