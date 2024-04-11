@@ -379,10 +379,11 @@ class Profiler:
                             return None
                         if not isinstance(kern_exec, list):
                             kern_exec = [kern_exec]
-                        df = pd.concat(
-                            [df, pd.DataFrame.from_records(kern_exec)],
-                            ignore_index=True,
-                        )
+#                        df = pd.concat(
+#                            [df, pd.DataFrame.from_records(kern_exec)],
+#                            ignore_index=True,
+#                        )
+                        df = pd.concat( [df] + kern_exec )
                     Timing.accm_timer("execution")
                 else:
                     pwarning("Execution process disabled!")
